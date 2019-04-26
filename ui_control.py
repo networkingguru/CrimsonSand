@@ -12,6 +12,7 @@ def create_console(w, h):
 def render_all(con_list, entities, screen_width, screen_height):
 
     for con in con_list:
+        con.clear()
         render_console(con, entities, screen_width, screen_height)
 
     
@@ -28,15 +29,13 @@ def render_console(con, entities, screen_width, screen_height, con_type=0):
     libtcodpy.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
 
 def handle_keys(game_state):
-    for evt in event.get():
+    for evt in event.wait():
         if evt.type == "QUIT":
-            print(event)
-            exit(0)
+            exit()
         elif evt.type == "KEYDOWN":
             key = chr(evt.sym)
             if not key.isalnum():
                 key = evt.sym
-            print(key)
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
             return command

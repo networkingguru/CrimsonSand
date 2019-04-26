@@ -4,7 +4,7 @@ import time
 from combat_control import combat_controller
 from ui_control import render_all, create_console, handle_keys
 from enums import GameStates
-from entity import create_entity_list
+from entity import create_entity_list, fill_player_list
 
  
 
@@ -14,14 +14,17 @@ if __name__ == "__main__":
     con = create_console(options.screen_width, options.screen_height)
     con_list = [con]
     entity_list = options.entities
-    
-    
+    entities = create_entity_list(entity_list)
+    players = []
+    players.append(fill_player_list(entities))
+    curr_actor = players[0]
+
 
     game_state = GameStates.default
 
     while not libtcodpy.console_is_window_closed():
 
-        entities = create_entity_list(entity_list)
+        
 
         render_all(con_list, entities, options.screen_width, options.screen_height)
 
@@ -34,7 +37,7 @@ if __name__ == "__main__":
             command = handle_keys(game_state)
             if command is not None:
                 print(command)
-                action = combat_controller(None, entities, command)
+                action = combat_controller(None, 0, entities, command)
 
 
     
