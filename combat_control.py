@@ -10,13 +10,20 @@ def combat_controller(game_map, originator, entities, command):
             direction = []
             direction.extend(command[1])
             y, x = direction
+            y_mod = 0
+            x_mod = 0
             if y == 'n':
-                entity.mod_attribute('y', -1)
+                y_mod = -1
             if y == 's':
-                entity.mod_attribute('y', 1)
+                y_mod = 1
             if x == 'w':
-                entity.mod_attribute('x', -1)
+                x_mod = -1
             if x == 'e':
-                entity.mod_attribute('x', 1)
-            return None
+                x_mod = 1
+            fx, fy =entity.x + x_mod, entity.y + y_mod
+            #Boundary checking
+            if (len(game_map) >= fx and len(game_map[fx]) >= fy) and not game_map.tiles[fx][fy].blocked and not (fx < 0  or fy < 0):
+                entity.mod_attribute('x', x_mod)
+                entity.mod_attribute('y', y_mod)
+
 
