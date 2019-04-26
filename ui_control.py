@@ -3,6 +3,7 @@ import tcod as libtcodpy
 from tcod import event
 import options
 
+
 def create_console(w, h):
     con = libtcodpy.console_new(w, h)
     libtcodpy.console_set_custom_font('fonts\\cp437_8x8.png', libtcodpy.FONT_TYPE_GRAYSCALE | libtcodpy.FONT_LAYOUT_ASCII_INROW)
