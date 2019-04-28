@@ -22,7 +22,7 @@ def combat_controller(game_map, originator, entities, command):
                 x_mod = 1
             fx, fy =entity.x + x_mod, entity.y + y_mod
             #Boundary checking
-            if (len(game_map) >= fx and len(game_map[fx]) >= fy) and not game_map.tiles[fx][fy].blocked and not (fx < 0  or fy < 0):
+            if (game_map.width >= fx and game_map.height >= fy) and not game_map.tiles[fx][fy].blocked and not (fx < 0  or fy < 0):
                 entity.mod_attribute('x', x_mod)
                 entity.mod_attribute('y', y_mod)
 
