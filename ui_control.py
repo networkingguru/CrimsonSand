@@ -1,10 +1,37 @@
 
 import tcod as libtcodpy
+import bearlibterminal.terminal as terminal
 from tcod import event
 import options
 
+def create_terminal(w,h):
+    term = terminal.open()
+    terminal.set('window: size='+str(w)+'x'+str(h)+',title=Crimson Sands; font: fonts\\cp437_8x8.png, size=8x8, codepage=437')
+    terminal.refresh()
+
+    return term
+
+def blt_handle_keys(game_state):
+    key = None
+    if terminal.has_input():
+        key = terminal.read()
+        print(key)
+        if key == terminal.TK_CLOSE:
+            exit()
+        else:
+            key = chr(key)
+            keymap = options.key_maps[game_state.value - 1]
+            command = keymap.get(key)
+            return command
+    else:
+        return None
+    
+
+
+
 
 def create_console(w, h):
+
     con = libtcodpy.console_new(w, h)
     libtcodpy.console_set_custom_font('fonts\\cp437_8x8.png', libtcodpy.FONT_TYPE_GRAYSCALE | libtcodpy.FONT_LAYOUT_ASCII_INROW)
     libtcodpy.console_init_root(w, h, 'Combat Prototype', False)
