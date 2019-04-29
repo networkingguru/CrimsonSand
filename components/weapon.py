@@ -59,3 +59,4 @@ class Unarmed(Weapon):
         self.attacks = [self.punch, self.kick]
 
 
+weapon_master_list = [Unarmed]

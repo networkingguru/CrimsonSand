@@ -51,7 +51,7 @@ enemy_weapons = [enemy_r_weapon, enemy_f_weapon]
 
 #Fighter and Weapons lists
 fighters = [player_fighter, enemy_fighter]
-weapons = [player_weapons, enemy_weapons]
+weapons = {'Player': player_weapons, 'Enemy': enemy_weapons}
 
 #Entity list
 player = (50, 50, '@', 'white', 'Player', enums.EntityState.conscious, True, True)

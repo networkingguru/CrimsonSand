@@ -4,7 +4,7 @@ import time
 from combat_control import combat_controller
 from ui_control import render_all, create_console, handle_keys, create_terminal, blt_handle_keys, create_root_console, render
 from enums import GameStates
-from entity import create_entity_list, fill_player_list, add_fighters
+from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap
 
  
@@ -36,6 +36,8 @@ if __name__ == "__main__":
     entities = create_entity_list(entity_list)
     fighters = options.fighters
     add_fighters(entities, fighters)
+    weapons = options.weapons
+    add_weapons(entities, weapons)
     players = []
     players.append(fill_player_list(entities))
     curr_actor = players[0]

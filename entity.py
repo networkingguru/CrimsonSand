@@ -1,9 +1,10 @@
 import math
 from components.fighter import Fighter
+from components import weapon
 
 class Entity:
 
-    def __init__(self, x, y, char, color, name, state, player = False, blocks = False, fighter = None, weapon = []):
+    def __init__(self, x, y, char, color, name, state, player = False, blocks = False, fighter = None, weapons = []):
         self.x = x
         self.y = y
         self.char = char
@@ -13,6 +14,7 @@ class Entity:
         self.blocks = blocks
         self.fighter = fighter
         self.state = state
+        self.weapons = weapons
 
         if self.fighter:
             self.fighter.owner = self
@@ -28,6 +30,12 @@ class Entity:
         attributes, facing, aoc, targets = fighter_attrs[0], fighter_attrs[1], fighter_attrs[2], fighter_attrs[3]
         if len(fighter_attrs) > 4: ai = fighter_attrs[4]
         self.fighter = Fighter(attributes, facing, aoc, targets, ai)
+
+    def add_weapon_component(self, wpn) -> None:
+        for w in weapon.weapon_master_list:
+            new_wpn = w()
+            if wpn == new_wpn.name:
+                self.weapons.append(new_wpn)
 
 
 def create_entity_list(entity_list) -> list:
@@ -50,6 +58,13 @@ def add_fighters(entities, fighter_list) -> None:
             if fighter[0] == entity.name:
                 del fighter[0]
                 entity.add_fighter_component(fighter)
+
+def add_weapons(entities, weapon_dict) -> None:
+    for entity in entities:
+        if hasattr(entity, 'fighter'):
+            wpns = weapon_dict.get(entity.name)
+            for wpn in wpns:
+                entity.add_weapon_component(wpn)
 
 def entity_angle(reference, axis) -> int:
     dy = axis.y - reference.y
