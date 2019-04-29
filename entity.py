@@ -1,8 +1,9 @@
 import math
+from components.fighter import Fighter
 
 class Entity:
 
-    def __init__(self, x, y, char, color, name, state, player = False, blocks = False, fighter = None):
+    def __init__(self, x, y, char, color, name, state, player = False, blocks = False, fighter = None, weapon = []):
         self.x = x
         self.y = y
         self.char = char
@@ -16,29 +17,41 @@ class Entity:
         if self.fighter:
             self.fighter.owner = self
 
-    def mod_attribute(self, attribute, amount):
+    def mod_attribute(self, attribute, amount) -> None:
         value = int(getattr(self, attribute))
         if value + amount <= 0: setattr(self, attribute, 0)
         else: 
             value += int(amount)
             setattr(self, attribute, value)
 
+    def add_fighter_component(self, fighter_attrs) -> None:
+        attributes, facing, aoc, targets = fighter_attrs[0], fighter_attrs[1], fighter_attrs[2], fighter_attrs[3]
+        if len(fighter_attrs) > 4: ai = fighter_attrs[4]
+        self.fighter = Fighter(attributes, facing, aoc, targets, ai)
 
-def create_entity_list(entity_list):
+
+def create_entity_list(entity_list) -> list:
     entities = []
     for item in entity_list:
         entities.append(Entity(*item))
 
     return entities
 
-def fill_player_list(entities):
+def fill_player_list(entities) -> list:
     players = []
     for entity in entities:
         if entity.player:
             players.append(entity)
     return players
 
-def entity_angle(reference, axis):
+def add_fighters(entities, fighter_list) -> None:
+    for entity in entities:
+        for fighter in fighter_list:
+            if fighter[0] == entity.name:
+                del fighter[0]
+                entity.add_fighter_component(fighter)
+
+def entity_angle(reference, axis) -> int:
     dy = axis.y - reference.y
     dx = reference.x - axis.x
     radians = math.atan2(-dy, dx)

@@ -23,9 +23,10 @@ def combat_controller(game_map, originator, entities, command):
                 x_mod = 1
             fx, fy =entity.x + x_mod, entity.y + y_mod
             #Boundary and blocker checking
-            if ((game_map.width >= fx and game_map.height >= fy) and not game_map.tiles[fx][fy].blocked 
-                and not (fx < 0  or fy < 0) and get_blocking_entities_at_location(entities, fx, fy) is None):
-                entity.mod_attribute('x', x_mod)
-                entity.mod_attribute('y', y_mod)
+            if (game_map.width -1 >= fx and game_map.height -1 >= fy):
+                if (not game_map.tiles[fx][fy].blocked and not (fx < 0  or fy < 0) 
+                    and get_blocking_entities_at_location(entities, fx, fy) is None):
+                    entity.mod_attribute('x', x_mod)
+                    entity.mod_attribute('y', y_mod)
 
 
