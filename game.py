@@ -13,7 +13,7 @@ from game_map import GameMap
 if __name__ == "__main__":
     libtcodpy.sys_set_fps(options.fps)
     con = create_console(options.screen_width, options.screen_height)
-    term = create_terminal(options.screen_width, options.screen_height)
+    #term = create_terminal(options.screen_width, options.screen_height)
     con_list = [con]
     entity_list = options.entities
     entities = create_entity_list(entity_list)
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     while not libtcodpy.console_is_window_closed():
 
         render_all(con_list, entities, options.screen_width, options.screen_height)
-        command2 = blt_handle_keys(game_state)
+        #command2 = blt_handle_keys(game_state)
         #Establish ms timer, only execute block x times per second
         base_time = time.clock()
         tick = round(base_time - int(base_time), 1)

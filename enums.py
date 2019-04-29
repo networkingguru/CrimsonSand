@@ -18,5 +18,8 @@ class FighterStance(Enum):
     kneeling = auto()
     sitting = auto()
 
-class Colors(Enum):
-    white = auto()
+class WeaponTypes(Enum):
+    thrust_and_slash = auto
+    thrust = auto
+    slash = auto
+    flail = auto

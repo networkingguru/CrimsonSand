@@ -4,6 +4,9 @@ import bearlibterminal.terminal as terminal
 from tcod import event
 import options
 
+colors = {'gray':libtcodpy.gray, 'dark_gray': libtcodpy.dark_gray, 'white':libtcodpy.white, 'black': libtcodpy.black, 'crimson': libtcodpy.crimson,
+            'amber': libtcodpy.amber, 'dark_amber':libtcodpy.dark_amber, 'yellow':libtcodpy.yellow}
+
 def create_terminal(w,h):
     term = terminal.open()
     terminal.set('window: size='+str(w)+'x'+str(h)+',title=Crimson Sands; font: fonts\\cp437_8x8.png, size=8x8, codepage=437')
@@ -19,7 +22,8 @@ def blt_handle_keys(game_state):
         if key == terminal.TK_CLOSE:
             exit()
         else:
-            key = chr(key)
+            key = terminal.get(key)
+            print(key)
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
             return command
@@ -46,13 +50,16 @@ def render_all(con_list, entities, screen_width, screen_height):
     
     libtcodpy.console_flush()
    
-def render_console(con, entities, screen_width, screen_height, con_type=0):
-    libtcodpy.console_set_default_background(con, libtcodpy.dark_gray)
-    libtcodpy.console_set_default_foreground(con, libtcodpy.white)
+def render_console(con, entities, screen_width, screen_height, fg_color='white', bg_color='black', con_type=0):
+    fg_color = colors.get(fg_color)
+    bg_color = colors.get(bg_color)
+    libtcodpy.console_set_default_background(con, bg_color)
+    libtcodpy.console_set_default_foreground(con, fg_color)
 
     if con_type == 0:
         for entity in entities:
-            libtcodpy.console_put_char(con, entity.x, entity.y, entity.char, libtcodpy.BKGND_DEFAULT)
+            ent_color = colors.get(entity.color)
+            libtcodpy.console_put_char_ex(con, entity.x, entity.y, entity.char, ent_color,bg_color)
 
     libtcodpy.console_blit(con, 0, 0, screen_width, screen_height, 0, 0, 0)
 

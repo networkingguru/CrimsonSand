@@ -23,8 +23,8 @@ map_height = screen_height - message_panel_h
 fps = 30
 
 #Entity list
-player = (50, 50, '@', enums.Colors.white, 'Player', enums.EntityState.conscious, True)
-enemy = (60, 60, '@', enums.Colors.white, 'Enemy', enums.EntityState.conscious)
+player = (50, 50, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
+enemy = (60, 60, '@', 'yellow', 'Enemy', enums.EntityState.conscious, False, True)
 entities = [player, enemy]
 
 #Key Dicts in order of key, command_verb
