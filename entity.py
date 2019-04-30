@@ -4,7 +4,7 @@ from components import weapon
 
 class Entity:
 
-    def __init__(self, x, y, char, color, name, state, player = False, blocks = False, fighter = None, weapons = []):
+    def __init__(self, x, y, char, color, name, state, player = False, blocks = False, fighter = None, weapons = None):
         self.x = x
         self.y = y
         self.char = char
@@ -32,6 +32,7 @@ class Entity:
         self.fighter = Fighter(attributes, facing, aoc, targets, ai)
 
     def add_weapon_component(self, wpn) -> None:
+        if self.weapons is None: self.weapons=[]
         for w in weapon.weapon_master_list:
             new_wpn = w()
             if wpn == new_wpn.name:
@@ -65,6 +66,7 @@ def add_weapons(entities, weapon_dict) -> None:
             wpns = weapon_dict.get(entity.name)
             for wpn in wpns:
                 entity.add_weapon_component(wpn)
+                print(entity.name + str(len(entity.weapons)))
 
 def entity_angle(reference, axis) -> int:
     dy = axis.y - reference.y
