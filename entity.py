@@ -66,7 +66,6 @@ def add_weapons(entities, weapon_dict) -> None:
             wpns = weapon_dict.get(entity.name)
             for wpn in wpns:
                 entity.add_weapon_component(wpn)
-                print(entity.name + str(len(entity.weapons)))
 
 def entity_angle(reference, axis) -> int:
     dy = axis.y - reference.y

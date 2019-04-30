@@ -19,7 +19,7 @@ def recompute_fov(fov_map, x, y, radius, light_walls=True, algorithm=libtcodpy.F
 
 
 def fov_calc(radius, x, y, percent, start_angle) -> list:
-    aoc = []
+    aoc = set()
 
 
     # calc range
@@ -64,10 +64,10 @@ def fov_calc(radius, x, y, percent, start_angle) -> list:
                         if end_angle > 359:
                             overlap_end = end_angle - 360
                             if (angle <= overlap_end and polarradius < radius):
-                                aoc.append([w,h])
+                                aoc.add((w,h))
                         if (angle >= start_angle and angle <= end_angle 
                                             and polarradius < radius):
-                            aoc.append([w,h])
+                            aoc.add((w,h))
 
        
     return aoc
@@ -75,7 +75,7 @@ def fov_calc(radius, x, y, percent, start_angle) -> list:
 
 def change_face(direction, x, y, range = 2, percent = 25) -> list:
     #direction as int, 0-7 starting with N and proceeding clockwise
-    player_aoc = []
+    player_aoc = set()
     
     if direction == 0: #N
         player_aoc = fov_calc(range,x, y, percent, 45)
@@ -117,16 +117,16 @@ def modify_fov(entity, game_map, fov_map) -> None:
             wall = game_map.tiles[x][y].block_sight
             #This truncates the FOV to the arc defined by direciton
             if visible:
-                temp_coords = [x,y]
+                temp_coords = (x,y)
                 if temp_coords not in fov_area:
                     if x != entity.x or y != entity.y:
                         fov_map.fov[y,x] = False
                         visible = False
             #Showing visible stuff and adding them to the exploration set
             if visible:
-                entity.fighter.fov_explored.add((x,y))
+                if not (x,y) in entity.fighter.fov_explored: entity.fighter.fov_explored.add((x,y))
                 if wall:
-                    entity.fighter.fov_wall.add((x,y))
+                    if not (x,y) in entity.fighter.fov_wall: entity.fighter.fov_wall.add((x,y))
                 else:
-                    entity.fighter.fov_visible.add((x,y))
+                    if not (x,y) in entity.fighter.fov_visible: entity.fighter.fov_visible.add((x,y))
                 

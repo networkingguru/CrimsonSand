@@ -31,7 +31,7 @@ def combat_controller(game_map, fov_map, active_entity, entities, command) -> No
                     entity.mod_attribute('y', y_mod)
             if hasattr(entity, 'fighter'):
                 fov_radius = int(round(entity.fighter.sit/5))
-                #fov_map = recompute_fov(fov_map, entity.x, entity.y, fov_radius)
+                recompute_fov(fov_map, entity.x, entity.y, fov_radius)
                 modify_fov(entity, game_map, fov_map)
                 
 

@@ -6,7 +6,7 @@ from ui_control import render_all, create_console, handle_keys, create_terminal,
 from enums import GameStates
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap
-from fov_aoc import initialize_fov, recompute_fov
+from fov_aoc import initialize_fov, recompute_fov, modify_fov
 
  
 
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     #Console init
     con = create_root_console(options.screen_width, options.screen_height)
     dim_list = [(options.map_width, options.map_height), (options.status_panel_w, options.status_panel_h), 
-                (options.enemy_panel_h, options.enemy_panel_w), (options.message_panel_w, options.message_panel_h)]
+                (options.enemy_panel_w, options.enemy_panel_h), (options.message_panel_w, options.message_panel_h)]
     map_con = create_console(dim_list[0][0], dim_list[0][1])
     status_panel = create_console(dim_list[1][0], dim_list[1][1])
     enemy_panel = create_console(dim_list[2][0], dim_list[2][1])
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     offset_list = ((options.map_x,options.map_y),(options.status_panel_x,options.status_panel_y),(options.enemy_panel_x,options.enemy_panel_y),
                 (options.message_panel_x,options.message_panel_y))
     type_list = (0,2,2,3)
-    color_list = (('white','dark_gray'), ('black','white'), ('black', 'gray'), ('yellow', 'crimson'))
+    color_list = (('white','light_gray'), ('black','white'), ('black', 'yellow'), ('yellow', 'crimson'))
 
 
     #Entity init
@@ -52,6 +52,8 @@ if __name__ == "__main__":
     #Initial computations
     fov_radius = int(round(curr_actor.fighter.sit/5))
     recompute_fov(fov_map, curr_actor.x, curr_actor.y, fov_radius)
+    modify_fov(curr_actor, game_map, fov_map)
+    
 
     while not libtcodpy.console_is_window_closed():
 
