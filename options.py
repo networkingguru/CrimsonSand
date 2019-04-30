@@ -23,6 +23,11 @@ map_width = screen_width - status_panel_w - enemy_panel_w
 map_height = screen_height - message_panel_h + 1
 map_x = enemy_panel_w
 map_y = 0
+
+#Map setup
+blocked = ((30,30),(30,31),(30,32),(30,33),(30,34),(30,35),(31,30),(32,30),(33,30),(34,30),(35,30))
+
+
 #Base time units
 fps = 30
 

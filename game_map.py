@@ -1,4 +1,22 @@
 
+from tcod import map
+import numpy as np
+import options
+
+def array_gen(map, blocked) -> np.array:
+    blocked_tiles = np.full((map.width, map.height), True, order='F')
+    for (x,y) in blocked:
+        blocked_tiles[x,y] = False
+    return blocked_tiles
+
+def fill_map(game_map, s_blocked, mv_blocked):
+    game_map.transparent[:] = True
+    game_map.walkable[:] = True
+    for (x,y) in s_blocked:
+        game_map.transparent[x,y] = False
+    for (x,y) in mv_blocked:
+        game_map.walkable[x,y] = False
+
 
 class Tile:
     """

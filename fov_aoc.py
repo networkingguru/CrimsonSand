@@ -1,6 +1,7 @@
 
 import math
 import tcod as libtcodpy
+from tcod import map
 from enums import GameStates, EntityState
 
  
@@ -15,6 +16,7 @@ def initialize_fov(game_map) -> list:
     return fov_map
 
 def recompute_fov(fov_map, x, y, radius, light_walls=True, algorithm=libtcodpy.FOV_BASIC) -> None:
+    
     libtcodpy.map_compute_fov(fov_map, x, y, radius, light_walls, algorithm)
 
 

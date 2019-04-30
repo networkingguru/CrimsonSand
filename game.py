@@ -1,11 +1,13 @@
 import tcod as libtcodpy
+from tcod import map
 import options
 import time
+#import numpy as np
 from combat_control import combat_controller
 from ui_control import render_all, create_console, handle_keys, create_terminal, blt_handle_keys, create_root_console, render
 from enums import GameStates
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
-from game_map import GameMap
+from game_map import GameMap, array_gen, fill_map
 from fov_aoc import initialize_fov, recompute_fov, modify_fov
 
  
@@ -47,6 +49,11 @@ if __name__ == "__main__":
     game_map = GameMap(options.map_width, options.map_height)
     fov_map = initialize_fov(game_map)
     game_state = GameStates.default
+
+    new_map = map.Map(options.map_width, options.map_height, 'F')
+    #blocked_array = array_gen(new_map, options.blocked)
+    fill_map(new_map, options.blocked, options.blocked)
+
 
 
     #Initial computations
