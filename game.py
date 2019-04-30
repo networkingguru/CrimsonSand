@@ -6,6 +6,7 @@ from ui_control import render_all, create_console, handle_keys, create_terminal,
 from enums import GameStates
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap
+from fov_aoc import initialize_fov, recompute_fov
 
  
 
@@ -39,17 +40,22 @@ if __name__ == "__main__":
     weapons = options.weapons
     add_weapons(entities, weapons)
     players = []
-    players.append(fill_player_list(entities))
+    players.extend(fill_player_list(entities))
     curr_actor = players[0]
 
     #Map/state init
     game_map = GameMap(options.map_width, options.map_height)
-
+    fov_map = initialize_fov(game_map)
     game_state = GameStates.default
+
+
+    #Initial computations
+    fov_radius = int(round(curr_actor.fighter.sit/5))
+    recompute_fov(fov_map, curr_actor.x, curr_actor.y, fov_radius)
 
     while not libtcodpy.console_is_window_closed():
 
-        render_all(con_list, offset_list, type_list, entities, dim_list, color_list)
+        render_all(con_list, offset_list, type_list, entities, players, dim_list, color_list, game_map)
         
         #command2 = blt_handle_keys(game_state)
         #Establish ms timer, only execute block x times per second
@@ -60,7 +66,7 @@ if __name__ == "__main__":
             
             if command is not None:
                 print(command)
-                action = combat_controller(game_map, 0, entities, command)
+                action = combat_controller(game_map, fov_map, 0, entities, command)
 
 
     
