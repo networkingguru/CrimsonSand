@@ -87,6 +87,7 @@ def handle_keys(game_state) -> str or None:
             key = chr(evt.sym)
             if not key.isalnum():
                 key = evt.sym
+                print(key)
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
             return command

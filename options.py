@@ -54,12 +54,12 @@ fighters = [player_fighter, enemy_fighter]
 weapons = {'Player': player_weapons, 'Enemy': enemy_weapons}
 
 #Entity list
-player = (50, 50, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
+player = (0, 0, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
 enemy = (60, 60, '@', 'yellow', 'Enemy', enums.EntityState.conscious, False, True)
 entities = [player, enemy]
 
 #Key Dicts in order of key, command_verb
 default_keys = {'q':('move','nw'), 'w':('move','n '), 'e':('move','ne'), 'd':('move',' e'), 'c':('move','se'), 
-                'x':('move','s '), 'z':('move','sw'),'a':('move',' w'), 27: 'exit'}
+                'x':('move','s '), 'z':('move','sw'),'a':('move',' w'), 27: 'exit', 44:('spin','ccw'), 46:('spin','cw')}
 
 key_maps = [default_keys]

@@ -21,25 +21,20 @@ def recompute_fov(fov_map, x, y, radius, light_walls=True, algorithm=libtcodpy.F
 def fov_calc(radius, x, y, percent, start_angle) -> list:
     aoc = set()
 
-
     # calc range
     segment = (360/100)*percent
     # calculate endAngle 
     end_angle = segment + start_angle
     
-    # Calculate polar co-ordinates 
-    
-    
-  
     # Check whether polarradius is less 
     # then radius of circle or not and  
     # Angle is between startAngle and  
     # endAngle or not 
-    w_hi = x + radius #+ 3
-    w_lo = x - radius #- 3
+    w_hi = x + radius 
+    w_lo = x - radius 
 
-    h_hi = y + radius #+ 3
-    h_lo = y - radius #- 3
+    h_hi = y + radius 
+    h_lo = y - radius 
 
     for w in range (w_lo, w_hi):
         if w > 0:
@@ -50,7 +45,6 @@ def fov_calc(radius, x, y, percent, start_angle) -> list:
                         continue
                     else:
                         #determine distance between points
-                        
                         dx = w - x
                         dy = h - y
 
@@ -68,8 +62,6 @@ def fov_calc(radius, x, y, percent, start_angle) -> list:
                         if (angle >= start_angle and angle <= end_angle 
                                             and polarradius < radius):
                             aoc.add((w,h))
-
-       
     return aoc
 
 
@@ -77,24 +69,23 @@ def change_face(direction, x, y, range = 2, percent = 25) -> list:
     #direction as int, 0-7 starting with N and proceeding clockwise
     player_aoc = set()
     
-    if direction == 0: #N
+    if direction == 7: #N
         player_aoc = fov_calc(range,x, y, percent, 45)
-    elif direction == 1: #NE
+    elif direction == 0: #NE
         player_aoc = fov_calc(range,x, y, percent, 0)
-    elif direction == 2: #E
+    elif direction == 1: #E
         player_aoc = fov_calc(range,x, y, percent, 315)
-    elif direction == 3: #SE
+    elif direction == 2: #SE
         player_aoc = fov_calc(range,x, y, percent, 270)
-    elif direction == 4: #S
+    elif direction == 3: #S
         player_aoc = fov_calc(range,x, y, percent, 225)
-    elif direction == 5: #SW
+    elif direction == 4: #SW
         player_aoc = fov_calc(range,x, y, percent, 180)
-    elif direction == 6: #W
+    elif direction == 5: #W
         player_aoc = fov_calc(range,x, y, percent, 135)
     else: #NW
         player_aoc = fov_calc(range,x, y, percent, 90)
     
-    #player_aoc = player_aoc_1, player_aoc_2, player_aoc_3
     return player_aoc
 
 def aoc_check(entities, active_entity) -> object:
