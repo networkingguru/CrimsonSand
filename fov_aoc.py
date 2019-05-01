@@ -20,7 +20,7 @@ def recompute_fov(fov_map, x, y, radius, light_walls=True, algorithm=libtcodpy.F
     libtcodpy.map_compute_fov(fov_map, x, y, radius, light_walls, algorithm)
 
 
-def fov_calc(radius, x, y, percent, start_angle) -> list:
+def fov_calc(radius, x, y, percent, start_angle) -> set:
     aoc = set()
 
     # calc range
@@ -33,41 +33,41 @@ def fov_calc(radius, x, y, percent, start_angle) -> list:
     # Angle is between startAngle and  
     # endAngle or not 
     w_hi = x + radius 
-    w_lo = x - radius 
+    w_lo = x - radius
+    if w_lo < 0: w_lo = 0 
 
     h_hi = y + radius 
     h_lo = y - radius 
+    if h_lo < 0: h_lo = 0 
 
     for w in range (w_lo, w_hi):
-        if w > 0:
-            for h in range (h_lo, h_hi):
-                if h > 0:
-                    #Ignore initiator square
-                    if w == x and h == y:
-                        continue
-                    else:
-                        #determine distance between points
-                        dx = w - x
-                        dy = h - y
+        for h in range (h_lo, h_hi):
+            #Ignore initiator square
+            if w == x and h == y:
+                continue
+            else:
+                #determine distance between points
+                dx = w - x
+                dy = h - y
 
-                        angle = math.degrees(math.atan2(-dy, dx))
+                angle = math.degrees(math.atan2(-dy, dx))
 
-                        #deal with boundary
-                        if angle < 0:
-                            angle += 360
-                        #determine distance of w,h from x,y
-                        polarradius = math.sqrt((abs(w-x)) * (abs(w-x)) + (abs(y-h)) * (abs(y-h))) 
-                        if end_angle > 359:
-                            overlap_end = end_angle - 360
-                            if (angle <= overlap_end and polarradius < radius):
-                                aoc.add((w,h))
-                        if (angle >= start_angle and angle <= end_angle 
-                                            and polarradius < radius):
-                            aoc.add((w,h))
+                #deal with boundary
+                if angle < 0:
+                    angle += 360
+                #determine distance of w,h from x,y
+                polarradius = math.sqrt((abs(w-x)) * (abs(w-x)) + (abs(y-h)) * (abs(y-h))) 
+                if end_angle > 359:
+                    overlap_end = end_angle - 360
+                    if (angle <= overlap_end and polarradius < radius):
+                        aoc.add((w,h))
+                if (angle >= start_angle and angle <= end_angle 
+                                    and polarradius < radius):
+                    aoc.add((w,h))
     return aoc
 
 
-def change_face(direction, x, y, range = 2, percent = 25) -> list:
+def change_face(direction, x, y, range = 2, percent = 25) -> set:
     #direction as int, 0-7 starting with N and proceeding clockwise
     player_aoc = set()
     
@@ -100,20 +100,19 @@ def aoc_check(entities, active_entity) -> object:
                     return entity
 
 
-def modify_fov(entity, game_map, fov_map) -> None:
-    fov_area = change_face(entity.fighter.facing, entity.x, entity.y, 50, 50)
+def modify_fov(entity, game_map) -> None:
+    fov_area = change_face(entity.fighter.facing, entity.x, entity.y, 50, 50) #Contains truncated area based on facing
     entity.fighter.fov_visible.clear()
-    for y in range(game_map.height):
-        for x in range(game_map.width):
-            visible = libtcodpy.map_is_in_fov(fov_map, x, y)
+    for x in range(game_map.width):
+        for y in range(game_map.height):
+            visible = game_map.fov[x,y]
 
-            wall = game_map.tiles[x][y].block_sight
-            #This truncates the FOV to the arc defined by direciton
+            wall = not game_map.walkable[x,y]
+            #This truncates the FOV to the arc defined by direction
             if visible:
                 temp_coords = (x,y)
                 if temp_coords not in fov_area:
                     if x != entity.x or y != entity.y:
-                        fov_map.fov[y,x] = False
                         visible = False
             #Showing visible stuff and adding them to the exploration set
             if visible:

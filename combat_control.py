@@ -1,8 +1,9 @@
 import tcod as libtcodpy
+import time
 from entity import get_blocking_entities_at_location
 from fov_aoc import recompute_fov, modify_fov, change_face
 
-def combat_controller(game_map, fov_map, active_entity, entities, command) -> None:
+def combat_controller(game_map, active_entity, entities, command) -> None:
     fov_recompute = False
     #Dict containing facing direction based on x,y offset
     facing_dict = {(-1,0):6,(-1,1):5,(-1,-1):7,(1,-1):1,(1,1):3,(1,0):2,(0,1):4,(0,-1):0}
@@ -27,7 +28,7 @@ def combat_controller(game_map, fov_map, active_entity, entities, command) -> No
         fx, fy =entity.x + x_mod, entity.y + y_mod
         #Boundary and blocker checking
         if (game_map.width -1 >= fx and game_map.height -1 >= fy):
-            if (not game_map.tiles[fx][fy].blocked and not (fx < 0  or fy < 0) 
+            if (game_map.walkable[fx, fy] and not (fx < 0  or fy < 0) 
                 and get_blocking_entities_at_location(entities, fx, fy) is None):
                 entity.mod_attribute('x', x_mod)
                 entity.mod_attribute('y', y_mod)
@@ -51,8 +52,14 @@ def combat_controller(game_map, fov_map, active_entity, entities, command) -> No
             
 
     if hasattr(entity, 'fighter') and fov_recompute == True:
+        #t0 = time.time()
+        
         fov_radius = int(round(entity.fighter.sit/5))
-        recompute_fov(fov_map, entity.x, entity.y, fov_radius)
-        modify_fov(entity, game_map, fov_map)
+        game_map.compute_fov(entity.x, entity.y, fov_radius, True, libtcodpy.FOV_SHADOW)
+        modify_fov(entity, game_map)
+
+        # t1 = time.time()
+        # total_time = t1 - t0
+        # print(total_time)
 
 

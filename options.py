@@ -59,7 +59,7 @@ fighters = [player_fighter, enemy_fighter]
 weapons = {'Player': player_weapons, 'Enemy': enemy_weapons}
 
 #Entity list
-player = (0, 0, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
+player = (30, 10, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
 enemy = (60, 60, '@', 'yellow', 'Enemy', enums.EntityState.conscious, False, True)
 entities = [player, enemy]
 

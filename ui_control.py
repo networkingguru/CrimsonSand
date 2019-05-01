@@ -7,7 +7,8 @@ import options
 
 
 colors = {'gray':libtcodpy.gray, 'dark_gray': libtcodpy.dark_gray, 'white':libtcodpy.white, 'black': libtcodpy.black, 'crimson': libtcodpy.crimson,
-            'amber': libtcodpy.amber, 'dark_amber':libtcodpy.dark_amber, 'yellow':libtcodpy.yellow, 'light_gray': libtcodpy.light_gray}
+            'amber': libtcodpy.amber, 'dark_amber':libtcodpy.dark_amber, 'yellow':libtcodpy.yellow, 'light_gray': libtcodpy.light_gray,
+            'darker_gray':libtcodpy.darker_gray, 'darker_amber': libtcodpy.darker_amber}
 
 
     
@@ -53,28 +54,35 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
     libtcodpy.console_set_default_foreground(con, fg_color)
     
     if players is not None:
-        for entity in entities:
-            ent_color = colors.get(entity.color)
-            libtcodpy.console_put_char_ex(con, entity.x, entity.y, entity.char, ent_color, bg_color)
+        
         for player in players:
+            ent_color = colors.get(player.color)
+            libtcodpy.console_put_char_ex(con, player.x, player.y, player.char, ent_color, bg_color)
             for y in range(game_map.height):
-                for x in range(game_map.width):
-                    
+                for x in range(game_map.width):   
                     #Show if it's visible
                     if (x, y) in player.fighter.fov_visible:
-                        con.bg[x][y] = libtcodpy.dark_amber
-                        #libtcodpy.console_set_char_background(con, x, y, libtcodpy.dark_amber, libtcodpy.BKGND_SET)
+                        con.bg[x][y] = colors.get('dark_amber')
                         if (x,y) in player.fighter.fov_wall:
-                            libtcodpy.console_set_char_background(con, x, y, libtcodpy.darker_gray, libtcodpy.BKGND_SET)
+                            con.bg[x][y] = colors.get('darker_gray')
                     #Not visible but explored
                     elif (x,y) in player.fighter.fov_explored:
                         if (x,y) in player.fighter.fov_wall:
-                            libtcodpy.console_set_char_background(con, x, y, libtcodpy.darker_gray, libtcodpy.BKGND_SET)
+                            con.bg[x][y] = colors.get('darker_gray')
                         else:
-                            libtcodpy.console_set_char_background(con, x, y, libtcodpy.darker_amber, libtcodpy.BKGND_SET)  
+                            con.bg[x][y] = colors.get('darker_amber')
                     #Not explored                     
                     else:
-                        libtcodpy.console_set_char_background(con, x, y, libtcodpy.dark_grey, libtcodpy.BKGND_SET)            
+                        con.bg[x][y] = colors.get('dark_gray')
+
+        for entity in entities:
+            for player in players:
+                if (entity.x, entity.y) in player.fighter.fov_visible:
+                    ent_color = colors.get(entity.color)
+                    libtcodpy.console_put_char_ex(con, entity.x, entity.y, entity.char, ent_color, bg_color)
+                elif (entity.x, entity.y) in player.fighter.fov_explored:   
+                    ent_color = colors.get('darker_gray')
+                    libtcodpy.console_put_char_ex(con, entity.x, entity.y, entity.char, ent_color, bg_color)          
             
 
     libtcodpy.console_blit(con, 0, 0, width, height, 0, dx, dy)
@@ -87,10 +95,11 @@ def handle_keys(game_state) -> str or None:
             key = chr(evt.sym)
             if not key.isalnum():
                 key = evt.sym
-                print(key)
+                #print(key)
             keymap = options.key_maps[game_state.value - 1]
-            command = keymap.get(key)
-            return command
+            if not evt.repeat:
+                command = keymap.get(key)
+                return command
         else:
             return None
 
