@@ -44,12 +44,13 @@ def render_all(con_list, offset_list, type_list, dim_list, color_list, logs, ent
         if con_type == 0:
             render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, players, game_map)
         else:
-            render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color)
+            log = logs[con_type-1]
+            render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, None, None, log)
 
     
     libtcodpy.console_flush()
    
-def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', bg_color='black', players = None, game_map = None) -> None:
+def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', bg_color='black', players = None, game_map = None, log = None) -> None:
     fg_color = colors.get(fg_color)
     bg_color = colors.get(bg_color)
     libtcodpy.console_set_default_background(con, bg_color)
@@ -77,7 +78,12 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
 
 
         draw_entity(con, entities)        
-            
+    else: #Print messages to console
+        y = 1
+        for message in log.messages:
+            libtcodpy.console_set_default_foreground(con, colors.get(message.color))
+            libtcodpy.console_print_ex(con, log.x, y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, message.text)
+            y += 1  
 
     libtcodpy.console_blit(con, 0, 0, width, height, 0, dx, dy)
 
@@ -86,10 +92,13 @@ def handle_keys(game_state) -> str or None:
         if evt.type == "QUIT":
             exit()
         elif evt.type == "KEYDOWN":
-            key = chr(evt.sym)
-            if not key.isalnum():
-                key = evt.sym
-                #print(key)
+            try:
+                key = chr(evt.sym)
+            except:
+                key = evt.scancode
+                print(key)
+                pass
+                
             keymap = options.key_maps[game_state.value - 1]
             if not evt.repeat:
                 command = keymap.get(key)

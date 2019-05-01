@@ -31,14 +31,14 @@ if __name__ == "__main__":
     con_list = [map_con, status_panel, enemy_panel, message_panel]
     offset_list = ((options.map_x,options.map_y),(options.status_panel_x,options.status_panel_y),(options.enemy_panel_x,options.enemy_panel_y),
                 (options.message_panel_x,options.message_panel_y))
-    type_list = (0,2,2,3)
-    color_list = (('white','light_gray'), ('black','white'), ('black', 'yellow'), ('yellow', 'crimson'))
+    type_list = options.panel_types
+    color_list = options.panel_colors
 
     #Message Log init
-    message_log = MessageLog(options.message_panel_x+1, options.message_panel_w-1, options.message_panel_h-2)
-    status_log = MessageLog(options.status_panel_x+1, options.status_panel_w-1, options.status_panel_h-2)
-    enemy_log = MessageLog(options.enemy_panel_x+1, options.enemy_panel_w-1, options.enemy_panel_h-2)
-    logs = [message_log, status_log, enemy_log]
+    message_log = MessageLog(1, options.message_panel_w-1, options.message_panel_h-2)
+    status_log = MessageLog(1, options.status_panel_w-1, options.status_panel_h-2)
+    enemy_log = MessageLog(1, options.enemy_panel_w-1, options.enemy_panel_h-2)
+    logs = [status_log, enemy_log, message_log]
 
 
 
