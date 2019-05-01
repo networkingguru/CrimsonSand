@@ -56,8 +56,6 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
     if players is not None:
         
         for player in players:
-            ent_color = colors.get(player.color)
-            libtcodpy.console_put_char_ex(con, player.x, player.y, player.char, ent_color, bg_color)
             for y in range(game_map.height):
                 for x in range(game_map.width):   
                     #Show if it's visible
@@ -137,14 +135,14 @@ def draw_entity(con, entities) -> None:
     
     #Place players
     for player in players:
-        libtcodpy.console_put_char_ex(con, entity.x, entity.y, entity.char, colors.get(entity.color), colors.get('dark_amber'))
+        libtcodpy.console_put_char_ex(con, player.x, player.y, player.char, colors.get(player.color), colors.get('dark_amber'))
 
     #PLace visible enemies
     for enemy in enemies:
         if (enemy.x, enemy.y) in players_visible:
-            libtcodpy.console_put_char_ex(con, entity.x, entity.y, entity.char, colors.get(entity.color), colors.get('dark_amber'))
+            libtcodpy.console_put_char_ex(con, enemy.x, enemy.y, enemy.char, colors.get(enemy.color), colors.get('dark_amber'))
         elif (enemy.x, enemy.y) in players_explored:
-            libtcodpy.console_put_char_ex(con, entity.x, entity.y, entity.char, colors.get('darker_gray'), colors.get('darker_amber'))
+            libtcodpy.console_put_char_ex(con, enemy.x, enemy.y, enemy.char, colors.get('darker_gray'), colors.get('darker_amber'))
 
                     
 
