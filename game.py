@@ -51,8 +51,8 @@ if __name__ == "__main__":
     game_state = GameStates.default
 
     new_map = map.Map(options.map_width, options.map_height, 'F')
-    #blocked_array = array_gen(new_map, options.blocked)
     fill_map(new_map, options.blocked, options.blocked)
+    fov_transparency = array_gen(game_map, options.blocked)
 
 
 

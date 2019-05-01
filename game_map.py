@@ -1,10 +1,10 @@
 
-from tcod import map
+from tcod import map as tcod_map
 import numpy as np
 import options
 
-def array_gen(map, blocked) -> np.array:
-    blocked_tiles = np.full((map.width, map.height), True, order='F')
+def array_gen(game_map, blocked) -> np.array:
+    blocked_tiles = np.full((game_map.width, game_map.height), True, order='F')
     for (x,y) in blocked:
         blocked_tiles[x,y] = False
     return blocked_tiles
