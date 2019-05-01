@@ -3,7 +3,7 @@ import time
 from entity import get_blocking_entities_at_location
 from fov_aoc import modify_fov, change_face
 
-def combat_controller(game_map, active_entity, entities, command) -> None:
+def combat_controller(game_map, active_entity, entities, command, logs) -> None:
     fov_recompute = False
     #Dict containing facing direction based on x,y offset
     facing_dict = {(-1,0):6,(-1,1):5,(-1,-1):7,(1,-1):1,(1,1):3,(1,0):2,(0,1):4,(0,-1):0}

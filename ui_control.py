@@ -6,6 +6,8 @@ import options
 
 
 
+
+
 colors = {'gray':libtcodpy.gray, 'dark_gray': libtcodpy.dark_gray, 'white':libtcodpy.white, 'black': libtcodpy.black, 'crimson': libtcodpy.crimson,
             'amber': libtcodpy.amber, 'dark_amber':libtcodpy.dark_amber, 'yellow':libtcodpy.yellow, 'light_gray': libtcodpy.light_gray,
             'darker_gray':libtcodpy.darker_gray, 'darker_amber': libtcodpy.darker_amber, 'green': libtcodpy.green, 'red': libtcodpy.red}
@@ -23,11 +25,11 @@ def create_root_console(w, h) -> object:
 
 def create_console(w, h) -> object:
 
-    con = console.Console(w,h,'F')    #libtcodpy.console_new(w, h)
+    con = console.Console(w,h,'F')    
 
     return con
 
-def render_all(con_list, offset_list, type_list, entities, players, dim_list, color_list, game_map) -> None:
+def render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map) -> None:
 
     for con in con_list:
         con.clear()

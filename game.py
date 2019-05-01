@@ -9,6 +9,7 @@ from enums import GameStates
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap, array_gen, fill_map
 from fov_aoc import modify_fov, change_face
+from game_messages import MessageLog
 
  
 
@@ -32,6 +33,13 @@ if __name__ == "__main__":
                 (options.message_panel_x,options.message_panel_y))
     type_list = (0,2,2,3)
     color_list = (('white','light_gray'), ('black','white'), ('black', 'yellow'), ('yellow', 'crimson'))
+
+    #Message Log init
+    message_log = MessageLog(options.message_panel_x+1, options.message_panel_w-1, options.message_panel_h-2)
+    status_log = MessageLog(options.status_panel_x+1, options.status_panel_w-1, options.status_panel_h-2)
+    enemy_log = MessageLog(options.enemy_panel_x+1, options.enemy_panel_w-1, options.enemy_panel_h-2)
+    logs = [message_log, status_log, enemy_log]
+
 
 
     #Entity init
@@ -61,13 +69,13 @@ if __name__ == "__main__":
         entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
     
     while not libtcodpy.console_is_window_closed():
-        render_all(con_list, offset_list, type_list, entities, players, dim_list, color_list, game_map)
+        render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map)
 
         command = handle_keys(game_state)
         
         if command is not None:
             #print(command)
-            action = combat_controller(game_map, 0, entities, command)
+            action = combat_controller(game_map, 0, entities, command, logs)
 
 
     
