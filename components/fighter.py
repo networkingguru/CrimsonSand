@@ -11,6 +11,7 @@ class Fighter:
             self.ai = ai(self)
         self.facing = facing
         self.aoc = aoc
+        self.aoc_facing = facing
         self.action = []
         self.targets = targets
         self.combat_choices = []
@@ -171,6 +172,12 @@ class Fighter:
         self.fov_wall = set()
         self.fov_explored = set()
 
+    def update_aoc_facing(self) -> None:
+        #Hack to handle incongruity between aoc facing and fov facing
+        if self.facing == 0:
+            self.aoc_facing = 7
+        else:
+            self.aoc_facing = self.facing -1
 
     def adjust_max_locations(self, location_index, layer_index, value_to_subtract):
         self.max_locations[location_index][layer_index] -= value_to_subtract

@@ -4,20 +4,6 @@ import tcod as libtcodpy
 from tcod import map
 from enums import GameStates, EntityState
 
- 
-def initialize_fov(game_map) -> list:
-    fov_map = libtcodpy.map_new(game_map.width, game_map.height)
-
-    for y in range(game_map.height):
-        for x in range(game_map.width):
-            libtcodpy.map_set_properties(fov_map, x, y, not game_map.tiles[x][y].block_sight,
-                                       not game_map.tiles[x][y].blocked)
-
-    return fov_map
-
-def recompute_fov(fov_map, x, y, radius, light_walls=True, algorithm=libtcodpy.FOV_BASIC) -> None:
-    
-    libtcodpy.map_compute_fov(fov_map, x, y, radius, light_walls, algorithm)
 
 
 def fov_calc(radius, x, y, percent, start_angle) -> set:

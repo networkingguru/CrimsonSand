@@ -1,7 +1,7 @@
 import tcod as libtcodpy
 import time
 from entity import get_blocking_entities_at_location
-from fov_aoc import recompute_fov, modify_fov, change_face
+from fov_aoc import modify_fov, change_face
 
 def combat_controller(game_map, active_entity, entities, command) -> None:
     fov_recompute = False
@@ -47,7 +47,8 @@ def combat_controller(game_map, active_entity, entities, command) -> None:
         #Change facing
         
     if command[0] == 'spin' or 'move':
-        entity.fighter.aoc = change_face(entity.fighter.facing, entity.x, entity.y, entity.fighter.reach)
+        entity.fighter.update_aoc_facing()
+        entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
 
             
 

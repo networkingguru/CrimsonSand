@@ -8,7 +8,7 @@ from ui_control import render_all, create_console, handle_keys, create_terminal,
 from enums import GameStates
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap, array_gen, fill_map
-from fov_aoc import initialize_fov, recompute_fov, modify_fov
+from fov_aoc import modify_fov, change_face
 
  
 
@@ -56,6 +56,9 @@ if __name__ == "__main__":
     fov_radius = int(round(curr_actor.fighter.sit/5))
     game_map.compute_fov(curr_actor.x, curr_actor.y, fov_radius, True)
     modify_fov(curr_actor, game_map)
+    for entity in entities:
+        entity.fighter.update_aoc_facing
+        entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
     
     while not libtcodpy.console_is_window_closed():
         render_all(con_list, offset_list, type_list, entities, players, dim_list, color_list, game_map)
