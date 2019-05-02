@@ -19,17 +19,17 @@ def combat_controller(game_map, active_entity, entities, command, logs) -> None:
     if command[0] == 'move':
         direction = []
         direction.extend(command[1])
-        y, x = direction
         y_mod = 0
         x_mod = 0
-        if y == 'n':
-            y_mod = -1
-        if y == 's':
-            y_mod = 1
-        if x == 'w':
-            x_mod = -1
-        if x == 'e':
-            x_mod = 1
+        for xy in direction:
+            if xy == 'n':
+                y_mod = -1
+            if xy == 's':
+                y_mod = 1
+            if xy == 'w':
+                x_mod = -1
+            if xy == 'e':
+                x_mod = 1
         fx, fy =entity.x + x_mod, entity.y + y_mod
         #Boundary and blocker checking
         if (game_map.width -1 >= fx and game_map.height -1 >= fy):

@@ -67,7 +67,8 @@ enemy = (60, 60, '@', 'yellow', 'Enemy', enums.EntityState.conscious, False, Tru
 entities = [player, enemy]
 
 #Key Dicts in order of key, command_verb
-default_keys = {'q':('move','nw'), 'w':('move','n '), 'e':('move','ne'), 'd':('move',' e'), 'c':('move','se'), 
-                'x':('move','s '), 'z':('move','sw'),'a':('move',' w'), 27: 'exit', 44:('spin','ccw'), 46:('spin','cw')}
+default_keys = {'q':('move','nw'), 'w':('move','n'), 'e':('move','ne'), 'd':('move','e'), 'c':('move','se'), 
+                'x':('move','s'), 'z':('move','sw'),'a':('move','w'), 41: 'exit', 54:('spin','ccw'), 55:('spin','cw'),
+                80: ('move','w'), 79:('move','e'),82:('move','n'),81:('move','s')}
 
 key_maps = [default_keys]

@@ -94,10 +94,12 @@ def handle_keys(game_state) -> str or None:
         elif evt.type == "KEYDOWN":
             try:
                 key = chr(evt.sym)
+                if not key.isalnum():
+                    key = evt.scancode
+                    #print(key)
             except:
                 key = evt.scancode
-                print(key)
-                pass
+                #print(key)
                 
             keymap = options.key_maps[game_state.value - 1]
             if not evt.repeat:
