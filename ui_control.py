@@ -215,29 +215,25 @@ def draw_entity(con, entities) -> None:
 
 
 #Below for testing
-def render(root_con, con_list, offset_list, type_list, entities, dim_list, color_list) -> None:
+def render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list,logs) -> None:
+    terminal.clear()
     for con in con_list:
-        con.clear()
         idx = con_list.index(con)
         dim_x = dim_list[idx][0]
         dim_y = dim_list[idx][1]
         offset_x = offset_list[idx][0]
         offset_y = offset_list[idx][1]
         con_type = type_list[idx]
-        fg_color = color_list[idx][0]
-        bg_color = color_list[idx][1]
-        fg_color = colors.get(fg_color)
-        bg_color = colors.get(bg_color)
-        libtcodpy.console_set_default_background(con, bg_color)
-        libtcodpy.console_set_default_foreground(con, fg_color)
+        
         if con_type == 0:
-            for entity in entities:
-                ent_color = colors.get(entity.color)
-                libtcodpy.console_put_char_ex(con, entity.x, entity.y, entity.char, ent_color,bg_color)
-
-        libtcodpy.console_blit(con, 0, 0, dim_x, dim_y, 0, offset_x, offset_y)
-    
-    libtcodpy.console_flush()
+            render_map_con(entities, players, game_map, dim_x, dim_y, offset_x, offset_y)
+        elif con_type == 3:
+            log = logs[con_type-1]
+            render_msg_con(offset_x, offset_y, log)
+        else:
+            log = logs[con_type-1]
+            render_status_con(entities, players, game_map, dim_x, dim_y, con_type, log, offset_x, offset_y)
+    terminal.refresh()
    
 
 
@@ -258,10 +254,119 @@ def blt_handle_keys(game_state) -> str or None:
         if key == terminal.TK_CLOSE:
             exit()
         else:
-            key = terminal.get(key)
+            if terminal.check(terminal.TK_CHAR):
+	            key = chr(terminal.state(terminal.TK_CHAR))
             print(key)
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
             return command
     else:
         return None
+
+def render_map_con(entities, players, game_map, width, height, ox=0, oy=0) -> None:
+
+    for player in players:
+        for y in range(game_map.height):
+            for x in range(game_map.width):   
+                #Show if it's visible
+                if (x,y) in player.fighter.fov_visible:
+                    terminal.print_(x+ox, y+oy, '[color=dark amber] [/color]')
+                    if (x,y) in player.fighter.fov_wall:
+                        terminal.print_(x+ox, y+oy, '[color=dark gray] [/color]')
+                #Not visible but explored
+                elif (x,y) in player.fighter.fov_explored:
+                    if (x,y) in player.fighter.fov_wall:
+                        terminal.print_(x+ox, y+oy, '[color=darker gray] [/color]')
+                    else:
+                        terminal.print_(x+ox, y+oy, '[color=darker gray] [/color]')
+                #Not explored                     
+                else:
+                    terminal.print_(x+ox, y+oy, '[color=dark gray] [/color]')
+
+
+    print__entities(entities, ox, oy)
+
+def render_status_con(entities, players, game_map, width, height, con_type, log, ox=0, oy=0):
+    if con_type == 1: entity = players[0]
+    else:
+        try:
+            entity = players[0].fighter.targets[0]
+        except:
+            entity = None
+           
+    #Print paper dolls
+    terminal.printf(ox, oy, '[color=white][bg_color=black]Hit Location')
+    terminal.printf(ox+15, oy, 'DERM')
+    terminal.printf(ox+20, oy, 'TIS')
+    terminal.printf(ox+25, oy, 'BONE')
+
+    if entity is not None:
+        p_y = 1
+        for hit_location in entity.fighter.locations:
+            terminal.printf(ox, oy+p_y, entity.fighter.name_location(p_y-1) + ':')
+            terminal.printf(ox+15, oy+p_y, str(hit_location[0]))
+            terminal.printf(ox+20, oy+p_y, str(hit_location[1]))
+            terminal.printf(ox+25, oy+p_y, str(hit_location[2]))
+            p_y += 1
+
+    if con_type == 1: #Print char con
+        s_y = 50
+        for message in log.messages:
+            terminal.printf(ox, oy+s_y, message.text)
+            s_y += 1
+
+def render_msg_con(ox, oy, log):
+    y = 1
+    for message in log.messages:
+        terminal.printf(ox, oy+y, message.text)
+        y += 1
+
+def print__entities(entities, ox, oy) -> None:
+    
+    players = set()
+    enemies = set()
+    players_aoc = set()
+    players_visible = set()
+    players_explored = set()
+    for entity in entities:
+        if entity.player:
+            players.add(entity)
+        else:
+            enemies.add(entity)
+
+    #Creating a set with all player AOC, explored, and visible values    
+    for player in players:
+        players_aoc = players_aoc|set(player.fighter.aoc)
+        players_visible = players_visible|set(player.fighter.fov_visible)
+        players_explored = players_explored|set(player.fighter.fov_explored)
+
+    #Creating a set with all enemy AOC values
+    enemies_aoc = set()
+    for enemy in enemies:
+        enemies_aoc = enemies_aoc|set(enemy.fighter.aoc)
+
+
+    #Paint players AOC green
+    for (x,y) in players_aoc:
+        terminal.print_(x+ox, y+oy, '[color=green] [/color]')
+    #Paint visible enemy AOC's red
+    for (x,y) in enemies_aoc:
+        if (x,y) in players_visible:
+            #Paint overlapping enemy/player AOC's yellow
+            if (x,y) in players_aoc:
+                terminal.print_(x+ox, y+oy, '[color=yellow] [/color]')
+            else:
+                terminal.print_(x+ox, y+oy, '[color=red] [/color]')
+
+    
+    #Place players
+    for player in players:
+        terminal.print_(player.x+ox, player.y+oy, '[bk_color=dark amber][color='+player.color+']'+player.char+'[/color][/bk_color]')
+
+    #PLace visible enemies
+    for enemy in enemies:
+        if (enemy.x, enemy.y) in players_visible:
+            terminal.print_(enemy.x+ox, enemy.y+oy, '[bk_color=dark amber][color='+enemy.color+']'+enemy.char+'[/color][/bk_color]')
+        elif (enemy.x, enemy.y) in players_explored:
+            terminal.print_(enemy.x+ox, enemy.y+oy, '[bk_color=darker amber][color=darker gray]'+enemy.char+'[/color][/bk_color]')
+

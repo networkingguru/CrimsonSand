@@ -86,6 +86,7 @@ if __name__ == "__main__":
     
     while not libtcodpy.console_is_window_closed():
         render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map)
+        #render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs)
 
         command = handle_keys(game_state)
         

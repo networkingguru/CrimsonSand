@@ -500,6 +500,530 @@
                     "filename": "utilities.py"
                 }
             ]
+        },
+        {
+            "version": "0.1.7",
+            "counttime": "2019-05-02 12:19:23",
+            "filesum": 76,
+            "codesum": 1162,
+            "commentsum": 154,
+            "blanksum": 268,
+            "filelist": [
+                {
+                    "blank": 20,
+                    "code": 84,
+                    "comment": 0,
+                    "filename": ".gitignore"
+                },
+                {
+                    "filename": "__pycache__\\chargen_functions.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\combat_control.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\entity.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\enums.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\fov_aoc.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\game_map.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\game_messages.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\options.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\ui_control.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "__pycache__\\utilities.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 3,
+                    "code": 40,
+                    "comment": 9,
+                    "filename": "chargen_functions.py"
+                },
+                {
+                    "blank": 16,
+                    "code": 57,
+                    "comment": 9,
+                    "filename": "combat_control.py"
+                },
+                {
+                    "blank": 5,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "combat_functions.py"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "components\\__init__.py"
+                },
+                {
+                    "filename": "components\\__pycache__\\__init__.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "components\\__pycache__\\fighter.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "components\\__pycache__\\weapon.cpython-37.pyc",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 20,
+                    "code": 238,
+                    "comment": 55,
+                    "filename": "components\\fighter.py"
+                },
+                {
+                    "blank": 7,
+                    "code": 55,
+                    "comment": 0,
+                    "filename": "components\\weapon.py"
+                },
+                {
+                    "blank": 19,
+                    "code": 91,
+                    "comment": 10,
+                    "filename": "entity.py"
+                },
+                {
+                    "blank": 4,
+                    "code": 21,
+                    "comment": 0,
+                    "filename": "enums.py"
+                },
+                {
+                    "filename": "fonts\\arial10x10.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\arial12x12.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\arial8x8.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\caeldera8x8_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\celtic_garamond_10x10_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\consolas10x10_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\consolas12x12_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\consolas8x8_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\consolas_unicode_10x10.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\consolas_unicode_12x12.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\consolas_unicode_16x16.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\consolas_unicode_8x8.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\courier10x10_aa_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\courier12x12_aa_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\courier8x8_aa_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\cp437_8x8.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\dejavu10x10_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\dejavu12x12_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\dejavu16x16_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\dejavu8x8_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\dejavu_wide12x12_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\dejavu_wide16x16_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\dundalk12x12_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\lucida10x10_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\lucida12x12_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\lucida8x8_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\prestige10x10_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\prestige12x12_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\prestige8x8_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal10x10_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal10x16_gs_ro.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal10x16_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal10x18_gs_ro.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal12x12_gs_ro.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal16x16_gs_ro.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal7x7_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x12_gs_ro.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x12_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x14_gs_ro.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x8_aa_as.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x8_aa_ro.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x8_aa_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x8_gs_as.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x8_gs_ro.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "fonts\\terminal8x8_gs_tc.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 19,
+                    "code": 78,
+                    "comment": 22,
+                    "filename": "fov_aoc.py"
+                },
+                {
+                    "blank": 27,
+                    "code": 63,
+                    "comment": 11,
+                    "filename": "game.py"
+                },
+                {
+                    "blank": 14,
+                    "code": 81,
+                    "comment": 3,
+                    "filename": "game_map.py"
+                },
+                {
+                    "blank": 10,
+                    "code": 17,
+                    "comment": 3,
+                    "filename": "game_messages.py"
+                },
+                {
+                    "blank": 16,
+                    "code": 50,
+                    "comment": 8,
+                    "filename": "options.py"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "README.md"
+                },
+                {
+                    "blank": 1,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": "tester.py"
+                },
+                {
+                    "blank": 74,
+                    "code": 177,
+                    "comment": 19,
+                    "filename": "ui_control.py"
+                },
+                {
+                    "blank": 13,
+                    "code": 105,
+                    "comment": 5,
+                    "filename": "utilities.py"
+                }
+            ]
         }
     ]
 }

@@ -82,3 +82,91 @@ tester.py, code is 4, comment is 0, blank is 1.
 ui_control.py, code is 110, comment is 1, blank is 55.
 utilities.py, code is 78, comment is 5, blank is 11.
 ===============================================================================
+===============================================================================
+EXTENSION NAME : linecount
+EXTENSION VERSION : 0.1.7
+-------------------------------------------------------------------------------
+count time : 2019-05-02 12:19:23
+count workspace : c:\Users\alfag\Documents\GitHub\CombatProto\CrimsonSand
+total files : 76
+total code lines : 1162
+total comment lines : 154
+total blank lines : 268
+
+.gitignore, code is 84, comment is 0, blank is 20.
+__pycache__\chargen_functions.cpython-37.pyc, it is a binary file.
+__pycache__\combat_control.cpython-37.pyc, it is a binary file.
+__pycache__\entity.cpython-37.pyc, it is a binary file.
+__pycache__\enums.cpython-37.pyc, it is a binary file.
+__pycache__\fov_aoc.cpython-37.pyc, it is a binary file.
+__pycache__\game_map.cpython-37.pyc, it is a binary file.
+__pycache__\game_messages.cpython-37.pyc, it is a binary file.
+__pycache__\options.cpython-37.pyc, it is a binary file.
+__pycache__\ui_control.cpython-37.pyc, it is a binary file.
+__pycache__\utilities.cpython-37.pyc, it is a binary file.
+chargen_functions.py, code is 40, comment is 9, blank is 3.
+combat_control.py, code is 57, comment is 9, blank is 16.
+combat_functions.py, code is 0, comment is 0, blank is 5.
+components\__init__.py, code is 0, comment is 0, blank is 0.
+components\__pycache__\__init__.cpython-37.pyc, it is a binary file.
+components\__pycache__\fighter.cpython-37.pyc, it is a binary file.
+components\__pycache__\weapon.cpython-37.pyc, it is a binary file.
+components\fighter.py, code is 238, comment is 55, blank is 20.
+components\weapon.py, code is 55, comment is 0, blank is 7.
+entity.py, code is 91, comment is 10, blank is 19.
+enums.py, code is 21, comment is 0, blank is 4.
+fonts\arial10x10.png, it is a binary file.
+fonts\arial12x12.png, it is a binary file.
+fonts\arial8x8.png, it is a binary file.
+fonts\caeldera8x8_gs_tc.png, it is a binary file.
+fonts\celtic_garamond_10x10_gs_tc.png, it is a binary file.
+fonts\consolas10x10_gs_tc.png, it is a binary file.
+fonts\consolas12x12_gs_tc.png, it is a binary file.
+fonts\consolas8x8_gs_tc.png, it is a binary file.
+fonts\consolas_unicode_10x10.png, it is a binary file.
+fonts\consolas_unicode_12x12.png, it is a binary file.
+fonts\consolas_unicode_16x16.png, it is a binary file.
+fonts\consolas_unicode_8x8.png, it is a binary file.
+fonts\courier10x10_aa_tc.png, it is a binary file.
+fonts\courier12x12_aa_tc.png, it is a binary file.
+fonts\courier8x8_aa_tc.png, it is a binary file.
+fonts\cp437_8x8.png, it is a binary file.
+fonts\dejavu10x10_gs_tc.png, it is a binary file.
+fonts\dejavu12x12_gs_tc.png, it is a binary file.
+fonts\dejavu16x16_gs_tc.png, it is a binary file.
+fonts\dejavu8x8_gs_tc.png, it is a binary file.
+fonts\dejavu_wide12x12_gs_tc.png, it is a binary file.
+fonts\dejavu_wide16x16_gs_tc.png, it is a binary file.
+fonts\dundalk12x12_gs_tc.png, it is a binary file.
+fonts\lucida10x10_gs_tc.png, it is a binary file.
+fonts\lucida12x12_gs_tc.png, it is a binary file.
+fonts\lucida8x8_gs_tc.png, it is a binary file.
+fonts\prestige10x10_gs_tc.png, it is a binary file.
+fonts\prestige12x12_gs_tc.png, it is a binary file.
+fonts\prestige8x8_gs_tc.png, it is a binary file.
+fonts\terminal10x10_gs_tc.png, it is a binary file.
+fonts\terminal10x16_gs_ro.png, it is a binary file.
+fonts\terminal10x16_gs_tc.png, it is a binary file.
+fonts\terminal10x18_gs_ro.png, it is a binary file.
+fonts\terminal12x12_gs_ro.png, it is a binary file.
+fonts\terminal16x16_gs_ro.png, it is a binary file.
+fonts\terminal7x7_gs_tc.png, it is a binary file.
+fonts\terminal8x12_gs_ro.png, it is a binary file.
+fonts\terminal8x12_gs_tc.png, it is a binary file.
+fonts\terminal8x14_gs_ro.png, it is a binary file.
+fonts\terminal8x8_aa_as.png, it is a binary file.
+fonts\terminal8x8_aa_ro.png, it is a binary file.
+fonts\terminal8x8_aa_tc.png, it is a binary file.
+fonts\terminal8x8_gs_as.png, it is a binary file.
+fonts\terminal8x8_gs_ro.png, it is a binary file.
+fonts\terminal8x8_gs_tc.png, it is a binary file.
+fov_aoc.py, code is 78, comment is 22, blank is 19.
+game.py, code is 63, comment is 11, blank is 27.
+game_map.py, code is 81, comment is 3, blank is 14.
+game_messages.py, code is 17, comment is 3, blank is 10.
+options.py, code is 50, comment is 8, blank is 16.
+README.md, code is 1, comment is 0, blank is 0.
+tester.py, code is 4, comment is 0, blank is 1.
+ui_control.py, code is 177, comment is 19, blank is 74.
+utilities.py, code is 105, comment is 5, blank is 13.
+===============================================================================
