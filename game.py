@@ -10,7 +10,7 @@ from entity import create_entity_list, fill_player_list, add_fighters, add_weapo
 from game_map import GameMap, array_gen, fill_map
 from fov_aoc import modify_fov, change_face
 from game_messages import MessageLog, Message
-from combat_control import gen_status_panel
+from utilities import gen_status_panel
  
 
 
@@ -51,7 +51,16 @@ if __name__ == "__main__":
     add_weapons(entities, weapons)
     players = []
     players.extend(fill_player_list(entities))
-    curr_actor = players[0]
+    enemies = []
+    enemies = set(entities) - set(players)
+    
+    #Global order vars; players get first move
+    order = []
+    order.extend(players)
+    order.extend(enemies)
+    curr_actor = order[0]
+    round_num = 1
+
 
     #Map/state init
     game_state = GameStates.default
@@ -72,6 +81,8 @@ if __name__ == "__main__":
     entries = gen_status_panel(players[0])
     for entry in entries:
         status_log.add_message(Message(entry))
+
+
     
     while not libtcodpy.console_is_window_closed():
         render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map)
