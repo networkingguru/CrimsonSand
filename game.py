@@ -9,8 +9,8 @@ from enums import GameStates
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap, array_gen, fill_map
 from fov_aoc import modify_fov, change_face
-from game_messages import MessageLog
-
+from game_messages import MessageLog, Message
+from combat_control import gen_status_panel
  
 
 
@@ -60,13 +60,18 @@ if __name__ == "__main__":
     fill_map(game_map, options.blocked, options.blocked)
     fov_transparency = array_gen(game_map, options.blocked)
 
-    #Initial computations
+    #Initial computations:
+    #FOV and AOC comps
     fov_radius = int(round(curr_actor.fighter.sit/5))
     game_map.compute_fov(curr_actor.x, curr_actor.y, fov_radius, True)
     modify_fov(curr_actor, game_map)
     for entity in entities:
         entity.fighter.update_aoc_facing
         entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
+    #Fill out initial char stats
+    entries = gen_status_panel(players[0])
+    for entry in entries:
+        status_log.add_message(Message(entry))
     
     while not libtcodpy.console_is_window_closed():
         render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map)
@@ -75,7 +80,7 @@ if __name__ == "__main__":
         
         if command is not None:
             #print(command)
-            action = combat_controller(game_map, 0, entities, command, logs)
+            action = combat_controller(game_map, 0, entities, players, command, logs)
 
 
     

@@ -42,21 +42,21 @@ def render_all(con_list, offset_list, type_list, dim_list, color_list, logs, ent
         fg_color = color_list[idx][0]
         bg_color = color_list[idx][1]
         if con_type == 0:
-            render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, players, game_map)
+            render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, con_type, players, game_map)
         else:
             log = logs[con_type-1]
-            render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, None, None, log)
+            render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, con_type, players, None, log)
 
     
     libtcodpy.console_flush()
    
-def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', bg_color='black', players = None, game_map = None, log = None) -> None:
+def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', bg_color='black', con_type = 0, players = None, game_map = None, log = None) -> None:
     fg_color = colors.get(fg_color)
     bg_color = colors.get(bg_color)
     libtcodpy.console_set_default_background(con, bg_color)
     libtcodpy.console_set_default_foreground(con, fg_color)
     
-    if players is not None:
+    if con_type == 0: #Print map console
         
         for player in players:
             for y in range(game_map.height):
@@ -78,12 +78,42 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
 
 
         draw_entity(con, entities)        
-    else: #Print messages to console
+    elif con_type == 3: #Print messages to message console
         y = 1
         for message in log.messages:
             libtcodpy.console_set_default_foreground(con, colors.get(message.color))
             libtcodpy.console_print_ex(con, log.x, y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, message.text)
-            y += 1  
+            y += 1
+
+    else: 
+        if con_type == 1: entity = players[0]
+        else:
+            try:
+                entity = players[0].fighter.targets[0]
+            except:
+                entity = None
+                
+        #Print paper dolls
+        #libtcodpy.console_set_default_foreground(con, libtcodpy.white)
+        libtcodpy.console_print_ex(con, log.x, 0, libtcodpy.BKGND_NONE, libtcodpy.LEFT, 'Hit Location')
+        libtcodpy.console_print_ex(con, log.x+15, 0, libtcodpy.BKGND_NONE, libtcodpy.LEFT, 'DERM')
+        libtcodpy.console_print_ex(con, log.x+20, 0, libtcodpy.BKGND_NONE, libtcodpy.LEFT, 'TIS')
+        libtcodpy.console_print_ex(con, log.x+25, 0, libtcodpy.BKGND_NONE, libtcodpy.LEFT, 'BONE')
+        if entity is not None:
+            p_y = 1
+            for hit_location in entity.fighter.locations:
+                libtcodpy.console_print_ex(con, log.x, p_y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, entity.fighter.name_location(p_y-1) + ':')
+                libtcodpy.console_print_ex(con, log.x+15, p_y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, str(hit_location[0]))
+                libtcodpy.console_print_ex(con, log.x+20, p_y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, str(hit_location[1]))
+                libtcodpy.console_print_ex(con, log.x+25, p_y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, str(hit_location[2]))
+                p_y += 1
+
+        if con_type == 1: #Print char con
+            s_y = 50
+            for message in log.messages:
+                #libtcodpy.console_set_default_foreground(con, colors.get(message.color))
+                libtcodpy.console_print_ex(con, log.x, s_y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, message.text)
+                s_y += 1
 
     libtcodpy.console_blit(con, 0, 0, width, height, 0, dx, dy)
 
