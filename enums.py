@@ -23,3 +23,8 @@ class WeaponTypes(Enum):
     thrust = auto
     slash = auto
     flail = auto
+
+class MenuTypes(Enum):
+    combat = auto
+    inventory = auto
+    options = auto

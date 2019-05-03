@@ -3,6 +3,7 @@ import tcod as libtcodpy
 import bearlibterminal.terminal as terminal
 from tcod import event, console
 import options
+from enums import MenuTypes, GameStates
 
 
 
@@ -29,7 +30,9 @@ def create_console(w, h) -> object:
 
     return con
 
-def render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map) -> None:
+def render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map, menu_dict = None) -> None:
+    #con_list = [map_con, status_panel, enemy_panel, message_panel]
+    map_con = con_list[0]
 
     for con in con_list:
         con.clear()
@@ -41,12 +44,20 @@ def render_all(con_list, offset_list, type_list, dim_list, color_list, logs, ent
         con_type = type_list[idx]
         fg_color = color_list[idx][0]
         bg_color = color_list[idx][1]
+        if menu_dict != None:
+            menu_type = menu_dict.get('type')
+            menu_header = menu_dict.get('header')
+            menu_options = menu_dict.get('options')
+            hide_options = menu_dict.get('mode')
+            
+            if menu_type == MenuTypes.combat:
+                menu(map_con, menu_header, menu_options, dim_list[0][0]/5, options.screen_width, options.screen_height, hide_options)
         if con_type == 0:
             render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, con_type, players, game_map)
         else:
             log = logs[con_type-1]
             render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, con_type, players, None, log)
-
+        
     
     libtcodpy.console_flush()
    
@@ -117,7 +128,7 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
 
     libtcodpy.console_blit(con, 0, 0, width, height, 0, dx, dy)
 
-def handle_keys(game_state) -> str or None:
+def handle_keys(game_state, menu_dict = None) -> str or None:
     for evt in event.wait():
         if evt.type == "QUIT":
             exit()
@@ -130,11 +141,30 @@ def handle_keys(game_state) -> str or None:
             except:
                 key = evt.scancode
                 #print(key)
-                
-            keymap = options.key_maps[game_state.value - 1]
-            if not evt.repeat:
-                command = keymap.get(key)
-                return command
+            if game_state == GameStates.default:
+                keymap = options.key_maps[game_state.value - 1]
+                if not evt.repeat:
+                    command = keymap.get(key)
+                    return command
+            if game_state == GameStates.menu:
+                try:
+                    menu_type = menu_dict.get('type')
+                    menu_header = menu_dict.get('header')
+                    menu_options = menu_dict.get('options')
+                    hide_options = menu_dict.get('mode')
+                except:
+                    print('Something is missing from the menu_dict')
+                if hide_options:
+                    for item in menu_options:
+                        index = key.c - ord(item)
+                        if index >= 0 and not index > (len(menu_options)-1):
+                            command = menu_options[index]
+                            return command
+                else:
+                    index = key.c - ord('a')
+                    if index >= 0 and not index > (len(menu_options)-1):
+                        command = menu_options[index]
+                        return command
         else:
             return None
 
@@ -187,7 +217,45 @@ def draw_entity(con, entities) -> None:
         elif (enemy.x, enemy.y) in players_explored:
             libtcodpy.console_put_char_ex(con, enemy.x, enemy.y, enemy.char, colors.get('darker_gray'), colors.get('darker_amber'))
 
-                    
+def menu(con, header, options, width, screen_width, screen_height, hide_options = False):
+    #if len(options) > 26: raise ValueError('Cannot have a menu with more than 26 options.')
+
+    # calculate total height for the header (after auto-wrap) and one line per option
+    header_height = libtcodpy.console_get_height_rect(con, 0, 0, width, screen_height, header)
+    if not hide_options:
+        height = len(options) + header_height
+    else:
+        height = header_height
+
+    # create an off-screen console that represents the menu's window
+    window = libtcodpy.console_new(width, height)
+
+    # print the header, with auto-wrap
+    libtcodpy.console_set_default_foreground(window, libtcodpy.white)
+    libtcodpy.console_print_rect_ex(window, 0, 0, width, height, libtcodpy.BKGND_NONE, libtcodpy.LEFT, header)
+
+    # print all the options
+    if not hide_options:
+        y = header_height
+        letter_index = ord('a')
+        for option_text in options:
+            text = '(' + chr(letter_index) + ') ' + option_text
+            libtcodpy.console_print_ex(window, 0, y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, text)
+            y += 1
+            letter_index += 1
+
+    # blit the contents of "window" to the root console
+    x = int(screen_width / 2 - width / 2)
+    y = int(screen_height / 2 - height / 2)
+    libtcodpy.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
+
+def combat_menu(con, header, options, menu_width, screen_width, screen_height, hide_options = False):
+    #Show a menu with each option as a seperate key
+    if len(options) == 0:
+        options = ['You are disabled and may not attack']
+    menu(con, header, options, menu_width, screen_width, screen_height, hide_options)
+"""     else:
+        options = [choice.name for choice in options.choices] """                    
 
         
 
@@ -239,11 +307,11 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
 
 
 
-def create_terminal(w,h) -> object:
+def create_terminal(w,h) -> bool:
     term = terminal.open()
     terminal.set('window: size='+str(w)+'x'+str(h)+',title=Crimson Sands; font: fonts\\cp437_8x8.png, size=8x8, codepage=437')
+    terminal.composition(terminal.TK_OFF)
     terminal.refresh()
-
     return term
 
 def blt_handle_keys(game_state) -> str or None:

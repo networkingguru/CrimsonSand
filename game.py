@@ -82,13 +82,14 @@ if __name__ == "__main__":
     for entry in entries:
         status_log.add_message(Message(entry))
 
-
+    #Gamestate init
+    action = None
     
     while not libtcodpy.console_is_window_closed():
         render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map)
         #render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs)
 
-        command = handle_keys(game_state)
+        command = handle_keys(game_state, action)
         
         if command is not None:
             #print(command)
