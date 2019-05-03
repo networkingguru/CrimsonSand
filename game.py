@@ -2,10 +2,10 @@ import tcod as libtcodpy
 from tcod import map
 import options
 import time
-#import numpy as np
+import global_vars
 from combat_control import combat_controller
 from ui_control import render_all, create_console, handle_keys, create_terminal, blt_handle_keys, create_root_console, render
-from enums import GameStates
+from enums import GameStates, CombatPhase
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap, array_gen, fill_map
 from fov_aoc import modify_fov, change_face
@@ -25,6 +25,7 @@ if __name__ == "__main__":
     status_panel = create_console(dim_list[1][0], dim_list[1][1])
     enemy_panel = create_console(dim_list[2][0], dim_list[2][1])
     message_panel = create_console(dim_list[3][0], dim_list[3][1])
+    menu_dict = None
 
     #term = create_terminal(options.screen_width, options.screen_height)
 
@@ -59,11 +60,13 @@ if __name__ == "__main__":
     order.extend(players)
     order.extend(enemies)
     curr_actor = order[0]
-    round_num = 1
+    round_num = global_vars.round_num
 
 
     #Map/state init
     game_state = GameStates.default
+    #map_dict = None
+    combat_phase = CombatPhase.explore
 
     game_map = map.Map(options.map_width, options.map_height, 'F')
     fill_map(game_map, options.blocked, options.blocked)
@@ -82,19 +85,17 @@ if __name__ == "__main__":
     for entry in entries:
         status_log.add_message(Message(entry))
 
-    #Gamestate init
-    action = None
     
     while not libtcodpy.console_is_window_closed():
-        render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map)
+        
+        render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map, menu_dict)
         #render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs)
 
-        command = handle_keys(game_state, action)
+        command = handle_keys(game_state, menu_dict)
         
         if command is not None:
             #print(command)
-            action = combat_controller(game_map, 0, entities, players, command, logs)
-
+            menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
     
         

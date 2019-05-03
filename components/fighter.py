@@ -5,19 +5,20 @@ from enums import FighterStance
 from chargen_functions import height_curve
 
 class Fighter:
-    def __init__(self, attributes, facing, aoc, targets, ai = None, end_turn = False, disengage = False):
-        self.end_turn = end_turn
+    def __init__(self, attributes, facing, ai = None):
+        self.end_turn = False
         if ai is not None:
             self.ai = ai(self)
         self.facing = facing
-        self.aoc = aoc
+        self.aoc = []
         self.aoc_facing = facing
         self.action = []
-        self.targets = targets
+        self.targets = []
+        self.curr_target = None
         self.combat_choices = []
         self.attacker = None
         self.attacker_history = []
-        self.disengage = disengage
+        self.disengage = False
         self.male = True
         #Attributes
         self.attributes = attributes
@@ -179,12 +180,12 @@ class Fighter:
         else:
             self.aoc_facing = self.facing -1
 
-    def adjust_max_locations(self, location_index, layer_index, value_to_subtract):
+    def adjust_max_locations(self, location_index, layer_index, value_to_subtract) -> None:
         self.max_locations[location_index][layer_index] -= value_to_subtract
         if self.locations[location_index][layer_index] > self.max_locations[location_index][layer_index]:
             self.locations[location_index][layer_index] = self.max_locations[location_index][layer_index]
 
-    def mod_attribute(self, attribute, amount):
+    def mod_attribute(self, attribute, amount) -> None:
         value = int(getattr(self, attribute))
         if value + amount <= 0: setattr(self, attribute, 0)
         else: 

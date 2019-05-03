@@ -46,13 +46,13 @@ tallboy = [130,130,130,130,130,130,130,130,250,250,130,130,130,130,130,130,130,1
 
 #Fighter specs
 player_attr = tank
-player_fighter = ['Player', player_attr, 0, [], [], None]
+player_fighter = ['Player', player_attr, 0]
 player_r_weapon = 'Unarmed'
 player_f_weapon = 'Unarmed'
 player_weapons = [player_r_weapon, player_f_weapon]
 
 enemy_attr = tallboy
-enemy_fighter = ['Enemy', enemy_attr, 0, [], [], None]
+enemy_fighter = ['Enemy', enemy_attr, 0]
 enemy_r_weapon = 'Unarmed'
 enemy_f_weapon = 'Unarmed'
 enemy_weapons = [enemy_r_weapon, enemy_f_weapon]
@@ -62,7 +62,7 @@ fighters = [player_fighter, enemy_fighter]
 weapons = {'Player': player_weapons, 'Enemy': enemy_weapons}
 
 #Entity list
-player = (30, 10, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
+player = (30, 40, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
 enemy = (60, 60, '@', 'yellow', 'Enemy', enums.EntityState.conscious, False, True)
 entities = [player, enemy]
 

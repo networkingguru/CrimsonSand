@@ -76,14 +76,16 @@ def change_face(direction, x, y, range = 2, percent = 25) -> set:
     
     return player_aoc
 
-def aoc_check(entities, active_entity) -> object:
+def aoc_check(entities, active_entity) -> list:
+    targets = []
     for x, y in active_entity.fighter.aoc:
         for entity in entities:
             if entity == active_entity:
                 continue
             elif entity.x == x and entity.y == y:
                 if entity.state != entity.state.dead:
-                    return entity
+                    targets.append(entity)
+    return targets
 
 
 def modify_fov(entity, game_map) -> None:
