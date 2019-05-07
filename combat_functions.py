@@ -192,6 +192,7 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                 return menu_dict, combat_phase, game_state, order
 
             combat_menu_header = 'What do you wish to do?'
+
             try:
                 if command.get('Wait'):
                     messages.append('You decide to wait for your opponents to act')
@@ -211,6 +212,7 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
             except:
                 pass
 
+
             menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
 
         for message in messages:
@@ -218,7 +220,33 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
 
     return menu_dict, combat_phase, game_state, order
 
+def phase_weapon(player, command, logs, combat_phase) -> (int, dict):
+    combat_menu_header = None
+    menu_dict = None
+    messages = []
+    log = logs[2]
 
+    #Choose your weapon
+    combat_menu_header = 'Choose your weapon'
+    player.fighter.action.clear()
+    for wpn in player.weapons:
+        if wpn.name not in player.fighter.action:
+            player.fighter.action.append(wpn.name)
+    for option in player.fighter.action:
+        if command.get(option):
+            messages.append('You decide to use ' + option)
+            for wpn in player.weapons:
+                if option == wpn.name:
+                    if len(player.fighter.combat_choices) == 0:   
+                        player.fighter.combat_choices.append(wpn)
+            combat_phase = CombatPhase.option
+    
+    for message in messages:
+            log.add_message(Message(message))
+
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': player.fighter.action, 'mode': False}
+
+    return combat_phase, menu_dict
 
 
 

@@ -131,7 +131,7 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
 def handle_keys(game_state, menu_dict = None) -> str or None:
     for evt in event.wait():
         if evt.type == "QUIT":
-            exit()
+            exit(0)
         elif evt.type == "KEYDOWN":
             try:
                 key = chr(evt.sym)
@@ -158,12 +158,12 @@ def handle_keys(game_state, menu_dict = None) -> str or None:
                     for item in menu_options:
                         index = evt.sym - ord(item)
                         if index >= 0 and not index > (len(menu_options)-1):
-                            command = menu_options[index]
+                            command = {menu_options[index]:menu_options[index]}
                             return command
                 else:
                     index = evt.sym - ord('a')
                     if index >= 0 and not index > (len(menu_options)-1):
-                        command = menu_options[index]
+                        command = {menu_options[index]:menu_options[index]}
                         return command
         else:
             return None
