@@ -1,7 +1,7 @@
 import tcod as libtcodpy
 import time
 import global_vars
-from enums import CombatPhase, MenuTypes, EntityState
+from enums import CombatPhase, MenuTypes, EntityState, GameStates
 from entity import get_blocking_entities_at_location
 from fov_aoc import modify_fov, change_face, aoc_check
 from game_messages import Message
@@ -79,15 +79,15 @@ def move_actor(game_map, entity, entities, players, command, logs) -> bool:
             
 
     if hasattr(entity, 'fighter') and fov_recompute == True:
-        #t0 = time.time()
+        t0 = time.time()
         
         fov_radius = int(round(entity.fighter.sit/5))
         game_map.compute_fov(entity.x, entity.y, fov_radius, True, libtcodpy.FOV_SHADOW)
         modify_fov(entity, game_map)
 
-        # t1 = time.time()
-        # total_time = t1 - t0
-        # print(total_time)
+        t1 = time.time()
+        total_time = t1 - t0
+        print(total_time)
 
 
 
@@ -103,6 +103,7 @@ def turn_order(entities) -> list:
     return(order)
 
 def update_targets(entity, targets) -> None:
+    """Purpose is to remove or change target list when aoc changes"""
     if set(entity.fighter.targets) != set(targets):
         entity.fighter.targets = targets
         if entity.fighter.curr_target not in set(entity.fighter.targets):
@@ -125,6 +126,7 @@ def phase_init(entities) -> list:
 
 def phase_action(curr_actor, players, entities, order, command, logs, game_map) -> (dict,int,list):
     combat_phase = CombatPhase.action
+    game_state = GameStates.default
     combat_menu_header = None
     menu_dict = None
     messages = []
@@ -141,7 +143,7 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
         log.add_message(Message('The round has ended. '))
         combat_phase = CombatPhase.init
         global_vars.round_num  += 1
-        return menu_dict, combat_phase, order
+        return menu_dict, combat_phase, game_state, order
     
     
     if curr_actor.fighter.end_turn:
@@ -164,10 +166,13 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                         status_log.messages.clear()
                         for entry in entries:
                             status_log.add_message(Message(entry))
+                        if len(curr_actor.fighter.targets) != 0:
+                            phase_action(curr_actor,players,entities,order,command,logs,game_map)
             else:
                 curr_actor.fighter.end_turn = True
                 combat_phase = CombatPhase.action
         else:    
+            game_state = GameStates.menu
             #CHeck to see if player can afford to attack
             wpn_ap = []
             for wpn in curr_actor.weapons:
@@ -183,32 +188,37 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                 curr_actor.fighter.end_turn = True
                 combat_phase = CombatPhase.action
                 menu_dict = None
-                return menu_dict, combat_phase, order
+                game_state = GameStates.default
+                return menu_dict, combat_phase, game_state, order
 
             combat_menu_header = 'What do you wish to do?'
-
-            if command.get('Wait'):
-                messages.append('You decide to wait for your opponents to act')
-                order.append(order.pop(0))
-                combat_phase = CombatPhase.action                  
-            elif command.get('Engage'):
-                messages.append('You decide to attack')
-                combat_phase = CombatPhase.weapon
-            elif command.get('Disengage'):
-                messages.append('You decide to disengage from ' + curr_actor.fighter.targets[0].name)
-                combat_phase = CombatPhase.disengage
-            elif command.get('End Turn'):
-                messages.append('You decide to end your turn')
-                curr_actor.fighter.end_turn = True
-                order.append(order.pop(0))
-                combat_phase = CombatPhase.action
+            try:
+                if command.get('Wait'):
+                    messages.append('You decide to wait for your opponents to act')
+                    order.append(order.pop(0))
+                    combat_phase = CombatPhase.action                  
+                elif command.get('Engage'):
+                    messages.append('You decide to attack')
+                    combat_phase = CombatPhase.weapon
+                elif command.get('Disengage'):
+                    messages.append('You decide to disengage from ' + curr_actor.fighter.targets[0].name)
+                    combat_phase = CombatPhase.disengage
+                elif command.get('End Turn'):
+                    messages.append('You decide to end your turn')
+                    curr_actor.fighter.end_turn = True
+                    order.append(order.pop(0))
+                    combat_phase = CombatPhase.action
+            except:
+                pass
 
             menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
 
         for message in messages:
             log.add_message(Message(message))
 
-    return menu_dict, combat_phase, order
+    return menu_dict, combat_phase, game_state, order
+
+
 
 
 

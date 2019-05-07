@@ -96,7 +96,7 @@ if __name__ == "__main__":
         if command is not None:
             #print(command)
             menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
-
+            print(menu_dict)
     
         
         

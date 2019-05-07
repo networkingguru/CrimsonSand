@@ -51,7 +51,7 @@ def render_all(con_list, offset_list, type_list, dim_list, color_list, logs, ent
             hide_options = menu_dict.get('mode')
             
             if menu_type == MenuTypes.combat:
-                menu(map_con, menu_header, menu_options, dim_list[0][0]/5, options.screen_width, options.screen_height, hide_options)
+                menu(map_con, menu_header, menu_options, int(dim_list[0][0]/5), options.screen_width, options.screen_height, hide_options)
         if con_type == 0:
             render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, con_type, players, game_map)
         else:
@@ -156,12 +156,12 @@ def handle_keys(game_state, menu_dict = None) -> str or None:
                     print('Something is missing from the menu_dict')
                 if hide_options:
                     for item in menu_options:
-                        index = key.c - ord(item)
+                        index = evt.sym - ord(item)
                         if index >= 0 and not index > (len(menu_options)-1):
                             command = menu_options[index]
                             return command
                 else:
-                    index = key.c - ord('a')
+                    index = evt.sym - ord('a')
                     if index >= 0 and not index > (len(menu_options)-1):
                         command = menu_options[index]
                         return command
@@ -222,6 +222,7 @@ def menu(con, header, options, width, screen_width, screen_height, hide_options 
 
     # calculate total height for the header (after auto-wrap) and one line per option
     header_height = libtcodpy.console_get_height_rect(con, 0, 0, width, screen_height, header)
+    #header_height = int(round(len(header)/width))
     if not hide_options:
         height = len(options) + header_height
     else:
