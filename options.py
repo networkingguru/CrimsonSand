@@ -1,5 +1,6 @@
 
 import enums
+from components.ai import CombatAI
 
 #UI Vars
 screen_width = 180
@@ -51,8 +52,9 @@ player_r_weapon = 'Unarmed'
 player_f_weapon = 'Unarmed'
 player_weapons = [player_r_weapon, player_f_weapon]
 
+
 enemy_attr = tallboy
-enemy_fighter = ['Enemy', enemy_attr, 0]
+enemy_fighter = ['Enemy', enemy_attr, 0, CombatAI]
 enemy_r_weapon = 'Unarmed'
 enemy_f_weapon = 'Unarmed'
 enemy_weapons = [enemy_r_weapon, enemy_f_weapon]

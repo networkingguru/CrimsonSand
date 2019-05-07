@@ -29,7 +29,7 @@ class Entity:
     def add_fighter_component(self, fighter_attrs) -> None:
         ai = None
         attributes, facing = fighter_attrs[0], fighter_attrs[1]
-        if len(fighter_attrs) > 3: ai = fighter_attrs[4]
+        if len(fighter_attrs) > 2: ai = fighter_attrs[2]
         self.fighter = Fighter(attributes, facing, ai)
 
     def add_weapon_component(self, wpn) -> None:
@@ -149,10 +149,15 @@ class Entity:
             x *= dam_mult
 
         to_parry += parry_mod
-        #KEY 0 tot_er,1 b_psi,2 s_psi,3 p_psi,4 t_psi,5 to_hit,6 to_parry,7 dodge_mod,8 final_ap,9 parry_ap,10 parry_mod
+
         combat_dict = {'total er': tot_er, 'b psi': b_psi, 's psi': s_psi, 'p psi': p_psi, 't psi': t_psi, 'to hit': to_hit, 
                         'to parry': to_parry, 'dodge mod': dodge_mod, 'final ap': final_ap, 'parry ap': parry_ap, 
                         'parry mod': parry_mod}
+
+        #convert items to int
+        for key in combat_dict:
+            combat_dict[key] = int(combat_dict[key])
+
         return combat_dict
 
 
