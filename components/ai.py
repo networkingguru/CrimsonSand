@@ -14,18 +14,13 @@ class CombatAI:
     def take_turn(self, entity, entities, combat_phase):
         messages = []
         #Check AOC for targets in case one moved
-        new_targets = aoc_check(entities, entity)
-
-        #Recurse if target list changed
-        if new_targets != entity.fighter.targets: 
-            entity.fighter.targets = new_targets
-            self.take_turn(entity, entities, combat_phase)
+        entity.fighter.targets = aoc_check(entities, entity)
         
         if len(self.host.targets) == 0:
             combat_phase = CombatPhase.action
             messages.append(entity.name + ' ends ' +  'turn. ')
             self.host.end_turn = True
-            return messages, entity, combat_phase
+            return messages, combat_phase
 
         
         
@@ -35,7 +30,7 @@ class CombatAI:
         # See if we have enough AP to attack
         min_ap = self.host.swift + 1
 
-        for wpn in entity.weapon:
+        for wpn in entity.weapons:
             for atk in wpn.attacks:
 
                 cs = entity.determine_combat_stats(wpn, atk)
@@ -58,7 +53,7 @@ class CombatAI:
             #Locations to be scored higher because they kill the foe
             critical_locs = {0,1,2,6}
 
-            for wpn in entity.weapon:
+            for wpn in entity.weapons:
                 for atk in wpn.attacks:
                     if final_ap <= self.host.ap:
                         for location in loc_list:
@@ -113,11 +108,7 @@ class CombatAI:
             #Add new choices to list
             for i in best_atk:
                 self.host.combat_choices.append(i)
-            
-                                 
-                                
-            
-            
+
             #Commit attack
             
             cs = entity.determine_combat_stats(best_atk[0], best_atk[1], best_atk[2], best_atk[3])
@@ -137,13 +128,10 @@ class CombatAI:
                 history_mod = calc_history_modifier(curr_target, self.host.combat_choices[1], self.host.combat_choices[2], self.host.combat_choices[3])
                 dodge_mod += history_mod
                 parry_mod += history_mod
-            messages, combat_phase = perform_attack(entity, entities, to_hit, curr_target, cs, messages, combat_phase)
+            messages, combat_phase = perform_attack(entity, entities, to_hit, curr_target, cs, combat_phase)
         else:
             combat_phase = CombatPhase.action
             messages.append(entity.name + ' ends ' +  'turn. ')
             self.host.end_turn = True
 
-
-
-        
         return messages, combat_phase

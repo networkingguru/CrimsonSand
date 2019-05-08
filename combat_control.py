@@ -1,5 +1,5 @@
 
-from combat_functions import move_actor, update_targets, detect_enemies, phase_init, phase_action, phase_weapon, phase_option, phase_location, phase_option2, phase_confirm, phase_repeat
+from combat_functions import move_actor, update_targets, detect_enemies, phase_init, phase_action, phase_weapon, phase_option, phase_location, phase_option2, phase_confirm, phase_repeat, phase_defend
 from enums import CombatPhase, GameStates
 
 def combat_controller(game_map, active_entity, entities, players, command, logs, combat_phase, game_state, order) -> (dict, int, int, object, list):
@@ -43,14 +43,12 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
         combat_phase, menu_dict = phase_repeat(active_entity, command, logs, combat_phase)
     
     if combat_phase == CombatPhase.defend:
-        pass
+        combat_phase, game_state, menu_dict = phase_defend(active_entity.fighter.targets[0], active_entity, entities, command, logs, combat_phase)
 
     if combat_phase == CombatPhase.disengage:
         pass
 
-    try:
-        menu_dict
-    except:
+    if game_state == GameStates.default:
         menu_dict = None
 
     return menu_dict, combat_phase, game_state, active_entity, order

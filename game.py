@@ -4,6 +4,7 @@ import options
 import time
 import global_vars
 from combat_control import combat_controller
+from combat_functions import change_actor
 from ui_control import render_all, create_console, handle_keys, create_terminal, blt_handle_keys, create_root_console, render
 from enums import GameStates, CombatPhase
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
@@ -92,7 +93,13 @@ if __name__ == "__main__":
         #render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs)
 
         command = handle_keys(game_state, menu_dict)
-        
+
+        change_actor(order, entities, combat_phase, logs)
+        curr_actor = order[0]
+
+        if hasattr(curr_actor.fighter, 'ai'):
+            command = {'ai':'ai'}
+            
         if command is not None:
             #print(command)
             menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
