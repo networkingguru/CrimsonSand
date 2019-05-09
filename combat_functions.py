@@ -2135,16 +2135,22 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             cs = curr_actor.determine_combat_stats(wpn, atk)
             wpn_ap.append(cs.get('final ap'))
     min_ap = min(wpn_ap)
-    if curr_actor.fighter.ap >= min_ap: 
-        curr_actor.fighter.action = ['Engage', 'Disengage', 'Wait', 'End Turn']
-    elif curr_actor.fighter.ap > 0:
-        curr_actor.fighter.action = ['Wait', 'End Turn']
+    curr_actor.fighter.action = []
+    if curr_actor.fighter.ap >= min_ap:
+        curr_actor.fighter.action.append('Engage')
+    if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
+        curr_actor.fighter.action.append('Disengage')
+    if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 
+        curr_actor.fighter.action.append('Wait')
+    if len(curr_actor.fighter.action) >= 2:
+        curr_actor.fighter.action.append('End Turn')
+        game_state = GameStates.menu
     else:
         curr_actor.fighter.end_turn = True
         combat_phase = CombatPhase.action
         menu_dict = None
         game_state = GameStates.default
-        return menu_dict, combat_phase, game_state, order
+        return menu_dict, combat_phase, game_state, order, messages
 
     combat_menu_header = 'What do you wish to do?'
 
@@ -2195,6 +2201,7 @@ def change_actor(order, entities, combat_phase, logs) -> (int, list):
             log.add_message(Message('The round has ended. '))
             combat_phase = CombatPhase.init
             global_vars.round_num  += 1
+            order = entities
 
     for message in messages:
             log.add_message(Message(message))
@@ -2209,6 +2216,7 @@ def phase_init(entities) -> list:
     for entity in entities:
         if hasattr(entity, 'fighter'):
             fighters.append(entity)
+            entity.fighter.end_turn = False
     
 
     #Sort the entities by initiative
@@ -2225,7 +2233,7 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
     menu_dict = None
     messages = []
     log = logs[2]
-    status_log = logs[0]  
+    status_log = logs[1]  
 
 
     if hasattr(curr_actor.fighter, 'ai'):
@@ -2234,29 +2242,33 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
         
     
     else:
-        #Check and see if player has a target in zoc
-        if len(curr_actor.fighter.targets) == 0:
-            if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
-                if command[0] == 'move' or 'spin':
-                    moved = move_actor(game_map, curr_actor, entities, players, command, logs)
-                    if moved:
-                        curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
-                        curr_actor.fighter.targets = aoc_check(entities, curr_actor)
-                        if len(curr_actor.fighter.targets) != 0:
-                            entries = gen_status_panel(curr_actor.fighter.targets[0])
-                            status_log.messages.clear()
-                            for entry in entries:
-                                status_log.add_message(Message(entry))
-                            menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
-                            
+        if command is not None:
+            #Check and see if player has a target in zoc
+            if len(curr_actor.fighter.targets) == 0:
+                if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
+                    if command[0] == 'move' or 'spin':
+                        moved = move_actor(game_map, curr_actor, entities, players, command, logs)
+                        if moved:
+                            curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
+                            curr_actor.fighter.targets = aoc_check(entities, curr_actor)
+                            if len(curr_actor.fighter.targets) != 0:
+                                entries = gen_status_panel(curr_actor.fighter.targets[0])
+                                status_log.messages.clear()
+                                for entry in entries:
+                                    status_log.add_message(Message(entry))
+                                menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
+                                
+                else:
+                    curr_actor.fighter.end_turn = True
+                    combat_phase = CombatPhase.action
             else:
-                curr_actor.fighter.end_turn = True
-                combat_phase = CombatPhase.action
-        else:    
-            menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
+                menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
+        else:
+            if len(curr_actor.fighter.targets) != 0:    
+                menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
 
-        for message in messages:
-            log.add_message(Message(message))
+    for message in messages:
+        log.add_message(Message(message))
 
     return menu_dict, combat_phase, game_state, order
 
@@ -2269,17 +2281,18 @@ def phase_weapon(player, command, logs, combat_phase) -> (int, dict):
     #Choose your weapon
     combat_menu_header = 'Choose your weapon'
     player.fighter.action.clear()
-    for wpn in player.weaponss:
+    for wpn in player.weapons:
         if wpn.name not in player.fighter.action:
             player.fighter.action.append(wpn.name)
     for option in player.fighter.action:
-        if command.get(option):
-            messages.append('You decide to use ' + option)
-            for wpn in player.weaponss:
-                if option == wpn.name:
-                    if len(player.fighter.combat_choices) == 0:   
-                        player.fighter.combat_choices.append(wpn)
-            combat_phase = CombatPhase.option
+        if command is not None:
+            if command.get(option):
+                messages.append('You decide to use ' + option)
+                for wpn in player.weapons:
+                    if option == wpn.name:
+                        if len(player.fighter.combat_choices) == 0:   
+                            player.fighter.combat_choices.append(wpn)
+                combat_phase = CombatPhase.option
     
     for message in messages:
             log.add_message(Message(message))
@@ -2304,12 +2317,13 @@ def phase_option(player, command, logs, combat_phase) -> (int, dict):
         if player.fighter.ap >= atk_final_ap:
             player.fighter.action.append(atk.name)
     for option in player.fighter.action:
-        if command.get(option):
-            for atk in player.fighter.combat_choices[0].attacks:
-                if atk.name == option:
-                    player.fighter.combat_choices.append(atk)
-            messages.append('You decide to ' + option)
-            combat_phase = CombatPhase.location
+        if command is not None:
+            if command.get(option):
+                for atk in player.fighter.combat_choices[0].attacks:
+                    if atk.name == option:
+                        player.fighter.combat_choices.append(atk)
+                messages.append('You decide to ' + option)
+                combat_phase = CombatPhase.location
     
     for message in messages:
             log.add_message(Message(message))
@@ -2332,14 +2346,16 @@ def phase_location(player, command, logs, combat_phase) -> (int, dict):
     valid_locs = determine_valid_locs(player, curr_target, attack)
     #Prune list to only valid
     locations = prune_list(curr_target.fighter.get_locations(), valid_locs, True, False)
-    player.fighter.action = locations    
-    for option in player.fighter.action:
-        choice = command.get(option)
-        if choice: 
-            player.fighter.combat_choices.append(curr_target.fighter.name_location(option))   
-            player.fighter.action = determine_valid_angles(curr_target.fighter.name_location(option))
-            messages.append('You aim for ' + player.fighter.targets[0].name + '\'s ' + option)
-            combat_phase = CombatPhase.option2
+    player.fighter.action = locations
+    if command is not None:    
+        for option in player.fighter.action:
+            if command.get(option):
+                choice = command.get(option)
+                if choice: 
+                    player.fighter.combat_choices.append(curr_target.fighter.name_location(option))   
+                    player.fighter.action = determine_valid_angles(curr_target.fighter.name_location(option))
+                    messages.append('You aim for ' + player.fighter.targets[0].name + '\'s ' + option)
+                    combat_phase = CombatPhase.option2
     
     for message in messages:
             log.add_message(Message(message))
@@ -2355,14 +2371,14 @@ def phase_option2(player, command, logs, combat_phase) -> (int, dict):
     log = logs[2]
     #Choose the angle of attack
     combat_menu_header = 'What angle would you like to attack from?'
-
-    for option in player.fighter.action:
-        choice = command.get(option)
-        if choice:
-            player.fighter.combat_choices.append(angle_id(option))
-            messages.append('You decide to use the ' + option + ' angle.')
-            player.fighter.action = ['Accept', 'Restart']
-            combat_phase = CombatPhase.confirm
+    if command is not None:
+        for option in player.fighter.action:
+            choice = command.get(option)
+            if choice:
+                player.fighter.combat_choices.append(angle_id(option))
+                messages.append('You decide to use the ' + option + ' angle.')
+                player.fighter.action = ['Accept', 'Restart']
+                combat_phase = CombatPhase.confirm
 
     for message in messages:
             log.add_message(Message(message))
@@ -2410,20 +2426,20 @@ def phase_confirm(player, entities, command, logs, combat_phase) -> (int, dict):
         + ' Would you like to continue, or modify your choices?')
 
     player.fighter.action = ['Accept', 'Restart']
+    if command is not None:
+        if command.get('Accept'):
+            messages, combat_phase = perform_attack(player, entities, final_to_hit, curr_target, cs, combat_phase)
+            
+            #See if player has AP for repeat
+            if player.fighter.ap >= final_ap:           
+                combat_phase = CombatPhase.repeat
+            else:
+                combat_phase = combat_phase.action
 
-    if command.get('Accept'):
-        messages, combat_phase = perform_attack(player, entities, final_to_hit, curr_target, cs, combat_phase)
-        
-        #See if player has AP for repeat
-        if player.fighter.ap >= final_ap:           
-            combat_phase = CombatPhase.repeat
-        else:
-            combat_phase = combat_phase.action
-
-    if command.get('Restart'):
-        #Reset vars
-        player.fighter.combat_choices.clear()
-        combat_phase = CombatPhase.action
+        if command.get('Restart'):
+            #Reset vars
+            player.fighter.combat_choices.clear()
+            combat_phase = CombatPhase.action
 
     for message in messages:
             log.add_message(Message(message))
@@ -2441,14 +2457,15 @@ def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
 
     combat_menu_header = 'Would you like to repeat the last attack, or start a new attack strategy?'
     player.fighter.action = ['Repeat', 'New']
-    if command.get('Repeat'):
-        combat_phase = CombatPhase.confirm
+    if command is not None:
+        if command.get('Repeat'):
+            combat_phase = CombatPhase.confirm
 
-                
-    if command.get('New'):
-        #Reset vars
-        player.fighter.combat_choices.clear()
-        combat_phase = CombatPhase.action
+                    
+        if command.get('New'):
+            #Reset vars
+            player.fighter.combat_choices.clear()
+            combat_phase = CombatPhase.action
 
     for message in messages:
             log.add_message(Message(message))
@@ -2506,26 +2523,27 @@ def phase_defend(player, enemy, entities, command, logs, combat_phase) -> (int, 
         game_state = GameStates.menu
         header_items.append('What would you like to do? ')
         combat_menu_header = ''.join(header_items)
-        if command.get('Take the hit. '):
-            effects = apply_dam(player, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
-        if command.get('Dodge'):
-            check = save_roll_con(player.fighter.dodge, dodge_mod, enemy.fighter.ai.atk_result[0], final_to_hit)
-            #Remove ap and stam
-            player.fighter.mod_attribute('ap', -player.fighter.walk_ap)
-            player.fighter.mod_attribute('stamina', -player.fighter.base_stam_cost)
-            if check == 's':
-                message = ('You dodged the attack. ')
-            else:
+        if command is not None:
+            if command.get('Take the hit. '):
                 effects = apply_dam(player, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
-        if command.get('Parry'):
-            check = save_roll_con(player.fighter.deflect, parry_mod, enemy.fighter.ai.atk_result[0], final_to_hit)
-            #Remove ap and stam
-            player.fighter.mod_attribute('stamina', -(player.weapons[0].stamina*player.fighter.base_stam_cost))
-            player.fighter.mod_attribute('ap', -parry_ap)
-            if check == 's':
-                message = ('You parried the attack. ')
-            else:
-                effects = apply_dam(player, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
+            if command.get('Dodge'):
+                check = save_roll_con(player.fighter.dodge, dodge_mod, enemy.fighter.ai.atk_result[0], final_to_hit)
+                #Remove ap and stam
+                player.fighter.mod_attribute('ap', -player.fighter.walk_ap)
+                player.fighter.mod_attribute('stamina', -player.fighter.base_stam_cost)
+                if check == 's':
+                    message = ('You dodged the attack. ')
+                else:
+                    effects = apply_dam(player, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
+            if command.get('Parry'):
+                check = save_roll_con(player.fighter.deflect, parry_mod, enemy.fighter.ai.atk_result[0], final_to_hit)
+                #Remove ap and stam
+                player.fighter.mod_attribute('stamina', -(player.weapons[0].stamina*player.fighter.base_stam_cost))
+                player.fighter.mod_attribute('ap', -parry_ap)
+                if check == 's':
+                    message = ('You parried the attack. ')
+                else:
+                    effects = apply_dam(player, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
     else:
         effects = apply_dam(player, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
     

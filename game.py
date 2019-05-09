@@ -94,13 +94,13 @@ if __name__ == "__main__":
 
         command = handle_keys(game_state, menu_dict)
 
-        change_actor(order, entities, combat_phase, logs)
+        combat_phase, order = change_actor(order, entities, combat_phase, logs)
         curr_actor = order[0]
 
-        if hasattr(curr_actor.fighter, 'ai'):
+        if hasattr(curr_actor.fighter, 'ai') and command is None:
             command = {'ai':'ai'}
             
-        if command is not None:
+        if command is not None or combat_phase != CombatPhase.explore:
             #print(command)
             menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 

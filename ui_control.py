@@ -128,7 +128,7 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
 
     libtcodpy.console_blit(con, 0, 0, width, height, 0, dx, dy)
 
-def handle_keys(game_state, menu_dict = None) -> str or None:
+def handle_keys(game_state, menu_dict = None) -> str or int or None:
     for evt in event.wait():
         if evt.type == "QUIT":
             exit(0)
