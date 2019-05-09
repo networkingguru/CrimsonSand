@@ -988,7 +988,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
         if title ==' Upper Right Digestive Organs Damaged':
             description.append(entity.name + '\'s liver, pancreas, and omentum are all damaged badly. The injury bleeds heavily internally, and '
                 + entity.name + 'will slowly die without these organs. ')
-            entity.fighter.diseases.extend('Cirrhosis', 'Pancreatitis')
+            entity.fighter.diseases.extend(['Cirrhosis', 'Pancreatitis'])
             entity.fighter.mod_attribute('immune', (entity.fighter.immune*.05)*-1)
             entity.fighter.bleed.append([entity.fighter.max_vitae*.08,10])
         if title == 'Upper Left Digestive Organ Damage':
@@ -1007,7 +1007,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
         if title == 'Upper Left Digestive Organs Damaged':
             description.append(entity.name + '\'s spleen, pancreas, and stomach are all damaged badly. The injury bleeds heavily internally, and '
                 + entity.name + 'will slowly die without these organs. ')
-            entity.fighter.diseases.extend('Stomach Rupture', 'Pancreatitis')
+            entity.fighter.diseases.extend(['Stomach Rupture', 'Pancreatitis'])
             entity.fighter.bleed.append([entity.fighter.max_vitae*.04,10])
             entity.fighter.bleed.append([10,1000])
         if title == 'Abdominal Muscle Damage':
@@ -2211,21 +2211,29 @@ def change_actor(order, entities, combat_phase, logs) -> (int, list):
 
 
 
-def phase_init(entities) -> list:
+def phase_init(entities) -> (int, list):
     fighters = []
+    combatants = 0
     for entity in entities:
         if hasattr(entity, 'fighter'):
             fighters.append(entity)
             entity.fighter.end_turn = False
+            entity.fighter.targets = aoc_check(entities, entity)
+            combatants += len(entity.fighter.targets)
     
 
     #Sort the entities by initiative
     if len(entities) > 1:    
         order = turn_order(entities)
+        if combatants > 1:
+            combat_phase = CombatPhase.action
+        else:
+            combat_phase = CombatPhase.explore
     else:
         order = entities
+        combat_phase = CombatPhase.explore
 
-    return order
+    return combat_phase, order
 
 def phase_action(curr_actor, players, entities, order, command, logs, game_map) -> (dict,int,list):
     combat_phase = CombatPhase.action

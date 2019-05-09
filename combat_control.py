@@ -8,18 +8,18 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
     if command == 'exit':
         exit(0)
     if combat_phase == CombatPhase.explore:
-        if command[0] == 'move' or 'spin':
-            moved = move_actor(game_map, active_entity, entities, players, command, logs)
-            if moved: 
-                combat_phase_new = detect_enemies(entities)
-                #If phase changed, go into new phase
-                if combat_phase != combat_phase_new:
-                    combat_phase = combat_phase_new
+        try: 
+            if command[0] == 'move' or 'spin':
+                moved = move_actor(game_map, active_entity, entities, players, command, logs)
+                if moved: 
+                    combat_phase_new = detect_enemies(entities)
+                    #If phase changed, go into new phase
+                    if combat_phase != combat_phase_new:
+                        combat_phase = combat_phase_new
+        except: pass
                    
     if combat_phase == CombatPhase.init:
-        order = phase_init(entities)
-        combat_phase = CombatPhase.action
-
+        combat_phase, order = phase_init(entities)
                 
     if combat_phase == CombatPhase.action:
         menu_dict, combat_phase, game_state, order = phase_action(active_entity, players, entities, order, command, logs, game_map)
