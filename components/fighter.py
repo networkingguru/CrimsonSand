@@ -6,6 +6,7 @@ from chargen_functions import height_curve
 
 class Fighter:
     def __init__(self, attributes, facing, ai = None):
+        #Transitory combat variables
         self.end_turn = False
         if ai is not None:
             self.ai = ai(self)
@@ -19,8 +20,9 @@ class Fighter:
         self.attacker = None
         self.attacker_history = []
         self.disengage = False
-        self.male = True
+        self.mods = []
         #Attributes
+        self.male = True
         self.attributes = attributes
         self.max_attributes = attributes.copy()
         #log, mem, wis, comp, comm, cre, men, will, ss, pwr, man, ped, bal, swift, flex, sta, derm, 
