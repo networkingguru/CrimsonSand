@@ -7,10 +7,12 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
 
     if command == 'exit':
         exit(0)
+
+
     if combat_phase == CombatPhase.explore:
         try: 
             if command[0] == 'move' or 'spin':
-                moved = move_actor(game_map, active_entity, entities, players, command, logs)
+                moved = move_actor(game_map, active_entity, entities, command, logs)
                 if moved: 
                     combat_phase_new = detect_enemies(entities)
                     #If phase changed, go into new phase

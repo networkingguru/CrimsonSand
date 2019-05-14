@@ -66,9 +66,8 @@ if __name__ == "__main__":
 
     #Map/state init
     game_state = GameStates.default
-    #map_dict = None
     combat_phase = CombatPhase.explore
-
+    command = None
     game_map = map.Map(options.map_width, options.map_height, 'F')
     fill_map(game_map, options.blocked, options.blocked)
     fov_transparency = array_gen(game_map, options.blocked)
@@ -92,18 +91,16 @@ if __name__ == "__main__":
         render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map, menu_dict)
         #render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs)
 
-        command = handle_keys(game_state, menu_dict)
-
         combat_phase, order = change_actor(order, entities, combat_phase, logs)
         curr_actor = order[0]
+
         
-        if combat_phase is not CombatPhase.explore:
-            if hasattr(curr_actor.fighter, 'ai'):
-                if command != 'exit':
-                    command = curr_actor.fighter.ai.ai_command(curr_actor, entities, combat_phase)
+        if hasattr(curr_actor.fighter, 'ai'):
+            command = curr_actor.fighter.ai.ai_command(curr_actor, entities, combat_phase, game_map, order)
+        else:
+            command = handle_keys(game_state, menu_dict)
             
         if command is not None:
-            print(curr_actor)
             menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
     

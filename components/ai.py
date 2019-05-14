@@ -1,4 +1,5 @@
-from combat_functions import determine_valid_angles, angle_id, calc_history_modifier
+import tcod.path as pathfind
+from combat_functions import determine_valid_angles, angle_id, calc_history_modifier, init_combat
 from enums import CombatPhase
 from components.fighter import Fighter
 from fov_aoc import aoc_check
@@ -11,16 +12,19 @@ class CombatAI:
         self.atk_success = False
 
 
-    def ai_command(self, entity, entities, combat_phase) -> str:
+    def ai_command(self, entity, entities, combat_phase, game_map, order) -> str:
         command = None
-
+        if combat_phase == CombatPhase.explore:
+            command = hunt_target(entity, entities, game_map)
         if combat_phase == CombatPhase.action:
             #Check AOC for targets in case one moved
             entity.fighter.targets = aoc_check(entities, entity)
-            if 'Engage' in self.host.action:
-                command = 'Engage'
-            else:
-                command = 'End Turn'
+            if len(entity.fighter.targets) != 0: init_combat(entity, order, command)
+            if len(self.host.action) != 0:
+                if 'Engage' in self.host.action:
+                    command = 'Engage'
+                else: command = hunt_target(entity, entities, game_map)
+            else: command = hunt_target(entity, entities, game_map)
         if combat_phase == CombatPhase.weapon:
             determine_attack(entity)
             command = self.host.combat_choices[0].name
@@ -167,3 +171,36 @@ def avoid_attack(attacker, defender, cs) -> str:
     
     return command
 
+def hunt_target(curr_actor, entities, game_map) -> list:
+    astar = pathfind.AStar(game_map)
+    enemies = []
+    closest_coords = []
+    closest_dist = None
+    path = None
+    command = 'End Turn'
+
+    for entity in entities:
+        if entity in curr_actor.fighter.fov_visible:
+            print(entity.name + ' is visible')
+            enemies.append(entity)
+    for enemy in enemies:
+        dist = sum(((abs(enemy.x - curr_actor.x)),(abs(enemy.y - curr_actor.y))))
+        if dist < closest_dist:
+            closest_dist = dist
+            closest_coords = [enemy.x, enemy.y]
+    if closest_dist is not None:
+        path = astar.get_path(curr_actor.x, curr_actor.y, closest_coords[0], closest_coords[1])
+
+    if path is not None:
+        command = ['move']
+        y_mod = None
+        x_mod = None
+        for x,y in path[0]:
+            if y == -1: y_mod = 'n'
+            if y == 1: y_mod = 's'
+            if x == -1: x_mod = 'w'
+            if x == 1: x_mod = 'e'
+        mv_dir = str(y_mod + x_mod)
+        command.append(mv_dir)
+
+    return command

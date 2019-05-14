@@ -11,7 +11,7 @@ from utilities import inch_conv, gen_status_panel, roll_dice, prune_list, entity
 def detect_enemies(entities) -> int:
     combat_phase = CombatPhase.explore
     for entity in entities:
-        if entity.fighter:
+        if hasattr(entity, 'fighter'):
             opponents = entities.copy()
             opponents.remove(entity)
             for opponent in opponents:
@@ -19,7 +19,7 @@ def detect_enemies(entities) -> int:
                     combat_phase = CombatPhase.init
     return combat_phase
 
-def move_actor(game_map, entity, entities, players, command, logs) -> bool:
+def move_actor(game_map, entity, entities, command, logs) -> bool:
 
     fov_recompute = False
     #Dict containing facing direction based on x,y offset
@@ -77,10 +77,11 @@ def move_actor(game_map, entity, entities, players, command, logs) -> bool:
 
     if hasattr(entity, 'fighter') and fov_recompute == True:
         t0 = time.time()
-        
-        fov_radius = int(round(entity.fighter.sit/5))
-        game_map.compute_fov(entity.x, entity.y, fov_radius, True, libtcodpy.FOV_SHADOW)
-        modify_fov(entity, game_map)
+        for e in entities:
+            if  hasattr(e, 'fighter'):
+                fov_radius = int(round(e.fighter.sit/5))
+                game_map.compute_fov(e.x, e.y, fov_radius, True, libtcodpy.FOV_SHADOW)
+                modify_fov(e, game_map)
 
         t1 = time.time()
         total_time = t1 - t0
@@ -2088,7 +2089,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
         elif command.get('End Turn'):
             messages.append('You decide to end your turn')
             curr_actor.fighter.end_turn = True
-            order.append(order.pop(0))
+            order.remove(curr_actor)
             combat_phase = CombatPhase.action
             game_state = GameStates.default 
     except:
@@ -2125,31 +2126,23 @@ def change_actor(order, entities, combat_phase, logs) -> (int, list):
             order = entities
 
     for message in messages:
-            log.add_message(Message(message))
+        log.add_message(Message(message))
 
     return combat_phase, order
 
 
 
-
 def phase_init(entities) -> (int, list):
-    fighters = []
-    combatants = 0
+
     for entity in entities:
         if hasattr(entity, 'fighter'):
-            fighters.append(entity)
             entity.fighter.end_turn = False
             entity.fighter.targets = aoc_check(entities, entity)
-            combatants += len(entity.fighter.targets)
     
-
     #Sort the entities by initiative
     if len(entities) > 1:    
         order = turn_order(entities)
-        if combatants > 1:
-            combat_phase = CombatPhase.action
-        else:
-            combat_phase = CombatPhase.explore
+        combat_phase = CombatPhase.action
     else:
         order = entities
         combat_phase = CombatPhase.explore
@@ -2166,14 +2159,18 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
 
 
     if command is not None:
+        if command == 'End Turn':
+            curr_actor.fighter.end_turn = True
+            combat_phase = CombatPhase.action
         #Check and see if entity has a target in zoc
         if len(curr_actor.fighter.targets) == 0:
             if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
                 if command[0] == 'move' or 'spin':
-                    moved = move_actor(game_map, curr_actor, entities, players, command, logs)
+                    moved = move_actor(game_map, curr_actor, entities, command, logs)
                     if moved:
+                        for entity in entities:
+                            entity.fighter.targets = aoc_check(entities, entity)
                         curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
-                        curr_actor.fighter.targets = aoc_check(entities, curr_actor)
                         if len(curr_actor.fighter.targets) != 0:
                             entries = gen_status_panel(curr_actor.fighter.targets[0])
                             status_log.messages.clear()
@@ -2220,7 +2217,7 @@ def phase_weapon(curr_actor, command, logs, combat_phase) -> (int, dict):
                 combat_phase = CombatPhase.option
     
     for message in messages:
-            log.add_message(Message(message))
+        log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
         menu_dict = None
@@ -2256,7 +2253,7 @@ def phase_option(curr_actor, command, logs, combat_phase) -> (int, dict):
                 combat_phase = CombatPhase.location
     
     for message in messages:
-            log.add_message(Message(message))
+        log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
         menu_dict = None
@@ -2294,7 +2291,7 @@ def phase_location(curr_actor, command, logs, combat_phase) -> (int, dict):
                     combat_phase = CombatPhase.option2
     
     for message in messages:
-            log.add_message(Message(message))
+        log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
         menu_dict = None
@@ -2322,7 +2319,7 @@ def phase_option2(curr_actor, command, logs, combat_phase) -> (int, dict):
                 combat_phase = CombatPhase.confirm
 
     for message in messages:
-            log.add_message(Message(message))
+        log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
         menu_dict = None
@@ -2387,7 +2384,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
             combat_phase = CombatPhase.action
 
     for message in messages:
-            log.add_message(Message(message))
+        log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
         menu_dict = None
@@ -2417,7 +2414,7 @@ def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
             combat_phase = CombatPhase.action
 
     for message in messages:
-            log.add_message(Message(message))
+        log.add_message(Message(message))
 
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': player.fighter.action, 'mode': False}
 
@@ -2510,7 +2507,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         combat_phase == CombatPhase.disengage
         
     for message in messages:
-            log.add_message(Message(message))
+        log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
         menu_dict = None
