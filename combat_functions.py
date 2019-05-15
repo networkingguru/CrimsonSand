@@ -50,11 +50,13 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
                 and blocker is None):
                 entity.mod_attribute('x', x_mod)
                 entity.mod_attribute('y', y_mod)
+                if global_vars.debug: print(entity.name + ' ' + str(entity.x) + ' ' + str(entity.y))
                 fov_recompute = True
                 entity.fighter.facing = facing_dict.get((x_mod,y_mod))
-                message = Message('You move ' + command[1], 'black')
-                message_log.add_message(message)
-            if blocker:
+                if not hasattr(entity.fighter, 'ai'): 
+                    message = Message('You move ' + command[1], 'black')
+                    message_log.add_message(message)
+            if blocker and not hasattr(entity.fighter, 'ai'):
                 message = Message('You can\'t walk over '+blocker.name+'!', 'black')
                 message_log.add_message(message)
 
@@ -76,16 +78,16 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
             
 
     if hasattr(entity, 'fighter') and fov_recompute == True:
-        t0 = time.time()
+        if global_vars.debug: t0 = time.time()
         for e in entities:
             if  hasattr(e, 'fighter'):
                 fov_radius = int(round(e.fighter.sit/5))
                 game_map.compute_fov(e.x, e.y, fov_radius, True, libtcodpy.FOV_SHADOW)
                 modify_fov(e, game_map)
 
-        t1 = time.time()
-        total_time = t1 - t0
-        print(total_time)
+        if global_vars.debug: t1 = time.time()
+        if global_vars.debug: total_time = t1 - t0
+        if global_vars.debug: print('FOV recompute time: ' + str(total_time))
 
 
 
@@ -165,7 +167,6 @@ def determine_valid_locs(attacker, defender, attack) -> list:
     for location in locations:
         can_reach = location_angle(attacker, defender, er, distance, attack, location)
         if not can_reach:
-            #i = locations.index(location)
             if not location in loc_list:
                 loc_list.append(location)
     locations = prune_list(locations, loc_list)
@@ -257,6 +258,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     attack = entity.fighter.combat_choices[1]  
     final_ap = cs.get('final ap')
     location = entity.fighter.combat_choices[2]
+    active_entity = entity
 
     #Clear history if attacker changed
     if curr_target.fighter.attacker is not entity:
@@ -301,7 +303,10 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     if curr_target.fighter.disengage:
         combat_phase = CombatPhase.disengage
 
-    return messages, combat_phase
+    if combat_phase == CombatPhase.defend:
+        active_entity = curr_target
+
+    return messages, combat_phase, active_entity
 
 def add_history(entity) -> None:
     history = entity.fighter.attacker_history
@@ -2075,19 +2080,31 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
 
     try:
         if command.get('Wait'):
-            messages.append('You decide to wait for your opponents to act')
+            if curr_actor.player:
+                messages.append('You decide to wait for your opponents to act')
+            else:
+                messages.append(curr_actor.name + ' waits for you to act')
             order.append(order.pop(0))
             combat_phase = CombatPhase.action
             game_state = GameStates.default                  
         elif command.get('Engage'):
-            messages.append('You decide to attack')
+            if curr_actor.player:
+                messages.append('You decide to attack')
             combat_phase = CombatPhase.weapon
         elif command.get('Disengage'):
-            messages.append('You decide to disengage from ' + curr_actor.fighter.targets[0].name)
+            if curr_actor.player:
+                messages.append('You decide to disengage from ' + curr_actor.fighter.targets[0].name)
+            else:
+                messages.append(curr_actor.name + ' attempts to disengage. ')
             combat_phase = CombatPhase.disengage
             game_state = GameStates.default 
         elif command.get('End Turn'):
-            messages.append('You decide to end your turn')
+            if curr_actor.player:
+                messages.append('You decide to end your turn')
+            else:
+                if curr_actor.fighter.male: pro = 'his'
+                else: pro = 'her'
+                messages.append(curr_actor.name + 'ends ' + pro + ' turn')
             curr_actor.fighter.end_turn = True
             order.remove(curr_actor)
             combat_phase = CombatPhase.action
@@ -2103,7 +2120,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
 
     return menu_dict, combat_phase, game_state, order, messages
 
-def change_actor(order, entities, combat_phase, logs) -> (int, list):
+def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list):
     messages = []
     log = logs[2]
     if len(order) == 0:
@@ -2128,7 +2145,10 @@ def change_actor(order, entities, combat_phase, logs) -> (int, list):
     for message in messages:
         log.add_message(Message(message))
 
-    return combat_phase, order
+    if combat_phase != CombatPhase.defend:
+        curr_actor = order[0]
+
+    return combat_phase, order, curr_actor
 
 
 
@@ -2171,6 +2191,9 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                         for entity in entities:
                             entity.fighter.targets = aoc_check(entities, entity)
                         curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
+
+                        if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
+
                         if len(curr_actor.fighter.targets) != 0:
                             entries = gen_status_panel(curr_actor.fighter.targets[0])
                             status_log.messages.clear()
@@ -2333,6 +2356,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     #Verify choices and continue or restart
 
     #Variable setup
+    active_entity = curr_actor
     combat_menu_header = None
     menu_dict = None
     messages = []
@@ -2370,9 +2394,8 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     curr_actor.fighter.action = ['Accept', 'Restart']
     if command is not None:
         if command.get('Accept'):
-            messages, combat_phase = perform_attack(curr_actor, entities, final_to_hit, curr_target, cs, combat_phase)
-            combat_phase = combat_phase.action
-
+            messages, combat_phase, active_entity = perform_attack(curr_actor, entities, final_to_hit, curr_target, cs, combat_phase)
+            
             if not hasattr(curr_actor.fighter, 'ai'):
                 #See if curr_actor has AP for repeat
                 if curr_actor.fighter.ap >= final_ap:           
@@ -2392,7 +2415,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     else:
         menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
 
-    return combat_phase, menu_dict
+    return combat_phase, menu_dict, active_entity
 
 def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
     #Repeat last attack?
@@ -2420,7 +2443,7 @@ def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
 
     return combat_phase, menu_dict
 
-def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (int, int, dict):
+def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (int, int, dict, object):
     #Variable setup
     combat_menu_header = None
     menu_dict = None
@@ -2515,7 +2538,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     else:
         menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
 
-    return combat_phase, game_state, menu_dict
+    return combat_phase, game_state, menu_dict, curr_actor
 
 
 

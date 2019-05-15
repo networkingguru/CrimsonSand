@@ -1,5 +1,5 @@
 import tcod.path as pathfind
-from combat_functions import determine_valid_angles, angle_id, calc_history_modifier, init_combat
+from combat_functions import determine_valid_angles, angle_id, calc_history_modifier, init_combat, determine_valid_locs
 from enums import CombatPhase
 from components.fighter import Fighter
 from fov_aoc import aoc_check
@@ -19,25 +19,30 @@ class CombatAI:
         if combat_phase == CombatPhase.action:
             #Check AOC for targets in case one moved
             entity.fighter.targets = aoc_check(entities, entity)
-            if len(entity.fighter.targets) != 0: init_combat(entity, order, command)
+            #If targets are available but no actions exist, rerun to fill action list
+            if len(entity.fighter.targets) != 0 and self.host.action == 0: return command
             if len(self.host.action) != 0:
-                if 'Engage' in self.host.action:
-                    command = 'Engage'
+                determine_attack(entity)
+                if len(self.host.combat_choices) == 0:
+                    command = {'End Turn':'End Turn'}
+                elif 'Engage' in self.host.action:
+                    command = {'Engage':'Engage'}
                 else: command = hunt_target(entity, entities, game_map)
             else: command = hunt_target(entity, entities, game_map)
         if combat_phase == CombatPhase.weapon:
-            determine_attack(entity)
-            command = self.host.combat_choices[0].name
+            command = {self.host.combat_choices[0].name:self.host.combat_choices[0].name}
         if combat_phase == CombatPhase.option:
-            command = self.host.combat_choices[1].name
+            command = {self.host.combat_choices[1].name:self.host.combat_choices[1].name}
         if combat_phase == CombatPhase.location:
-            command = self.host.combat_choices[2]
+            location = self.host.targets[0].fighter.name_location(self.host.combat_choices[2])
+            command = {location:location}
         if combat_phase == CombatPhase.option2:
-            command = self.host.combat_choices[3]
+            angle = angle_id(self.host.combat_choices[3])
+            command = {angle:angle}
         if combat_phase == CombatPhase.confirm:
-            command = 'Accept'
+            command = {'Accept':'Accept'}
         if combat_phase == CombatPhase.defend:
-            cs = entity.determine_combat_stats(self.host.weapons[0], self.host.weapons[0].attacks[0])
+            cs = entity.determine_combat_stats(entity.weapons[0], entity.weapons[0].attacks[0])
             command = avoid_attack(self.host.attacker, entity, cs)
 
         return command
@@ -65,13 +70,16 @@ def determine_attack(entity) -> None:
 
     best_score = 0
     best_atk = []
-    loc_list = curr_target.fighter.locations
+    
     #Locations to be scored higher because they kill the foe
     critical_locs = {0,1,2,6}
 
     for wpn in entity.weapons:
         for atk in wpn.attacks:
             if final_ap <= entity.fighter.ap:
+                loc_list = []
+                for i in determine_valid_locs(entity, curr_target, atk):
+                    loc_list.append(curr_target.fighter.locations[i])
                 for location in loc_list:
                     loc_id = loc_list.index(location)
                     #Skip if location destroyed
@@ -165,9 +173,9 @@ def avoid_attack(attacker, defender, cs) -> str:
         if can_dodge: dodge = True
         elif can_parry: parry = True
 
-    if parry: command = 'Parry'
-    elif dodge: command = 'Dodge'
-    else: command = 'Take the hit'
+    if parry: command = {'Parry':'Parry'}
+    elif dodge: command = {'Dodge':'Dodge'}
+    else: command = {'Take the hit':'Take the hit'}
     
     return command
 
@@ -175,14 +183,15 @@ def hunt_target(curr_actor, entities, game_map) -> list:
     astar = pathfind.AStar(game_map)
     enemies = []
     closest_coords = []
-    closest_dist = None
+    closest_dist = 100
     path = None
-    command = 'End Turn'
+    command = {'End Turn':'End Turn'}
 
     for entity in entities:
-        if entity in curr_actor.fighter.fov_visible:
-            print(entity.name + ' is visible')
-            enemies.append(entity)
+        if entity is not curr_actor:
+            if (entity.x, entity.y) in curr_actor.fighter.fov_visible:
+                if global_vars.debug: print(entity.name + ' is visible')
+                enemies.append(entity)
     for enemy in enemies:
         dist = sum(((abs(enemy.x - curr_actor.x)),(abs(enemy.y - curr_actor.y))))
         if dist < closest_dist:
@@ -191,16 +200,23 @@ def hunt_target(curr_actor, entities, game_map) -> list:
     if closest_dist is not None:
         path = astar.get_path(curr_actor.x, curr_actor.y, closest_coords[0], closest_coords[1])
 
-    if path is not None:
+    if len(path) != 0:
         command = ['move']
-        y_mod = None
-        x_mod = None
-        for x,y in path[0]:
-            if y == -1: y_mod = 'n'
-            if y == 1: y_mod = 's'
-            if x == -1: x_mod = 'w'
-            if x == 1: x_mod = 'e'
-        mv_dir = str(y_mod + x_mod)
+        y_dir = None
+        x_dir = None
+        x,y = path[0]
+        x_mod = x - curr_actor.x
+        y_mod = y - curr_actor.y
+        if y_mod == -1: y_dir = 'n'
+        if y_mod == 1: y_dir = 's'
+        if x_mod == -1: x_dir = 'w'
+        if x_mod == 1: x_dir = 'e'
+        if x_dir is not None and y_dir is not None:
+            mv_dir = str(y_dir + x_dir)
+        elif y_dir is not None:
+            mv_dir = y_dir
+        else:
+            mv_dir = x_dir
         command.append(mv_dir)
 
     return command

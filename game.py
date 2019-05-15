@@ -42,7 +42,8 @@ if __name__ == "__main__":
     enemy_log = MessageLog(1, options.enemy_panel_w-1, options.enemy_panel_h-2)
     logs = [status_log, enemy_log, message_log]
 
-
+    #Set debug from options
+    global_vars.debug = options.debug
 
     #Entity init
     entity_list = options.entities
@@ -68,6 +69,7 @@ if __name__ == "__main__":
     game_state = GameStates.default
     combat_phase = CombatPhase.explore
     command = None
+    event = None
     game_map = map.Map(options.map_width, options.map_height, 'F')
     fill_map(game_map, options.blocked, options.blocked)
     fov_transparency = array_gen(game_map, options.blocked)
@@ -87,23 +89,34 @@ if __name__ == "__main__":
 
     
     while not libtcodpy.console_is_window_closed():
-        
+        if global_vars.debug: t0 = time.time()
+
         render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map, menu_dict)
         #render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs)
 
-        combat_phase, order = change_actor(order, entities, combat_phase, logs)
-        curr_actor = order[0]
+        combat_phase, order, curr_actor = change_actor(order, entities, curr_actor, combat_phase, logs)
 
-        
-        if hasattr(curr_actor.fighter, 'ai'):
+        event = handle_keys(game_state, menu_dict)
+
+        if event == 'exit': exit(1)
+        elif curr_actor.player and event is not None:
+            command = event
+        elif not curr_actor.player:
             command = curr_actor.fighter.ai.ai_command(curr_actor, entities, combat_phase, game_map, order)
-        else:
-            command = handle_keys(game_state, menu_dict)
-            
+
+            if global_vars.debug: print(curr_actor.name + ' actions: ', *curr_actor.fighter.action, sep=', ')
+            if global_vars.debug and isinstance(command, str): print(curr_actor.name + ' command: ' + command)
+
         if command is not None:
             menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
+            if global_vars.debug: print('Phase: ' + str(combat_phase))
 
-    
+        
+        
+
+        if global_vars.debug: t1 = time.time()
+        if global_vars.debug: total_time = t1 - t0
+        if global_vars.debug: print('Refresh time: ' + str(total_time))
         
         
 

@@ -31,6 +31,8 @@ panel_colors = (('white','light_gray'), ('black','white'), ('black', 'yellow'), 
 #Map setup
 blocked = ((30,30),(30,31),(30,32),(30,33),(30,34),(30,35),(31,30),(32,30),(33,30),(34,30),(35,30))
 
+#Debug
+debug = True
 
 #Base time units
 fps = 30
@@ -48,14 +50,14 @@ hi_init = [130,130,130,130,130,130,430,130,250,250,130,130,130,430,130,130,130,1
 
 #Fighter specs
 player_attr = tank
-player_fighter = ['Player', player_attr, 0]
+player_fighter = ['Player', player_attr, 3]
 player_r_weapon = 'Unarmed'
 player_f_weapon = 'Unarmed'
 player_weapons = [player_r_weapon, player_f_weapon]
 
 
 enemy_attr = hi_init
-enemy_fighter = ['Enemy', enemy_attr, 0, CombatAI]
+enemy_fighter = ['Enemy', enemy_attr, 7, CombatAI]
 enemy_r_weapon = 'Unarmed'
 enemy_f_weapon = 'Unarmed'
 enemy_weapons = [enemy_r_weapon, enemy_f_weapon]
@@ -65,7 +67,7 @@ fighters = [player_fighter, enemy_fighter]
 weapons = {'Player': player_weapons, 'Enemy': enemy_weapons}
 
 #Entity list
-player = (58, 60, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
+player = (60, 40, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
 enemy = (60, 60, '@', 'yellow', 'Enemy', enums.EntityState.conscious, False, True)
 entities = [player, enemy]
 

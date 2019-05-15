@@ -3,6 +3,7 @@ import tcod as libtcodpy
 import bearlibterminal.terminal as terminal
 from tcod import event, console
 import options
+import global_vars
 from enums import MenuTypes, GameStates
 
 
@@ -129,23 +130,22 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
     libtcodpy.console_blit(con, 0, 0, width, height, 0, dx, dy)
 
 def handle_keys(game_state, menu_dict = None) -> str or int or None:
-    for evt in event.wait():
+    for evt in event.get():
         if evt.type == "QUIT":
             exit(0)
-        elif evt.type == "KEYDOWN":
+        elif evt.type == "KEYDOWN" and not evt.repeat:
             try:
                 key = chr(evt.sym)
                 if not key.isalnum():
                     key = evt.scancode
-                    #print(key)
+                    if global_vars.debug: print(key)
             except:
                 key = evt.scancode
-                #print(key)
+                if global_vars.debug: print(key)
             if game_state == GameStates.default:
                 keymap = options.key_maps[game_state.value - 1]
-                if not evt.repeat:
-                    command = keymap.get(key)
-                    return command
+                command = keymap.get(key)
+                return command
             if game_state == GameStates.menu:
                 try:
                     menu_type = menu_dict.get('type')
