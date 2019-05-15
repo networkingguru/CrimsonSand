@@ -78,16 +78,16 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
             
 
     if hasattr(entity, 'fighter') and fov_recompute == True:
-        if global_vars.debug: t0 = time.time()
+        if global_vars.debug_time: t0 = time.time()
         for e in entities:
             if  hasattr(e, 'fighter'):
                 fov_radius = int(round(e.fighter.sit/5))
                 game_map.compute_fov(e.x, e.y, fov_radius, True, libtcodpy.FOV_SHADOW)
                 modify_fov(e, game_map)
 
-        if global_vars.debug: t1 = time.time()
-        if global_vars.debug: total_time = t1 - t0
-        if global_vars.debug: print('FOV recompute time: ' + str(total_time))
+        if global_vars.debug_time: t1 = time.time()
+        if global_vars.debug_time: total_time = t1 - t0
+        if global_vars.debug_time: print('FOV recompute time: ' + str(total_time))
 
 
 
@@ -2183,7 +2183,7 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
             curr_actor.fighter.end_turn = True
             combat_phase = CombatPhase.action
         #Check and see if entity has a target in zoc
-        if len(curr_actor.fighter.targets) == 0:
+        elif len(curr_actor.fighter.targets) == 0:
             if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
                 if command[0] == 'move' or 'spin':
                     moved = move_actor(game_map, curr_actor, entities, command, logs)
@@ -2308,7 +2308,7 @@ def phase_location(curr_actor, command, logs, combat_phase) -> (int, dict):
                 if choice: 
                     if not hasattr(curr_actor.fighter, 'ai'):
                         curr_actor.fighter.combat_choices.append(curr_target.fighter.name_location(option))
-                        messages.append('You aim for ' + curr_actor.fighter.targets[0].name + '\'s ' + option)   
+                        messages.append('You aim for ' + curr_target.fighter.name + '\'s ' + option)   
                     curr_actor.fighter.action = determine_valid_angles(curr_target.fighter.name_location(option))
                     
                     combat_phase = CombatPhase.option2

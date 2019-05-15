@@ -56,7 +56,7 @@ player_f_weapon = 'Unarmed'
 player_weapons = [player_r_weapon, player_f_weapon]
 
 
-enemy_attr = hi_init
+enemy_attr = hopeless
 enemy_fighter = ['Enemy', enemy_attr, 7, CombatAI]
 enemy_r_weapon = 'Unarmed'
 enemy_f_weapon = 'Unarmed'
@@ -67,7 +67,7 @@ fighters = [player_fighter, enemy_fighter]
 weapons = {'Player': player_weapons, 'Enemy': enemy_weapons}
 
 #Entity list
-player = (60, 40, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
+player = (60, 55, '@', 'white', 'Player', enums.EntityState.conscious, True, True)
 enemy = (60, 60, '@', 'yellow', 'Enemy', enums.EntityState.conscious, False, True)
 entities = [player, enemy]
 

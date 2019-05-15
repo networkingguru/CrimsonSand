@@ -4,7 +4,7 @@ import bearlibterminal.terminal as terminal
 from tcod import event, console
 import options
 import global_vars
-from enums import MenuTypes, GameStates
+from enums import MenuTypes, GameStates, CombatPhase
 
 
 
@@ -129,8 +129,8 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
 
     libtcodpy.console_blit(con, 0, 0, width, height, 0, dx, dy)
 
-def handle_keys(game_state, menu_dict = None) -> str or int or None:
-    for evt in event.get():
+def handle_input(game_state, menu_dict = None) -> str or int or None:
+    for evt in event.wait():
         if evt.type == "QUIT":
             exit(0)
         elif evt.type == "KEYDOWN" and not evt.repeat:
@@ -168,6 +168,47 @@ def handle_keys(game_state, menu_dict = None) -> str or int or None:
         else:
             return None
 
+def handle_global_input(combat_phase) -> str or int or None:
+    if combat_phase != CombatPhase.explore:
+        for evt in event.get():
+            if evt.type == "QUIT":
+                exit(0)
+            elif evt.type == "KEYDOWN" and not evt.repeat:
+                try:
+                    key = chr(evt.sym)
+                    if not key.isalnum():
+                        key = evt.scancode
+                        if global_vars.debug: print(key)
+                except:
+                    key = evt.scancode
+                    if global_vars.debug: print(key)
+
+                keymap = options.default_keys
+                command = keymap.get(key)
+                return command
+                
+            else:
+                return None
+    else:    
+        for evt in event.wait():
+            if evt.type == "QUIT":
+                exit(0)
+            elif evt.type == "KEYDOWN" and not evt.repeat:
+                try:
+                    key = chr(evt.sym)
+                    if not key.isalnum():
+                        key = evt.scancode
+                        if global_vars.debug: print(key)
+                except:
+                    key = evt.scancode
+                    if global_vars.debug: print(key)
+
+                keymap = options.default_keys
+                command = keymap.get(key)
+                return command
+                
+            else:
+                return None
 
 def draw_entity(con, entities) -> None:
     
