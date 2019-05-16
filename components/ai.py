@@ -21,7 +21,7 @@ class CombatAI:
             entity.fighter.targets = aoc_check(entities, entity)
             #If targets are available but no actions exist, rerun to fill action list
             if len(entity.fighter.targets) != 0 and self.host.action == 0: return command
-            if len(self.host.action) != 0:
+            elif len(self.host.action) != 0:
                 determine_attack(entity)
                 if len(self.host.combat_choices) == 0:
                     command = {'End Turn':'End Turn'}
@@ -41,7 +41,7 @@ class CombatAI:
             command = {angle:angle}
         if combat_phase == CombatPhase.confirm:
             command = {'Accept':'Accept'}
-        if combat_phase == CombatPhase.defend:
+        elif combat_phase == CombatPhase.defend:
             cs = entity.determine_combat_stats(entity.weapons[0], entity.weapons[0].attacks[0])
             command = avoid_attack(self.host.attacker, entity, cs)
 
@@ -78,10 +78,11 @@ def determine_attack(entity) -> None:
         for atk in wpn.attacks:
             if final_ap <= entity.fighter.ap:
                 loc_list = []
+                locs = curr_target.fighter.locations
                 for i in determine_valid_locs(entity, curr_target, atk):
                     loc_list.append(curr_target.fighter.locations[i])
                 for location in loc_list:
-                    loc_id = loc_list.index(location)
+                    loc_id = locs.index(location)
                     #Skip if location destroyed
                     if not any(location):
                         continue
@@ -121,7 +122,7 @@ def determine_attack(entity) -> None:
                                 hit_score = 1
                             else:    
                                 hit_score = (100/(to_hit - best_avoid))
-                            overall_score = dam_score * hit_score   
+                                overall_score = dam_score * hit_score   
                             for loc in critical_locs:
                                 if loc_id == loc: overall_score *= 1.5
                             if overall_score > best_score:

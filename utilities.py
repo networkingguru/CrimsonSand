@@ -60,6 +60,13 @@ def save_roll_con(p1_score, p1_mods, p2_roll, p2_final_chance) -> str:
     
     return result
 
+def clamp(n, min_n, max_n = 2**10000) -> int:
+    """Clamps a variable between a min and max"""
+    if n < min_n:
+        n = min_n
+    elif n > max_n:
+        n = max_n
+    return n
 
 
 def prune_list(source_list, to_remove, inverse = False, index = True) -> list: #If index true, source_list should be a list of index locations as ints

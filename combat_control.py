@@ -38,15 +38,15 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
     if combat_phase == CombatPhase.option2:
         combat_phase, menu_dict = phase_option2(active_entity, command, logs, combat_phase)
 
-    elif combat_phase == CombatPhase.confirm:
+    if combat_phase == CombatPhase.confirm:
         combat_phase, menu_dict, active_entity = phase_confirm(active_entity, entities, command, logs, combat_phase)
     
-    elif combat_phase == CombatPhase.repeat:
-        combat_phase, menu_dict = phase_repeat(active_entity, command, logs, combat_phase)
-    
-    elif combat_phase == CombatPhase.defend:
+    if combat_phase == CombatPhase.defend:
         combat_phase, game_state, menu_dict, active_entity = phase_defend(active_entity, active_entity.fighter.attacker, entities, command, logs, combat_phase)
 
+    if combat_phase == CombatPhase.repeat:
+        combat_phase, menu_dict = phase_repeat(active_entity, command, logs, combat_phase)
+    
     elif combat_phase == CombatPhase.disengage:
         pass
 

@@ -269,11 +269,8 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
         add_history(curr_target)
     
     atk_result  = make_attack_roll(final_to_hit, 1, entity.fighter.combat_choices[2])
-    roll, dam_mult, new_loc = atk_result[0], atk_result[1], atk_result[2]
+    entity.fighter.atk_result, entity.fighter.dam_result, entity.fighter.new_loc_result = atk_result[0], atk_result[1], atk_result[2]
 
-    #Add result to entity
-    if hasattr(entity.fighter, 'ai'):
-        entity.fighter.ai.atk_result = atk_result
     
     
     #Subtract attack AP and stamina
@@ -286,11 +283,6 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
             messages.append('You missed. ')
         else:
             messages.append(entity.name + ' missed you. ')
-        
-    #Hit wrong area
-    elif new_loc != location:
-        combat_phase = CombatPhase.defend
-    #hit
     else:
         combat_phase = CombatPhase.defend
 
@@ -2308,7 +2300,7 @@ def phase_location(curr_actor, command, logs, combat_phase) -> (int, dict):
                 if choice: 
                     if not hasattr(curr_actor.fighter, 'ai'):
                         curr_actor.fighter.combat_choices.append(curr_target.fighter.name_location(option))
-                        messages.append('You aim for ' + curr_target.fighter.name + '\'s ' + option)   
+                        messages.append('You aim for ' + curr_target.name + '\'s ' + option)   
                     curr_actor.fighter.action = determine_valid_angles(curr_target.fighter.name_location(option))
                     
                     combat_phase = CombatPhase.option2
@@ -2395,12 +2387,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     if command is not None:
         if command.get('Accept'):
             messages, combat_phase, active_entity = perform_attack(curr_actor, entities, final_to_hit, curr_target, cs, combat_phase)
-            
-            if not hasattr(curr_actor.fighter, 'ai'):
-                #See if curr_actor has AP for repeat
-                if curr_actor.fighter.ap >= final_ap:           
-                    combat_phase = CombatPhase.repeat
-                    
+            curr_actor.fighter.last_atk_ap = final_ap
         if command.get('Restart'):
             #Reset vars
             curr_actor.fighter.combat_choices.clear()
@@ -2494,9 +2481,9 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         combat_menu_header = ''.join(header_items)
         if command is not None:
             if command.get('Take the hit'):
-                effects = apply_dam(curr_actor, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
+                effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Dodge'):
-                check = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.ai.atk_result[0], final_to_hit)
+                check = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
                 curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
@@ -2504,9 +2491,9 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You dodged the attack. ')
                     else: message = (enemy.name + ' dodged the attack. ')
                 else:
-                    effects = apply_dam(curr_actor, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
+                    effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Parry'):
-                check = save_roll_con(curr_actor.fighter.deflect, parry_mod, enemy.fighter.ai.atk_result[0], final_to_hit)
+                check = save_roll_con(curr_actor.fighter.deflect, parry_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 curr_actor.fighter.mod_attribute('stamina', -(curr_actor.weapons[0].stamina*curr_actor.fighter.base_stam_cost))
                 curr_actor.fighter.mod_attribute('ap', -parry_ap)
@@ -2514,21 +2501,31 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You parried the attack. ')
                     else: message = (enemy.name + ' parried the blow. ')
                 else:
-                    effects = apply_dam(curr_actor, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
+                    effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
     else:
-        effects = apply_dam(curr_actor, entities, enemy.fighter.ai.atk_result[0], enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.ai.atk_result[1], enemy.fighter.combat_choices[2], cs)
+        effects = apply_dam(curr_actor, entities, enemy.fighter.dam_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
     
-    if message:
-        messages.append(message)
-        combat_phase = CombatPhase.action
-    if effects:
-        for effect in effects:
-            messages.append(effect)
-        combat_phase = CombatPhase.action
     
-    if curr_actor.fighter.disengage:
-        combat_phase == CombatPhase.disengage
+    if message or effects:
+        combat_phase = CombatPhase.action
         
+        if message:
+            messages.append(message)
+
+        if effects:
+            for effect in effects:
+                messages.append(effect)
+
+        if curr_actor.fighter.disengage:
+            combat_phase == CombatPhase.disengage
+        else:
+            curr_actor = enemy
+            if curr_actor.player:
+                #See if curr_actor has AP for repeat
+                if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
+                    combat_phase = CombatPhase.repeat
+
+
     for message in messages:
         log.add_message(Message(message))
 

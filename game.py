@@ -76,12 +76,13 @@ if __name__ == "__main__":
 
     #Initial computations:
     #FOV and AOC comps
-    fov_radius = int(round(curr_actor.fighter.sit/5))
-    game_map.compute_fov(curr_actor.x, curr_actor.y, fov_radius, True)
-    modify_fov(curr_actor, game_map)
     for entity in entities:
-        entity.fighter.update_aoc_facing
+        entity.fighter.update_aoc_facing()
         entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
+        fov_radius = int(round(entity.fighter.sit/5))
+        game_map.compute_fov(entity.x, entity.y, fov_radius, True)
+        modify_fov(entity, game_map)
+        
     #Fill out initial char stats
     entries = gen_status_panel(players[0])
     for entry in entries:
@@ -96,7 +97,7 @@ if __name__ == "__main__":
 
         combat_phase, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, logs)
         if curr_actor != new_curr_actor:
-            print(curr_actor.name + new_curr_actor.name)
+            if global_vars.debug: print(curr_actor.name + ' ' + new_curr_actor.name)
             curr_actor = new_curr_actor
 
         event = handle_global_input(combat_phase)

@@ -1,6 +1,6 @@
 from statistics import mean
 from copy import copy, deepcopy
-from utilities import inch_conv
+from utilities import inch_conv, clamp
 from enums import FighterStance
 from chargen_functions import height_curve
 
@@ -14,6 +14,10 @@ class Fighter:
         self.aoc = []
         self.aoc_facing = facing
         self.action = []
+        self.atk_result = None
+        self.dam_result = None
+        self.new_loc_result = None
+        self.last_atk_ap = None
         self.targets = []
         self.curr_target = None
         self.combat_choices = []
@@ -93,8 +97,7 @@ class Fighter:
         #Effective Power
         self.ep = int(round(((self.pwr * 2) + self.weight + (self.bone * 0.1)) * ((self.brawling + (self.bal/2))/200)))
         #Reach
-        self.reach = inch_conv(self.er, 1)
-        if self.reach == 0: self.reach = 1
+        self.reach = clamp(inch_conv(self.er, 1), 2)
         #Base stamina cost for actions
         self.base_stam_cost = int(round((self.fat/self.str)*(self.weight/100)))
 

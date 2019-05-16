@@ -50,14 +50,14 @@ hi_init = [130,130,130,130,130,130,430,130,250,250,130,130,130,430,130,130,130,1
 
 #Fighter specs
 player_attr = tank
-player_fighter = ['Player', player_attr, 3]
+player_fighter = ['Player', player_attr, 4]
 player_r_weapon = 'Unarmed'
 player_f_weapon = 'Unarmed'
 player_weapons = [player_r_weapon, player_f_weapon]
 
 
-enemy_attr = hopeless
-enemy_fighter = ['Enemy', enemy_attr, 7, CombatAI]
+enemy_attr = fw
+enemy_fighter = ['Enemy', enemy_attr, 0, CombatAI]
 enemy_r_weapon = 'Unarmed'
 enemy_f_weapon = 'Unarmed'
 enemy_weapons = [enemy_r_weapon, enemy_f_weapon]
