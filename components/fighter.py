@@ -88,7 +88,8 @@ class Fighter:
         self.vitr = int((((self.immune/100)*self.weight)/60))
         self.max_mv = int(round(((self.ht/2) * 7.5) * (((self.ht * 2.5) / self.weight) * (self.swift / 100) * (self.flex / 100))))
         self.mv = self.max_mv
-        self.ap = self.swift
+        self.max_ap = self.swift
+        self.ap = self.max_ap
         self.walk_ap = round(self.ap / inch_conv(self.mv, 1))
         self.jog_ap = round(self.ap / inch_conv(self.mv*1.5, 1))
         self.run_ap = round(self.ap / inch_conv(self.mv*2, 1))

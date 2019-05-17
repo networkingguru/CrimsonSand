@@ -289,9 +289,6 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
 
     entity.fighter.mods = cs
 
-    #Add to history to keep up with who had the last action. Used in disengaging and opportunity attacks
-    global_vars.action_id_history.append(id(entity))
-
     if curr_target.fighter.disengage:
         combat_phase = CombatPhase.disengage
 
@@ -337,6 +334,51 @@ def make_attack_roll(hit_chance, damage, location) -> (int, int, int):
         damage *= (((hit_chance - roll)/(hit_chance/100))/100)
         return roll, damage, location
 
+def handle_persistant_effects(entity, entities):
+    messages = []
+    if entity.fighter:
+        #Handle bleeding
+        if len(entity.fighter.bleed) != 0:
+            messages.append(entity.name + ' has ' + str(round(entity.fighter.vitae)) + 'ml of blood. ')
+            former_blood = entity.fighter.vitae
+            for cut in entity.fighter.bleed:
+                entity.fighter.vitae -= cut[0]
+                cut[1] -= 1
+                if cut[1] <= 0: entity.fighter.bleed.remove(cut) 
+            messages.append(('His ' if entity.fighter.male else 'Her ') + 'cuts bleed for ' + str(round(former_blood - entity.fighter.vitae)) + 
+                'ml of loss. ')
+        #Handle blood regen
+        if entity.fighter.max_vitae > entity.fighter.vitae:
+            entity.fighter.vitae += entity.fighter.vitr/12
+            #Handle bleeding to death
+            if entity.fighter.max_vitae*.25 >= entity.fighter.vitae:
+                handle_state_change(entity, entities, EntityState.dead)
+                messages.append(entity.name + ' has passed out from blood loss and will soon be dead. ')
+        #Handle suffocation
+        if entity.fighter.suffocation:
+            if entity.fighter.suffocation == 0:
+                handle_state_change(entity, entities, EntityState.dead)
+                messages.append(entity.name + ' has suffocated an died. ')
+            else: 
+                entity.fighter.suffocation -= 1
+                messages.append(entity.name + ' is slowly choking to death from a neck wound. ')
+        #Handle AP regen
+        entity.fighter.ap = entity.fighter.max_ap
+        #Handle stamina regen/drain
+        if entity.fighter.stamina < entity.fighter.max_stamina:
+            entity.fighter.stamina += entity.fighter.stamr - entity.fighter.stam_drain
+        #Handle unconsiousness due to fatigue
+        if entity.fighter.stamina <= 0:
+            entity.fighter.stamina = 0
+            entity.fighter.stance = FighterStance.prone
+            handle_state_change(entity, entities, EntityState.unconscious)
+            if hasattr(entity.fighter, 'ai'): messages.append(entity.name + ' has passed out due to fatigue. ')
+            else: messages.append('You have passed out due to fatigue. ')
+        #Handle turn end
+        entity.fighter.end_turn = False
+        if not hasattr(entity.fighter, 'ai'): messages.append('A new round has begun. ')
+
+    return messages
 
 def apply_dam(target, entities, roll, dam_type, dam_mult, location, cs) -> set:
     """This  is the  main damage function. dam_effect_finder returns into this. """
@@ -2098,7 +2140,6 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 else: pro = 'her'
                 messages.append(curr_actor.name + 'ends ' + pro + ' turn')
             curr_actor.fighter.end_turn = True
-            order.remove(curr_actor)
             combat_phase = CombatPhase.action
             game_state = GameStates.default 
     except:
@@ -2115,31 +2156,40 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
 def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list):
     messages = []
     log = logs[2]
+    round_end = False
     if len(order) == 0:
-        log.add_message(Message('The round has ended. '))
-        combat_phase = CombatPhase.init
-        global_vars.round_num  += 1
-        order = entities
+        round_end = True
+        
     else:
         #Check and see if anyone can still act
         remaining_fighters = 0
         for entity in order:
             if entity.fighter.end_turn or entity.state == EntityState.unconscious:
                 order.remove(entity)
-            remaining_fighters = len(order)
+                global_vars.turn_order.remove(entity)
+        remaining_fighters = len(order)
         
         if remaining_fighters == 0: 
-            log.add_message(Message('The round has ended. '))
-            combat_phase = CombatPhase.init
-            global_vars.round_num  += 1
-            order = entities
+            round_end = True
+        else:
+            order = list(global_vars.turn_order)
+
+    if round_end:
+        log.add_message(Message('The round has ended. '))
+        combat_phase = CombatPhase.init
+        global_vars.round_num  += 1
+        order = entities
+        for entity in order:
+            handle_persistant_effects(entity, entities)
 
     for message in messages:
         log.add_message(Message(message))
 
     if combat_phase != CombatPhase.defend:
         curr_actor = order[0]
-
+        
+    if global_vars.debug: print(order[0].name + '\'s turn')
+            
     return combat_phase, order, curr_actor
 
 
@@ -2154,6 +2204,7 @@ def phase_init(entities) -> (int, list):
     #Sort the entities by initiative
     if len(entities) > 1:    
         order = turn_order(entities)
+        global_vars.turn_order = list(order)
         combat_phase = CombatPhase.action
     else:
         order = entities

@@ -63,6 +63,7 @@ if __name__ == "__main__":
     order.extend(enemies)
     curr_actor = order[0]
     round_num = global_vars.round_num
+    global_vars.turn_order = list(order)
 
 
     #Map/state init
