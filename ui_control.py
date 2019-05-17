@@ -5,7 +5,8 @@ from tcod import event, console
 import options
 import global_vars
 from enums import MenuTypes, GameStates, CombatPhase
-
+from game_messages import Message
+from utilities import inch_conv
 
 
 
@@ -52,7 +53,7 @@ def render_all(con_list, offset_list, type_list, dim_list, color_list, logs, ent
             hide_options = menu_dict.get('mode')
             
             if menu_type == MenuTypes.combat:
-                menu(map_con, menu_header, menu_options, int(dim_list[0][0]/5), options.screen_width, options.screen_height, hide_options)
+                menu(map_con, menu_header, menu_options, int(dim_list[0][0]/3), options.screen_width, options.screen_height, hide_options)
         if con_type == 0:
             render_console(con, entities, dim_x, dim_y, offset_x, offset_y, fg_color, bg_color, con_type, players, game_map)
         else:
@@ -89,7 +90,8 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
                         con.bg[x][y] = colors.get('dark_gray')
 
 
-        draw_entity(con, entities)        
+        draw_entity(con, entities)
+
     elif con_type == 3: #Print messages to message console
         y = 1
         for message in log.messages:
@@ -128,6 +130,42 @@ def render_console(con, entities, width, height, dx=0, dy=0, fg_color='white', b
                 s_y += 1
 
     libtcodpy.console_blit(con, 0, 0, width, height, 0, dx, dy)
+
+def gen_status_panel(player) -> list:
+    entries = []
+    
+    entries.append(str('INTELLECT: \t' + str(round(player.fighter.int))))
+    entries.append(str('STRENGTH: \t' + str(round(player.fighter.str))))
+    entries.append(str('AGILITY: \t' + str(round(player.fighter.agi))))
+    entries.append(str('CONSTITUTION: \t' + str(round(player.fighter.con))))
+    entries.append(str('SENSES: \t' + str(round(player.fighter.sens))))
+    entries.append(str('APPEARANCE: \t' + str(round(player.fighter.appear))))
+    entries.append(str('Height: \t' + inch_conv(player.fighter.height)))
+    entries.append(str('Weight: \t' + str(round(player.fighter.weight)) + ' lbs'))
+    entries.append(str('Reach: \t\t' + str(round(player.fighter.er)) + '"'))
+    entries.append(str('Stamina: \t' + str(round(player.fighter.stamina))))
+    entries.append(str('Stamina Regen: \t' + str(round(player.fighter.stamr)) + '/rd'))
+    entries.append(str('Vitae: \t\t' + str(round(player.fighter.vitae)) + ' ml'))
+    entries.append(str('Vitae Regen:\t' + str(round(player.fighter.vitr)) + ' ml/min'))
+    entries.append(str('Move (walk): \t' + str(inch_conv(player.fighter.mv, 1)) + ' sq/rd'))
+    entries.append(str('Move (jog): \t' + str(inch_conv(player.fighter.mv*1.5, 1)) + ' sq/rd'))
+    entries.append(str('Move (run): \t' + str(inch_conv(player.fighter.mv*2, 1)) + ' sq/rd'))
+    entries.append(str('Eff. Power: \t' + str(round(player.fighter.ep)) + ' PSI'))
+    entries.append(str('Brawling: \t' + str(player.fighter.brawling) + '%'))
+    entries.append(str('Dodge: \t\t' + str(player.fighter.dodge) + '%'))    
+    entries.append(str('Deflect: \t' + str(player.fighter.deflect) + '%'))
+    entries.append(str('AP: \t\t' + str(player.fighter.ap)))
+    entries.append(str('Walk: \t\t' + str(player.fighter.walk_ap)) + ' AP/sq')
+    entries.append(str('Jog: \t\t' + str(player.fighter.jog_ap)) + ' AP/sq')
+    entries.append(str('Run: \t\t' + str(player.fighter.run_ap)) + ' AP/sq')
+    return entries
+
+def fill_status_panel(player, log) -> None:
+    log.messages.clear()
+    #Fill out char stats
+    entries = gen_status_panel(player)
+    for entry in entries:
+        log.add_message(Message(entry))
 
 def handle_input(game_state, menu_dict = None) -> str or int or None:
     for evt in event.wait():

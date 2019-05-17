@@ -6,7 +6,7 @@ from enums import CombatPhase, MenuTypes, EntityState, GameStates, FighterStance
 from entity import get_blocking_entities_at_location
 from fov_aoc import modify_fov, change_face, aoc_check
 from game_messages import Message
-from utilities import inch_conv, gen_status_panel, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un
+from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un
 
 def detect_enemies(entities) -> int:
     combat_phase = CombatPhase.explore
@@ -2238,10 +2238,7 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                         if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
 
                         if len(curr_actor.fighter.targets) != 0:
-                            entries = gen_status_panel(curr_actor.fighter.targets[0])
-                            status_log.messages.clear()
-                            for entry in entries:
-                                status_log.add_message(Message(entry))
+                            
                             menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
                             
             else:

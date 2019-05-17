@@ -5,13 +5,13 @@ import time
 import global_vars
 from combat_control import combat_controller
 from combat_functions import change_actor
-from ui_control import render_all, create_console, handle_input, handle_global_input, create_terminal, blt_handle_keys, create_root_console, render
+from ui_control import render_all, create_console, handle_input, handle_global_input, create_terminal, blt_handle_keys, create_root_console, render, fill_status_panel
 from enums import GameStates, CombatPhase
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap, array_gen, fill_map
 from fov_aoc import modify_fov, change_face
 from game_messages import MessageLog, Message
-from utilities import gen_status_panel
+
  
 
 
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     players.extend(fill_player_list(entities))
     enemies = []
     enemies = set(entities) - set(players)
+    fill_status_panel(players[0], status_log)
     
     #Global order vars; players get first move
     order = []
@@ -83,11 +84,6 @@ if __name__ == "__main__":
         fov_radius = int(round(entity.fighter.sit/5))
         game_map.compute_fov(entity.x, entity.y, fov_radius, True)
         modify_fov(entity, game_map)
-        
-    #Fill out initial char stats
-    entries = gen_status_panel(players[0])
-    for entry in entries:
-        status_log.add_message(Message(entry))
 
     
     while not libtcodpy.console_is_window_closed():
@@ -126,7 +122,11 @@ if __name__ == "__main__":
 
         if command is not None:
             menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
+            fill_status_panel(players[0], status_log)
             if global_vars.debug: print('Phase: ' + str(combat_phase))
+            if global_vars.debug:
+                for message in status_log.messages: 
+                    if message.text[0] == 'A': print(message.text)
 
 
 

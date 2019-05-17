@@ -100,34 +100,6 @@ def find_last_occurence(source, subject) -> object:
         if len(source)>0: return source[-1]
         else: return [1]
 
-def gen_status_panel(player) -> list:
-    entries = []
-    
-    entries.append(str('INTELLECT: \t' + str(round(player.fighter.int))))
-    entries.append(str('STRENGTH: \t' + str(round(player.fighter.str))))
-    entries.append(str('AGILITY: \t' + str(round(player.fighter.agi))))
-    entries.append(str('CONSTITUTION: \t' + str(round(player.fighter.con))))
-    entries.append(str('SENSES: \t' + str(round(player.fighter.sens))))
-    entries.append(str('APPEARANCE: \t' + str(round(player.fighter.appear))))
-    entries.append(str('Height: \t' + inch_conv(player.fighter.height)))
-    entries.append(str('Weight: \t' + str(round(player.fighter.weight)) + ' lbs'))
-    entries.append(str('Reach: \t\t' + str(round(player.fighter.er)) + '"'))
-    entries.append(str('Stamina: \t' + str(round(player.fighter.stamina))))
-    entries.append(str('Stamina Regen: \t' + str(round(player.fighter.stamr)) + '/rd'))
-    entries.append(str('Vitae: \t\t' + str(round(player.fighter.vitae)) + ' ml'))
-    entries.append(str('Vitae Regen:\t' + str(round(player.fighter.vitr)) + ' ml/min'))
-    entries.append(str('Move (walk): \t' + str(inch_conv(player.fighter.mv, 1)) + ' sq/rd'))
-    entries.append(str('Move (jog): \t' + str(inch_conv(player.fighter.mv*1.5, 1)) + ' sq/rd'))
-    entries.append(str('Move (run): \t' + str(inch_conv(player.fighter.mv*2, 1)) + ' sq/rd'))
-    entries.append(str('Eff. Power: \t' + str(round(player.fighter.ep)) + ' PSI'))
-    entries.append(str('Brawling: \t' + str(player.fighter.brawling) + '%'))
-    entries.append(str('Dodge: \t\t' + str(player.fighter.dodge) + '%'))    
-    entries.append(str('Deflect: \t' + str(player.fighter.deflect) + '%'))
-    entries.append(str('AP: \t\t' + str(player.fighter.ap)))
-    entries.append(str('Walk: \t\t' + str(player.fighter.walk_ap)) + ' AP/sq')
-    entries.append(str('Jog: \t\t' + str(player.fighter.jog_ap)) + ' AP/sq')
-    entries.append(str('Run: \t\t' + str(player.fighter.run_ap)) + ' AP/sq')
-    return entries
 
 
 def entity_angle(reference, axis) -> int:
