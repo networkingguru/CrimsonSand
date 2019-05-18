@@ -25,6 +25,8 @@ class Fighter:
         self.attacker_history = []
         self.disengage = False
         self.mods = []
+        self.wait = False
+        self.acted = False
         #Attributes
         self.male = True
         self.attributes = attributes

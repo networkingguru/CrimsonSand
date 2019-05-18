@@ -374,8 +374,10 @@ def handle_persistant_effects(entity, entities):
             handle_state_change(entity, entities, EntityState.unconscious)
             if hasattr(entity.fighter, 'ai'): messages.append(entity.name + ' has passed out due to fatigue. ')
             else: messages.append('You have passed out due to fatigue. ')
-        #Handle turn end
+        #Reset turn end, acted, wait
         entity.fighter.end_turn = False
+        entity.fighter.acted = False
+        entity.fighter.wait = False
         if not hasattr(entity.fighter, 'ai'): messages.append('A new round has begun. ')
 
     return messages
@@ -2088,6 +2090,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
     messages = []
     #CHeck to see if entity can afford to attack
     wpn_ap = []
+    curr_actor.fighter.acted = False
     for wpn in curr_actor.weapons:
         for atk in wpn.attacks:
             cs = curr_actor.determine_combat_stats(wpn, atk)
@@ -2118,7 +2121,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 messages.append('You decide to wait for your opponents to act')
             else:
                 messages.append(curr_actor.name + ' waits for you to act')
-            order.append(order.pop(0))
+            curr_actor.fighter.wait = True
             combat_phase = CombatPhase.action
             game_state = GameStates.default                  
         elif command.get('Engage'):
@@ -2173,6 +2176,11 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
             round_end = True
         else:
             order = list(global_vars.turn_order)
+            if order[0].fighter.wait: 
+                if not order[1].fighter.acted: curr_actor = order[1]
+                else: order[0].fighter.wait = False
+            elif combat_phase != CombatPhase.defend:
+                curr_actor = order[0]
 
     if round_end:
         log.add_message(Message('The round has ended. '))
@@ -2184,9 +2192,6 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
 
     for message in messages:
         log.add_message(Message(message))
-
-    if combat_phase != CombatPhase.defend:
-        curr_actor = order[0]
         
     if global_vars.debug: print(order[0].name + '\'s turn')
             
@@ -2436,6 +2441,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
         if command.get('Accept'):
             messages, combat_phase, active_entity = perform_attack(curr_actor, entities, final_to_hit, curr_target, cs, combat_phase)
             curr_actor.fighter.last_atk_ap = final_ap
+            curr_actor.fighter.acted = True
         if command.get('Restart'):
             #Reset vars
             curr_actor.fighter.combat_choices.clear()
