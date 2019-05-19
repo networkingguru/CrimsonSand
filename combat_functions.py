@@ -2141,7 +2141,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             else:
                 if curr_actor.fighter.male: pro = 'his'
                 else: pro = 'her'
-                messages.append(curr_actor.name + 'ends ' + pro + ' turn')
+                messages.append(curr_actor.name + ' ends ' + pro + ' turn')
             curr_actor.fighter.end_turn = True
             combat_phase = CombatPhase.action
             game_state = GameStates.default 
@@ -2171,6 +2171,7 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
                 order.remove(entity)
                 global_vars.turn_order.remove(entity)
         remaining_fighters = len(order)
+        if global_vars.debug and len(order) != len(global_vars.turn_order) : print('order length: ' + str(len(order)) + ', global order length: ' + str(len(global_vars.turn_order)))
         
         if remaining_fighters == 0: 
             round_end = True
@@ -2187,13 +2188,13 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
         combat_phase = CombatPhase.init
         global_vars.round_num  += 1
         order = entities
+        global_vars.turn_order = list(order)
         for entity in order:
             handle_persistant_effects(entity, entities)
 
     for message in messages:
         log.add_message(Message(message))
         
-    if global_vars.debug: print(order[0].name + '\'s turn')
             
     return combat_phase, order, curr_actor
 
@@ -2210,9 +2211,11 @@ def phase_init(entities) -> (int, list):
     if len(entities) > 1:    
         order = turn_order(entities)
         global_vars.turn_order = list(order)
+        if global_vars.debug: print('order length: ' + str(len(order)) + ', global order length: ' + str(len(global_vars.turn_order)))
         combat_phase = CombatPhase.action
     else:
         order = entities
+        global_vars.turn_order = list(order)
         combat_phase = CombatPhase.explore
 
     return combat_phase, order
@@ -2227,11 +2230,8 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
 
 
     if command is not None:
-        if command == 'End Turn':
-            curr_actor.fighter.end_turn = True
-            combat_phase = CombatPhase.action
         #Check and see if entity has a target in zoc
-        elif len(curr_actor.fighter.targets) == 0:
+        if len(curr_actor.fighter.targets) == 0:
             if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
                 if command[0] == 'move' or 'spin':
                     moved = move_actor(game_map, curr_actor, entities, command, logs)

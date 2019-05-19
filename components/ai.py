@@ -124,7 +124,7 @@ def determine_attack(entity) -> None:
                                 hit_score = (100/(to_hit - best_avoid))
                                 overall_score = dam_score * hit_score   
                             for loc in critical_locs:
-                                if loc_id == loc: overall_score *= 1.5
+                                if loc_id == loc: overall_score *= 1.2
                             if overall_score > best_score:
                                 best_atk = [wpn, atk, loc_id, angle]
                                 best_score = overall_score
