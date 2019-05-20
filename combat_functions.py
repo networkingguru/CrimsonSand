@@ -244,11 +244,12 @@ def calc_history_modifier(entity, attack, loc, angle) -> int:
         if i == curr_attack:
             repeats = history.count(curr_attack)
         #Add up how many times the elements repeat
-        for n in curr_attack:
-            for x in i:
-                if n == x:
-                    element_repeat += 1
-    mod += (repeats * 15) + (element_repeat * 3)
+        else:
+            for n in curr_attack:
+                for x in i:
+                    if n == x:
+                        element_repeat += 1
+    mod += ((repeats-1) * 15) + ((element_repeat) * 3)
     return mod
 
 def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase) -> (list, int):
@@ -2462,7 +2463,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
             #Reset vars
             curr_actor.fighter.combat_choices.clear()
             combat_phase = CombatPhase.action
-            
+
         menu_dict = None
 
     for message in messages:
@@ -2484,20 +2485,23 @@ def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
 
     combat_menu_header = 'Would you like to repeat the last attack, or start a new attack strategy?'
     player.fighter.action = ['Repeat', 'New']
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': player.fighter.action, 'mode': False}
     if command is not None:
         if command.get('Repeat'):
             combat_phase = CombatPhase.confirm
+            menu_dict = None
 
                     
         if command.get('New'):
             #Reset vars
             player.fighter.combat_choices.clear()
             combat_phase = CombatPhase.action
+            menu_dict = None
 
     for message in messages:
         log.add_message(Message(message))
 
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': player.fighter.action, 'mode': False}
+    
 
     return combat_phase, menu_dict
 
@@ -2528,8 +2532,8 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         parry_mod += history_mod
 
     #Find chances and see if curr_actor can parry/dodge
-    parry_chance = curr_actor.fighter.deflect + parry_mod
-    dodge_chance = curr_actor.fighter.dodge + dodge_mod
+    parry_chance = (curr_actor.fighter.deflect + parry_mod) - enemy.fighter.atk_result
+    dodge_chance = (curr_actor.fighter.dodge + dodge_mod) - enemy.fighter.atk_result
     cs_p = curr_actor.determine_combat_stats(curr_actor.weapons[0],curr_actor.weapons[0].attacks[0])
     parry_ap = cs_p.get('parry ap')
     if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap: can_dodge = True
@@ -2550,6 +2554,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         game_state = GameStates.menu
         header_items.append('What would you like to do? ')
         combat_menu_header = ''.join(header_items)
+        menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
         if command is not None:
             if command.get('Take the hit'):
                 effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
@@ -2573,6 +2578,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     else: message = (enemy.name + ' parried the blow. ')
                 else:
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+            menu_dict = None
     else:
         effects = apply_dam(curr_actor, entities, enemy.fighter.dam_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
     
@@ -2603,8 +2609,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     if hasattr(curr_actor.fighter, 'ai'):
         menu_dict = None
         game_state = GameStates.default
-    else:
-        menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+        
 
     return combat_phase, game_state, menu_dict, curr_actor
 

@@ -49,7 +49,7 @@ tallboy = [130,130,130,130,130,130,130,130,250,250,130,130,130,130,130,130,130,1
 hi_init = [130,130,130,130,130,130,430,130,250,250,130,130,130,430,130,130,130,130,130,130,130,130,130,130,130,130,350,80,130]
 
 #Fighter specs
-player_attr = hi_init
+player_attr = tank
 player_fighter = ['Player', player_attr, 4]
 player_r_weapon = 'Unarmed'
 player_f_weapon = 'Unarmed'
