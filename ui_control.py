@@ -334,8 +334,7 @@ def combat_menu(con, header, options, menu_width, screen_width, screen_height, h
     if len(options) == 0:
         options = ['You are disabled and may not attack']
     menu(con, header, options, menu_width, screen_width, screen_height, hide_options)
-"""     else:
-        options = [choice.name for choice in options.choices] """                    
+             
 
         
 
@@ -389,27 +388,43 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
 
 def create_terminal(w,h) -> bool:
     term = terminal.open()
-    terminal.set('window: size='+str(w)+'x'+str(h)+',title=Crimson Sands; font: fonts\\cp437_8x8.png, size=8x8, codepage=437')
+    terminal.set('window: size='+str(w)+'x'+str(h)+', cellsize=auto, title=Crimson Sands; font: fonts\\DejaVuSansMono-Bold.ttf, size=8x8')
     terminal.composition(terminal.TK_OFF)
     terminal.refresh()
     return term
 
 def blt_handle_keys(game_state) -> str or None:
-    key = None
+    key = terminal.read()
+    command = None
+    #print(key)
+    if key == terminal.TK_CLOSE:
+        exit()
+    else:
+        if terminal.check(terminal.TK_CHAR):
+            key = chr(terminal.state(terminal.TK_CHAR))
+        #print(key)
+        keymap = options.key_maps[game_state.value - 1]
+        command = keymap.get(key)
+    
+    return command
+
+
+def blt_handle_global_input(game_state) -> str or int or None:
+    
+    command = None
     if terminal.has_input():
         key = terminal.read()
-        print(key)
         if key == terminal.TK_CLOSE:
-            exit()
+            exit(0)
         else:
             if terminal.check(terminal.TK_CHAR):
-	            key = chr(terminal.state(terminal.TK_CHAR))
-            print(key)
+                key = chr(terminal.state(terminal.TK_CHAR))
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
-            return command
-    else:
-        return None
+    return command
+                
+            
+
 
 def render_map_con(entities, players, game_map, width, height, ox=0, oy=0) -> None:
 
@@ -418,21 +433,26 @@ def render_map_con(entities, players, game_map, width, height, ox=0, oy=0) -> No
             for x in range(game_map.width):   
                 #Show if it's visible
                 if (x,y) in player.fighter.fov_visible:
-                    terminal.print_(x+ox, y+oy, '[color=dark amber] [/color]')
+                    terminal.color('light amber')
+                    terminal.put(x+ox, y+oy, 0x2588)
                     if (x,y) in player.fighter.fov_wall:
-                        terminal.print_(x+ox, y+oy, '[color=dark gray] [/color]')
+                        terminal.color('dark gray')
+                        terminal.put(x+ox, y+oy, 0x2588)
                 #Not visible but explored
                 elif (x,y) in player.fighter.fov_explored:
                     if (x,y) in player.fighter.fov_wall:
-                        terminal.print_(x+ox, y+oy, '[color=darker gray] [/color]')
+                        terminal.color('darker gray')
+                        terminal.put(x+ox, y+oy, 0x2588)
                     else:
-                        terminal.print_(x+ox, y+oy, '[color=darker gray] [/color]')
+                        terminal.color('darker amber')
+                        terminal.put(x+ox, y+oy, 0x2588)
                 #Not explored                     
                 else:
-                    terminal.print_(x+ox, y+oy, '[color=dark gray] [/color]')
+                    terminal.color('dark gray')
+                    terminal.put(x+ox, y+oy, 0x2588)
 
 
-    print__entities(entities, ox, oy)
+    print_entities(entities, ox, oy)
 
 def render_status_con(entities, players, game_map, width, height, con_type, log, ox=0, oy=0):
     if con_type == 1: entity = players[0]
@@ -443,33 +463,34 @@ def render_status_con(entities, players, game_map, width, height, con_type, log,
             entity = None
            
     #Print paper dolls
-    terminal.printf(ox, oy, '[color=white][bg_color=black]Hit Location')
-    terminal.printf(ox+15, oy, 'DERM')
-    terminal.printf(ox+20, oy, 'TIS')
-    terminal.printf(ox+25, oy, 'BONE')
+    terminal.puts(ox, oy, '[color=white][bg_color=black]Hit Location')
+    terminal.puts(ox+15, oy, '[color=white][bg_color=black]DERM')
+    terminal.puts(ox+20, oy, '[color=white][bg_color=black]TIS')
+    terminal.puts(ox+25, oy, '[color=white][bg_color=black]BONE')
 
     if entity is not None:
         p_y = 1
         for hit_location in entity.fighter.locations:
-            terminal.printf(ox, oy+p_y, entity.fighter.name_location(p_y-1) + ':')
-            terminal.printf(ox+15, oy+p_y, str(hit_location[0]))
-            terminal.printf(ox+20, oy+p_y, str(hit_location[1]))
-            terminal.printf(ox+25, oy+p_y, str(hit_location[2]))
+            terminal.color('white')
+            terminal.puts(ox, oy+p_y, entity.fighter.name_location(p_y-1) + ':')
+            terminal.puts(ox+15, oy+p_y, str(hit_location[0]))
+            terminal.puts(ox+20, oy+p_y, str(hit_location[1]))
+            terminal.puts(ox+25, oy+p_y, str(hit_location[2]))
             p_y += 1
 
     if con_type == 1: #Print char con
         s_y = 50
         for message in log.messages:
-            terminal.printf(ox, oy+s_y, message.text)
+            terminal.puts(ox, oy+s_y, message.text)
             s_y += 1
 
 def render_msg_con(ox, oy, log):
     y = 1
     for message in log.messages:
-        terminal.printf(ox, oy+y, message.text)
+        terminal.puts(ox, oy+y, message.text)
         y += 1
 
-def print__entities(entities, ox, oy) -> None:
+def print_entities(entities, ox, oy) -> None:
     
     players = set()
     enemies = set()
@@ -496,25 +517,28 @@ def print__entities(entities, ox, oy) -> None:
 
     #Paint players AOC green
     for (x,y) in players_aoc:
-        terminal.print_(x+ox, y+oy, '[color=green] [/color]')
+        terminal.color('green')
+        terminal.put(x+ox, y+oy, 0x2588)
     #Paint visible enemy AOC's red
     for (x,y) in enemies_aoc:
         if (x,y) in players_visible:
             #Paint overlapping enemy/player AOC's yellow
             if (x,y) in players_aoc:
-                terminal.print_(x+ox, y+oy, '[color=yellow] [/color]')
+                terminal.color('yellow')
+                terminal.put(x+ox, y+oy, 0x2588)
             else:
-                terminal.print_(x+ox, y+oy, '[color=red] [/color]')
+                terminal.color('red')
+                terminal.put(x+ox, y+oy, 0x2588)
 
     
     #Place players
     for player in players:
-        terminal.print_(player.x+ox, player.y+oy, '[bk_color=dark amber][color='+player.color+']'+player.char+'[/color][/bk_color]')
+        terminal.puts(player.x+ox, player.y+oy, '[bk_color=dark amber][color='+player.color+']'+player.char+'[/color][/bk_color]')
 
     #PLace visible enemies
     for enemy in enemies:
         if (enemy.x, enemy.y) in players_visible:
-            terminal.print_(enemy.x+ox, enemy.y+oy, '[bk_color=dark amber][color='+enemy.color+']'+enemy.char+'[/color][/bk_color]')
+            terminal.puts(enemy.x+ox, enemy.y+oy, '[bk_color=dark amber][color='+enemy.color+']'+enemy.char+'[/color][/bk_color]')
         elif (enemy.x, enemy.y) in players_explored:
-            terminal.print_(enemy.x+ox, enemy.y+oy, '[bk_color=darker amber][color=darker gray]'+enemy.char+'[/color][/bk_color]')
+            terminal.puts(enemy.x+ox, enemy.y+oy, '[bk_color=darker amber][color=darker gray]'+enemy.char+'[/color][/bk_color]')
 
