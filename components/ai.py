@@ -19,8 +19,9 @@ class CombatAI:
         if combat_phase == CombatPhase.action:
             #Check AOC for targets in case one moved
             entity.fighter.targets = aoc_check(entities, entity)
-            #If targets are available but no actions exist, rerun to fill action list
-            if len(entity.fighter.targets) != 0 and self.host.action == 0: return command
+            #If targets are available but no actions exist, run init_combat to fill action list
+            if len(entity.fighter.targets) != 0 and len(self.host.action) == 0: 
+                _, combat_phase, _, order, _ = init_combat(entity, order, command)
             elif len(self.host.action) != 0:
                 determine_attack(entity)
                 if len(self.host.combat_choices) == 0:
@@ -68,7 +69,7 @@ def determine_attack(entity) -> None:
     
     #Attack logic begins
 
-    best_score = 0
+    best_score = -100
     best_atk = []
     
     #Locations to be scored higher because they kill the foe
