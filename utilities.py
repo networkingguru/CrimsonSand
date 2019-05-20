@@ -1,5 +1,6 @@
 import math
 from random import randint
+import global_vars
 
 def roll_dice(dice, facing, explode = False) -> int:
     roll = 0
@@ -54,6 +55,7 @@ def save_roll_con(p1_score, p1_mods, p2_roll, p2_final_chance) -> str:
     result = 'f'
     p2_margin = p2_final_chance - p2_roll
     p1_result, p1_margin = save_roll_un(p1_score, p1_mods)
+    if global_vars.debug: print('Attacker Margin: ' + str(p2_margin) + '\n' + 'Defender Margin: ' + str(p1_margin))
     if p1_result == 'cf': result = 'cf'
     elif p1_margin > p2_margin:
         result = 's'

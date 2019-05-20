@@ -2183,8 +2183,11 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
         else:
             order = list(global_vars.turn_order)
             if order[0].fighter.wait: 
-                if not order[1].fighter.acted: curr_actor = order[1]
-                else: order[0].fighter.wait = False
+                if not order[1].fighter.acted: 
+                    curr_actor = order[1]
+                else: 
+                    order[0].fighter.wait = False
+                    order[1].fighter.acted = False
             elif combat_phase != CombatPhase.defend:
                 curr_actor = order[0]
 
@@ -2532,8 +2535,8 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         parry_mod += history_mod
 
     #Find chances and see if curr_actor can parry/dodge
-    parry_chance = (curr_actor.fighter.deflect + parry_mod) - enemy.fighter.atk_result
-    dodge_chance = (curr_actor.fighter.dodge + dodge_mod) - enemy.fighter.atk_result
+    parry_chance = (curr_actor.fighter.deflect + parry_mod) - (final_to_hit - enemy.fighter.atk_result)
+    dodge_chance = (curr_actor.fighter.dodge + dodge_mod) - (final_to_hit - enemy.fighter.atk_result)
     cs_p = curr_actor.determine_combat_stats(curr_actor.weapons[0],curr_actor.weapons[0].attacks[0])
     parry_ap = cs_p.get('parry ap')
     if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap: can_dodge = True

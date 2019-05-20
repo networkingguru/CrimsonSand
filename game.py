@@ -124,9 +124,7 @@ if __name__ == "__main__":
             menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
             fill_status_panel(players[0], status_log)
             if global_vars.debug: print('Phase: ' + str(combat_phase))
-            if global_vars.debug:
-                for message in status_log.messages: 
-                    if message.text[0] == 'A': print(message.text)
+            
 
 
 
