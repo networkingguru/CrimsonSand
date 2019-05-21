@@ -92,7 +92,7 @@ if __name__ == "__main__":
         if global_vars.debug_time: t0 = time.time()
 
         #render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map, menu_dict)
-        render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs)
+        render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict)
 
         combat_phase, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, logs)
         if curr_actor != new_curr_actor:

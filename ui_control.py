@@ -362,8 +362,9 @@ def combat_menu(con, header, options, menu_width, screen_width, screen_height, h
 
 
 #Below for testing
-def render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list,logs) -> None:
+def render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict = None) -> None:
     terminal.clear()
+    map_con = con_list[0]
     for con in con_list:
         idx = con_list.index(con)
         dim_x = dim_list[idx][0]
@@ -371,7 +372,17 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
         offset_x = offset_list[idx][0]
         offset_y = offset_list[idx][1]
         con_type = type_list[idx]
-        
+        if menu_dict != None:
+            menu_type = menu_dict.get('type')
+            menu_header = menu_dict.get('header')
+            menu_options = menu_dict.get('options')
+            hide_options = menu_dict.get('mode')
+            
+            if menu_type == MenuTypes.combat:
+                menu(map_con, menu_header, menu_options, int(dim_list[0][0]/3), options.screen_width, options.screen_height, hide_options)
+
+
+
         if con_type == 0:
             render_map_con(entities, players, game_map, dim_x, dim_y, offset_x, offset_y)
         elif con_type == 3:
@@ -542,3 +553,35 @@ def print_entities(entities, ox, oy) -> None:
         elif (enemy.x, enemy.y) in players_explored:
             terminal.puts(enemy.x+ox, enemy.y+oy, '[bk_color=darker amber][color=darker gray]'+enemy.char+'[/color][/bk_color]')
 
+def blt_menu(con, header, options, width, screen_width, screen_height, hide_options = False):
+    #if len(options) > 26: raise ValueError('Cannot have a menu with more than 26 options.')
+
+    # calculate total height for the header (after auto-wrap) and one line per option
+    header_height = libtcodpy.console_get_height_rect(con, 0, 0, width, screen_height, header)
+    #header_height = int(round(len(header)/width))
+    if not hide_options:
+        height = len(options) + header_height
+    else:
+        height = header_height
+
+    # create an off-screen console that represents the menu's window
+    window = libtcodpy.console_new(width, height)
+
+    # print the header, with auto-wrap
+    libtcodpy.console_set_default_foreground(window, libtcodpy.white)
+    libtcodpy.console_print_rect_ex(window, 0, 0, width, height, libtcodpy.BKGND_NONE, libtcodpy.LEFT, header)
+
+    # print all the options
+    if not hide_options:
+        y = header_height
+        letter_index = ord('a')
+        for option_text in options:
+            text = '(' + chr(letter_index) + ') ' + option_text
+            libtcodpy.console_print_ex(window, 0, y, libtcodpy.BKGND_NONE, libtcodpy.LEFT, text)
+            y += 1
+            letter_index += 1
+
+    # blit the contents of "window" to the root console
+    x = int(screen_width / 2 - width / 2)
+    y = int(screen_height / 2 - height / 2)
+    libtcodpy.console_blit(window, 0, 0, width, height, 0, x, y, 1.0, 0.7)
