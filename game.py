@@ -5,7 +5,7 @@ import time
 import global_vars
 from combat_control import combat_controller
 from combat_functions import change_actor
-from ui_control import render_all, create_console, handle_input, handle_global_input, create_terminal, blt_handle_keys, create_root_console, render, fill_status_panel, blt_handle_global_input
+from ui_control import create_terminal, blt_handle_keys, render, fill_status_panel, blt_handle_global_input, BLTWindow
 from enums import GameStates, CombatPhase
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from game_map import GameMap, array_gen, fill_map
@@ -19,16 +19,13 @@ if __name__ == "__main__":
     libtcodpy.sys_set_fps(options.fps)
 
     #Console init
-    #con = create_root_console(options.screen_width, options.screen_height)
     dim_list = [(options.map_width, options.map_height), (options.status_panel_w, options.status_panel_h), 
                 (options.enemy_panel_w, options.enemy_panel_h), (options.message_panel_w, options.message_panel_h)]
-    # map_con = create_console(dim_list[0][0], dim_list[0][1])
-    # status_panel = create_console(dim_list[1][0], dim_list[1][1])
-    # enemy_panel = create_console(dim_list[2][0], dim_list[2][1])
-    # message_panel = create_console(dim_list[3][0], dim_list[3][1])
+
     menu_dict = None
 
     term = create_terminal(options.screen_width, options.screen_height)
+    modal_dialog = BLTWindow(options.modal_x, options.modal_y, options.modal_w, 'white', 'black')
 
     con_list = ['map_con', 'status_panel', 'enemy_panel', 'message_panel']
     offset_list = ((options.map_x,options.map_y),(options.status_panel_x,options.status_panel_y),(options.enemy_panel_x,options.enemy_panel_y),
@@ -91,15 +88,14 @@ if __name__ == "__main__":
     while not leave:
         if global_vars.debug_time: t0 = time.time()
 
-        #render_all(con_list, offset_list, type_list, dim_list, color_list, logs, entities, players, game_map, menu_dict)
-        render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict)
+        render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, modal_dialog)
 
         combat_phase, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, logs)
         if curr_actor != new_curr_actor:
             if global_vars.debug: print(curr_actor.name + ' ' + new_curr_actor.name)
             curr_actor = new_curr_actor
 
-        event = blt_handle_global_input(game_state)
+        if game_state != GameStates.menu: event = blt_handle_global_input(game_state)
 
         if event == 'exit': exit(1)
         elif combat_phase == CombatPhase.explore:
@@ -108,13 +104,12 @@ if __name__ == "__main__":
             #Below complexity is due to modal nature. if targets exist, block for input. 
             #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
             if len(curr_actor.fighter.targets) == 0:
-                #command = handle_input(game_state, menu_dict)
-                command = blt_handle_keys(game_state)
+                command = blt_handle_keys(game_state, menu_dict)
                 if command == 'exit': leave = True
             else:
                 try:
                     if menu_dict.get('options'):
-                        command = handle_input(game_state, menu_dict)
+                        command = blt_handle_keys(game_state, menu_dict)
                 except:
                     command = None
                     menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)       
