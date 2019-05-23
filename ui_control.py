@@ -87,7 +87,12 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
 
 def create_terminal(w,h) -> bool:
     term = terminal.open()
-    terminal.set('window: size='+str(w)+'x'+str(h)+', cellsize=auto, title=Crimson Sands; font: fonts\\DejaVuSansMono-Bold.ttf, size=8x8')
+    terminal.set('window: size='+str(w)+'x'+str(h)+', cellsize=auto, title=Crimson Sands')
+    #Fonts
+    terminal.set("text font: fonts\\consolab.ttf, size=8x14")
+    terminal.set("font: fonts\\DejaVuSansMono-Bold.ttf, size=10x10")
+    terminal.set("big font: fonts\\consolab.ttf, size=10x16")
+    
     terminal.composition(terminal.TK_OFF)
     terminal.refresh()
     return term
@@ -182,31 +187,31 @@ def render_status_con(entities, players, game_map, width, height, con_type, log,
             entity = None
            
     #Print paper dolls
-    terminal.puts(ox, oy, '[color=white][bg_color=black]Hit Location')
-    terminal.puts(ox+15, oy, '[color=white][bg_color=black]DERM')
-    terminal.puts(ox+20, oy, '[color=white][bg_color=black]TIS')
-    terminal.puts(ox+25, oy, '[color=white][bg_color=black]BONE')
+    terminal.puts(ox, oy, '[font=text][color=white][bg_color=black]Hit Location')
+    terminal.puts(ox+15, oy, '[font=text][color=white][bg_color=black]DERM')
+    terminal.puts(ox+20, oy, '[font=text][color=white][bg_color=black]TIS')
+    terminal.puts(ox+25, oy, '[font=text][color=white][bg_color=black]BONE')
 
     if entity is not None:
         p_y = 1
         for hit_location in entity.fighter.locations:
             terminal.color('white')
-            terminal.puts(ox, oy+p_y, entity.fighter.name_location(p_y-1) + ':')
-            terminal.puts(ox+15, oy+p_y, str(hit_location[0]))
-            terminal.puts(ox+20, oy+p_y, str(hit_location[1]))
-            terminal.puts(ox+25, oy+p_y, str(hit_location[2]))
+            terminal.puts(ox, oy+p_y, '[font=text]'+entity.fighter.name_location(p_y-1) + ':')
+            terminal.puts(ox+15, oy+p_y, '[font=text]'+str(hit_location[0]))
+            terminal.puts(ox+20, oy+p_y, '[font=text]'+str(hit_location[1]))
+            terminal.puts(ox+25, oy+p_y, '[font=text]'+str(hit_location[2]))
             p_y += 1
 
     if con_type == 1: #Print char con
         s_y = 50
         for message in log.messages:
-            terminal.puts(ox, oy+s_y, message.text)
+            terminal.puts(ox, oy+s_y, '[font=text]'+message.text)
             s_y += 1
 
 def render_msg_con(ox, oy, log):
     y = 1
     for message in log.messages:
-        terminal.puts(ox, oy+y, message.text)
+        terminal.puts(ox, oy+y, '[font=text]'+message.text)
         y += 1
 
 def print_entities(entities, ox, oy) -> None:
@@ -310,12 +315,12 @@ class BLTWindow:
             header_len = len(self.header)
             for h in self.header:
                 terminal.layer(2)
-                terminal.printf(x+1, y+1+(self.header.index(h)), '[color=white]'+h)
+                terminal.printf(x+1, y+1+(self.header.index(h)), '[color=white][font=big]'+h)
             terminal.print_(x+1, y+1+header_len, '\n')
 
         letter_index = ord('a')
         for option in self.options:
             terminal.layer(2)
-            text = '(' + chr(letter_index) + ') ' + option
+            text = '[font=big](' + chr(letter_index) + ') ' + option
             terminal.printf(x+1, y+1+header_len+1+(self.options.index(option)), '[color=white]'+ text)
             letter_index += 1
