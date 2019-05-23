@@ -60,7 +60,7 @@ player_f_weapon = 'Unarmed'
 player_weapons = [player_r_weapon, player_f_weapon]
 
 
-enemy_attr = fw
+enemy_attr = hi_init
 enemy_fighter = ['Enemy', enemy_attr, 0, CombatAI]
 enemy_r_weapon = 'Unarmed'
 enemy_f_weapon = 'Unarmed'

@@ -2568,7 +2568,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
                 if check == 's':
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You dodged the attack. ')
-                    else: message = (enemy.name + ' dodged the attack. ')
+                    else: message = (curr_actor.name + ' dodged the attack. ')
                 else:
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Parry'):
@@ -2578,7 +2578,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 curr_actor.fighter.mod_attribute('ap', -parry_ap)
                 if check == 's':
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You parried the attack. ')
-                    else: message = (enemy.name + ' parried the blow. ')
+                    else: message = (curr_actor.name + ' parried the blow. ')
                 else:
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             menu_dict = None
