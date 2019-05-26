@@ -276,7 +276,13 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     
     
     #Subtract attack AP and stamina
-    entity.fighter.mod_attribute('ap', -final_ap)
+    #Subtract AP from enemy if this is a disengagement attack
+    try:
+        if curr_target in entity.fighter.entities_opportunity_attacked:
+            curr_target.fighter.mod_attribute('ap', -final_ap)
+    except:
+        entity.fighter.mod_attribute('ap', -final_ap)
+        
     entity.fighter.mod_attribute('stamina', -(attack.stamina*entity.fighter.base_stam_cost))
     
     #No damage
@@ -2132,7 +2138,9 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 wpn_ap.append(cs.get('final ap'))
         min_ap = min(wpn_ap)
         curr_actor.fighter.action = []
-        if curr_actor.fighter.ap >= min_ap:
+        if len(curr_actor.fighter.entities_opportunity_attacked) != 0:
+            curr_actor.fighter.action.append('Engage')
+        elif curr_actor.fighter.ap >= min_ap:
             curr_actor.fighter.action.append('Engage')
         if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
             curr_actor.fighter.action.append('Disengage')
@@ -2318,7 +2326,7 @@ def phase_option(curr_actor, command, logs, combat_phase) -> (int, dict):
     for atk in curr_actor.fighter.combat_choices[0].attacks:
         cs = curr_actor.determine_combat_stats(curr_actor.fighter.combat_choices[0], atk)
         atk_final_ap = cs.get('final ap')
-        if curr_actor.fighter.ap >= atk_final_ap:
+        if len(curr_actor.fighter.entities_opportunity_attacked) != 0 or curr_actor.fighter.ap >= atk_final_ap:
             curr_actor.fighter.action.append(atk.name)
 
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
@@ -2598,9 +2606,15 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 messages.append(effect)
 
         if curr_actor.fighter.disengage:
-            combat_phase = CombatPhase.disengage
-            game_state = GameStates.default
-            menu_dict = None
+            if effects:
+                combat_phase = CombatPhase.action
+                curr_actor.fighter.disengage = False
+                enemy.fighter.entities_opportunity_attacked.remove(curr_actor)
+                curr_actor.fighter.disengage_option = None
+            else:
+                combat_phase = CombatPhase.disengage
+                game_state = GameStates.default
+                menu_dict = None
         else:
             curr_actor = enemy
             if curr_actor.player:
@@ -2666,6 +2680,7 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
                 curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
                 curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
             curr_actor.fighter.disengage = False
+            curr_actor.fighter.disengage_option = None
             for entity in entities:
                 if curr_actor in entity.fighter.entities_opportunity_attacked:
                     entity.fighter.entities_opportunity_attacked.remove(curr_actor)
