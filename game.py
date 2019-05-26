@@ -8,7 +8,7 @@ from combat_functions import change_actor
 from ui_control import create_terminal, blt_handle_keys, render, fill_status_panel, blt_handle_global_input, BLTWindow
 from enums import GameStates, CombatPhase
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
-from game_map import GameMap, array_gen, fill_map
+from game_map import array_gen, fill_map
 from fov_aoc import modify_fov, change_face
 from game_messages import MessageLog, Message
 

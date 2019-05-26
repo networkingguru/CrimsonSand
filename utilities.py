@@ -70,7 +70,6 @@ def clamp(n, min_n, max_n = 2**10000) -> int:
         n = max_n
     return n
 
-
 def prune_list(source_list, to_remove, inverse = False, index = True) -> list: #If index true, source_list should be a list of index locations as ints
     if index:
             for i in to_remove:
@@ -92,8 +91,6 @@ def prune_list(source_list, to_remove, inverse = False, index = True) -> list: #
                         source_list.remove(i)
     return source_list
 
-
-
 def find_last_occurence(source, subject) -> object:
     if subject in source:
         #Find the last occurence of subject in list source and return it's index value
@@ -102,9 +99,8 @@ def find_last_occurence(source, subject) -> object:
         if len(source)>0: return source[-1]
         else: return [1]
 
-
-
 def entity_angle(reference, axis) -> int:
+
     dy = axis.y - reference.y
     dx = reference.x - axis.x
     radians = math.atan2(-dy, dx)

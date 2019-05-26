@@ -27,6 +27,8 @@ class Fighter:
         self.mods = []
         self.wait = False
         self.acted = False
+        self.entities_opportunity_attacked = []
+        self.disengage_option = None
         #Attributes
         self.male = True
         self.attributes = attributes

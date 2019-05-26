@@ -60,7 +60,7 @@ player_f_weapon = 'Unarmed'
 player_weapons = [player_r_weapon, player_f_weapon]
 
 
-enemy_attr = hi_init
+enemy_attr = fat
 enemy_fighter = ['Enemy', enemy_attr, 0, CombatAI]
 enemy_r_weapon = 'Unarmed'
 enemy_f_weapon = 'Unarmed'
@@ -77,7 +77,7 @@ entities = [player, enemy]
 
 #Key Dicts in order of key, command_verb
 default_keys = {'q':('move','nw'), 'w':('move','n'), 'e':('move','ne'), 'd':('move','e'), 'c':('move','se'), 
-                'x':('move','s'), 'z':('move','sw'),'a':('move','w'), 41: 'exit', 54:('spin','ccw'), 55:('spin','cw'),
+                'x':('move','s'), 'z':('move','sw'),'a':('move','w'), 41: 'exit', '.':('spin','ccw'), ',':('spin','cw'),
                 80: ('move','w'), 79:('move','e'),82:('move','n'),81:('move','s')}
 
 key_maps = [default_keys]

@@ -74,10 +74,15 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
         menu_options = menu_dict.get('options')
         hide_options = menu_dict.get('mode')
         
-        if menu_type == MenuTypes.combat and not hide_options:
-            modal_dialog.options = menu_options
-            modal_dialog.add_header(menu_header)
-            modal_dialog.draw_window()
+        if menu_type == MenuTypes.combat:
+            if not hide_options:
+                modal_dialog.options = menu_options
+                modal_dialog.add_header(menu_header)
+                modal_dialog.draw_window()
+            else:
+                modal_dialog.options = None
+                modal_dialog.add_header(menu_header)
+                modal_dialog.draw_window()
 
     terminal.refresh()
    
@@ -87,7 +92,7 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
 
 def create_terminal(w,h) -> bool:
     term = terminal.open()
-    terminal.set('window: size='+str(w)+'x'+str(h)+', cellsize=auto, title=Crimson Sands')
+    terminal.set('window: size='+str(w)+'x'+str(h)+', cellsize=10x10, title=Crimson Sands')
     #Fonts
     terminal.set("text font: fonts\\consolab.ttf, size=8x14")
     terminal.set("font: fonts\\DejaVuSansMono-Bold.ttf, size=10x10")
@@ -110,8 +115,6 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
         if game_state == GameStates.menu:
-            if terminal.check(terminal.TK_CHAR):
-                key = ord(chr(terminal.state(terminal.TK_CHAR)))
             try:
                 menu_type = menu_dict.get('type')
                 menu_header = menu_dict.get('header')
@@ -120,11 +123,15 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
             except:
                 print('Something is missing from the menu_dict')
             if hide_options:
+                if terminal.check(terminal.TK_CHAR):
+                    key = chr(terminal.state(terminal.TK_CHAR))
                 for item in menu_options:
-                    index = key - ord(item)
-                    if index >= 0 and not index > (len(menu_options)-1):
-                        command = {menu_options[index]:menu_options[index]}
+                    if key == item:
+                        keymap = options.key_maps[0]
+                        command = keymap.get(key)
             else:
+                if terminal.check(terminal.TK_CHAR):
+                    key = ord(chr(terminal.state(terminal.TK_CHAR)))
                 index = key - ord('a')
                 if index >= 0 and not index > (len(menu_options)-1):
                     command = {menu_options[index]:menu_options[index]}
@@ -283,7 +290,10 @@ class BLTWindow:
     def add_header(self, header):
         if header is not None:
             self.header = textwrap.wrap(header, self.w-2)
-            self.h = len(self.header)+len(self.options)+3
+            self.h = len(self.header)
+            if self.options is not None: 
+                self.h += len(self.options)+3
+            else: self.h += 3
     def draw_window(self):
 
         x = self.x
@@ -317,10 +327,10 @@ class BLTWindow:
                 terminal.layer(2)
                 terminal.printf(x+1, y+1+(self.header.index(h)), '[color=white][font=big]'+h)
             terminal.print_(x+1, y+1+header_len, '\n')
-
-        letter_index = ord('a')
-        for option in self.options:
-            terminal.layer(2)
-            text = '[font=big](' + chr(letter_index) + ') ' + option
-            terminal.printf(x+1, y+1+header_len+1+(self.options.index(option)), '[color=white]'+ text)
-            letter_index += 1
+        if self.options is not None:
+            letter_index = ord('a')
+            for option in self.options:
+                terminal.layer(2)
+                text = '[font=big](' + chr(letter_index) + ') ' + option
+                terminal.printf(x+1, y+1+header_len+1+(self.options.index(option)), '[color=white]'+ text)
+                letter_index += 1
