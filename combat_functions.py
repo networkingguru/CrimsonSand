@@ -277,12 +277,12 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     
     #Subtract attack AP and stamina
     #Subtract AP from enemy if this is a disengagement attack
-    try:
-        if curr_target in entity.fighter.entities_opportunity_attacked:
-            curr_target.fighter.mod_attribute('ap', -final_ap)
-    except:
+
+    if curr_target in entity.fighter.entities_opportunity_attacked:
+        curr_target.fighter.mod_attribute('ap', -final_ap)
+    else:
         entity.fighter.mod_attribute('ap', -final_ap)
-        
+
     entity.fighter.mod_attribute('stamina', -(attack.stamina*entity.fighter.base_stam_cost))
     
     #No damage
@@ -2605,22 +2605,17 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
             for effect in effects:
                 messages.append(effect)
 
-        if curr_actor.fighter.disengage:
-            if effects:
-                combat_phase = CombatPhase.action
-                curr_actor.fighter.disengage = False
-                enemy.fighter.entities_opportunity_attacked.remove(curr_actor)
-                curr_actor.fighter.disengage_option = None
-            else:
-                combat_phase = CombatPhase.disengage
-                game_state = GameStates.default
-                menu_dict = None
+        if curr_actor.fighter.disengage:       
+            combat_phase = CombatPhase.disengage
+            game_state = GameStates.default
+            menu_dict = None
         else:
             curr_actor = enemy
             if curr_actor.player:
                 #See if curr_actor has AP for repeat
                 if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
                     combat_phase = CombatPhase.repeat
+                    game_state = GameStates.menu
 
 
     for message in messages:
