@@ -185,7 +185,7 @@ def hunt_target(curr_actor, entities, game_map) -> list:
     astar = pathfind.AStar(game_map)
     enemies = []
     closest_coords = []
-    closest_dist = 100
+    closest_dist = None
     path = None
     command = {'End Turn':'End Turn'}
 
@@ -194,11 +194,14 @@ def hunt_target(curr_actor, entities, game_map) -> list:
             if (entity.x, entity.y) in curr_actor.fighter.fov_visible:
                 if global_vars.debug: print(entity.name + ' is visible')
                 enemies.append(entity)
-    for enemy in enemies:
-        dist = sum(((abs(enemy.x - curr_actor.x)),(abs(enemy.y - curr_actor.y))))
-        if dist < closest_dist:
-            closest_dist = dist
-            closest_coords = [enemy.x, enemy.y]
+    if len(enemies) != 0:
+        for enemy in enemies:
+            dist = sum(((abs(enemy.x - curr_actor.x)),(abs(enemy.y - curr_actor.y))))
+            if closest_dist is None or dist < closest_dist:
+                closest_dist = dist
+                closest_coords = [enemy.x, enemy.y]
+    else:
+        command = {'spin','cw'}
     if closest_dist is not None:
         path = astar.get_path(curr_actor.x, curr_actor.y, closest_coords[0], closest_coords[1])
 

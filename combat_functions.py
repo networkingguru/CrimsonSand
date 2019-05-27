@@ -159,10 +159,10 @@ def determine_valid_locs(attacker, defender, attack) -> list:
         locations = []
         return locations
 
-    #Find distance between attacker and defender
+    #Find distance between attacker and defender. 
     distance = sqrt((defender.x - attacker.x)**2 + (defender.y - attacker.y)**2)
-    #Convert squares into inches and round it off
-    distance = int(round(distance*36))
+    #Convert squares into inches and round it off. 36" subtracted due to each combatant being in the middle of a square
+    distance = int(round(distance*36))-36
     
     #Remove locations that are unreachable due to angle
     for location in locations:
@@ -2610,6 +2610,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
             game_state = GameStates.default
             menu_dict = None
         else:
+            curr_actor.fighter.action.clear()
             curr_actor = enemy
             if curr_actor.player:
                 #See if curr_actor has AP for repeat
