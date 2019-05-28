@@ -30,6 +30,13 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
     message_log = logs[2]
     
     if command[0] == 'move':
+        #Mark last known pos of entity for AI
+        for e in entities:
+            if e is not entity and hasattr(e.fighter, 'ai'):
+                e.fighter.ai.update_enemy_pos(entity)
+            else:
+                continue
+
         direction = []
         direction.extend(command[1])
         y_mod = 0

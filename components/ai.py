@@ -1,4 +1,5 @@
 import tcod.path as pathfind
+from random import randint
 from combat_functions import determine_valid_angles, angle_id, calc_history_modifier, init_combat, determine_valid_locs
 from enums import CombatPhase
 from components.fighter import Fighter
@@ -10,6 +11,7 @@ class CombatAI:
         self.host = host
         self.atk_result = []
         self.atk_success = False
+        self.target_memory = []
 
 
     def ai_command(self, entity, entities, combat_phase, game_map, order) -> str:
@@ -47,6 +49,22 @@ class CombatAI:
             command = avoid_attack(self.host.attacker, entity, cs)
 
         return command
+
+    def update_enemy_pos(self, entity) -> None:
+        entry = {'target':entity, 'last_loc':(entity.x, entity.y), 'last_seen':global_vars.round_num}
+        try:
+            if entry in self.target_memory:
+                pass
+            else:
+                for item in self.target_memory:
+                    target = item.get('target')
+                    if target == entity:
+                        self.target_memory.remove(item)
+                        self.target_memory.append(entry)
+                if entry not in self.target_memory:
+                    self.target_memory.append(entry)
+        except:
+            self.target_memory.append(entry)
 
 
 
@@ -201,11 +219,27 @@ def hunt_target(curr_actor, entities, game_map) -> list:
                 closest_dist = dist
                 closest_coords = [enemy.x, enemy.y]
     else:
-        command = {'spin','cw'}
+        #See if there's a known loc for an enemy in history
+        try:
+            for entry in curr_actor.fighter.ai.target_memory:
+                x,y = entry.get('last_loc')
+                dist = sum(((abs(x - curr_actor.x)),(abs(y - curr_actor.y))))
+                if closest_dist is None or dist < closest_dist:
+                    closest_dist = dist
+                    closest_coords = [x, y]
+        except:
+            rand_x = randint(0, game_map.width)
+            rand_y = randint(0, game_map.height)
+            dist = sum(((abs(rand_x - curr_actor.x)),(abs(rand_y - curr_actor.y))))
+            if closest_dist is None or dist < closest_dist:
+                closest_dist = dist
+                closest_coords = [rand_x, rand_y]
+
     if closest_dist is not None:
         path = astar.get_path(curr_actor.x, curr_actor.y, closest_coords[0], closest_coords[1])
-
-    if len(path) != 0:
+    if path is None:
+        command = ('spin','cw')
+    elif len(path) != 0:
         command = ['move']
         y_dir = None
         x_dir = None
@@ -225,3 +259,4 @@ def hunt_target(curr_actor, entities, game_map) -> list:
         command.append(mv_dir)
 
     return command
+
