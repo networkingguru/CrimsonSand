@@ -132,9 +132,15 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
             else:
                 if terminal.check(terminal.TK_CHAR):
                     key = ord(chr(terminal.state(terminal.TK_CHAR)))
-                index = key - ord('a')
-                if index >= 0 and not index > (len(menu_options)-1):
-                    command = {menu_options[index]:menu_options[index]}
+                for option in menu_options:
+                    opt_index = menu_options.index(option)
+                    if opt_index < 26:
+                        cp = ord('a') + opt_index
+                    else:
+                        cp = ord('0') + opt_index - 26
+                    if cp == key:
+                        command = {menu_options[opt_index]:menu_options[opt_index]}
+                        pass
     
     return command
 
@@ -328,9 +334,16 @@ class BLTWindow:
                 terminal.printf(x+1, y+1+(self.header.index(h)), '[color=white][font=big]'+h)
             terminal.print_(x+1, y+1+header_len, '\n')
         if self.options is not None:
+            
+
             letter_index = ord('a')
+
             for option in self.options:
+                opt_index = self.options.index(option)
+                if opt_index < 26:
+                    letter_index = ord('a') + opt_index
+                else:
+                    letter_index = ord('0') + opt_index - 26
                 terminal.layer(2)
                 text = '[font=big](' + chr(letter_index) + ') ' + option
                 terminal.printf(x+1, y+1+header_len+1+(self.options.index(option)), '[color=white]'+ text)
-                letter_index += 1

@@ -10,17 +10,17 @@ class Fighter:
         self.end_turn = False
         if ai is not None:
             self.ai = ai(self)
-        self.facing = facing
-        self.aoc = []
+        self.facing = facing #Facing for FOV
+        self.aoc = [] #List of cells for AOC
         self.aoc_facing = facing
-        self.action = []
-        self.atk_result = None
-        self.dam_result = None
-        self.new_loc_result = None
-        self.last_atk_ap = None
-        self.targets = []
+        self.action = [] #List of available commmands for combat menus
+        self.atk_result = None #Atk roll for last attack
+        self.dam_result = None #Dam multiplier for last attack
+        self.new_loc_result = None #Used when attack hits wrong loc
+        self.last_atk_ap = 0
+        self.targets = [] #This is a list of targets in AOC, set by update_targets
         self.curr_target = None
-        self.combat_choices = []
+        self.combat_choices = [] #List of chosen commands for combat menus
         self.attacker = None
         self.attacker_history = []
         self.disengage = False

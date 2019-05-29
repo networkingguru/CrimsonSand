@@ -34,8 +34,6 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
         for e in entities:
             if e is not entity and hasattr(e.fighter, 'ai'):
                 e.fighter.ai.update_enemy_pos(entity)
-            else:
-                continue
 
         direction = []
         direction.extend(command[1])
@@ -268,6 +266,8 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     final_ap = cs.get('final ap')
     location = entity.fighter.combat_choices[2]
     active_entity = entity
+    curr_actor = entity
+    enemy = curr_target
 
     #Clear history if attacker changed
     if curr_target.fighter.attacker is not entity:
@@ -299,7 +299,34 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
         else:
             messages.append(entity.name + ' missed you. ')
     else:
-        combat_phase = CombatPhase.defend
+        #First, see if this is an attack from behind
+        if entity in curr_target.fighter.targets:
+            combat_phase = CombatPhase.defend
+        else:
+            effects = apply_dam(enemy, entities, curr_actor.fighter.atk_result, curr_actor.fighter.combat_choices[1].damage_type[0], curr_actor.fighter.dam_result, curr_actor.fighter.combat_choices[2], cs)
+    
+    
+            if effects:
+                combat_phase = CombatPhase.action
+                curr_actor.fighter.action.clear()
+                for effect in effects:
+                    messages.append(effect)
+
+                if enemy.fighter.disengage:       
+                    combat_phase = CombatPhase.disengage
+                    active_entity = enemy
+                    game_state = GameStates.default
+                    menu_dict = None
+                else:
+                    if curr_actor.player:
+                        #See if curr_actor has AP for repeat
+                        if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
+                            combat_phase = CombatPhase.repeat
+                            game_state = GameStates.menu
+
+            if hasattr(curr_actor.fighter, 'ai'):
+                menu_dict = None
+                game_state = GameStates.default
 
 
     entity.fighter.mods = cs
@@ -2144,7 +2171,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 cs = curr_actor.determine_combat_stats(wpn, atk)
                 wpn_ap.append(cs.get('final ap'))
         min_ap = min(wpn_ap)
-        curr_actor.fighter.action = []
+        curr_actor.fighter.action.clear()
         if len(curr_actor.fighter.entities_opportunity_attacked) != 0:
             curr_actor.fighter.action.append('Engage')
         elif curr_actor.fighter.ap >= min_ap:
@@ -2479,7 +2506,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
             #Reset vars
             curr_actor.fighter.combat_choices.clear()
             combat_phase = CombatPhase.action
-
+        
         menu_dict = None
 
     for message in messages:
@@ -2542,21 +2569,20 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     game_state = GameStates.default
     header_items = []
 
-    #First, see if this is an attack from behind
-    if enemy in curr_actor.fighter.targets:
-        #Find history mod
-        if len(curr_actor.fighter.attacker_history) > 0:
-            history_mod = calc_history_modifier(curr_actor, atk_name, enemy.fighter.combat_choices[2], enemy.fighter.combat_choices[3])
-            dodge_mod += history_mod
-            parry_mod += history_mod
 
-        #Find chances and see if curr_actor can parry/dodge
-        parry_chance = (curr_actor.fighter.deflect + parry_mod) - (final_to_hit - enemy.fighter.atk_result)
-        dodge_chance = (curr_actor.fighter.dodge + dodge_mod) - (final_to_hit - enemy.fighter.atk_result)
-        cs_p = curr_actor.determine_combat_stats(curr_actor.weapons[0],curr_actor.weapons[0].attacks[0])
-        parry_ap = cs_p.get('parry ap')
-        if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap: can_dodge = True
-        if curr_actor.fighter.ap >= parry_ap: can_parry = True
+    #Find history mod
+    if len(curr_actor.fighter.attacker_history) > 0:
+        history_mod = calc_history_modifier(curr_actor, atk_name, enemy.fighter.combat_choices[2], enemy.fighter.combat_choices[3])
+        dodge_mod += history_mod
+        parry_mod += history_mod
+
+    #Find chances and see if curr_actor can parry/dodge
+    parry_chance = (curr_actor.fighter.deflect + parry_mod) - (final_to_hit - enemy.fighter.atk_result)
+    dodge_chance = (curr_actor.fighter.dodge + dodge_mod) - (final_to_hit - enemy.fighter.atk_result)
+    cs_p = curr_actor.determine_combat_stats(curr_actor.weapons[0],curr_actor.weapons[0].attacks[0])
+    parry_ap = cs_p.get('parry ap')
+    if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap: can_dodge = True
+    if curr_actor.fighter.ap >= parry_ap: can_parry = True
     
 
     #Choose how to defend '
@@ -2619,6 +2645,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         else:
             curr_actor.fighter.action.clear()
             curr_actor = enemy
+            
             if curr_actor.player:
                 #See if curr_actor has AP for repeat
                 if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           

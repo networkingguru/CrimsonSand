@@ -4,6 +4,8 @@ from combat_functions import determine_valid_angles, angle_id, calc_history_modi
 from enums import CombatPhase
 from components.fighter import Fighter
 from fov_aoc import aoc_check
+from entity import get_blocking_entities_at_location
+from utilities import entity_angle, prune_list
 import global_vars
 
 class CombatAI:
@@ -30,7 +32,8 @@ class CombatAI:
                     command = {'End Turn':'End Turn'}
                 elif 'Engage' in self.host.action:
                     command = {'Engage':'Engage'}
-                else: command = hunt_target(entity, entities, game_map)
+                else: 
+                    command = hunt_target(entity, entities, game_map)
             else: command = hunt_target(entity, entities, game_map)
         if combat_phase == CombatPhase.weapon:
             command = {self.host.combat_choices[0].name:self.host.combat_choices[0].name}
@@ -96,12 +99,14 @@ def determine_attack(entity) -> None:
     for wpn in entity.weapons:
         for atk in wpn.attacks:
             if final_ap <= entity.fighter.ap:
-                loc_list = []
-                locs = curr_target.fighter.locations
-                for i in determine_valid_locs(entity, curr_target, atk):
-                    loc_list.append(curr_target.fighter.locations[i])
-                for location in loc_list:
-                    loc_id = locs.index(location)
+                locs = curr_target.fighter.get_locations()
+                #Determine valid locations
+                valid_locs = determine_valid_locs(entity, curr_target, atk)
+                #Prune list to only valid
+                loc_strings = prune_list(curr_target.fighter.get_locations(), valid_locs, True, False)
+                for l in loc_strings:
+                    loc_id = locs.index(l)
+                    location = curr_target.fighter.locations[loc_id]
                     #Skip if location destroyed
                     if not any(location):
                         continue
@@ -227,6 +232,7 @@ def hunt_target(curr_actor, entities, game_map) -> list:
                 if closest_dist is None or dist < closest_dist:
                     closest_dist = dist
                     closest_coords = [x, y]
+                    closest_enemy = entry.get('target')
         except:
             rand_x = randint(0, game_map.width)
             rand_y = randint(0, game_map.height)
@@ -241,22 +247,34 @@ def hunt_target(curr_actor, entities, game_map) -> list:
         command = ('spin','cw')
     elif len(path) != 0:
         command = ['move']
+
+        if len(path) == 1:
+            if get_blocking_entities_at_location(entities, closest_coords[0], closest_coords[1]) is not None:
+                command = ['spin']
+        
         y_dir = None
         x_dir = None
         x,y = path[0]
         x_mod = x - curr_actor.x
         y_mod = y - curr_actor.y
-        if y_mod == -1: y_dir = 'n'
-        if y_mod == 1: y_dir = 's'
-        if x_mod == -1: x_dir = 'w'
-        if x_mod == 1: x_dir = 'e'
-        if x_dir is not None and y_dir is not None:
-            mv_dir = str(y_dir + x_dir)
-        elif y_dir is not None:
-            mv_dir = y_dir
+        if command[0] == 'move':
+            if y_mod == -1: y_dir = 'n'
+            if y_mod == 1: y_dir = 's'
+            if x_mod == -1: x_dir = 'w'
+            if x_mod == 1: x_dir = 'e'
+            if x_dir is not None and y_dir is not None:
+                mv_dir = str(y_dir + x_dir)
+            elif y_dir is not None:
+                mv_dir = y_dir
+            else:
+                mv_dir = x_dir
+            command.append(mv_dir)
         else:
-            mv_dir = x_dir
-        command.append(mv_dir)
+            #Spin to closest enemy
+            if len(curr_actor.fighter.targets) == 0:
+                angle = entity_angle(closest_enemy, curr_actor)
+                if angle <= 180: command.append('ccw')
+                else: command.append('cw')
 
     return command
 
