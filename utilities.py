@@ -137,3 +137,8 @@ def entity_angle(reference, axis) -> int:
         degrees -= 360
     
     return degrees
+
+def find_command(keymap, wanted_cmd) -> str:
+    for key, command in keymap.items():
+        if command == wanted_cmd:
+            return key

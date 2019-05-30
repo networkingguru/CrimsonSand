@@ -3,6 +3,7 @@ from tcod import map as tcod_map
 import numpy as np
 import options
 from entity import get_blocking_entities_at_location
+from utilities import find_command
 
 def array_gen(game_map, blocked) -> np.array:
     blocked_tiles = np.full((game_map.width, game_map.height), True, order='F')
@@ -50,21 +51,29 @@ def cells_to_keys(cells, entity) -> (list, list):
         offsets.append((x_offset, y_offset))
         if x_offset == 1:
             if y_offset == 1:
-                keys.append('c')
+                key = find_command(options.default_keys, ('move','se'))
+                keys.append(key)
             elif y_offset == 0:
-                keys.append('d')
+                key = find_command(options.default_keys, ('move','e'))
+                keys.append(key)
             else:
-                keys.append('e')
+                key = find_command(options.default_keys, ('move','ne'))
+                keys.append(key)
         elif x_offset == 0:
             if y_offset == 1:
-                keys.append('x')
+                key = find_command(options.default_keys, ('move','s'))
+                keys.append(key)
             else:
-                keys.append('w')
+                key = find_command(options.default_keys, ('move','n'))
+                keys.append(key)
         else:
             if y_offset == 1:
-                keys.append('z')
+                key = find_command(options.default_keys, ('move','sw'))
+                keys.append(key)
             elif y_offset == 0:
-                keys.append('a')
+                key = find_command(options.default_keys, ('move','w'))
+                keys.append(key)
             else:
-                keys.append('q')
+                key = find_command(options.default_keys, ('move','se'))
+                keys.append(key)
     return keys, offsets
