@@ -89,7 +89,7 @@ def aoc_check(entities, active_entity) -> list:
 
 
 def modify_fov(entity, game_map) -> None:
-    fov_area = change_face(entity.fighter.facing, entity.x, entity.y, 50, 50) #Contains truncated area based on facing
+    fov_area = change_face(entity.fighter.facing, entity.x, entity.y, int(round(entity.fighter.sit/3)), 50) #Contains truncated area based on facing
     entity.fighter.fov_visible.clear()
     for x in range(game_map.width):
         for y in range(game_map.height):

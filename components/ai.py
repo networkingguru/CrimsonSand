@@ -1,11 +1,12 @@
 import tcod.path as pathfind
 from random import randint
 from combat_functions import determine_valid_angles, angle_id, calc_history_modifier, init_combat, determine_valid_locs
-from enums import CombatPhase
+from enums import CombatPhase, EntityState
 from components.fighter import Fighter
-from fov_aoc import aoc_check
+from fov_aoc import aoc_check, fov_calc
 from entity import get_blocking_entities_at_location
 from utilities import entity_angle, prune_list
+from entity import Entity
 import global_vars
 
 class CombatAI:
@@ -14,6 +15,7 @@ class CombatAI:
         self.atk_result = []
         self.atk_success = False
         self.target_memory = [] #List of dict entries set by update_enemy_pos to hold last known loc of enemies
+        self.command_queue = [] #List of queued commands for random hunting
 
 
     def ai_command(self, entity, entities, combat_phase, game_map, order) -> str:
@@ -205,7 +207,7 @@ def avoid_attack(attacker, defender, cs) -> str:
     
     return command
 
-def hunt_target(curr_actor, entities, game_map) -> list:
+def hunt_target(curr_actor, entities, game_map) -> list or str:
     astar = pathfind.AStar(game_map)
     enemies = []
     closest_coords = []
@@ -226,7 +228,7 @@ def hunt_target(curr_actor, entities, game_map) -> list:
                 closest_coords = [enemy.x, enemy.y]
     else:
         #See if there's a known loc for an enemy in history
-        try:
+        if len(curr_actor.fighter.ai.target_memory) > 0:
             for entry in curr_actor.fighter.ai.target_memory:
                 x,y = entry.get('last_loc')
                 dist = sum(((abs(x - curr_actor.x)),(abs(y - curr_actor.y))))
@@ -234,53 +236,108 @@ def hunt_target(curr_actor, entities, game_map) -> list:
                     closest_dist = dist
                     closest_coords = [x, y]
                     closest_enemy = entry.get('target')
-        except:
-            rand_x = randint(0, game_map.width)
-            rand_y = randint(0, game_map.height)
-            dist = sum(((abs(rand_x - curr_actor.x)),(abs(rand_y - curr_actor.y))))
-            if closest_dist is None or dist < closest_dist:
-                closest_dist = dist
-                closest_coords = [rand_x, rand_y]
+        else:
+            command = random_hunt(curr_actor, entities, game_map)
 
     if closest_dist is not None:
         path = astar.get_path(curr_actor.x, curr_actor.y, closest_coords[0], closest_coords[1])
-    if len(path) == 0: #What to do if you reached the last known loc?
-        if (closest_enemy.x, closest_enemy.y) in curr_actor.fighter.fov_visible:
-            path = astar.get_path(curr_actor.x, curr_actor.y, closest_enemy.x, closest_enemy.y)
-        else:
-            for entry in curr_actor.fighter.ai.target_memory:
-                if entry.get('target') == closest_enemy:
-                    curr_actor.fighter.ai.target_memory.remove(entry)
+        if len(path) == 0: #What to do if you reached the last known loc?
+            if (closest_enemy.x, closest_enemy.y) in curr_actor.fighter.fov_visible:
+                path = astar.get_path(curr_actor.x, curr_actor.y, closest_enemy.x, closest_enemy.y)
+            else:
+                for entry in curr_actor.fighter.ai.target_memory:
+                    if entry.get('target') == closest_enemy:
+                        curr_actor.fighter.ai.target_memory.remove(entry)
+                        command = random_hunt(curr_actor, entities, game_map)
+    try:
+        if len(path) != 0:
+            command = ['move']
+            y_dir = None
+            x_dir = None
+            x,y = path[0]
+            x_mod = x - curr_actor.x
+            y_mod = y - curr_actor.y
 
-    if len(path) != 0:
-        command = ['move']
-        y_dir = None
-        x_dir = None
-        x,y = path[0]
-        x_mod = x - curr_actor.x
-        y_mod = y - curr_actor.y
+            if y_mod == -1: y_dir = 'n'
+            if y_mod == 1: y_dir = 's'
+            if x_mod == -1: x_dir = 'w'
+            if x_mod == 1: x_dir = 'e'
+            if x_dir is not None and y_dir is not None:
+                mv_dir = str(y_dir + x_dir)
+            elif y_dir is not None:
+                mv_dir = y_dir
+            else:
+                mv_dir = x_dir
+            command.append(mv_dir)
 
-        if y_mod == -1: y_dir = 'n'
-        if y_mod == 1: y_dir = 's'
-        if x_mod == -1: x_dir = 'w'
-        if x_mod == 1: x_dir = 'e'
-        if x_dir is not None and y_dir is not None:
-            mv_dir = str(y_dir + x_dir)
-        elif y_dir is not None:
-            mv_dir = y_dir
-        else:
-            mv_dir = x_dir
-        command.append(mv_dir)
-
-        if len(path) == 1:
-            if get_blocking_entities_at_location(entities, closest_coords[0], closest_coords[1]) is not None:
-                #Spin to closest enemy
-                if len(curr_actor.fighter.targets) == 0:
-                    command = ['spin']
-                    angle = entity_angle(closest_enemy, curr_actor)
-                    if angle <= 180: command.append('ccw')
-                    else: command.append('cw')
+            if len(path) == 1:
+                if get_blocking_entities_at_location(entities, closest_coords[0], closest_coords[1]) is not None:
+                    #Spin to closest enemy
+                    if len(curr_actor.fighter.targets) == 0:
+                        command = ['spin']
+                        angle = entity_angle(closest_enemy, curr_actor)
+                        if angle <= 180: command.append('ccw')
+                        else: command.append('cw')
+    except:
+        pass
             
 
     return command
 
+def random_hunt(curr_actor, entities, game_map) -> list or str:
+    astar = pathfind.AStar(game_map)
+    enemies = []
+    closest_coords = []
+    closest_dist = None
+    path = None
+    command = {'End Turn':'End Turn'}
+    fov_area = fov_calc(int(round(curr_actor.fighter.sit/3)), curr_actor.x, curr_actor.y, 100, 0)
+    fov_explored = True
+    for (x,y) in fov_area:
+        if not (x,y) in curr_actor.fighter.fov_explored: 
+            fov_explored = False
+            unexplored_pos = (x,y)
+            break
+
+    #First see if there is a command queue. If so, pop the first command and return it.
+    if len(curr_actor.fighter.ai.command_queue) > 0:
+        command = curr_actor.fighter.ai.command_queue.pop(0)
+    #Has entire radius has been seen? If not, spin until it has. 
+    elif not fov_explored:
+        pos = Entity(unexplored_pos[0], unexplored_pos[1], 0x2588, 'dark gray', 'Focus', EntityState.inanimate)
+        command = ['spin']
+        angle = entity_angle(pos, curr_actor)
+        if angle <= 180: command.append('ccw')
+        else: command.append('cw')
+    else: #Create a path to a radnom location, store the path in the command queue, and return the first comand from the queue
+        closest_dist = None
+        rand_x = randint(min((curr_actor.x-10),0), min((curr_actor.x+10),game_map.width))
+        rand_y = randint(min((curr_actor.y-10),0), min((curr_actor.y+10),game_map.height))
+        dist = sum(((abs(rand_x - curr_actor.x)),(abs(rand_y - curr_actor.y))))
+        if closest_dist is None or dist < closest_dist:
+            closest_dist = dist
+            closest_coords = [rand_x, rand_y]
+            path = astar.get_path(curr_actor.x, curr_actor.y, closest_coords[0], closest_coords[1])
+            for i in reversed(path):
+                command = ['move']
+                y_dir = None
+                x_dir = None
+                x,y = path[0]
+                x_mod = x - curr_actor.x
+                y_mod = y - curr_actor.y
+
+                if y_mod == -1: y_dir = 'n'
+                if y_mod == 1: y_dir = 's'
+                if x_mod == -1: x_dir = 'w'
+                if x_mod == 1: x_dir = 'e'
+                if x_dir is not None and y_dir is not None:
+                    mv_dir = str(y_dir + x_dir)
+                elif y_dir is not None:
+                    mv_dir = y_dir
+                else:
+                    mv_dir = x_dir
+                command.append(mv_dir)
+                curr_actor.fighter.ai.command_queue.append(command)
+            curr_actor.fighter.ai.command_queue.remove(command)
+        
+    return command
