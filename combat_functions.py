@@ -2128,7 +2128,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
     game_state = GameStates.menu
     combat_phase = CombatPhase.action
     messages = []
-    
+    menu_dict = None
 
     try:
         if command.get('Wait'):
@@ -2142,7 +2142,6 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
         elif command.get('Engage'):
             if curr_actor.player:
                 messages.append('You decide to attack')
-            menu_dict = None
             combat_phase = CombatPhase.weapon
         elif command.get('Disengage'):
             if curr_actor.player:
@@ -2150,7 +2149,6 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             else:
                 messages.append(curr_actor.name + ' attempts to disengage. ')
             combat_phase = CombatPhase.disengage
-            menu_dict = None
         elif command.get('End Turn'):
             if curr_actor.player:
                 messages.append('You decide to end your turn')
@@ -2159,7 +2157,6 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 else: pro = 'her'
                 messages.append(curr_actor.name + ' ends ' + pro + ' turn')
             curr_actor.fighter.end_turn = True
-            menu_dict = None
             combat_phase = CombatPhase.action
             game_state = GameStates.default 
     except:
@@ -2186,7 +2183,6 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
         else:
             curr_actor.fighter.end_turn = True
             combat_phase = CombatPhase.action
-            menu_dict = None
             game_state = GameStates.default
             return menu_dict, combat_phase, game_state, order, messages
 
@@ -2195,7 +2191,6 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
         menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
         game_state = GameStates.default
 
 
@@ -2280,23 +2275,28 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
     if command is not None:
         #Check and see if entity has a target in zoc
         if len(curr_actor.fighter.targets) == 0:
-            if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
-                if command[0] == 'move' or 'spin':
-                    moved = move_actor(game_map, curr_actor, entities, command, logs)
-                    if moved:
-                        for entity in entities:
-                            entity.fighter.targets = aoc_check(entities, entity)
-                        curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
+            try: 
+                if command.get('End Turn'):
+                    curr_actor.fighter.end_turn = True
+                    combat_phase = CombatPhase.action
+            except: 
+                if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
+                    if command[0] == 'move' or 'spin':
+                        moved = move_actor(game_map, curr_actor, entities, command, logs)
+                        if moved:
+                            for entity in entities:
+                                entity.fighter.targets = aoc_check(entities, entity)
+                            curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
 
-                        if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
+                            if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
 
-                        if len(curr_actor.fighter.targets) != 0:
-                            
-                            menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
-                            
-            else:
-                curr_actor.fighter.end_turn = True
-                combat_phase = CombatPhase.action
+                            if len(curr_actor.fighter.targets) != 0:
+                                
+                                menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
+                                
+                else:
+                    curr_actor.fighter.end_turn = True
+                    combat_phase = CombatPhase.action
         else:
             menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
     else:

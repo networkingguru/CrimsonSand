@@ -13,7 +13,7 @@ class CombatAI:
         self.host = host
         self.atk_result = []
         self.atk_success = False
-        self.target_memory = []
+        self.target_memory = [] #List of dict entries set by update_enemy_pos to hold last known loc of enemies
 
 
     def ai_command(self, entity, entities, combat_phase, game_map, order) -> str:
@@ -54,20 +54,21 @@ class CombatAI:
         return command
 
     def update_enemy_pos(self, entity) -> None:
-        entry = {'target':entity, 'last_loc':(entity.x, entity.y), 'last_seen':global_vars.round_num}
-        try:
-            if entry in self.target_memory:
-                pass
-            else:
-                for item in self.target_memory:
-                    target = item.get('target')
-                    if target == entity:
-                        self.target_memory.remove(item)
+        if (entity.x, entity.y) in self.host.fov_visible:
+            entry = {'target':entity, 'last_loc':(entity.x, entity.y), 'last_seen':global_vars.round_num}
+            try:
+                if entry in self.target_memory:
+                    pass
+                else:
+                    for item in self.target_memory:
+                        target = item.get('target')
+                        if target == entity:
+                            self.target_memory.remove(item)
+                            self.target_memory.append(entry)
+                    if entry not in self.target_memory:
                         self.target_memory.append(entry)
-                if entry not in self.target_memory:
-                    self.target_memory.append(entry)
-        except:
-            self.target_memory.append(entry)
+            except:
+                self.target_memory.append(entry)
 
 
 
@@ -243,38 +244,43 @@ def hunt_target(curr_actor, entities, game_map) -> list:
 
     if closest_dist is not None:
         path = astar.get_path(curr_actor.x, curr_actor.y, closest_coords[0], closest_coords[1])
-    if path is None:
-        command = ('spin','cw')
-    elif len(path) != 0:
-        command = ['move']
+    if len(path) == 0: #What to do if you reached the last known loc?
+        if (closest_enemy.x, closest_enemy.y) in curr_actor.fighter.fov_visible:
+            path = astar.get_path(curr_actor.x, curr_actor.y, closest_enemy.x, closest_enemy.y)
+        else:
+            for entry in curr_actor.fighter.ai.target_memory:
+                if entry.get('target') == closest_enemy:
+                    curr_actor.fighter.ai.target_memory.remove(entry)
 
-        if len(path) == 1:
-            if get_blocking_entities_at_location(entities, closest_coords[0], closest_coords[1]) is not None:
-                command = ['spin']
-        
+    if len(path) != 0:
+        command = ['move']
         y_dir = None
         x_dir = None
         x,y = path[0]
         x_mod = x - curr_actor.x
         y_mod = y - curr_actor.y
-        if command[0] == 'move':
-            if y_mod == -1: y_dir = 'n'
-            if y_mod == 1: y_dir = 's'
-            if x_mod == -1: x_dir = 'w'
-            if x_mod == 1: x_dir = 'e'
-            if x_dir is not None and y_dir is not None:
-                mv_dir = str(y_dir + x_dir)
-            elif y_dir is not None:
-                mv_dir = y_dir
-            else:
-                mv_dir = x_dir
-            command.append(mv_dir)
+
+        if y_mod == -1: y_dir = 'n'
+        if y_mod == 1: y_dir = 's'
+        if x_mod == -1: x_dir = 'w'
+        if x_mod == 1: x_dir = 'e'
+        if x_dir is not None and y_dir is not None:
+            mv_dir = str(y_dir + x_dir)
+        elif y_dir is not None:
+            mv_dir = y_dir
         else:
-            #Spin to closest enemy
-            if len(curr_actor.fighter.targets) == 0:
-                angle = entity_angle(closest_enemy, curr_actor)
-                if angle <= 180: command.append('ccw')
-                else: command.append('cw')
+            mv_dir = x_dir
+        command.append(mv_dir)
+
+        if len(path) == 1:
+            if get_blocking_entities_at_location(entities, closest_coords[0], closest_coords[1]) is not None:
+                #Spin to closest enemy
+                if len(curr_actor.fighter.targets) == 0:
+                    command = ['spin']
+                    angle = entity_angle(closest_enemy, curr_actor)
+                    if angle <= 180: command.append('ccw')
+                    else: command.append('cw')
+            
 
     return command
 
