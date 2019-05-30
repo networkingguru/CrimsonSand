@@ -74,6 +74,12 @@ def cells_to_keys(cells, entity) -> (list, list):
                 key = find_command(options.default_keys, ('move','w'))
                 keys.append(key)
             else:
-                key = find_command(options.default_keys, ('move','se'))
+                key = find_command(options.default_keys, ('move','nw'))
                 keys.append(key)
+
+    #Add spin
+    keys.append(find_command(options.default_keys, ('spin','ccw')))
+    offsets.append((0,0))
+    keys.append(find_command(options.default_keys, ('spin','cw')))
+    offsets.append((0,0))
     return keys, offsets
