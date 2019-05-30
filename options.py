@@ -26,8 +26,8 @@ map_x = enemy_panel_w
 map_y = 0
 
 modal_w = map_width/4
-modal_x = (map_width/2 - modal_w) + map_x
-modal_y = map_height/2 - 20
+modal_x = map_width/2 + modal_w/2
+modal_y = map_height/2 - message_panel_h/2
 
 panel_types = (0,1,2,3)
 panel_colors = (('white','light_gray'), ('black','white'), ('black', 'yellow'), ('yellow', 'crimson'))
