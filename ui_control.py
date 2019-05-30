@@ -254,8 +254,9 @@ def print_entities(entities, ox, oy) -> None:
 
     #Paint players AOC green
     for (x,y) in players_aoc:
-        terminal.color('green')
-        terminal.put(x+ox, y+oy, 0x2588)
+        if (x,y) in players_visible:
+            terminal.color('green')
+            terminal.put(x+ox, y+oy, 0x2588)
     #Paint visible enemy AOC's red
     for (x,y) in enemies_aoc:
         if (x,y) in players_visible:
