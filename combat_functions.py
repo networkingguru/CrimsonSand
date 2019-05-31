@@ -2577,7 +2577,9 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     dodge_mod = cs.get('dodge mod')
     game_state = GameStates.default
     header_items = []
-
+    def_margin = None
+    atk_margin = None
+    rolls = None
 
     #Find history mod
     if len(curr_actor.fighter.attacker_history) > 0:
@@ -2697,8 +2699,11 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         else:
             #Show rolls
             if options.show_rolls: 
-                rolls = curr_actor.name + ' had a margin of success of ' + str(def_margin) + ', while ' + enemy.name + ' had a margin of ' + str(atk_margin) + '. '
-                messages.insert(0, rolls)
+                if atk_margin is not None and def_margin is not None:
+                    rolls = curr_actor.name + ' had a margin of success of ' + str(def_margin) + ', while ' + enemy.name + ' had a margin of ' + str(atk_margin) + '. '
+                elif atk_margin is not None:
+                    rolls = enemy.name + ' had a margin of success of ' + str(atk_margin) + '. '
+                if rolls is not None: messages.insert(0, rolls)
             curr_actor.fighter.action.clear()
             curr_actor = enemy
             
