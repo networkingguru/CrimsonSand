@@ -51,7 +51,7 @@ def save_roll_un(score, modifiers) -> list:
         else: result = ['f', 0]
     return result
 
-def save_roll_con(p1_score, p1_mods, p2_roll, p2_final_chance) -> str:
+def save_roll_con(p1_score, p1_mods, p2_roll, p2_final_chance) -> (str, int, int):
     result = 'f'
     p2_margin = p2_final_chance - p2_roll
     p1_result, p1_margin = save_roll_un(p1_score, p1_mods)
@@ -60,7 +60,7 @@ def save_roll_con(p1_score, p1_mods, p2_roll, p2_final_chance) -> str:
     elif p1_margin > p2_margin:
         result = 's'
     
-    return result
+    return result, p1_margin, p2_margin
 
 def clamp(n, min_n, max_n = 2**10000) -> int:
     """Clamps a variable between a min and max"""
@@ -139,6 +139,7 @@ def entity_angle(reference, axis) -> int:
     return degrees
 
 def find_command(keymap, wanted_cmd) -> str:
+    '''Function searches the keymap for the command and returns the key associated with it. Reverse of dict.get'''
     for key, command in keymap.items():
         if command == wanted_cmd:
             return key

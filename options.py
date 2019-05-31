@@ -82,3 +82,6 @@ default_keys = {'q':('move','nw'), 'w':('move','n'), 'e':('move','ne'), 'd':('mo
                 80: ('move','w'), 79:('move','e'),82:('move','n'),81:('move','s')}
 
 key_maps = [default_keys]
+
+#Gameplay options
+show_rolls = True

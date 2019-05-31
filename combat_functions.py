@@ -2,6 +2,7 @@ import tcod as libtcodpy
 import time
 import global_vars
 from math import sqrt
+import options
 from enums import CombatPhase, MenuTypes, EntityState, GameStates, FighterStance
 from entity import get_blocking_entities_at_location
 from fov_aoc import modify_fov, change_face, aoc_check
@@ -261,10 +262,8 @@ def calc_history_modifier(entity, attack, loc, angle) -> int:
 def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase) -> (list, int):
     effects = []
     messages = []
-    loc_list = curr_target.fighter.get_locations() 
     attack = entity.fighter.combat_choices[1]  
     final_ap = cs.get('final ap')
-    location = entity.fighter.combat_choices[2]
     active_entity = entity
     curr_actor = entity
     enemy = curr_target
@@ -277,7 +276,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     else:
         add_history(curr_target)
     
-    atk_result  = make_attack_roll(final_to_hit, 1, entity.fighter.combat_choices[2])
+    atk_result = make_attack_roll(final_to_hit, 1, entity.fighter.combat_choices[2])
     entity.fighter.atk_result, entity.fighter.dam_result, entity.fighter.new_loc_result = atk_result[0], atk_result[1], atk_result[2]
 
     
@@ -292,12 +291,18 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
 
     entity.fighter.mod_attribute('stamina', -(attack.stamina*entity.fighter.base_stam_cost))
     
+
     #No damage
     if atk_result[1] == 0:
         if not hasattr(entity.fighter, 'ai'):
             messages.append('You missed. ')
+            #Show rolls
+            if options.show_rolls: 
+                rolls = 'You rolled a ' + str(entity.fighter.atk_result) + ', missing. '
+                messages.insert(0, rolls)
         else:
             messages.append(entity.name + ' missed you. ')
+        
     else:
         #First, see if this is an attack from behind
         if entity in curr_target.fighter.targets:
@@ -328,6 +333,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
                 menu_dict = None
                 game_state = GameStates.default
 
+    
 
     entity.fighter.mods = cs
 
@@ -2604,7 +2610,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
             if command.get('Take the hit'):
                 effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Dodge'):
-                check = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
+                check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
                 curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
@@ -2614,7 +2620,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 else:
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Parry'):
-                check = save_roll_con(curr_actor.fighter.deflect, parry_mod, enemy.fighter.atk_result, final_to_hit)
+                check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.deflect, parry_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 curr_actor.fighter.mod_attribute('stamina', -(curr_actor.weapons[0].stamina*curr_actor.fighter.base_stam_cost))
                 curr_actor.fighter.mod_attribute('ap', -parry_ap)
@@ -2643,6 +2649,10 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
             game_state = GameStates.default
             menu_dict = None
         else:
+            #Show rolls
+            if options.show_rolls: 
+                rolls = curr_actor.name + ' had a margin of success of ' + str(def_margin) + ', while ' + enemy.name + ' had a margin of ' + str(atk_margin) + '. '
+                messages.insert(0, rolls)
             curr_actor.fighter.action.clear()
             curr_actor = enemy
             
