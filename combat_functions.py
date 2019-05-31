@@ -282,9 +282,11 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     
     
     #Subtract attack AP and stamina
-    #Subtract AP from enemy if this is a disengagement attack
+    #Subtract AP from enemy if this is a disengagement attack or an attack due to a wait
 
     if curr_target in entity.fighter.entities_opportunity_attacked:
+        curr_target.fighter.mod_attribute('ap', -final_ap)
+    elif curr_target.fighter.wait:
         curr_target.fighter.mod_attribute('ap', -final_ap)
     else:
         entity.fighter.mod_attribute('ap', -final_ap)
