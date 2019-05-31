@@ -5,7 +5,7 @@ from enums import FighterStance
 from chargen_functions import height_curve
 
 class Fighter:
-    def __init__(self, attributes, facing, ai = None):
+    def __init__(self, attributes, facing, ai = None, l_blocker = None, r_blocker = None):
         #Transitory combat variables
         self.end_turn = False
         if ai is not None:
@@ -182,6 +182,15 @@ class Fighter:
         self.fov_visible = set()
         self.fov_wall = set()
         self.fov_explored = set()
+        #Persistent derived combat attrubites
+        self.l_blocker = l_blocker
+        self.r_blocker = r_blocker
+        #If no blocker defined, use bone in forearms
+        if self.l_blocker == None:
+            self.l_blocker = self.locations[16][2]
+        if self.r_blocker == None:
+            self.r_blocker = self.locations[15][2]
+        self.best_combat_skill = self.brawling
 
     def update_aoc_facing(self) -> None:
         #Hack to handle incongruity between aoc facing and fov facing

@@ -433,8 +433,8 @@ def apply_dam(target, entities, roll, dam_type, dam_mult, location, cs) -> set:
     #Set deflect and soak rates
     if dam_type == 'B':
         deflect = [15, 25, 0]        
-        soak =  [.7 + ((((target.fighter.derm)*.75) + ((target.fighter.fat)*.25))/100 *.08),
-                 .6 + ((((target.fighter.fat)*.6) + ((target.fighter.str)*.4))/100 *.08), 
+        soak =  [.8 + ((((target.fighter.derm)*.75) + ((target.fighter.fat)*.25))/100 *.08),
+                 .75 + ((((target.fighter.fat)*.6) + ((target.fighter.str)*.4))/100 *.08), 
                  .4 + (sqrt(target.fighter.flex)/100)]
         for i in soak:
             if i > .95: i = .95
@@ -2223,16 +2223,17 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
             round_end = True
         else:
             order = list(global_vars.turn_order)
-            if order[0].fighter.wait: 
-                if not order[1].fighter.acted: 
-                    curr_actor = order[1]
-                else: 
-                    order[0].fighter.wait = False
-                    order[1].fighter.acted = False
-            elif order[0].fighter.disengage and order[0] in curr_actor.fighter.entities_opportunity_attacked:
-                pass
-            elif combat_phase != CombatPhase.defend:
-                curr_actor = order[0]
+            if len(order) > 1:
+                if order[0].fighter.wait: 
+                    if not order[1].fighter.acted: 
+                        curr_actor = order[1]
+                    else: 
+                        order[0].fighter.wait = False
+                        order[1].fighter.acted = False
+                elif order[0].fighter.disengage and order[0] in curr_actor.fighter.entities_opportunity_attacked:
+                    pass
+                elif combat_phase != CombatPhase.defend:
+                    curr_actor = order[0]
 
     if round_end:
         log.add_message(Message('The round has ended. '))
@@ -2601,6 +2602,27 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     if can_parry:
         header_items.append('You have a ' + str(parry_chance) + ' percent chance to parry the attack at a cost of ' + str(parry_ap) + ' ap. \n')
         curr_actor.fighter.action.append('Parry')
+        #Determine if can block
+        if enemy.fighter.combat_choices[2] <=2:
+            if 0 < curr_actor.fighter.l_blocker or curr_actor.fighter.r_blocker:
+                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                curr_actor.fighter.action.append('Block')
+        elif enemy.fighter.combat_choices[2] in [3,5,7,9,11,13,15,19]:
+            if 0 < curr_actor.fighter.r_blocker:
+                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                curr_actor.fighter.action.append('Block')
+        elif enemy.fighter.combat_choices[2] in [4,6,8,10,12,14,16,20]:
+            if 0 < curr_actor.fighter.l_blocker:
+                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                curr_actor.fighter.action.append('Block')
+        elif enemy.fighter.combat_choices[2] in [17,21,23,25]:
+            if 0 < curr_actor.fighter.locations[25][2]:
+                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                curr_actor.fighter.action.append('Block')
+        elif enemy.fighter.combat_choices[2] in [18,22,24,26]:
+            if 0 < curr_actor.fighter.locations[26][2]:
+                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                curr_actor.fighter.action.append('Block')
     if can_dodge or can_parry:
         game_state = GameStates.menu
         header_items.append('What would you like to do? ')
@@ -2627,6 +2649,28 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 if check == 's':
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You parried the attack. ')
                     else: message = (curr_actor.name + ' parried the blow. ')
+                else:
+                    effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+            if command.get('Block'):
+                check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.best_combat_skill, parry_mod, enemy.fighter.atk_result, final_to_hit)
+                #Remove ap and stam
+                curr_actor.fighter.mod_attribute('stamina', -(curr_actor.weapons[0].stamina*curr_actor.fighter.base_stam_cost))
+                curr_actor.fighter.mod_attribute('ap', -parry_ap)
+                if check == 's':
+                    if not hasattr(curr_actor.fighter, 'ai'): message = ('You blocked the attack. ')
+                    else: message = (curr_actor.name + ' blocked the blow. ')
+                    #Determine blocker to remove from
+                    if enemy.fighter.combat_choices[2] <=2:
+                        if curr_actor.fighter.l_blocker > curr_actor.fighter.r_blocker:
+                            blocker = 16
+                        else: blocker = 15
+                    elif enemy.fighter.combat_choices[2] in [3,5,7,9,11,13,15,19]: blocker = 15
+                    elif enemy.fighter.combat_choices[2] in [4,6,8,10,12,14,16,20]: blocker = 16
+                    elif enemy.fighter.combat_choices[2] in [17,21,23,25]: blocker = 25
+                    elif enemy.fighter.combat_choices[2] in [18,22,24,26]: blocker = 26
+
+
+                    effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, blocker, cs)
                 else:
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             menu_dict = None
