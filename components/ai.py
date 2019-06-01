@@ -170,53 +170,54 @@ def avoid_attack(attacker, defender, cs) -> str:
     can_block = False
     attack = attacker.fighter.combat_choices[1]
     atk_name = attack.name 
+    command = None
 
     if len(defender.fighter.action) > 1:
         if 'Dodge' in defender.fighter.action: can_dodge = True
         if 'Parry' in defender.fighter.action: can_parry = True
         if 'Block' in defender.fighter.action: can_block = True
 
-    dodge_mod = cs.get('dodge mod')
-    parry_mod = cs.get('parry mod')
-    final_to_hit = cs.get('to hit')                       
-    cs_d = defender.determine_combat_stats(defender.weapons[0],defender.weapons[0].attacks[0])
-    parry_ap = cs_d.get('parry ap')
+        dodge_mod = cs.get('dodge mod')
+        parry_mod = cs.get('parry mod')
+        final_to_hit = cs.get('to hit')                       
+        cs_d = defender.determine_combat_stats(defender.weapons[0],defender.weapons[0].attacks[0])
+        parry_ap = cs_d.get('parry ap')
 
-    if len(defender.fighter.attacker_history) > 0:
-        history_mod = calc_history_modifier(defender, atk_name, attacker.fighter.combat_choices[2], attacker.fighter.combat_choices[3])
-        dodge_mod += history_mod
-        parry_mod += history_mod
-    parry_chance = defender.fighter.deflect + parry_mod
-    dodge_chance = defender.fighter.dodge + dodge_mod
-    if can_block:
-        block_chance = defender.fighter.best_combat_skill + parry_mod
-    else:
-        block_chance = 0
-    
-    #Determine best method. Negative numbers = dodge, positive = parry
-    #Divide chance by AP on each side, then subtract dodge from parry
-    parry_score = parry_chance / parry_ap
-    dodge_score = dodge_chance / defender.fighter.walk_ap
-    final = parry_score - dodge_score
-
-    if final > 0: parry_best
-
-    #Use best if possible
-    if parry_best:
-        if can_parry: parry = True
-        elif can_dodge: dodge =  True
-    else:
-        if can_dodge: dodge = True
-        elif can_parry: parry = True
-
-    if parry: 
-        #If parry less than 50% and block 1.5x parry, block
-        if parry_chance < 50 and block_chance > (parry_chance*1.5):
-            command = {'Block':'Block'}
+        if len(defender.fighter.attacker_history) > 0:
+            history_mod = calc_history_modifier(defender, atk_name, attacker.fighter.combat_choices[2], attacker.fighter.combat_choices[3])
+            dodge_mod += history_mod
+            parry_mod += history_mod
+        parry_chance = defender.fighter.deflect + parry_mod
+        dodge_chance = defender.fighter.dodge + dodge_mod
+        if can_block:
+            block_chance = defender.fighter.best_combat_skill + parry_mod
         else:
-            command = {'Parry':'Parry'}
-    elif dodge: command = {'Dodge':'Dodge'}
-    else: command = {'Take the hit':'Take the hit'}
+            block_chance = 0
+
+        #Determine best method. Negative numbers = dodge, positive = parry
+        #Divide chance by AP on each side, then subtract dodge from parry
+        parry_score = parry_chance / parry_ap
+        dodge_score = dodge_chance / defender.fighter.walk_ap
+        final = parry_score - dodge_score
+
+        if final > 0: parry_best
+
+        #Use best if possible
+        if parry_best:
+            if can_parry: parry = True
+            elif can_dodge: dodge =  True
+        else:
+            if can_dodge: dodge = True
+            elif can_parry: parry = True
+
+        if parry: 
+            #If parry less than 50% and block 1.5x parry, block
+            if parry_chance < 50 and block_chance > (parry_chance*1.5):
+                command = {'Block':'Block'}
+            else:
+                command = {'Parry':'Parry'}
+        elif dodge: command = {'Dodge':'Dodge'}
+        else: command = {'Take the hit':'Take the hit'}
     
     return command
 

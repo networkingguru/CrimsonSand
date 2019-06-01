@@ -115,6 +115,7 @@ if __name__ == "__main__":
                     menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)       
         elif not curr_actor.player:
             command = curr_actor.fighter.ai.ai_command(curr_actor, entities, combat_phase, game_map, order)
+            menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
             if global_vars.debug: print(curr_actor.name + ' actions: ', *curr_actor.fighter.action, sep=', ')
             if global_vars.debug and isinstance(command, str): print(curr_actor.name + ' command: ' + command)

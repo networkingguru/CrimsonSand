@@ -51,9 +51,9 @@ class Entity:
         dodge_mod = 0
         parry_mod = 0
         dam_mult = 1
-        final_ap = int(attack.base_ap * (((getattr(self.fighter, skill)/100)*.2)+((self.fighter.weight/100)*.4)))
+        final_ap = int(attack.base_ap * (((100/(getattr(self.fighter, skill)))**.2)+((self.fighter.weight/100)*.4)))
         if final_ap > self.fighter.swift: final_ap = self.fighter.swift
-        parry_ap = int(weapon.parry_ap * (((getattr(self.fighter, skill)/100)*.2)+((self.fighter.weight/100)*.4)))  
+        parry_ap = int(weapon.parry_ap * (((100/(getattr(self.fighter, skill)/100))**.2)+((self.fighter.weight/100)*.4)))  
 
         #Loc mods
         if location == 0 or 10 < location < 13:

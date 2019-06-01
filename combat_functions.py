@@ -2236,6 +2236,8 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
                     pass
                 elif combat_phase != CombatPhase.defend:
                     curr_actor = order[0]
+            else:
+                curr_actor = order[0]
 
     if round_end:
         log.add_message(Message('The round has ended. '))
