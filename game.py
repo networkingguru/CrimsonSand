@@ -112,16 +112,17 @@ if __name__ == "__main__":
                         command = blt_handle_keys(game_state, menu_dict)
                 except:
                     command = None
-                    menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)       
+
         elif not curr_actor.player:
             command = curr_actor.fighter.ai.ai_command(curr_actor, entities, combat_phase, game_map, order)
-            menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
             if global_vars.debug: print(curr_actor.name + ' actions: ', *curr_actor.fighter.action, sep=', ')
             if global_vars.debug and isinstance(command, str): print(curr_actor.name + ' command: ' + command)
 
+
+        menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
+
         if command is not None:
-            menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
             fill_status_panel(players[0], status_log)
             if global_vars.debug: print('Phase: ' + str(combat_phase))
             

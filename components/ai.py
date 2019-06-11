@@ -29,10 +29,10 @@ class CombatAI:
             if len(entity.fighter.targets) != 0 and len(self.host.action) == 0: 
                 _, combat_phase, _, order, _ = init_combat(entity, order, command)
             elif len(self.host.action) != 0:
-                determine_attack(entity)
                 if len(self.host.combat_choices) == 0:
                     command = {'End Turn':'End Turn'}
                 elif 'Engage' in self.host.action:
+                    determine_attack(entity)
                     command = {'Engage':'Engage'}
                 else: 
                     command = hunt_target(entity, entities, game_map)
@@ -49,9 +49,12 @@ class CombatAI:
             command = {angle:angle}
         if combat_phase == CombatPhase.confirm:
             command = {'Accept':'Accept'}
-        elif combat_phase == CombatPhase.defend:
+        elif combat_phase == CombatPhase.defend and order[0].fighter is not self.host:
             cs = entity.determine_combat_stats(entity.weapons[0], entity.weapons[0].attacks[0])
             command = avoid_attack(self.host.attacker, entity, cs)
+
+        if command == 'End Turn':
+            breakpoint()
 
         return command
 

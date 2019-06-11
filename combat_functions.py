@@ -2208,6 +2208,11 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
     messages = []
     log = logs[2]
     round_end = False
+
+    #Exit without making changes if in defend phase
+    if combat_phase == CombatPhase.defend:
+        return combat_phase, order, curr_actor
+
     if len(order) == 0:
         round_end = True
         
@@ -2330,8 +2335,11 @@ def phase_weapon(curr_actor, command, logs, combat_phase) -> (int, dict):
     combat_menu_header = 'Choose your weapon'
     curr_actor.fighter.action.clear()
     for wpn in curr_actor.weapons:
-        if wpn.name not in curr_actor.fighter.action:
-            curr_actor.fighter.action.append(wpn.name)
+        for atk in wpn.attacks:
+            cs = curr_actor.determine_combat_stats(wpn, atk)
+            if curr_actor.fighter.ap >= cs.get('final ap'):
+                if wpn.name not in curr_actor.fighter.action:
+                    curr_actor.fighter.action.append(wpn.name)
 
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
     

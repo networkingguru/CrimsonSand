@@ -41,19 +41,22 @@ class Entity:
     def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 10):
         weapon = weapon
         skill = weapon.skill
+        skill_rating = getattr(self.fighter, skill)
         tot_er = self.fighter.er + weapon.length
         b_psi = self.fighter.ep * attack.b_dam
         s_psi = self.fighter.ep * attack.s_dam
         t_psi = self.fighter.ep * attack.t_dam
         p_psi = self.fighter.ep * attack.p_dam
-        to_hit = attack.attack_mod + (getattr(self.fighter, skill))
-        to_parry = attack.parry_mod + (getattr(self.fighter, skill))
+        to_hit = attack.attack_mod + skill_rating
+        to_parry = attack.parry_mod + skill_rating
         dodge_mod = 0
         parry_mod = 0
         dam_mult = 1
-        final_ap = int(attack.base_ap * (((100/(getattr(self.fighter, skill)))**.2)+((self.fighter.weight/100)*.4)))
+        weight_factor = (self.fighter.weight/100)**.4
+        
+        final_ap = int(attack.base_ap * (((100/skill_rating)**.2 + weight_factor)))
         if final_ap > self.fighter.swift: final_ap = self.fighter.swift
-        parry_ap = int(weapon.parry_ap * (((100/(getattr(self.fighter, skill)/100))**.2)+((self.fighter.weight/100)*.4)))  
+        parry_ap = int(weapon.parry_ap * (((100/skill_rating)**.2 + weight_factor)))  
 
         #Loc mods
         if location == 0 or 10 < location < 13:
