@@ -29,11 +29,11 @@ class CombatAI:
             if len(entity.fighter.targets) != 0 and len(self.host.action) == 0: 
                 _, combat_phase, _, order, _ = init_combat(entity, order, command)
             elif len(self.host.action) != 0:
-                if len(self.host.combat_choices) == 0:
-                    command = {'End Turn':'End Turn'}
-                elif 'Engage' in self.host.action:
+                if 'Engage' in self.host.action:
                     determine_attack(entity)
                     command = {'Engage':'Engage'}
+                elif len(self.host.combat_choices) == 0:
+                    command = {'End Turn':'End Turn'}
                 else: 
                     command = hunt_target(entity, entities, game_map)
             else: command = hunt_target(entity, entities, game_map)
@@ -79,31 +79,18 @@ class CombatAI:
 
 def determine_attack(entity) -> None:
     curr_target = entity.fighter.targets[0]
-    min_ap = entity.fighter.ap
-
-    for wpn in entity.weapons:
-        for atk in wpn.attacks:
-            
-            cs = entity.determine_combat_stats(wpn, atk)
-            b_psi = cs.get('b psi')
-            s_psi = cs.get('s psi')
-            p_psi = cs.get('p psi')
-            t_psi = cs.get('t psi')
-            final_ap = cs.get('final ap')
-            if final_ap < min_ap: 
-                min_ap = final_ap
-                
-    
-    #Attack logic begins
-
     best_score = -100
-    best_atk = []
+    best_atk = []          
     
+    
+
     #Locations to be scored higher because they kill the foe
     critical_locs = {0,1,2,6}
-
+    #Attack logic begins
     for wpn in entity.weapons:
         for atk in wpn.attacks:
+            cs = entity.determine_combat_stats(wpn, atk)
+            final_ap = cs.get('final ap')
             if final_ap <= entity.fighter.ap:
                 locs = curr_target.fighter.get_locations()
                 #Determine valid locations
@@ -244,6 +231,7 @@ def hunt_target(curr_actor, entities, game_map) -> list or str:
             if closest_dist is None or dist < closest_dist:
                 closest_dist = dist
                 closest_coords = [enemy.x, enemy.y]
+                closest_enemy = enemy
     else:
         #See if there's a known loc for an enemy in history
         if len(curr_actor.fighter.ai.target_memory) > 0:
@@ -268,7 +256,7 @@ def hunt_target(curr_actor, entities, game_map) -> list or str:
                         curr_actor.fighter.ai.target_memory.remove(entry)
                         command = random_hunt(curr_actor, entities, game_map)
     try:
-        if len(path) != 0:
+        if len(path) > 1:
             command = ['move']
             y_dir = None
             x_dir = None
@@ -288,14 +276,14 @@ def hunt_target(curr_actor, entities, game_map) -> list or str:
                 mv_dir = x_dir
             command.append(mv_dir)
 
-            if len(path) == 1:
-                if get_blocking_entities_at_location(entities, closest_coords[0], closest_coords[1]) is not None:
-                    #Spin to closest enemy
-                    if len(curr_actor.fighter.targets) == 0:
-                        command = ['spin']
-                        angle = entity_angle(closest_enemy, curr_actor)
-                        if angle <= 180: command.append('ccw')
-                        else: command.append('cw')
+        elif len(path) == 1:
+            if get_blocking_entities_at_location(entities, closest_coords[0], closest_coords[1]) is not None:
+                #Spin to closest enemy
+                if len(curr_actor.fighter.targets) == 0:
+                    command = ['spin']
+                    angle = entity_angle(closest_enemy, curr_actor)
+                    if angle <= 180: command.append('ccw')
+                    else: command.append('cw')
     except:
         pass
             
@@ -320,7 +308,7 @@ def random_hunt(curr_actor, entities, game_map) -> list or str:
     #First see if there is a command queue. If so, pop the first command and return it.
     if len(curr_actor.fighter.ai.command_queue) > 0:
         command = curr_actor.fighter.ai.command_queue.pop(0)
-    #Has entire radius has been seen? If not, spin until it has. 
+    #Has entire radius been seen? If not, spin until it has. 
     elif not fov_explored:
         pos = Entity(unexplored_pos[0], unexplored_pos[1], 0x2588, 'dark gray', 'Focus', EntityState.inanimate)
         command = ['spin']
