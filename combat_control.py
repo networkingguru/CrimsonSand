@@ -1,5 +1,5 @@
 
-from combat_functions import move_actor, update_targets, detect_enemies, phase_init, phase_action, phase_weapon, phase_option, phase_location, phase_option2, phase_confirm, phase_repeat, phase_defend, phase_disengage
+from combat_functions import strafe_control, move_actor, update_targets, detect_enemies, phase_init, phase_action, phase_weapon, phase_option, phase_location, phase_option2, phase_confirm, phase_repeat, phase_defend, phase_disengage
 from enums import CombatPhase, GameStates
 
 def combat_controller(game_map, active_entity, entities, players, command, logs, combat_phase, game_state, order) -> (dict, int, int, object, list):
@@ -10,7 +10,9 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
 
 
     if combat_phase == CombatPhase.explore:
-        try: 
+        if isinstance(command, str):
+            if command == 'strafe': strafe_control(active_entity)
+        elif command is not None:
             if command[0] == 'move' or 'spin':
                 moved = move_actor(game_map, active_entity, entities, command, logs)
                 if moved: 
@@ -18,7 +20,6 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
                     #If phase changed, go into new phase
                     if combat_phase != combat_phase_new:
                         combat_phase = combat_phase_new
-        except: pass
                    
     if combat_phase == CombatPhase.init:
         combat_phase, order = phase_init(entities)

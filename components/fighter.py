@@ -11,6 +11,7 @@ class Fighter:
         if ai is not None:
             self.ai = ai(self)
         self.facing = facing #Facing for FOV
+        self.strafe = 'auto'
         self.aoc = [] #List of cells for AOC
         self.aoc_facing = facing
         self.action = [] #List of available commmands for combat menus

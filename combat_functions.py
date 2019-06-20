@@ -63,7 +63,7 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
                 entity.mod_attribute('y', y_mod)
                 if global_vars.debug: print(entity.name + ' ' + str(entity.x) + ' ' + str(entity.y))
                 fov_recompute = True
-                entity.fighter.facing = facing_dict.get((x_mod,y_mod))
+                if entity.fighter.strafe == 'auto': entity.fighter.facing = facing_dict.get((x_mod,y_mod))
                 if not hasattr(entity.fighter, 'ai'): 
                     message = Message('You move ' + command[1], 'black')
                     message_log.add_message(message)
@@ -106,6 +106,12 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
     if targets is not None:
         update_targets(entity, targets)
     return fov_recompute #Used to id that entity moved for ap reduction in combat
+
+def strafe_control(entity):
+    #Cycle through the strafe modes
+    if entity.fighter.strafe == 'auto': entity.fighter.strafe = 'enemy'
+    elif entity.fighter.strafe == 'enemy': entity.fighter.strafe = 'manual'
+    else: entity.fighter.strafe = 'auto'
 
 def turn_order(entities) -> list:
     #Sort entities by highest init and make list of sorted entities
