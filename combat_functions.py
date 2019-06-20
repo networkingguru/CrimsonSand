@@ -11,13 +11,17 @@ from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_
 from game_map import cells_to_keys, get_adjacent_cells
 
 def detect_enemies(entities) -> int:
+    '''Goal is to see if enemies exist in each entity's FOV, and if so, change the combat phase'''
     combat_phase = CombatPhase.explore
     for entity in entities:
+        #For each fighter, create a list of opponents. Then see if any of them are in FOV. If so, start combat by changing phase
         if hasattr(entity, 'fighter'):
             opponents = entities.copy()
             opponents.remove(entity)
             for opponent in opponents:
-                if (opponent.x, opponent.y) in entity.fighter.fov_visible:
+                if not hasattr(opponent, 'fighter'):
+                    opponents.remove(opponent)
+                elif (opponent.x, opponent.y) in entity.fighter.fov_visible:
                     combat_phase = CombatPhase.init
     return combat_phase
 

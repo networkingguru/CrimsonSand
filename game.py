@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
         if game_state != GameStates.menu: event = blt_handle_global_input(game_state)
 
-        if event == 'exit': exit(1)
+        if event == 'exit': leave = True
         elif combat_phase == CombatPhase.explore:
             command = event
         elif curr_actor.player:
