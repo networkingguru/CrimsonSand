@@ -110,7 +110,7 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
         exit()
     else:
         if game_state == GameStates.default:
-            if terminal.check(terminal.TK_CHAR):
+            if not 89 < key < 99 and terminal.check(terminal.TK_CHAR):
                 key = chr(terminal.state(terminal.TK_CHAR))
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
@@ -150,10 +150,11 @@ def blt_handle_global_input(game_state) -> str or int or None:
     command = None
     if terminal.has_input():
         key = terminal.read()
+        print(key)
         if key == terminal.TK_CLOSE:
             exit(0)
         else:
-            if terminal.check(terminal.TK_CHAR):
+            if not 89 < key < 99 and terminal.check(terminal.TK_CHAR):
                 key = chr(terminal.state(terminal.TK_CHAR))
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
