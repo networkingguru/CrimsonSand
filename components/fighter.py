@@ -201,11 +201,13 @@ class Fighter:
             self.aoc_facing = self.facing -1
 
     def adjust_max_locations(self, location_index, layer_index, value_to_subtract) -> None:
+        #Method to reduce max location hits for permanent injuries, also reducing location hits at that time
         self.max_locations[location_index][layer_index] -= value_to_subtract
         if self.locations[location_index][layer_index] > self.max_locations[location_index][layer_index]:
             self.locations[location_index][layer_index] = self.max_locations[location_index][layer_index]
 
     def mod_attribute(self, attribute, amount) -> None:
+        #Setter for attributes
         value = int(getattr(self, attribute))
         if value + amount <= 0: setattr(self, attribute, 0)
         else: 
@@ -213,7 +215,8 @@ class Fighter:
             setattr(self, attribute, value)
 
     
-    def name_location(self, location):
+    def name_location(self, location) -> int or str:
+        #Method to convert loc names to numbers and vice versa
         loc_list = ['Scalp', 'Face', 'Neck', 'R Shoulder', 'L Shoulder', 'Up R Chest', 'Up L Chest', 'Up R Arm', 'Up L Arm', 'Low R Chest', 'Low L Chest', 
                     'R Elbow', 'L Elbow', 'R Abdomen', 'L Abdomen', 'R Forearm', 'L Forearm', 'R Hip', 'L Hip', 'R Hand', 'L Hand', 'R Thigh', 'L Thigh', 
                     'R Knee', 'L Knee', 'R Shin', 'L Shin', 'R Foot', 'L Foot']
@@ -253,12 +256,14 @@ class Fighter:
         try:
             val = int(location)
             title = loc_list[location]
+        #Otherwise, return a number
         except:
             title = loc_list.index(location)
 
         return title
 
-    def get_locations(self):
+    def get_locations(self) -> list:
+        #Creates a list of location names and returns them
         loc_list = []
         i = 0
         for location in self.locations:
@@ -267,7 +272,8 @@ class Fighter:
 
         return loc_list
 
-    def find_location(self, roll):
+    def find_location(self, roll) -> int:
+        #Used for random injury location determination (traps, etc)
         location = 0
         if roll == 0:
             return 28

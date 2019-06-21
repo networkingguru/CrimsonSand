@@ -109,9 +109,16 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
 
 def strafe_control(entity):
     #Cycle through the strafe modes
-    if entity.fighter.strafe == 'auto': entity.fighter.strafe = 'enemy'
-    elif entity.fighter.strafe == 'enemy': entity.fighter.strafe = 'manual'
-    else: entity.fighter.strafe = 'auto'
+    if entity.fighter.strafe == 'auto': 
+        entity.fighter.strafe = 'enemy'
+        message = Message('Strafe mode changed to Follow Enemy')
+    elif entity.fighter.strafe == 'enemy': 
+        entity.fighter.strafe = 'manual'
+        message = Message('Strafe mode changed to Manual')
+    else: 
+        entity.fighter.strafe = 'auto'
+        message = Message('Strafe mode changed to Auto')
+    return message
 
 def turn_order(entities) -> list:
     #Sort entities by highest init and make list of sorted entities
@@ -2299,14 +2306,18 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
 
 
     if command is not None:
-        #Check and see if entity has a target in zoc
+        #Check and see if entity has a target in aoc
         if len(curr_actor.fighter.targets) == 0:
-            try: 
-                if command.get('End Turn'):
-                    curr_actor.fighter.end_turn = True
-                    combat_phase = CombatPhase.action
-            except: 
-                if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
+            if isinstance(command, str):
+                if command == 'strafe': 
+                    message = strafe_control(curr_actor)
+                    log.add_message(message)
+            elif command is not None: 
+                if isinstance(command, dict):
+                    if command.get('End Turn'):
+                        curr_actor.fighter.end_turn = True
+                        combat_phase = CombatPhase.action
+                elif curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
                     if command[0] == 'move' or 'spin':
                         moved = move_actor(game_map, curr_actor, entities, command, logs)
                         if moved:
@@ -2317,7 +2328,6 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                             if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
 
                             if len(curr_actor.fighter.targets) != 0:
-                                
                                 menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
                                 
                 else:

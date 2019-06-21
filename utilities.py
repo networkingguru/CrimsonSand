@@ -100,7 +100,7 @@ def find_last_occurence(source, subject) -> object:
         else: return [1]
 
 def entity_angle(reference, axis) -> int:
-
+    #Axis is active entity, reference is thing to get angle to
     dy = axis.y - reference.y
     dx = reference.x - axis.x
     radians = math.atan2(-dy, dx)
@@ -136,6 +136,7 @@ def entity_angle(reference, axis) -> int:
     if degrees > 359:
         degrees -= 360
     
+    #Return angle to ref from axis, based on current facing
     return degrees
 
 def find_command(keymap, wanted_cmd) -> str:
