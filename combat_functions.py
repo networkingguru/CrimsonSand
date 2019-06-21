@@ -2541,6 +2541,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
             messages, combat_phase, active_entity = perform_attack(curr_actor, entities, final_to_hit, curr_target, cs, combat_phase)
             curr_actor.fighter.last_atk_ap = final_ap
             curr_actor.fighter.acted = True
+            curr_actor.fighter.action.clear()
         if command.get('Restart'):
             #Reset vars
             curr_actor.fighter.combat_choices.clear()
