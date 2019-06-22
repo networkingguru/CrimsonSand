@@ -2182,6 +2182,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 else: pro = 'her'
                 messages.append(curr_actor.name + ' ends ' + pro + ' turn')
             curr_actor.fighter.end_turn = True
+            curr_actor.fighter.action.clear()
             combat_phase = CombatPhase.action
             game_state = GameStates.default 
     except:
@@ -2202,7 +2203,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             curr_actor.fighter.action.append('Disengage')
         if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 
             curr_actor.fighter.action.append('Wait')
-        if len(curr_actor.fighter.action) >= 2:
+        if len(curr_actor.fighter.action) >= 1:
             curr_actor.fighter.action.append('End Turn')
             game_state = GameStates.menu
         else:

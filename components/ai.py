@@ -53,9 +53,6 @@ class CombatAI:
             cs = entity.determine_combat_stats(entity.weapons[0], entity.weapons[0].attacks[0])
             command = avoid_attack(self.host.attacker, entity, cs)
 
-        if command == 'End Turn':
-            breakpoint()
-
         return command
 
     def update_enemy_pos(self, entity) -> None:
