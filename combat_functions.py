@@ -11,7 +11,8 @@ from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_
 from game_map import cells_to_keys, get_adjacent_cells
 
 def detect_enemies(entities) -> int:
-    '''Goal is to see if enemies exist in each entity's FOV, and if so, change the combat phase'''
+    '''Goal is to see if enemies exist in each entity's FOV, and if so, change the combat phase. 
+        Secondary goal is to populate/update visible fighters and closest enemy lists. '''
     combat_phase = CombatPhase.explore
     for entity in entities:
         #For each fighter, create a list of opponents. Then see if any of them are in FOV. If so, start combat by changing phase
@@ -23,13 +24,32 @@ def detect_enemies(entities) -> int:
                     opponents.remove(opponent)
                 elif (opponent.x, opponent.y) in entity.fighter.fov_visible:
                     combat_phase = CombatPhase.init
+                    entity.fighter.visible_fighters.append(opponent)
+                elif len(entity.fighter.visible_fighters) > 0:
+                    if opponent in entity.fighter.visible_fighters:
+                        entity.fighter.visible_fighters.remove(opponent)
+    
+        find_closest_enemy(entity)
+
     return combat_phase
+
+def find_closest_enemy(entity):
+    closest_dist = None
+    if len(entity.fighter.visible_fighters) > 0:
+        for enemy in entity.fighter.visible_fighters:
+            x,y = enemy.x, enemy.y
+            dist = sum(((abs(x - entity.x)),(abs(y - entity.y))))
+            if closest_dist is None or dist < closest_dist:
+                closest_dist = dist
+                entity.fighter.closest_fighter = enemy
 
 def move_actor(game_map, entity, entities, command, logs) -> bool:
 
     fov_recompute = False
     #Dict containing facing direction based on x,y offset
     facing_dict = {(-1,0):6,(-1,1):5,(-1,-1):7,(1,-1):1,(1,1):3,(1,0):2,(0,1):4,(0,-1):0}
+    #Dict containing facing direction based on angle
+    angle_dict = {0:2,45:1,90:0,135:7,180:6,225:5,270:4,315:3}
     
     #Name message logs
     message_log = logs[2]
@@ -64,6 +84,10 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
                 if global_vars.debug: print(entity.name + ' ' + str(entity.x) + ' ' + str(entity.y))
                 fov_recompute = True
                 if entity.fighter.strafe == 'auto': entity.fighter.facing = facing_dict.get((x_mod,y_mod))
+                elif entity.fighter.strafe == 'enemy' and entity.fighter.closest_fighter is not None: 
+                    e_angle = entity_angle(entity.fighter.closest_fighter, entity, False)
+                    e_angle = (e_angle // 45) * 45
+                    entity.fighter.facing = angle_dict.get(e_angle)
                 if not hasattr(entity.fighter, 'ai'): 
                     message = Message('You move ' + command[1], 'black')
                     message_log.add_message(message)

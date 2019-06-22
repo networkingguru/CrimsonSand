@@ -12,6 +12,7 @@ from game_map import array_gen, fill_map
 from fov_aoc import modify_fov, change_face
 from game_messages import MessageLog, Message
 
+
  
 
 
@@ -125,6 +126,7 @@ if __name__ == "__main__":
         if command is not None:
             fill_status_panel(players[0], status_log)
             if global_vars.debug: print('Phase: ' + str(combat_phase))
+            
             
 
 

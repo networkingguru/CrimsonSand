@@ -99,7 +99,7 @@ def find_last_occurence(source, subject) -> object:
         if len(source)>0: return source[-1]
         else: return [1]
 
-def entity_angle(reference, axis) -> int:
+def entity_angle(reference, axis, relative = True) -> int:
     #Axis is active entity, reference is thing to get angle to
     dy = axis.y - reference.y
     dx = reference.x - axis.x
@@ -128,15 +128,15 @@ def entity_angle(reference, axis) -> int:
     #Deal with y axis being upside-down
     degrees -= 360
     degrees = abs(degrees)
-    
-    degrees -= angle_adj
+    #Adjust if angle is supposed to be relative to facing
+    if relative: degrees -= angle_adj
     #deal with boundary
     if degrees < 0:
         degrees += 360
     if degrees > 359:
         degrees -= 360
     
-    #Return angle to ref from axis, based on current facing
+    #Return angle to ref from axis
     return degrees
 
 def find_command(keymap, wanted_cmd) -> str:
