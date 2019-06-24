@@ -2845,6 +2845,69 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
 
     return combat_phase, menu_dict, curr_actor
 
+def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (int, dict, object):
+    combat_menu_header = 'Use the directional movement keys to move. '
+    avail_keys, offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map), curr_actor)
+    curr_actor.fighter.disengage = True 
+    fov_recompute = False
+    messages = []
+    log = logs[2]
+    #Fill action with moves
+    curr_actor.fighter.action = avail_keys
+    if curr_actor.fighter.disengage_option is not None or command is not None:
+        if curr_actor.fighter.disengage_option is not None:
+            action = curr_actor.fighter.disengage_option
+        else:
+            action = command
+        curr_actor.fighter.disengage_option = action
 
+        opp_attackers = []
+        #Check and see if anyone can hit with an attack
+        for entity in entities:
+            if not entity.fighter.end_turn and not curr_actor == entity and not curr_actor in entity.fighter.entities_opportunity_attacked:
+                opp_attackers.append(entity)
+        if len(opp_attackers) > 0:
+            for entity in opp_attackers:
+                for coords in entity.fighter.aoc:
+                    x = coords[0]
+                    y = coords[1]
+                    if x == curr_actor.x and y == curr_actor.y:
+                        wpn_ap = []
+                        cs = []
+                        for wpn in curr_actor.weapons:
+                            for atk in wpn.attacks:
+                                cs = curr_actor.determine_combat_stats(wpn, atk)
+                                wpn_ap.append(cs.get('final ap'))
+                        min_ap = min(wpn_ap)
+                        if entity.fighter.ap >= min_ap:
+                            entity.fighter.entities_opportunity_attacked.append(curr_actor)
+                            #Give enemy a single attack
+                            curr_actor = entity
+                            combat_phase = CombatPhase.action
+        else:
+            #Move player
+            fov_recompute = move_actor(game_map, curr_actor, entities, action, logs)
+            if fov_recompute:
+                #Subtract move AP and stamina
+                curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
+                curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
+            curr_actor.fighter.disengage = False
+            curr_actor.fighter.disengage_option = None
+            for entity in entities:
+                if curr_actor in entity.fighter.entities_opportunity_attacked:
+                    entity.fighter.entities_opportunity_attacked.remove(curr_actor)
+            combat_phase = CombatPhase.action
+
+
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': True}
+
+    if hasattr(curr_actor.fighter, 'ai'):
+        menu_dict = None
+        game_state = GameStates.default
+
+    for message in messages:
+        log.add_message(Message(message))
+
+    return combat_phase, menu_dict, curr_actor
 
 

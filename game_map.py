@@ -20,7 +20,7 @@ def fill_map(game_map, s_blocked, mv_blocked):
         game_map.walkable[x,y] = False
 
 
-def get_adjacent_cells(entity, entities, game_map) -> list:
+def get_adjacent_cells(entity, entities, game_map, aoc_cells = True) -> list:
     result = []
     combatants = entities.copy()
     if entity in combatants: combatants.remove(entity)
@@ -31,14 +31,17 @@ def get_adjacent_cells(entity, entities, game_map) -> list:
         else:
             if get_blocking_entities_at_location(combatants, x, y) is None:
                 #If nothing blocking square, see if square is in any enemies AOC
-                for opponent in combatants:
-                    if hasattr(opponent, 'fighter'):
-                        if (x,y) in opponent.fighter.aoc:
-                            continue
+                if aoc_cells:
+                    for opponent in combatants:
+                        if hasattr(opponent, 'fighter'):
+                            if (x,y) in opponent.fighter.aoc:
+                                continue
+                            else:
+                                result.append([x,y])
                         else:
                             result.append([x,y])
-                    else:
-                        result.append([x,y])
+                else:
+                    result.append([x,y])
     return result
 
 def cells_to_keys(cells, entity) -> (list, list):
