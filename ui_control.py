@@ -47,7 +47,7 @@ def fill_status_panel(player, log) -> None:
         log.add_message(Message(entry))
 
 
-def render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict = None, modal_dialog = None) -> None:
+def render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict = dict(), modal_dialog = None) -> None:
     terminal.clear()
     map_con = con_list[0]
     for con in con_list:

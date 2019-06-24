@@ -52,11 +52,11 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
     elif combat_phase == CombatPhase.move:
         combat_phase, menu_dict, active_entity = phase_move(active_entity, entities, command, logs, combat_phase, game_map)
 
-    elif combat_phase == CombatPhase.disengage:
+    if combat_phase == CombatPhase.disengage:
         combat_phase, menu_dict, active_entity = phase_disengage(active_entity, entities, command, logs, combat_phase, game_map)
 
     if game_state == GameStates.default:
-        menu_dict = None
+        menu_dict = dict()
 
     return menu_dict, combat_phase, game_state, active_entity, order
         

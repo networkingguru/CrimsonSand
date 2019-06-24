@@ -23,7 +23,7 @@ if __name__ == "__main__":
     dim_list = [(options.map_width, options.map_height), (options.status_panel_w, options.status_panel_h), 
                 (options.enemy_panel_w, options.enemy_panel_h), (options.message_panel_w, options.message_panel_h)]
 
-    menu_dict = None
+    menu_dict = dict()
 
     term = create_terminal(options.screen_width, options.screen_height)
     modal_dialog = BLTWindow(options.modal_x, options.modal_y, options.modal_w, 'white', 'black')
@@ -103,15 +103,15 @@ if __name__ == "__main__":
             command = event
         elif curr_actor.player:
             #Below complexity is due to modal nature. if targets exist, block for input. 
-            #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
+            #Otherwise, see if a menu is present. If so, unless block for input, if not, refresh and get menu
             if len(curr_actor.fighter.targets) == 0:
                 command = blt_handle_keys(game_state, menu_dict)
                 if command == 'exit': leave = True
             else:
-                try:
-                    if menu_dict.get('options'):
-                        command = blt_handle_keys(game_state, menu_dict)
-                except:
+                if 'options' in menu_dict:
+                    command = blt_handle_keys(game_state, menu_dict)
+
+                else:
                     command = None
 
         elif not curr_actor.player:
@@ -125,6 +125,7 @@ if __name__ == "__main__":
 
         if command is not None:
             fill_status_panel(players[0], status_log)
+            command = None
             if global_vars.debug: print('Phase: ' + str(combat_phase))
             
             

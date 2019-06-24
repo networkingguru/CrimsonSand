@@ -353,7 +353,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
                     combat_phase = CombatPhase.disengage
                     active_entity = enemy
                     game_state = GameStates.default
-                    menu_dict = None
+                    menu_dict = dict()
                 else:
                     if curr_actor.player:
                         #See if curr_actor has AP for repeat
@@ -362,7 +362,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
                             game_state = GameStates.menu
 
             if hasattr(curr_actor.fighter, 'ai'):
-                menu_dict = None
+                menu_dict = dict()
                 game_state = GameStates.default
 
     
@@ -2166,7 +2166,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
     game_state = GameStates.menu
     combat_phase = CombatPhase.action
     messages = []
-    menu_dict = None
+    menu_dict = dict()
 
     try:
         if command.get('Wait'):
@@ -2313,7 +2313,7 @@ def phase_init(entities) -> (int, list):
 def phase_action(curr_actor, players, entities, order, command, logs, game_map) -> (dict,int,list):
     combat_phase = CombatPhase.action
     game_state = GameStates.default
-    menu_dict = None
+    menu_dict = dict()
     messages = []
     log = logs[2]
     status_log = logs[1]  
@@ -2360,7 +2360,7 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
 
 def phase_weapon(curr_actor, command, logs, combat_phase) -> (int, dict):
     combat_menu_header = None
-    menu_dict = None
+    menu_dict = dict()
     messages = []
     log = logs[2]
     
@@ -2386,14 +2386,14 @@ def phase_weapon(curr_actor, command, logs, combat_phase) -> (int, dict):
                     if option == wpn.name:
                         if len(curr_actor.fighter.combat_choices) == 0:   
                             curr_actor.fighter.combat_choices.append(wpn)
-                menu_dict = None
+                menu_dict = dict()
                 combat_phase = CombatPhase.option
     
     for message in messages:
         log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
+        menu_dict = dict()
         game_state = GameStates.default
 
         
@@ -2402,7 +2402,7 @@ def phase_weapon(curr_actor, command, logs, combat_phase) -> (int, dict):
 
 def phase_option(curr_actor, command, logs, combat_phase) -> (int, dict):
     combat_menu_header = None
-    menu_dict = None
+    menu_dict = dict()
     messages = []
     log = logs[2]
 
@@ -2426,14 +2426,14 @@ def phase_option(curr_actor, command, logs, combat_phase) -> (int, dict):
                         if atk.name == option:
                             curr_actor.fighter.combat_choices.append(atk)
                             messages.append('You decide to ' + option)
-                menu_dict = None
+                menu_dict = dict()
                 combat_phase = CombatPhase.location
     
     for message in messages:
         log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
+        menu_dict = dict()
         game_state = GameStates.default
 
 
@@ -2441,7 +2441,7 @@ def phase_option(curr_actor, command, logs, combat_phase) -> (int, dict):
 
 def phase_location(curr_actor, command, logs, combat_phase) -> (int, dict):
     combat_menu_header = None
-    menu_dict = None
+    menu_dict = dict()
     messages = []
     log = logs[2]
 
@@ -2465,21 +2465,21 @@ def phase_location(curr_actor, command, logs, combat_phase) -> (int, dict):
                         curr_actor.fighter.combat_choices.append(curr_target.fighter.name_location(option))
                         messages.append('You aim for ' + curr_target.name + '\'s ' + option)   
                     curr_actor.fighter.action = determine_valid_angles(curr_target.fighter.name_location(option))
-                    menu_dict = None
+                    menu_dict = dict()
                     combat_phase = CombatPhase.option2
     
     for message in messages:
         log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
+        menu_dict = dict()
         game_state = GameStates.default
 
     return combat_phase, menu_dict
 
 def phase_option2(curr_actor, command, logs, combat_phase) -> (int, dict):
     combat_menu_header = None
-    menu_dict = None
+    menu_dict = dict()
     messages = []
     log = logs[2]
     #Choose the angle of attack
@@ -2492,7 +2492,7 @@ def phase_option2(curr_actor, command, logs, combat_phase) -> (int, dict):
                 if not hasattr(curr_actor.fighter, 'ai'):
                     curr_actor.fighter.combat_choices.append(angle_id(option))
                     messages.append('You decide to use the ' + option + ' angle.')
-                    menu_dict = None
+                    menu_dict = dict()
                 curr_actor.fighter.action = ['Accept', 'Restart']
                 combat_phase = CombatPhase.confirm
 
@@ -2500,7 +2500,7 @@ def phase_option2(curr_actor, command, logs, combat_phase) -> (int, dict):
         log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
+        menu_dict = dict()
         game_state = GameStates.default
 
         
@@ -2513,7 +2513,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     #Variable setup
     active_entity = curr_actor
     combat_menu_header = None
-    menu_dict = None
+    menu_dict = dict()
     messages = []
     log = logs[2]
     curr_target = curr_actor.fighter.targets[0]
@@ -2561,13 +2561,13 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
             curr_actor.fighter.combat_choices.clear()
             combat_phase = CombatPhase.action
         
-        menu_dict = None
+        menu_dict = dict()
 
     for message in messages:
         log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
+        menu_dict = dict()
         game_state = GameStates.default
 
 
@@ -2576,7 +2576,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
 def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
     #Repeat last attack?
     combat_menu_header = None
-    menu_dict = None
+    menu_dict = dict()
     messages = []
     log = logs[2]
 
@@ -2586,14 +2586,14 @@ def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
     if command is not None:
         if command.get('Repeat'):
             combat_phase = CombatPhase.confirm
-            menu_dict = None
+            menu_dict = dict()
 
                     
         if command.get('New'):
             #Reset vars
             player.fighter.combat_choices.clear()
             combat_phase = CombatPhase.action
-            menu_dict = None
+            menu_dict = dict()
 
     for message in messages:
         log.add_message(Message(message))
@@ -2605,7 +2605,7 @@ def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
 def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (int, int, dict, object):
     #Variable setup
     combat_menu_header = None
-    menu_dict = None
+    menu_dict = dict()
     messages = []
     log = logs[2]
     cs = enemy.fighter.mods
@@ -2722,7 +2722,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, blocker, cs)
                 else:
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
-            menu_dict = None
+            menu_dict = dict()
     else:
         effects = apply_dam(curr_actor, entities, enemy.fighter.dam_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
     
@@ -2740,7 +2740,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         if curr_actor.fighter.disengage:       
             combat_phase = CombatPhase.disengage
             game_state = GameStates.default
-            menu_dict = None
+            menu_dict = dict()
         else:
             #Show rolls
             if options.show_rolls: 
@@ -2763,7 +2763,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         log.add_message(Message(message))
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
+        menu_dict = dict()
         game_state = GameStates.default
         
 
@@ -2824,7 +2824,7 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': True}
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
+        menu_dict = dict()
         game_state = GameStates.default
 
     for message in messages:
@@ -2871,7 +2871,7 @@ def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': True}
 
     if hasattr(curr_actor.fighter, 'ai'):
-        menu_dict = None
+        menu_dict = dict()
         game_state = GameStates.default
 
     for message in messages:
