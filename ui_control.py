@@ -123,7 +123,7 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
             except:
                 print('Something is missing from the menu_dict')
             if hide_options:
-                if terminal.check(terminal.TK_CHAR):
+                if not 88 < key < 99 and terminal.check(terminal.TK_CHAR):
                     key = chr(terminal.state(terminal.TK_CHAR))
                 for item in menu_options:
                     if key == item:

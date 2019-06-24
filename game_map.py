@@ -51,38 +51,91 @@ def cells_to_keys(cells, entity) -> (list, list):
         x,y = cell
         x_offset = x - entity.x
         y_offset = y - entity.y
-        offsets.append((x_offset, y_offset))
+        #Below complexity is necessary to find multiple keys in the dict and add them all, along with thier offsets, in correct order
         if x_offset == 1:
             if y_offset == 1:
-                key = find_command(options.default_keys, ('move','se'))
-                keys.append(key)
+                n_keys = find_command(options.default_keys, ('move','se'))
+                keys += n_keys
+                repeat = len(n_keys)
+                i = 0
+                while i < repeat:
+                    offsets.append((x_offset, y_offset))
+                    i += 1
             elif y_offset == 0:
-                key = find_command(options.default_keys, ('move','e'))
-                keys.append(key)
+                n_keys = find_command(options.default_keys, ('move','e'))
+                keys += n_keys
+                repeat = len(n_keys)
+                i = 0
+                while i < repeat:
+                    offsets.append((x_offset, y_offset))
+                    i += 1
             else:
-                key = find_command(options.default_keys, ('move','ne'))
-                keys.append(key)
+                n_keys = find_command(options.default_keys, ('move','ne'))
+                keys += n_keys
+                repeat = len(n_keys)
+                i = 0
+                while i < repeat:
+                    offsets.append((x_offset, y_offset))
+                    i += 1
         elif x_offset == 0:
             if y_offset == 1:
-                key = find_command(options.default_keys, ('move','s'))
-                keys.append(key)
+                n_keys = find_command(options.default_keys, ('move','s'))
+                keys += n_keys
+                repeat = len(n_keys)
+                i = 0
+                while i < repeat:
+                    offsets.append((x_offset, y_offset))
+                    i += 1
             else:
-                key = find_command(options.default_keys, ('move','n'))
-                keys.append(key)
+                n_keys = find_command(options.default_keys, ('move','n'))
+                keys += n_keys
+                repeat = len(n_keys)
+                i = 0
+                while i < repeat:
+                    offsets.append((x_offset, y_offset))
+                    i += 1
         else:
             if y_offset == 1:
-                key = find_command(options.default_keys, ('move','sw'))
-                keys.append(key)
+                n_keys = find_command(options.default_keys, ('move','sw'))
+                keys += n_keys
+                repeat = len(n_keys)
+                i = 0
+                while i < repeat:
+                    offsets.append((x_offset, y_offset))
+                    i += 1
             elif y_offset == 0:
-                key = find_command(options.default_keys, ('move','w'))
-                keys.append(key)
+                n_keys = find_command(options.default_keys, ('move','w'))
+                keys += n_keys
+                repeat = len(n_keys)
+                i = 0
+                while i < repeat:
+                    offsets.append((x_offset, y_offset))
+                    i += 1
             else:
-                key = find_command(options.default_keys, ('move','nw'))
-                keys.append(key)
+                n_keys = find_command(options.default_keys, ('move','nw'))
+                keys += n_keys
+                repeat = len(n_keys)
+                i = 0
+                while i < repeat:
+                    offsets.append((x_offset, y_offset))
+                    i += 1
 
     #Add spin
-    keys.append(find_command(options.default_keys, ('spin','ccw')))
-    offsets.append((0,0))
-    keys.append(find_command(options.default_keys, ('spin','cw')))
+    n_keys = find_command(options.default_keys, ('spin','ccw'))
+    keys += n_keys
+    repeat = len(n_keys)
+    i = 0
+    while i < repeat:
+        offsets.append((x_offset, y_offset))
+        i += 1
+    n_keys = find_command(options.default_keys, ('spin','cw'))
+    keys += n_keys
+    repeat = len(n_keys)
+    i = 0
+    while i < repeat:
+        offsets.append((x_offset, y_offset))
+        i += 1
+    #Add strafe
+    keys += find_command(options.default_keys, 'strafe')
     offsets.append((0,0))
     return keys, offsets
