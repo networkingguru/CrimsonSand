@@ -42,3 +42,4 @@ class CombatPhase(Enum):
     confirm = auto()
     repeat = auto()
     disengage = auto()
+    move = auto()

@@ -61,7 +61,7 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
                 e.fighter.ai.update_enemy_pos(entity)
 
         x_mod, y_mod = command_to_offset(command)
-        
+
         fx, fy =entity.x + x_mod, entity.y + y_mod
         #Boundary and blocker checking
         blocker = get_blocking_entities_at_location(entities, fx, fy)
@@ -2181,12 +2181,12 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             if curr_actor.player:
                 messages.append('You decide to attack')
             combat_phase = CombatPhase.weapon
-        elif command.get('Disengage'):
+        elif command.get('Move'):
             if curr_actor.player:
-                messages.append('You decide to disengage from ' + curr_actor.fighter.targets[0].name)
+                messages.append('You decide to move.')
             else:
-                messages.append(curr_actor.name + ' attempts to disengage. ')
-            combat_phase = CombatPhase.disengage
+                messages.append(curr_actor.name + ' moves. ')
+            combat_phase = CombatPhase.move
         elif command.get('End Turn'):
             if curr_actor.player:
                 messages.append('You decide to end your turn')
@@ -2213,7 +2213,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
         elif curr_actor.fighter.ap >= min_ap:
             curr_actor.fighter.action.append('Engage')
         if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
-            curr_actor.fighter.action.append('Disengage')
+            curr_actor.fighter.action.append('Move')
         if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 
             curr_actor.fighter.action.append('Wait')
         if len(curr_actor.fighter.action) >= 1:
@@ -2771,13 +2771,11 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
 
 def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map) -> (int, dict, object):
     combat_menu_header = 'Use the directional movement keys to move. '
-    avail_keys, offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map), curr_actor)
     curr_actor.fighter.disengage = True 
     fov_recompute = False
     messages = []
     log = logs[2]
-    #Fill action with moves
-    curr_actor.fighter.action = avail_keys
+    
     if curr_actor.fighter.disengage_option is not None or command is not None:
         if curr_actor.fighter.disengage_option is not None:
             action = curr_actor.fighter.disengage_option
@@ -2836,8 +2834,8 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
 
 def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (int, dict, object):
     combat_menu_header = 'Use the directional movement keys to move. '
-    avail_keys, offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map, False), curr_actor)
-    d_avail_keys, d_offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map), curr_actor)
+    avail_keys, _ = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map, False), curr_actor)
+    _, d_offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map), curr_actor)
     curr_actor.fighter.disengage = False
     fov_recompute = False
     messages = []
@@ -2851,29 +2849,12 @@ def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (
             action = command
         curr_actor.fighter.disengage_option = action
 
-        opp_attackers = []
-        #Check and see if anyone can hit with an attack
-        for entity in entities:
-            if not entity.fighter.end_turn and not curr_actor == entity and not curr_actor in entity.fighter.entities_opportunity_attacked:
-                opp_attackers.append(entity)
-        if len(opp_attackers) > 0:
-            for entity in opp_attackers:
-                for coords in entity.fighter.aoc:
-                    x = coords[0]
-                    y = coords[1]
-                    if x == curr_actor.x and y == curr_actor.y:
-                        wpn_ap = []
-                        cs = []
-                        for wpn in curr_actor.weapons:
-                            for atk in wpn.attacks:
-                                cs = curr_actor.determine_combat_stats(wpn, atk)
-                                wpn_ap.append(cs.get('final ap'))
-                        min_ap = min(wpn_ap)
-                        if entity.fighter.ap >= min_ap:
-                            entity.fighter.entities_opportunity_attacked.append(curr_actor)
-                            #Give enemy a single attack
-                            curr_actor = entity
-                            combat_phase = CombatPhase.action
+        action_offset = tuple(command_to_offset(command))
+        
+        if action_offset in d_offsets:
+            curr_actor.fighter.disengage = True
+            combat_phase = CombatPhase.disengage
+
         else:
             #Move player
             fov_recompute = move_actor(game_map, curr_actor, entities, action, logs)
@@ -2883,9 +2864,7 @@ def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (
                 curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
             curr_actor.fighter.disengage = False
             curr_actor.fighter.disengage_option = None
-            for entity in entities:
-                if curr_actor in entity.fighter.entities_opportunity_attacked:
-                    entity.fighter.entities_opportunity_attacked.remove(curr_actor)
+
             combat_phase = CombatPhase.action
 
 
