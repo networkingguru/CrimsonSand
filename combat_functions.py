@@ -8,7 +8,7 @@ from entity import get_blocking_entities_at_location
 from fov_aoc import modify_fov, change_face, aoc_check
 from game_messages import Message
 from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un
-from game_map import cells_to_keys, get_adjacent_cells
+from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
 
 def detect_enemies(entities) -> int:
     '''Goal is to see if enemies exist in each entity's FOV, and if so, change the combat phase. 
@@ -60,19 +60,8 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
             if e is not entity and hasattr(e.fighter, 'ai'):
                 e.fighter.ai.update_enemy_pos(entity)
 
-        direction = []
-        direction.extend(command[1])
-        y_mod = 0
-        x_mod = 0
-        for xy in direction:
-            if xy == 'n':
-                y_mod = -1
-            if xy == 's':
-                y_mod = 1
-            if xy == 'w':
-                x_mod = -1
-            if xy == 'e':
-                x_mod = 1
+        x_mod, y_mod = command_to_offset(command)
+        
         fx, fy =entity.x + x_mod, entity.y + y_mod
         #Boundary and blocker checking
         blocker = get_blocking_entities_at_location(entities, fx, fy)
@@ -2847,8 +2836,9 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
 
 def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (int, dict, object):
     combat_menu_header = 'Use the directional movement keys to move. '
-    avail_keys, offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map), curr_actor)
-    curr_actor.fighter.disengage = True 
+    avail_keys, offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map, False), curr_actor)
+    d_avail_keys, d_offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map), curr_actor)
+    curr_actor.fighter.disengage = False
     fov_recompute = False
     messages = []
     log = logs[2]

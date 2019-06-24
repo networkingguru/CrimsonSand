@@ -139,3 +139,19 @@ def cells_to_keys(cells, entity) -> (list, list):
     keys += find_command(options.default_keys, 'strafe')
     offsets.append((0,0))
     return keys, offsets
+
+def command_to_offset(command) -> list:
+    direction = []
+    direction.extend(command[1])
+    y_mod = 0
+    x_mod = 0
+    for xy in direction:
+        if xy == 'n':
+            y_mod = -1
+        if xy == 's':
+            y_mod = 1
+        if xy == 'w':
+            x_mod = -1
+        if xy == 'e':
+            x_mod = 1  
+    return [x_mod,y_mod] 
