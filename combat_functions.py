@@ -2807,6 +2807,9 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
                             curr_actor = entity
                             combat_phase = CombatPhase.action
         else:
+            #Set strafe to follow enemy, but record current setting to set back
+            strafe = curr_actor.fighter.strafe
+            curr_actor.fighter.strafe = 'enemy'
             #Move player
             fov_recompute = move_actor(game_map, curr_actor, entities, action, logs)
             if fov_recompute:
@@ -2818,6 +2821,7 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
             for entity in entities:
                 if curr_actor in entity.fighter.entities_opportunity_attacked:
                     entity.fighter.entities_opportunity_attacked.remove(curr_actor)
+            curr_actor.fighter.strafe = strafe
             combat_phase = CombatPhase.action
 
 
@@ -2856,6 +2860,9 @@ def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (
             combat_phase = CombatPhase.disengage
 
         else:
+            #Set strafe to follow enemy, but record current setting to set back
+            strafe = curr_actor.fighter.strafe
+            curr_actor.fighter.strafe = 'enemy'
             #Move player
             fov_recompute = move_actor(game_map, curr_actor, entities, action, logs)
             if fov_recompute:
@@ -2864,6 +2871,7 @@ def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (
                 curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
             curr_actor.fighter.disengage = False
             curr_actor.fighter.disengage_option = None
+            curr_actor.fighter.strafe = strafe
 
             combat_phase = CombatPhase.action
 
