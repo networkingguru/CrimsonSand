@@ -146,3 +146,37 @@ def find_command(keymap, wanted_cmd) -> list:
         if command == wanted_cmd:
             keys.append(key)
     return keys
+
+def find_defense_probability(attack_prob, def_prob) -> int:
+    '''Goal: Find approx probability for two numbers that may be over 100%'''
+    defender_chance = int(0)
+
+    #Determine chance of atk failing, min 1 max 99
+    if attack_prob >= 100: 
+        atk_fail = 1
+
+    else: atk_fail = 100 - attack_prob
+
+    diff = abs(def_prob - attack_prob)
+
+    #If over 100% difference in scores, give chance as 99% or 1%
+    if diff >= 100:
+        if def_prob > attack_prob: defender_chance = 99
+        else: defender_chance = 1
+    else:
+        #Handle cases where one or both numbers are over 100%
+        if def_prob >= 100 or attack_prob >= 100:
+            overage = int(0)
+            for i in (def_prob, attack_prob):
+                o = i - 100
+                if o > 0 and o > overage:
+                    overage = o
+            def_prob -= overage
+            attack_prob -= overage
+
+        combined_prob = (def_prob/100)*(attack_prob/100)
+        defender_chance = int((combined_prob*100) + atk_fail)
+    
+    return defender_chance
+
+

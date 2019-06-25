@@ -7,7 +7,7 @@ from enums import CombatPhase, MenuTypes, EntityState, GameStates, FighterStance
 from entity import get_blocking_entities_at_location
 from fov_aoc import modify_fov, change_face, aoc_check
 from game_messages import Message
-from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un
+from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un, find_defense_probability
 from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
 
 def detect_enemies(entities) -> int:
@@ -2633,8 +2633,9 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         parry_mod += history_mod
 
     #Find chances and see if curr_actor can parry/dodge
-    parry_chance = (curr_actor.fighter.deflect + parry_mod) - (final_to_hit - enemy.fighter.atk_result)
-    dodge_chance = (curr_actor.fighter.dodge + dodge_mod) - (final_to_hit - enemy.fighter.atk_result)
+    parry_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.deflect + parry_mod))
+    dodge_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.dodge + dodge_mod))
+    block_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.best_combat_skill + parry_mod))
     cs_p = curr_actor.determine_combat_stats(curr_actor.weapons[0],curr_actor.weapons[0].attacks[0])
     parry_ap = cs_p.get('parry ap')
     if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap: can_dodge = True
@@ -2654,23 +2655,23 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         #Determine if can block
         if enemy.fighter.combat_choices[2] <=2:
             if 0 < curr_actor.fighter.l_blocker or curr_actor.fighter.r_blocker:
-                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                header_items.append('You have a ' + str(block_chance) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
                 curr_actor.fighter.action.append('Block')
         elif enemy.fighter.combat_choices[2] in [3,5,7,9,11,13,15,19]:
             if 0 < curr_actor.fighter.r_blocker:
-                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                header_items.append('You have a ' + str(block_chance) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
                 curr_actor.fighter.action.append('Block')
         elif enemy.fighter.combat_choices[2] in [4,6,8,10,12,14,16,20]:
             if 0 < curr_actor.fighter.l_blocker:
-                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                header_items.append('You have a ' + str(block_chance) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
                 curr_actor.fighter.action.append('Block')
         elif enemy.fighter.combat_choices[2] in [17,21,23,25]:
             if 0 < curr_actor.fighter.locations[25][2]:
-                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                header_items.append('You have a ' + str(block_chance) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
                 curr_actor.fighter.action.append('Block')
         elif enemy.fighter.combat_choices[2] in [18,22,24,26]:
             if 0 < curr_actor.fighter.locations[26][2]:
-                header_items.append('You have a ' + str(curr_actor.fighter.best_combat_skill) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
+                header_items.append('You have a ' + str(block_chance) + ' percent chance to block the attack at a cost of ' + str(parry_ap) + ' ap. \n')
                 curr_actor.fighter.action.append('Block')
     if can_dodge or can_parry:
         game_state = GameStates.menu
