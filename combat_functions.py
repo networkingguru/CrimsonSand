@@ -2791,6 +2791,8 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
                     combat_phase = CombatPhase.repeat
                     game_state = GameStates.menu
+                else:
+                    curr_actor.fighter.combat_choices.clear()
 
 
     for message in messages:
