@@ -173,6 +173,9 @@ class Fighter:
         self.diseases = []
         self.atk_mod_r = 0
         self.atk_mod_l = 0
+        self.can_act = True
+        self.can_walk = True
+        self.can_stand = True
         #Continuous Injury Effects
         self.bleed = [] #Amount, duration
         #rds until dead from suffocation

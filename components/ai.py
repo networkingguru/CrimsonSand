@@ -21,7 +21,10 @@ class CombatAI:
     def ai_command(self, entity, entities, combat_phase, game_map, order) -> str:
         command = None
         if combat_phase == CombatPhase.explore:
-            command = hunt_target(entity, entities, game_map)
+            if self.host.can_act and self.host.can_walk:
+                command = hunt_target(entity, entities, game_map)
+            else:
+                command = {'End Turn':'End Turn'}
         if combat_phase == CombatPhase.action:
             #Check AOC for targets in case one moved
             entity.fighter.targets = aoc_check(entities, entity)
@@ -35,8 +38,15 @@ class CombatAI:
                 elif len(self.host.combat_choices) == 0:
                     command = {'End Turn':'End Turn'}
                 else: 
+                    if self.host.can_act and self.host.can_walk:
+                        command = hunt_target(entity, entities, game_map)
+                    else:
+                        command = {'End Turn':'End Turn'}
+            else: 
+                if self.host.can_act and self.host.can_walk:
                     command = hunt_target(entity, entities, game_map)
-            else: command = hunt_target(entity, entities, game_map)
+                else:
+                    command = {'End Turn':'End Turn'}
         if combat_phase == CombatPhase.weapon:
             command = {self.host.combat_choices[0].name:self.host.combat_choices[0].name}
         if combat_phase == CombatPhase.option:

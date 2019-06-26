@@ -54,7 +54,13 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
     #Name message logs
     message_log = logs[2]
     
-    if command[0] == 'move':
+    if not entity.fighter.can_act:
+        message = Message('You can\'t move while unconscious!', 'black')
+    
+    if not entity.fighter.can_walk:
+        message = Message('You can\'t walk upright due to your injuries.', 'black')
+
+    if command[0] == 'move' and entity.fighter.can_act and entity.fighter.can_walk:
         #Mark last known pos of entity for AI
         for e in entities:
             if e is not entity and hasattr(e.fighter, 'ai'):
@@ -460,6 +466,30 @@ def handle_persistant_effects(entity, entities):
 
     return messages
 
+def handle_mobility_change(entity):
+    #Handle unconsciousness
+    if entity.state == EntityState.unconscious or entity.state == EntityState.dead:
+        entity.fighter.can_act = False
+    #Handle leg paralysis
+    no_walk_locs = (17,18,21,22,23,24,25,26,27,28)
+    for loc in no_walk_locs:
+        if loc in entity.fighter.paralyzed_locs:
+            entity.fighter.can_walk = False
+            break
+    if not entity.fighter.can_walk:
+        locs_found = []
+        for loc in no_walk_locs:
+            if loc in entity.fighter.paralyzed_locs:
+                locs_found.append(loc)
+        #Since even locations are on the left and odd on the right, checking to see if both sides are damaged is done by seeing if all locs are even or odd
+        odd = 0
+        even = 0
+        for i in locs_found:
+            if i%2==0: even += 1
+            else: odd += 1
+        if odd != 0:
+            if even != 0: entity.fighter.can_stand = False
+        
 def apply_dam(target, entities, roll, dam_type, dam_mult, location, cs) -> set:
     """This  is the  main damage function. dam_effect_finder returns into this. """
     #Set deflect and soak rates
@@ -546,6 +576,8 @@ def apply_dam(target, entities, roll, dam_type, dam_mult, location, cs) -> set:
         effects.extend(dam_effect_finder(location, i, dam_thresh[i], target, entities))
         i += 1
         effects_set = set(effects)
+
+    handle_mobility_change(target)
 
     return effects_set
 
@@ -2199,35 +2231,36 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             combat_phase = CombatPhase.action
             game_state = GameStates.default 
     except:
-        #CHeck to see if entity can afford to attack
-        wpn_ap = []
-        curr_actor.fighter.acted = False
-        for wpn in curr_actor.weapons:
-            for atk in wpn.attacks:
-                cs = curr_actor.determine_combat_stats(wpn, atk)
-                wpn_ap.append(cs.get('final ap'))
-        min_ap = min(wpn_ap)
-        curr_actor.fighter.action.clear()
-        if len(curr_actor.fighter.entities_opportunity_attacked) != 0:
-            curr_actor.fighter.action.append('Engage')
-        elif curr_actor.fighter.ap >= min_ap:
-            curr_actor.fighter.action.append('Engage')
-        if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
-            curr_actor.fighter.action.append('Move')
-        if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 
-            curr_actor.fighter.action.append('Wait')
-        if len(curr_actor.fighter.action) >= 1:
-            curr_actor.fighter.action.append('End Turn')
-            game_state = GameStates.menu
-        else:
-            curr_actor.fighter.end_turn = True
-            combat_phase = CombatPhase.action
-            game_state = GameStates.default
-            return menu_dict, combat_phase, game_state, order, messages
+        if curr_actor.fighter.can_act:
+            #CHeck to see if entity can afford to attack
+            wpn_ap = []
+            curr_actor.fighter.acted = False
+            for wpn in curr_actor.weapons:
+                for atk in wpn.attacks:
+                    cs = curr_actor.determine_combat_stats(wpn, atk)
+                    wpn_ap.append(cs.get('final ap'))
+            min_ap = min(wpn_ap)
+            curr_actor.fighter.action.clear()
+            if len(curr_actor.fighter.entities_opportunity_attacked) != 0:
+                curr_actor.fighter.action.append('Engage')
+            elif curr_actor.fighter.ap >= min_ap:
+                curr_actor.fighter.action.append('Engage')
+            if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap and curr_actor.fighter.can_walk:
+                curr_actor.fighter.action.append('Move')
+            if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 
+                curr_actor.fighter.action.append('Wait')
+            if len(curr_actor.fighter.action) >= 1:
+                curr_actor.fighter.action.append('End Turn')
+                game_state = GameStates.menu
+            else:
+                curr_actor.fighter.end_turn = True
+                combat_phase = CombatPhase.action
+                game_state = GameStates.default
+                return menu_dict, combat_phase, game_state, order, messages
 
-        combat_menu_header = 'What do you wish to do?'
+            combat_menu_header = 'What do you wish to do?'
 
-        menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+            menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}                       
 
     if hasattr(curr_actor.fighter, 'ai'):
         game_state = GameStates.default
