@@ -159,8 +159,7 @@ def determine_valid_locs(attacker, defender, attack) -> list:
     #Relative positions
     
     er = attacker.fighter.er * 1.3 #1.3 multiplier to account for the stretch from twisting
-    if hasattr(attack, 'length'):
-        er += attack.length
+    er += attack.length
 
     #Init location pool
     locations = []
@@ -180,8 +179,9 @@ def determine_valid_locs(attacker, defender, attack) -> list:
     #Now determine attacker angle to defender    
     attacker_angle = entity_angle(defender, attacker)
 
-    #List for holding locations to prune
+    #Lists for holding locations to prune
     loc_list = []
+    loc_list2 = []
 
     #Remove locations based on defender angle
     if 45 < defender_angle < 135:
@@ -190,6 +190,17 @@ def determine_valid_locs(attacker, defender, attack) -> list:
     elif 225 < defender_angle < 315:
         #Locations to remove
         loc_list = [4,6,8,10,12,14,16,18,20,22,24,26,28]
+
+    #Remove locations based on attack hand/foot(if applicable)
+    if attack.side_restrict:
+        if "(R)" in attack.name:
+            #Locations to remove
+            loc_list2 = [3,5,7,9,11,13,15,17,19,21,23,25,27]
+        elif "(L)" in attack.name:
+            #Locations to remove
+            loc_list2 = [4,6,8,10,12,14,16,18,20,22,24,26,28] 
+    #Combine lists if necessary
+    loc_list += list(set(loc_list2)-set(loc_list))
 
     #modify er based on attacker angle
     if 45 < attacker_angle < 90:
@@ -225,6 +236,7 @@ def location_angle(attacker, defender, er, distance, attack, location) -> bool:
     else:
         pivot = attacker.fighter.location_ht[17]
         er *= 1.2 #Legs average 1.2x longer than arms
+
 
     #Find length of hypotenuse(len of reach to hit location)
     reach_req = sqrt(distance**2 + abs(location_ht-pivot)**2)

@@ -21,7 +21,8 @@ class Weapon:
 
 
 class Attack():
-    def __init__(self, name, attack_mod, parry_mod, stamina, b_dam, s_dam, p_dam, t_dam, hands, damage_type, base_ap, atk_type, hand = True, dom_hand = True):
+    def __init__(self, name, attack_mod, parry_mod, stamina, b_dam, s_dam, p_dam, t_dam, hands, damage_type, base_ap, atk_type, 
+        hand = True, dom_hand = True, length = 0, side_restrict = True):
         self.name = name
         self.attack_mod = attack_mod
         self.parry_mod = parry_mod
@@ -36,6 +37,8 @@ class Attack():
         self.atk_type = atk_type
         self.hand = hand
         self.dom_hand = dom_hand
+        self.length = length
+        self.side_restrict = side_restrict #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
 
 
 class Unarmed(Weapon):
