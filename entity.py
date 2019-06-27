@@ -1,4 +1,5 @@
 import math
+from copy import deepcopy
 from components.fighter import Fighter
 from components import weapon
 
@@ -32,12 +33,53 @@ class Entity:
         if len(fighter_attrs) > 2: ai = fighter_attrs[2]
         self.fighter = Fighter(attributes, facing, ai)
 
-    def add_weapon_component(self, wpn) -> None:
+    def add_weapon_component(self, wpn, loc) -> None:
         if self.weapons is None: self.weapons=[]
         for w in weapon.weapon_master_list:
             new_wpn = w()
             if wpn == new_wpn.name:
-                self.weapons.append(new_wpn)
+                #Add a new weapon if it doesn't exist, else, retreive existing weapon
+                if len(self.weapons)<1:
+                    self.weapons.append(new_wpn)
+                    idx = self.weapons.index(new_wpn)
+                for wp in self.weapons:
+                    if wp.name != new_wpn.name: 
+                        self.weapons.append(new_wpn)
+                        idx = self.weapons.index(new_wpn)
+                    else:
+                        idx = self.weapons.index(wp)
+                base_wpn = self.weapons[idx]
+
+
+                for a in base_wpn.base_attacks:
+                    if (loc <=1 and not a.hand) or (loc > 1 and a.hand):
+                        continue
+                    atk = deepcopy(a)
+                    base_wpn.attacks.append(atk)
+                    if loc == 0 or loc == 2:
+                        atk.name += '(R)'
+                    else:
+                        atk.name += '(L)'
+                    if self.fighter.dom_hand == 'R':
+                        if loc == 0 or loc == 2:
+                            continue
+                        else:
+                            for dam in (atk.b_dam,atk.p_dam,atk.s_dam,atk.t_dam):
+                                if dam > 0:
+                                    dam *= .8
+                            atk.attack_mod -= 20
+                            atk.parry_mod -= 20
+                    elif self.fighter.dom_hand == 'L':
+                        if loc == 0 or loc == 2:
+                            for dam in (atk.b_dam,atk.p_dam,atk.s_dam,atk.t_dam):
+                                if dam > 0:
+                                    dam *= .8
+                            atk.attack_mod -= 20
+                            atk.parry_mod -= 20
+                    
+
+
+
     def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 10):
         weapon = weapon
         skill = weapon.skill
@@ -188,9 +230,14 @@ def add_fighters(entities, fighter_list) -> None:
 def add_weapons(entities, weapon_dict) -> None:
     for entity in entities:
         if hasattr(entity, 'fighter'):
+            #look in master weapon dict and find entity
             wpns = weapon_dict.get(entity.name)
-            for wpn in wpns:
-                entity.add_weapon_component(wpn)
+            #look in nested entity wpn dict and find weapons for each loc, then assign with AWC method
+            entity.add_weapon_component(wpns.get('r_wpn'), 0)
+            entity.add_weapon_component(wpns.get('l_wpn'), 1)
+            entity.add_weapon_component(wpns.get('rf_wpn'), 2)
+            entity.add_weapon_component(wpns.get('lf_wpn'), 3)
+
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y) -> object or None:
     for entity in entities:

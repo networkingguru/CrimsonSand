@@ -1,5 +1,7 @@
 from enums import WeaponTypes
 
+
+
 class Weapon:
     def __init__(self, name, skill, attack_mod, parry_mod, parry_ap, stamina, base_ap, damage_type, b_dam, s_dam, p_dam, t_dam, hands = 1, length = 0, weight = 0):
         self.name = name
@@ -56,7 +58,8 @@ class Unarmed(Weapon):
         self.base_ap = 0
         self.punch = Attack('Punch', 0, 40, 1, .5, 0, 0, 0, 1, 'B', 20, WeaponTypes.thrust_and_slash)
         self.kick = Attack('Kick', -20, 0, 2, .75, 0, 0, 0, 0, 'B', 30, WeaponTypes.thrust_and_slash, False)
-        self.attacks = [self.punch, self.kick]
+        self.base_attacks = [self.punch, self.kick]
+        self.attacks = []
 
 
 weapon_master_list = [Unarmed]

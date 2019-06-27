@@ -34,6 +34,7 @@ class Fighter:
         self.disengage_option = None
         #Attributes
         self.male = True
+        self.dom_hand = 'R' #'R', 'L', or 'Ambi'
         self.attributes = attributes
         self.max_attributes = attributes.copy()
         #log, mem, wis, comp, comm, cre, men, will, ss, pwr, man, ped, bal, swift, flex, sta, derm, 

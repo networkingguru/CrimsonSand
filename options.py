@@ -57,15 +57,19 @@ low_init = [130,130,130,130,130,130,30,130,150,150,130,130,130,30,130,130,130,13
 player_attr = tank
 player_fighter = ['Player', player_attr, 4]
 player_r_weapon = 'Unarmed'
-player_f_weapon = 'Unarmed'
-player_weapons = [player_r_weapon, player_f_weapon]
+player_l_weapon = 'Unarmed'
+player_rf_weapon = 'Unarmed'
+player_lf_weapon = 'Unarmed'
+player_weapons = {'r_wpn': player_r_weapon, 'l_wpn': player_l_weapon, 'rf_wpn': player_rf_weapon, 'lf_wpn': player_lf_weapon}
 
-
+#Enemy specs
 enemy_attr = fat
 enemy_fighter = ['Enemy', enemy_attr, 0, CombatAI]
 enemy_r_weapon = 'Unarmed'
-enemy_f_weapon = 'Unarmed'
-enemy_weapons = [enemy_r_weapon, enemy_f_weapon]
+enemy_l_weapon = 'Unarmed'
+enemy_rf_weapon = 'Unarmed'
+enemy_lf_weapon = 'Unarmed'
+enemy_weapons = {'r_wpn': enemy_r_weapon, 'l_wpn': enemy_l_weapon, 'rf_wpn': enemy_rf_weapon, 'lf_wpn': enemy_lf_weapon}
 
 #Fighter and Weapons lists
 fighters = [player_fighter, enemy_fighter]
