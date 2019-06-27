@@ -64,9 +64,11 @@ class Entity:
                         if loc == 0 or loc == 2:
                             continue
                         else:
-                            for dam in (atk.b_dam,atk.p_dam,atk.s_dam,atk.t_dam):
-                                if dam > 0:
-                                    dam *= .8
+                            scalar = .8
+                            atk.b_dam *= scalar
+                            atk.p_dam *= scalar
+                            atk.s_dam *= scalar
+                            atk.t_dam *= scalar
                             atk.attack_mod -= 20
                             atk.parry_mod -= 20
                     elif self.fighter.dom_hand == 'L':
