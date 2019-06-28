@@ -32,9 +32,9 @@ class CombatAI:
             if len(entity.fighter.targets) != 0 and len(self.host.action) == 0: 
                 _, combat_phase, _, order, _ = init_combat(entity, order, command)
             elif len(self.host.action) != 0:
-                if 'Engage' in self.host.action:
+                if 'Attack' in self.host.action:
                     determine_attack(entity)
-                    command = {'Engage':'Engage'}
+                    command = {'Attack':'Attack'}
                 elif len(self.host.combat_choices) == 0:
                     command = {'End Turn':'End Turn'}
                 else: 

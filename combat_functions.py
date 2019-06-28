@@ -2244,7 +2244,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             curr_actor.fighter.wait = True
             combat_phase = CombatPhase.action
             game_state = GameStates.default                  
-        elif command.get('Engage'):
+        elif command.get('Attack'):
             if curr_actor.player:
                 messages.append('You decide to attack')
             combat_phase = CombatPhase.weapon
@@ -2277,9 +2277,9 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             min_ap = min(wpn_ap)
             curr_actor.fighter.action.clear()
             if len(curr_actor.fighter.entities_opportunity_attacked) != 0:
-                curr_actor.fighter.action.append('Engage')
+                curr_actor.fighter.action.append('Attack')
             elif curr_actor.fighter.ap >= min_ap:
-                curr_actor.fighter.action.append('Engage')
+                curr_actor.fighter.action.append('Attack')
             if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap and curr_actor.fighter.can_walk:
                 curr_actor.fighter.action.append('Move')
             if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 

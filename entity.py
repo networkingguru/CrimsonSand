@@ -34,6 +34,8 @@ class Entity:
         self.fighter = Fighter(attributes, facing, ai)
 
     def add_weapon_component(self, wpn, loc) -> None:
+        '''Assign attacks to fighter component by copying them from base_attacks and then modifying as necessary'''
+        scalar = .8 #Adjust this to reduce damage from off hand
         if self.weapons is None: self.weapons=[]
         for w in weapon.weapon_master_list:
             new_wpn = w()
@@ -52,7 +54,7 @@ class Entity:
 
 
                 for a in base_wpn.base_attacks:
-                    if (loc <=1 and not a.hand) or (loc > 1 and a.hand):
+                    if (loc <=1 and not a.hand) or (loc > 1 and a.hand): #loc variable defines the 'location' the attrack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
                         continue
                     atk = deepcopy(a)
                     base_wpn.attacks.append(atk)
@@ -64,7 +66,6 @@ class Entity:
                         if loc == 0 or loc == 2:
                             continue
                         else:
-                            scalar = .8
                             atk.b_dam *= scalar
                             atk.p_dam *= scalar
                             atk.s_dam *= scalar
@@ -73,13 +74,15 @@ class Entity:
                             atk.parry_mod -= 20
                     elif self.fighter.dom_hand == 'L':
                         if loc == 0 or loc == 2:
-                            for dam in (atk.b_dam,atk.p_dam,atk.s_dam,atk.t_dam):
-                                if dam > 0:
-                                    dam *= .8
+                            atk.b_dam *= scalar
+                            atk.p_dam *= scalar
+                            atk.s_dam *= scalar
+                            atk.t_dam *= scalar
                             atk.attack_mod -= 20
                             atk.parry_mod -= 20
-                    
 
+        #Sort the list of objects alphabetically using the name attribute            
+        base_wpn.attacks.sort(key=lambda x: x.name)
 
 
     def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 10):
