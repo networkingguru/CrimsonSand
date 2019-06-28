@@ -286,7 +286,12 @@ def determine_valid_angles(location, attack) -> list:
 
     allowed_angles = []
 
-    for a in attack.allowed_angles:
+    if "(L)" in attack.name:
+        atk_allowed_angles = attack.allowed_angles_l
+    else:
+        atk_allowed_angles = attack.allowed_angles_r
+
+    for a in atk_allowed_angles:
         angle = angle_id(a)
         allowed_angles.append(angle)
 
