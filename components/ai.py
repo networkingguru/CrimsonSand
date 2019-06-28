@@ -111,7 +111,7 @@ def determine_attack(entity) -> None:
                     if not any(location):
                         continue
                     else:
-                        for angle_str in determine_valid_angles(loc_id):
+                        for angle_str in determine_valid_angles(loc_id, atk):
                             #Variable Init
                             angle = angle_id(angle_str)
                             dam_score = 0

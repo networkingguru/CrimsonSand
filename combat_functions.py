@@ -202,6 +202,11 @@ def determine_valid_locs(attacker, defender, attack) -> list:
     #Combine lists if necessary
     loc_list += list(set(loc_list2)-set(loc_list))
 
+    #Remove locations based on specific attack restrictions
+    for l in attack.restricted_locs:
+        if not l in loc_list:
+            loc_list.append(l)
+
     #modify er based on attacker angle
     if 45 < attacker_angle < 90:
         er -= attacker.fighter.er/2
@@ -244,7 +249,7 @@ def location_angle(attacker, defender, er, distance, attack, location) -> bool:
     
     return can_reach
 
-def determine_valid_angles(location) -> list:
+def determine_valid_angles(location, attack) -> list:
     result = []
     # Full Spectrum, clockwise: 'N -> S', 'NE -> SW', 'E -> W', 'SE -> NW', 'S -> N', 'SW -> NE', 'W -> E', 
     # 'NW -> SE', 'Straight (jab)'
@@ -278,7 +283,20 @@ def determine_valid_angles(location) -> list:
         result = ['NE -> SW', 'E -> W', 'W -> E', 'NW -> SE', 'Straight (jab)']
     elif location < 29:
         result = ['N -> S']
-    return result
+
+    allowed_angles = []
+
+    for a in attack.allowed_angles:
+        angle = angle_id(a)
+        allowed_angles.append(angle)
+
+    final = []
+
+    for r in result:
+        if r in allowed_angles:
+            final.append(r)
+
+    return final
 
 def angle_id(angle) -> list or int:
     angle_list = ['N -> S', 'NE -> SW', 'E -> W', 'SE -> NW', 'S -> N', 'SW -> NE', 'W -> E', 'NW -> SE', 'Straight (jab)']
@@ -2509,7 +2527,7 @@ def phase_location(curr_actor, command, logs, combat_phase) -> (int, dict):
                     if not hasattr(curr_actor.fighter, 'ai'):
                         curr_actor.fighter.combat_choices.append(curr_target.fighter.name_location(option))
                         messages.append('You aim for ' + curr_target.name + '\'s ' + option)   
-                    curr_actor.fighter.action = determine_valid_angles(curr_target.fighter.name_location(option))
+                    curr_actor.fighter.action = determine_valid_angles(curr_target.fighter.name_location(option), attack)
                     menu_dict = dict()
                     combat_phase = CombatPhase.option2
     

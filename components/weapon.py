@@ -21,8 +21,8 @@ class Weapon:
 
 
 class Attack():
-    def __init__(self, name, attack_mod, parry_mod, stamina, b_dam, s_dam, p_dam, t_dam, hands, damage_type, base_ap, atk_type, 
-        hand = True, dom_hand = True, length = 0, side_restrict = True):
+    def __init__(self, name, attack_mod, parry_mod, stamina, b_dam, s_dam, p_dam, t_dam, hands, damage_type, base_ap, 
+        hand = True, length = 0, side_restrict = True, restricted_locs = [], allowed_angles = [0,1,2,3,4,5,6,7,8]):
         self.name = name
         self.attack_mod = attack_mod
         self.parry_mod = parry_mod
@@ -34,11 +34,11 @@ class Attack():
         self.hands = hands
         self.damage_type = damage_type
         self.base_ap = base_ap
-        self.atk_type = atk_type
         self.hand = hand
-        self.dom_hand = dom_hand
         self.length = length
         self.side_restrict = side_restrict #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = restricted_locs #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles = allowed_angles #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
 
 
 class Unarmed(Weapon):
@@ -59,9 +59,12 @@ class Unarmed(Weapon):
         self.weight = 0
         self.damage_type = 'B'
         self.base_ap = 0
-        self.punch = Attack('Punch', 0, 40, 1, .5, 0, 0, 0, 1, 'B', 20, WeaponTypes.thrust_and_slash)
-        self.kick = Attack('Kick', -20, 0, 2, .75, 0, 0, 0, 0, 'B', 30, WeaponTypes.thrust_and_slash, False)
-        self.base_attacks = [self.punch, self.kick]
+        #self, name, attack_mod, parry_mod, stamina, b_dam, s_dam, p_dam, t_dam, hands, damage_type, base_ap, 
+        #hand = True, length = 0, side_restrict = True, restricted_locs = [], restricted_angles = []
+        self.punch = Attack('Punch', 0, 40, 1, .5, 0, 0, 0, 1, 'B', 20,)
+        self.kick = Attack('Kick', -20, 0, 2, .75, 0, 0, 0, 0, 'B', 30, False)
+        self.jab = Attack("Jab/Cross", 0, 0, 1, .5, 0, 0, 0, 1, 'B', 10, True, 0, True, [0], [8])
+        self.base_attacks = [self.punch, self.kick, self.jab]
         self.attacks = []
 
 
