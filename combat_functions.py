@@ -375,6 +375,20 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
                 messages.insert(0, rolls)
         else:
             messages.append(entity.name + ' missed you. ')
+            menu_dict = dict()
+            game_state = GameStates.default
+        
+        if enemy.fighter.disengage:       
+            combat_phase = CombatPhase.disengage
+            active_entity = enemy
+            game_state = GameStates.default
+            menu_dict = dict()
+        else:
+            if curr_actor.player:
+                #See if curr_actor has AP for repeat
+                if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
+                    combat_phase = CombatPhase.repeat
+                    game_state = GameStates.menu
         
     else:
         #First, see if this is an attack from behind
@@ -424,10 +438,11 @@ def add_history(entity) -> None:
         del history[0]
 
 def make_attack_roll(hit_chance, damage, location) -> (int, int, int):
-    roll = roll_dice(1, 100, True)
+    roll = int(roll_dice(1, 100, True))
+    new_loc = 0
     #MISS
     if roll > hit_chance:
-        return roll, 0, 0
+        damage = 0
     #Hit another loc softly
     elif roll > hit_chance - 10:
         if location <= 2:
@@ -437,7 +452,7 @@ def make_attack_roll(hit_chance, damage, location) -> (int, int, int):
         else:
             new_loc = location + (roll_dice(1,3) - roll_dice(1,3))
         damage *= (((hit_chance - roll)/(hit_chance/100))/100)*.4
-        return roll, damage, new_loc    
+  
     #Hit another loc glancing
     elif  roll > hit_chance - 20:
         if location <= 3:
@@ -447,10 +462,13 @@ def make_attack_roll(hit_chance, damage, location) -> (int, int, int):
         else:
             new_loc = location + (roll_dice(1,4) - roll_dice(1,4))
         damage *= (((hit_chance - roll)/(hit_chance/100))/100)*.1
-        return roll, damage, new_loc
+
     else:
         damage *= (((hit_chance - roll)/(hit_chance/100))/100)
-        return roll, damage, location
+
+    damage = round(damage, 2)
+        
+    return roll, damage, location
 
 def handle_persistant_effects(entity, entities):
     messages = []
@@ -2223,7 +2241,7 @@ def handle_state_change(entity, entities, state) -> None:
         entity.color = libtcodpy.crimson
         entity.fighter = None
         for item in entities:
-            if hasattr(item, 'fighter'):
+            if hasattr(item, 'fighter') and item is not entity:
             #Handle target removal if dead
                 for target in item.fighter.targets:
                     if target is entity:

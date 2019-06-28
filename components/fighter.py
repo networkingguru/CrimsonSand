@@ -223,7 +223,7 @@ class Fighter:
     
     def name_location(self, location) -> int or str:
         #Method to convert loc names to numbers and vice versa
-        loc_list = ['Scalp', 'Face', 'Neck', 'R Shoulder', 'L Shoulder', 'Up R Chest', 'Up L Chest', 'Up R Arm', 'Up L Arm', 'Low R Chest', 'Low L Chest', 
+        loc_list = ['Scalp', 'Face', 'Neck', 'R Shoulder', 'L Shoulder', 'R Chest', 'L Chest', 'Up R Arm', 'Up L Arm', 'R Ribs', 'L Ribs', 
                     'R Elbow', 'L Elbow', 'R Abdomen', 'L Abdomen', 'R Forearm', 'L Forearm', 'R Hip', 'L Hip', 'R Hand', 'L Hand', 'R Thigh', 'L Thigh', 
                     'R Knee', 'L Knee', 'R Shin', 'L Shin', 'R Foot', 'L Foot']
         #Key for reference
