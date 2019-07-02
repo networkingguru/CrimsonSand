@@ -111,14 +111,17 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
         entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
 
     if command[0] == 'prone':
+        message = Message('You drop prone', 'black')
         entity.fighter.stance = FighterStance.prone
         fov_recompute = True
     
     if command[0] == 'kneel':
+        message = Message('You kneel', 'black')
         entity.fighter.stance = FighterStance.kneeling
         fov_recompute = True
 
     if command[0] == 'stand' and entity.fighter.can_stand:
+        message = Message('You stand up', 'black')
         entity.fighter.stance = FighterStance.standing
         fov_recompute = True
 
@@ -256,13 +259,26 @@ def determine_valid_locs(attacker, defender, attack) -> list:
 
 def location_angle(attacker, defender, er, distance, attack, location) -> bool:
     can_reach = False
-    location_ht = defender.fighter.location_ht[location]
-    if attack.hand:
-        pivot = attacker.fighter.location_ht[3]
+    #Determine defender height based on stance
+    if defender.fighter.stance == FighterStance.prone:
+        location_ht = defender.fighter.location_ht[25]
+    elif defender.fighter.stance == FighterStance.kneeling or FighterStance.sitting:
+        location_ht = defender.fighter.location_ht[location] - defender.fighter.location_ht[23]
     else:
-        pivot = attacker.fighter.location_ht[17]
-        er *= 1.2 #Legs average 1.2x longer than arms
+        location_ht = defender.fighter.location_ht[location]
 
+    #Determine pivot point based on attacker stance
+    if attacker.fighter.stance == FighterStance.prone:
+        pivot = attacker.fighter.location_ht[25]
+        if not attack.hand: er *= 1.2 #Legs average 1.2x longer than arms
+    else:
+        if attack.hand:
+            pivot = attacker.fighter.location_ht[3]
+        else:
+            pivot = attacker.fighter.location_ht[17]
+            er *= 1.2 #Legs average 1.2x longer than arms
+        if attacker.fighter.stance == FighterStance.kneeling or FighterStance.sitting:
+            pivot -= attacker.fighter.location_ht[23]
 
     #Find length of hypotenuse(len of reach to hit location)
     reach_req = sqrt(distance**2 + abs(location_ht-pivot)**2)
