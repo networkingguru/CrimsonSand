@@ -82,7 +82,7 @@ entities = [player, enemy]
 
 #Key Dicts in order of key, command_verb
 default_keys = {'q':('move','nw'), 'w':('move','n'), 'e':('move','ne'), 'd':('move','e'), 'c':('move','se'), 
-                'x':('move','s'), 'z':('move','sw'),'a':('move','w'), 41: 'exit', '.':('spin','cw'), ',':('spin','ccw'),
+                'x':('move','s'), 'z':('move','sw'),'a':('move','w'), 41: ('exit', None), '.':('spin','cw'), ',':('spin','ccw'),
                 80: ('move','w'), 79:('move','e'),82:('move','n'),81:('move','s'),';':'strafe',95:('move','nw'), 
                 96:('move','n'), 97:('move','ne'), 94:('move','e'), 91:('move','se'),90:('move','s'),
                 89:('move','sw'),92:('move','w'),98:('spin','ccw'),'u':('stand',None),'p':('prone',None),'k':('kneel',None)}

@@ -125,7 +125,6 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
         entity.fighter.stance = FighterStance.standing
         fov_recompute = True
 
-
     if fov_recompute == True:
         entity.fighter.mod_attribute('ap', -ap_cost)
 
@@ -2451,14 +2450,14 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
     status_log = logs[1]  
 
 
-    if command is not None:
+    if len(command) != 0:
         #Check and see if entity has a target in aoc
         if len(curr_actor.fighter.targets) == 0:
             if isinstance(command, str):
                 if command == 'strafe': 
                     message = strafe_control(curr_actor)
                     log.add_message(message)
-            elif command is not None: 
+            elif len(command) != 0: 
                 if isinstance(command, dict):
                     if command.get('End Turn'):
                         curr_actor.fighter.end_turn = True
@@ -2510,7 +2509,7 @@ def phase_weapon(curr_actor, command, logs, combat_phase) -> (int, dict):
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
     
     for option in curr_actor.fighter.action:
-        if command is not None:
+        if len(command) != 0:
             if command.get(option):
                 if not hasattr(curr_actor.fighter, 'ai'):
                     messages.append('You decide to use ' + option)
@@ -2551,7 +2550,7 @@ def phase_option(curr_actor, command, logs, combat_phase) -> (int, dict):
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
     
     for option in curr_actor.fighter.action:
-        if command is not None:
+        if len(command) != 0:
             if command.get(option):
                 if not hasattr(curr_actor.fighter, 'ai'):
                     for atk in curr_actor.fighter.combat_choices[0].attacks:
@@ -2588,7 +2587,7 @@ def phase_location(curr_actor, command, logs, combat_phase) -> (int, dict):
     curr_actor.fighter.action = locations
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
     
-    if command is not None:    
+    if len(command) != 0:    
         for option in curr_actor.fighter.action:
             if command.get(option):
                 choice = command.get(option)
@@ -2617,7 +2616,7 @@ def phase_option2(curr_actor, command, logs, combat_phase) -> (int, dict):
     #Choose the angle of attack
     combat_menu_header = 'What angle would you like to attack from?'
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
-    if command is not None:
+    if len(command) != 0:
         for option in curr_actor.fighter.action:
             choice = command.get(option)
             if choice:
@@ -2682,7 +2681,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
 
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
 
-    if command is not None:
+    if len(command) != 0:
         if command.get('Accept'):
             messages, combat_phase, active_entity = perform_attack(curr_actor, entities, final_to_hit, curr_target, cs, combat_phase)
             curr_actor.fighter.last_atk_ap = final_ap
@@ -2715,7 +2714,7 @@ def phase_repeat(player, command, logs, combat_phase) -> (int, dict):
     combat_menu_header = 'Would you like to repeat the last attack, or start a new attack strategy?'
     player.fighter.action = ['Repeat', 'New']
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': player.fighter.action, 'mode': False}
-    if command is not None:
+    if len(command) != 0:
         if command.get('Repeat'):
             combat_phase = CombatPhase.confirm
             menu_dict = dict()
@@ -2810,7 +2809,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         header_items.append('What would you like to do? ')
         combat_menu_header = ''.join(header_items)
         menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
-        if command is not None:
+        if len(command) != 0:
             if command.get('Take the hit'):
                 effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Dodge'):
@@ -2911,7 +2910,7 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
     messages = []
     log = logs[2]
     
-    if curr_actor.fighter.disengage_option is not None or command is not None:
+    if curr_actor.fighter.disengage_option is not None or len(command) != 0:
         if curr_actor.fighter.disengage_option is not None:
             action = curr_actor.fighter.disengage_option
         else:
@@ -2974,44 +2973,53 @@ def phase_disengage(curr_actor, entities, command, logs, combat_phase, game_map)
 def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (int, dict, object):
     combat_menu_header = 'Use the directional movement keys to move. '
     avail_keys, _ = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map, False), curr_actor)
+    avail_keys.append(41)
     _, d_offsets = cells_to_keys(get_adjacent_cells(curr_actor, entities, game_map), curr_actor)
     curr_actor.fighter.disengage = False
     fov_recompute = False
     messages = []
     log = logs[2]
+    
     #Fill action with moves
     curr_actor.fighter.action = avail_keys
-    if curr_actor.fighter.disengage_option is not None or command is not None:
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': True}
+    
+    if curr_actor.fighter.disengage_option is not None or len(command) != 0:
         if curr_actor.fighter.disengage_option is not None:
             action = curr_actor.fighter.disengage_option
         else:
             action = command
-        curr_actor.fighter.disengage_option = action
+        curr_actor.fighter.disengage_option = action            
 
-        action_offset = tuple(command_to_offset(command))
+        if action[0] != 'exit':
+            action_offset = tuple(command_to_offset(command))
+            
+            if action_offset in d_offsets:
+                curr_actor.fighter.disengage = True
+                combat_phase = CombatPhase.disengage
+
+            else:
+                #Set strafe to follow enemy, but record current setting to set back
+                strafe = curr_actor.fighter.strafe
+                curr_actor.fighter.strafe = 'enemy'
+                #Move player
+                fov_recompute = move_actor(game_map, curr_actor, entities, action, logs)
+                if fov_recompute:
+                    #Subtract move AP and stamina
+                    curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
+                    curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
+                curr_actor.fighter.disengage = False
+                curr_actor.fighter.disengage_option = None
+                curr_actor.fighter.strafe = strafe
+
+                combat_phase = CombatPhase.action
+
+
         
-        if action_offset in d_offsets:
-            curr_actor.fighter.disengage = True
-            combat_phase = CombatPhase.disengage
-
-        else:
-            #Set strafe to follow enemy, but record current setting to set back
-            strafe = curr_actor.fighter.strafe
-            curr_actor.fighter.strafe = 'enemy'
-            #Move player
-            fov_recompute = move_actor(game_map, curr_actor, entities, action, logs)
-            if fov_recompute:
-                #Subtract move AP and stamina
-                curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
-                curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
-            curr_actor.fighter.disengage = False
-            curr_actor.fighter.disengage_option = None
-            curr_actor.fighter.strafe = strafe
-
+    
+        if action[0] == 'exit':
             combat_phase = CombatPhase.action
-
-
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': True}
+            menu_dict = dict()
 
     if hasattr(curr_actor.fighter, 'ai'):
         menu_dict = dict()

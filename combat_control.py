@@ -5,15 +5,12 @@ from enums import CombatPhase, GameStates
 
 def combat_controller(game_map, active_entity, entities, players, command, logs, combat_phase, game_state, order) -> (dict, int, int, object, list):
 
-    if command == 'exit':
-        exit(0)
-
     if combat_phase == CombatPhase.explore:
         if isinstance(command, str):
             if command == 'strafe': 
                 message = strafe_control(active_entity)
                 logs[2].add_message(message)
-        elif command is not None:
+        elif len(command) != 0:
             if command[0] == 'move' or 'spin':
                 moved = move_actor(game_map, active_entity, entities, command, logs)
                 if moved: 

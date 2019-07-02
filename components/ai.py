@@ -19,7 +19,7 @@ class CombatAI:
 
 
     def ai_command(self, entity, entities, combat_phase, game_map, order) -> str:
-        command = None
+        command = []
         if combat_phase == CombatPhase.explore:
             if self.host.can_act and self.host.can_walk:
                 command = hunt_target(entity, entities, game_map)
@@ -167,7 +167,7 @@ def avoid_attack(attacker, defender, cs) -> str:
     can_block = False
     attack = attacker.fighter.combat_choices[1]
     atk_name = attack.name 
-    command = None
+    command = []
 
     if len(defender.fighter.action) > 1:
         if 'Dodge' in defender.fighter.action: can_dodge = True

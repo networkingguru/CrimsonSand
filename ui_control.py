@@ -104,7 +104,7 @@ def create_terminal(w,h) -> bool:
 
 def blt_handle_keys(game_state, menu_dict) -> str or None:
     key = terminal.read()
-    command = None
+    command = []
 
     if key == terminal.TK_CLOSE:
         exit()
@@ -147,7 +147,7 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
 
 def blt_handle_global_input(game_state) -> str or int or None:
     
-    command = None
+    command = []
     if terminal.has_input():
         key = terminal.read()
         if key == terminal.TK_CLOSE:

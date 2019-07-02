@@ -70,8 +70,8 @@ if __name__ == "__main__":
     #Map/state init
     game_state = GameStates.default
     combat_phase = CombatPhase.explore
-    command = None
-    event = None
+    command = []
+    event = []
     game_map = map.Map(options.map_width, options.map_height, 'F')
     fill_map(game_map, options.blocked, options.blocked)
     fov_transparency = array_gen(game_map, options.blocked)
@@ -98,21 +98,22 @@ if __name__ == "__main__":
 
         if game_state != GameStates.menu: event = blt_handle_global_input(game_state)
 
-        if event == 'exit': leave = True
-        elif combat_phase == CombatPhase.explore:
+        
+        if len(event) > 0 and event[0] == 'exit': leave = True
+        if combat_phase == CombatPhase.explore:
             command = event
         elif curr_actor.player:
             #Below complexity is due to modal nature. if targets exist, block for input. 
             #Otherwise, see if a menu is present. If so, unless block for input, if not, refresh and get menu
             if len(curr_actor.fighter.targets) == 0:
                 command = blt_handle_keys(game_state, menu_dict)
-                if command == 'exit': leave = True
+                if command[0] == 'exit': leave = True
             else:
                 if 'options' in menu_dict:
                     command = blt_handle_keys(game_state, menu_dict)
 
                 else:
-                    command = None
+                    command = []
 
         elif not curr_actor.player:
             command = curr_actor.fighter.ai.ai_command(curr_actor, entities, combat_phase, game_map, order)
@@ -123,9 +124,9 @@ if __name__ == "__main__":
 
         menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
-        if command is not None:
+        if len(command) != 0:
             fill_status_panel(players[0], status_log)
-            command = None
+            command = []
             if global_vars.debug: print('Phase: ' + str(combat_phase))
             
             
