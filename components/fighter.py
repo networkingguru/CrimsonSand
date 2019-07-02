@@ -68,7 +68,7 @@ class Fighter:
         self.ht = attributes[26]
         self.fat = attributes[27]
         self.shape = attributes[28]
-        #Meta-Attributes
+        #Super-Attributes
         self.int = int(round((mean([self.log, self.mem, self.comm, self.comp, self.cre, self.men, self.will, self.wis])),0))
         self.str = int(round((mean([self.ss, self.pwr])),0))
         self.agi = int(round((mean([self.man, self.ped, self.bal, self.swift, self.flex])),0))

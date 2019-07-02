@@ -53,12 +53,17 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
     
     #Name message logs
     message_log = logs[2]
+
+    #Set ap cost based on stance
+    if entity.fighter.stance == FighterStance.standing:
+        ap_cost = entity.fighter.walk_ap
+    elif entity.fighter.stance == FighterStance.kneeling:
+        ap_cost = entity.fighter.walk_ap*2
+    else:
+        ap_cost = entity.fighter.walk_ap*4
     
     if not entity.fighter.can_act:
         message = Message('You can\'t move while unconscious!', 'black')
-    
-    if not entity.fighter.can_walk:
-        message = Message('You can\'t walk upright due to your injuries.', 'black')
 
     if command[0] == 'move' and entity.fighter.can_act and entity.fighter.can_walk:
         #Mark last known pos of entity for AI
@@ -105,7 +110,21 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
         entity.fighter.update_aoc_facing()
         entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
 
-            
+    if command[0] == 'prone':
+        entity.fighter.stance = FighterStance.prone
+        fov_recompute = True
+    
+    if command[0] == 'kneel':
+        entity.fighter.stance = FighterStance.kneeling
+        fov_recompute = True
+
+    if command[0] == 'stand' and entity.fighter.can_stand:
+        entity.fighter.stance = FighterStance.standing
+        fov_recompute = True
+
+
+    if fov_recompute == True:
+        entity.fighter.mod_attribute('ap', -ap_cost)
 
     if hasattr(entity, 'fighter') and fov_recompute == True:
         if global_vars.debug_time: t0 = time.time()
@@ -114,6 +133,8 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
                 fov_radius = int(round(e.fighter.sit/5))
                 game_map.compute_fov(e.x, e.y, fov_radius, True, libtcodpy.FOV_SHADOW)
                 modify_fov(e, game_map)
+        #Added to handle prone stance changes        
+        handle_mobility_change(entity)
 
         if global_vars.debug_time: t1 = time.time()
         if global_vars.debug_time: total_time = t1 - t0
@@ -520,6 +541,8 @@ def handle_persistant_effects(entity, entities):
     return messages
 
 def handle_mobility_change(entity):
+    #DIct containing direction to x,y AOC mapping for square directly in front of entity
+    prone_aoc_dict = {0:(0,-1),1:(1,-1),2:(1,0),3:(1,1),4:(0,1),5:(-1,1),6:(-1,0),7:(-1,-1)}
     #Handle unconsciousness
     if entity.state == EntityState.unconscious or entity.state == EntityState.dead:
         entity.fighter.can_act = False
@@ -541,8 +564,15 @@ def handle_mobility_change(entity):
             if i%2==0: even += 1
             else: odd += 1
         if odd != 0:
-            if even != 0: entity.fighter.can_stand = False
-        
+            if even != 0: 
+                entity.fighter.can_stand = False
+                entity.fighter.stance = FighterStance.prone
+    if entity.fighter.stance == FighterStance.prone:
+        x_mod, y_mod = prone_aoc_dict.get(entity.fighter.facing)
+        new_x = entity.x + x_mod
+        new_y = entity.y + y_mod
+        entity.fighter.aoc = [(new_x, new_y)]
+       
 def apply_dam(target, entities, roll, dam_type, dam_mult, location, cs) -> set:
     """This  is the  main damage function. dam_effect_finder returns into this. """
     #Set deflect and soak rates
@@ -2418,12 +2448,12 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                         curr_actor.fighter.end_turn = True
                         combat_phase = CombatPhase.action
                 elif curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
-                    if command[0] == 'move' or 'spin':
+                    if command[0] in ['move','spin','prone','stand','kneel']:
                         moved = move_actor(game_map, curr_actor, entities, command, logs)
                         if moved:
                             for entity in entities:
                                 entity.fighter.targets = aoc_check(entities, entity)
-                            curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
+                            
 
                             if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
 
