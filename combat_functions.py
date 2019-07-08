@@ -3019,6 +3019,7 @@ def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (
     
         if action[0] == 'exit':
             combat_phase = CombatPhase.action
+            curr_actor.fighter.disengage_option = None
             menu_dict = dict()
 
     if hasattr(curr_actor.fighter, 'ai'):
