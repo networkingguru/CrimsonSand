@@ -2652,12 +2652,14 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     attack = curr_actor.fighter.combat_choices[1]
     location = curr_actor.fighter.combat_choices[2]
     angle = curr_actor.fighter.combat_choices[3]
+    curr_actor.fighter.action = ['Accept', 'Restart']
+    
     cs = curr_actor.determine_combat_stats(weapon, attack, location, angle)
-
     final_to_hit = cs.get('to hit')
     dodge_mod = cs.get('dodge mod')
     final_ap = cs.get('final ap')
     parry_mod = cs.get('parry mod')
+
     total_ep = sum([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
 
     if len(curr_target.fighter.attacker_history) > 0:
@@ -3031,4 +3033,89 @@ def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (
 
     return combat_phase, menu_dict, curr_actor
 
+def phase_maneuver(curr_actor, command, logs, combat_phase) -> (int, dict):
+    combat_menu_header = None
+    menu_dict = dict()
+    messages = []
+    log = logs[2]
+    min_ap = curr_actor.get_min_ap()
 
+    curr_actor.fighter.action = ['Return']
+
+    if curr_actor.fighter.curr_target is not None:
+        if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap + min_ap + curr_actor.fighter.curr_target.min_ap():
+            curr_actor.fighter.action.append('Leave opening and counter')
+
+
+    combat_menu_header = 'Choose your maneuver:'
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+    if len(command) != 0:
+        for option in curr_actor.fighter.action:
+            choice = command.get(option)
+            if choice:
+                if choice == 'Return':
+                    curr_actor.fighter.action.clear()
+                    combat_phase = CombatPhase.action
+                elif choice == 'Leave opening and counter':
+                    combat_phase = CombatPhase.feint
+
+                    if not hasattr(curr_actor.fighter, 'ai'):
+                        curr_actor.fighter.combat_choices.append(option)
+                        messages.append('You decide to feint.')
+
+    for message in messages:
+        log.add_message(Message(message))
+
+    if hasattr(curr_actor.fighter, 'ai'):
+        menu_dict = dict()
+        game_state = GameStates.default
+
+    return combat_phase, menu_dict
+
+def phase_feint(curr_actor, command, logs, combat_phase) -> (int, dict, object):
+    combat_menu_header = None
+    menu_dict = dict()
+    messages = []
+    log = logs[2]
+    curr_actor.fighter.action = ['Return']
+
+    #Choose the hit location to expose
+    combat_menu_header = 'Which location do you want to expose?'
+    curr_target = curr_actor.fighter.curr_target
+    #Fill action list with locations
+    curr_actor.fighter.action = curr_actor.fighter.get_locations()
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+    
+    if len(command) != 0:    
+        for option in curr_actor.fighter.action:
+            if command.get(option):
+                choice = command.get(option)
+                if choice: 
+                    if choice == 'Return':
+                        curr_actor.fighter.action.clear()
+                        combat_phase = CombatPhase.action
+                    elif not hasattr(curr_actor.fighter, 'ai'):
+                        curr_actor.fighter.combat_choices.append(option)
+                        messages.append('You expose your ' + option + ' to ' + curr_target.name + ', hoping to tempt an attack. ')
+                        curr_actor.fighter.feint = True
+                        #See target is fooled
+                        roll = roll_dice(1,100)
+                        result,_,_ = save_roll_con(curr_actor.fighter.best_combat_skill, 0, roll, curr_target.fighter.best_combat_skill)
+                        if result is 's':
+                            #Adjust perceived hit location modifiers
+                            if option in curr_actor.fighter.loc_diff:
+                                curr_actor.fighter.loc_diff[option] += 50
+
+
+                        curr_actor = curr_target
+                        menu_dict = dict()
+                        combat_phase = CombatPhase.action
+    
+    for message in messages:
+        log.add_message(Message(message))
+
+    if hasattr(curr_actor.fighter, 'ai'):
+        menu_dict = dict()
+        game_state = GameStates.default
+
+    return combat_phase, menu_dict, curr_actor

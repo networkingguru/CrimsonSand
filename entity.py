@@ -210,6 +210,18 @@ class Entity:
 
         return combat_dict
 
+    def get_min_ap(self) -> int:
+        wpn_ap = []
+        min_wpn_ap =[]
+
+        for wpn in self.weapons:
+            for atk in wpn.attacks:
+                cs = self.determine_combat_stats(wpn, atk)
+                wpn_ap.append(cs.get('final ap'))
+            min_wpn_ap.append(min(wpn_ap))
+        min_ap = min(min_wpn_ap)
+        return min_ap
+        
 
 def create_entity_list(entity_list) -> list:
     entities = []

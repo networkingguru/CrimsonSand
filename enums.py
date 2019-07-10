@@ -43,3 +43,5 @@ class CombatPhase(Enum):
     repeat = auto()
     disengage = auto()
     move = auto()
+    maneuver = auto()
+    feint = auto()

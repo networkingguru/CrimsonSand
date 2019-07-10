@@ -21,12 +21,14 @@ class Fighter:
         self.last_atk_ap = 0
         self.targets = [] #This is a list of targets in AOC, set by update_targets
         self.curr_target = None
+        self.curr_target.loc_diff = dict() #Contains 'location name':mod displayed to fighter to show perceived hit chances
         self.visible_fighters = [] #This is a list of fighters in FOV, set by detect_enemies
         self.closest_fighter = None #The closest fighter, set by detect_enemies
         self.combat_choices = [] #List of chosen commands for combat menus
         self.attacker = None
         self.attacker_history = []
         self.disengage = False
+        self.feint = False
         self.mods = []
         self.wait = False
         self.acted = False
