@@ -57,12 +57,6 @@ if __name__ == "__main__":
     enemies = []
     enemies = set(entities) - set(players)
     fill_status_panel(players[0], status_log)
-    for entity in entities:
-        if hasattr(entity,'fighter'):
-            locations = entity.fighter.get_locations()
-            #Fill loc_diff with neutral percieved difficulties
-            for location in locations:
-                entity.fighter.loc_diff.update({location:0})
     
     #Global order vars; players get first move
     order = []

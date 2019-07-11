@@ -393,7 +393,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
 
     if curr_target in entity.fighter.entities_opportunity_attacked:
         curr_target.fighter.mod_attribute('ap', -final_ap)
-    elif curr_target.fighter.wait:
+    elif curr_target.fighter.wait or curr_target.fighter.feint:
         curr_target.fighter.mod_attribute('ap', -final_ap)
     else:
         entity.fighter.mod_attribute('ap', -final_ap)
@@ -551,6 +551,7 @@ def handle_persistant_effects(entity, entities):
         entity.fighter.end_turn = False
         entity.fighter.acted = False
         entity.fighter.wait = False
+        entity.fighter.feint = False
         if not hasattr(entity.fighter, 'ai'): messages.append('A new round has begun. ')
 
     return messages
@@ -2306,7 +2307,11 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 messages.append(curr_actor.name + ' waits for you to act')
             curr_actor.fighter.wait = True
             combat_phase = CombatPhase.action
-            game_state = GameStates.default                  
+            game_state = GameStates.default
+        elif command.get('Maneuver'):
+            if curr_actor.player:
+                messages.append('You decide to attempt a special maneuver')
+            combat_phase = CombatPhase.maneuver                  
         elif command.get('Attack'):
             if curr_actor.player:
                 messages.append('You decide to attack')
@@ -2347,6 +2352,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 curr_actor.fighter.action.append('Move')
             if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 
                 curr_actor.fighter.action.append('Wait')
+                curr_actor.fighter.action.append('Maneuver')
             if len(curr_actor.fighter.action) >= 1:
                 curr_actor.fighter.action.append('End Turn')
                 game_state = GameStates.menu
@@ -2394,13 +2400,19 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
             order = list(global_vars.turn_order)
             if len(order) > 1:
                 if order[0].fighter.wait: 
-                    if not order[1].fighter.acted: 
-                        curr_actor = order[1]
+                    if not order[0].fighter.curr_target.fighter.acted: 
+                        curr_actor = order[0].fighter.curr_target
                     else: 
                         order[0].fighter.wait = False
-                        order[1].fighter.acted = False
+                        order[0].fighter.curr_target.fighter.acted = False
                 elif order[0].fighter.disengage and order[0] in curr_actor.fighter.entities_opportunity_attacked:
                     pass
+                elif order[0].fighter.feint:
+                    if not order[0].fighter.curr_target.fighter.acted: 
+                        curr_actor = order[0].fighter.curr_target
+                    else:
+                        order[0].fighter.feint = False
+                        order[0].fighter.curr_target.fighter.acted = False
                 elif combat_phase != CombatPhase.defend:
                     curr_actor = order[0]
             else:
@@ -2468,6 +2480,10 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                         if moved:
                             for entity in entities:
                                 entity.fighter.targets = aoc_check(entities, entity)
+                                for target in entity.fighter.targets:
+                                    for location in target.fighter.get_locations():
+                                        #Set adjustments to zero
+                                        entity.fighter.adjust_loc_diffs(target,location)
                             
 
                             if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
@@ -3099,12 +3115,14 @@ def phase_feint(curr_actor, command, logs, combat_phase) -> (int, dict, object):
                         messages.append('You expose your ' + option + ' to ' + curr_target.name + ', hoping to tempt an attack. ')
                         curr_actor.fighter.feint = True
                         #See target is fooled
-                        roll = roll_dice(1,100)
-                        result,_,_ = save_roll_con(curr_actor.fighter.best_combat_skill, 0, roll, curr_target.fighter.best_combat_skill)
-                        if result is 's':
-                            #Adjust perceived hit location modifiers
-                            if option in curr_actor.fighter.loc_diff:
-                                curr_actor.fighter.loc_diff[option] += 50
+                        for t in curr_actor.fighter.targets:
+                            if curr_actor in t.fighter.targets:
+                                i = t.fighter.targets.index(curr_actor)
+                                roll = roll_dice(1,100)
+                                result,_,_ = save_roll_con(curr_actor.fighter.best_combat_skill, 0, roll, t.fighter.best_combat_skill)
+                                if result is 's':
+                                    #Adjust perceived hit location modifiers
+                                    t.fighter.adjust_location_diffs(curr_actor, option, 50)
 
 
                         curr_actor = curr_target

@@ -21,7 +21,9 @@ class Fighter:
         self.last_atk_ap = 0
         self.targets = [] #This is a list of targets in AOC, set by update_targets
         self.curr_target = None
-        self.curr_target.loc_diff = dict() #Contains 'location name':mod displayed to fighter to show perceived hit chances
+        self.loc_hit_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived hit chances
+        self.loc_dodge_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived dodge chances
+        self.loc_parry_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived parry chances
         self.visible_fighters = [] #This is a list of fighters in FOV, set by detect_enemies
         self.closest_fighter = None #The closest fighter, set by detect_enemies
         self.combat_choices = [] #List of chosen commands for combat menus
@@ -343,4 +345,17 @@ class Fighter:
                 location += 1
             return location
 
-    
+    def adjust_loc_diffs(self, target, location, hit_mod = 0, dodge_mod = 0, parry_mod = 0) -> None:
+        i = self.targets.index(target)
+
+        target_hit = self.loc_hit_diff[i]
+        target_parry = self.loc_parry_diff[i]
+        target_dodge = self.loc_dodge_diff[i]
+
+        target_hit[location] += hit_mod
+        target_dodge[location] += dodge_mod
+        target_parry[location] += parry_mod
+
+
+
+
