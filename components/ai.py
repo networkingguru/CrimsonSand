@@ -85,7 +85,11 @@ class CombatAI:
 
 
 def determine_attack(entity) -> None:
-    curr_target = entity.fighter.targets[0]
+    curr_target = entity.fighter.curr_target
+    target_idx = entity.fighter.targets.index(curr_target)
+    target_hit_diff = entity.fighter.loc_hit_diff[target_idx]
+    target_dodge_diff = entity.fighter.loc_dodge_diff[target_idx]
+    target_parry_diff = entity.fighter.loc_parry_diff[target_idx]
     best_score = -100
     best_atk = []          
     
@@ -127,6 +131,11 @@ def determine_attack(entity) -> None:
                             final_ap = cs.get('final ap')
                             parry_ap = cs.get('parry ap')
                             parry_mod = cs.get('parry mod')
+                            #Adjust hit/dodge/parry based on percieved mods
+                            dodge_mod += target_dodge_diff.get(l)
+                            to_hit += target_hit_diff.get(l)
+                            parry_mod += target_parry_diff.get(l)
+                            
                             dam = (b_psi + s_psi + p_psi + t_psi)
                             #Attks/rd
                             atks_rd = entity.fighter.ap / final_ap

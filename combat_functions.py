@@ -145,8 +145,13 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
 
 
     targets = aoc_check(entities, entity)
+
     if targets is not None:
         update_targets(entity, targets)
+        for target in targets:
+            e_targets = aoc_check(entities, target)
+            update_targets(target, e_targets)
+
     return fov_recompute #Used to id that entity moved for ap reduction in combat
 
 def strafe_control(entity):
@@ -170,10 +175,42 @@ def turn_order(entities) -> list:
 
 def update_targets(entity, targets) -> None:
     """Purpose is to remove or change target list when aoc changes"""
+    #See if any targets are not in the list and add them. Also update sister diff dicts
+    for target in targets:
+        hit_diff_dict = dict()
+        dodge_diff_dict = dict()
+        parry_diff_dict = dict()
+        if target not in entity.fighter.targets:
+            entity.fighter.targets.append(target)
+            #Add hit/dodge/parry loc_diffs
+            loc_list = target.fighter.get_locations()
+            #Fill dicts with locations and set value to 0's
+            for loc in loc_list:
+                hit_diff_dict[loc] = 0
+                dodge_diff_dict[loc] = 0
+                parry_diff_dict[loc] = 0
+
+            entity.fighter.loc_hit_diff.append(hit_diff_dict)
+            entity.fighter.loc_dodge_diff.append(dodge_diff_dict)
+            entity.fighter.loc_parry_diff.append(parry_diff_dict)
+    
+    #See if any targets need to be removed and do so
     if set(entity.fighter.targets) != set(targets):
-        entity.fighter.targets = targets
+        for t in entity.fighter.targets:
+            if not t in targets:
+                i = entity.fighter.targets.index(t)
+                entity.fighter.targets.remove(t)
+                entity.fighter.loc_hit_diff.pop(i)
+                entity.fighter.loc_dodge_diff.pop(i)
+                entity.fighter.loc_parry_diff.pop(i)
+
         if entity.fighter.curr_target not in set(entity.fighter.targets):
             entity.fighter.curr_target = None
+
+    #Set current target if not set; hack, remove when target selection implemented
+    if entity.fighter.curr_target == None and len(entity.fighter.targets) > 0: 
+        entity.fighter.curr_target = entity.fighter.targets[0] 
+    
 
 def determine_valid_locs(attacker, defender, attack) -> list:
     #Factors and counters:
@@ -2413,6 +2450,16 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
                     else:
                         order[0].fighter.feint = False
                         order[0].fighter.curr_target.fighter.acted = False
+                        #Remove fient dodge/parry mods
+                        idx = len(order[0].fighter.combat_choices)
+                        option = order[0].fighter.combat_choices[(idx - 1)]
+                        order[0].fighter.loc_dodge_mod[option] -= order[0].fighter.best_combat_skill/3
+                        order[0].fighter.loc_parry_mod[option] -= order[0].fighter.best_combat_skill/3
+                        for t in order[0].fighter.targets:
+                            if order[0] in t.fighter.targets:
+                                #Adjust perceived hit location modifiers
+                                t.fighter.adjust_loc_diffs(order[0], option, 0)
+
                 elif combat_phase != CombatPhase.defend:
                     curr_actor = order[0]
             else:
@@ -2477,19 +2524,19 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                 elif curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
                     if command[0] in ['move','spin','prone','stand','kneel']:
                         moved = move_actor(game_map, curr_actor, entities, command, logs)
-                        if moved:
-                            for entity in entities:
-                                entity.fighter.targets = aoc_check(entities, entity)
-                                for target in entity.fighter.targets:
-                                    for location in target.fighter.get_locations():
-                                        #Set adjustments to zero
-                                        entity.fighter.adjust_loc_diffs(target,location)
+                        # if moved:
+                        #     for entity in entities:
+                        #         entity.fighter.targets = aoc_check(entities, entity)
+                        #         for target in entity.fighter.targets:
+                        #             for location in target.fighter.get_locations():
+                        #                 #Set adjustments to zero
+                        #                 entity.fighter.adjust_loc_diffs(target,location)
                             
 
-                            if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
+                    if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
 
-                            if len(curr_actor.fighter.targets) != 0:
-                                menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
+                    if len(curr_actor.fighter.targets) != 0:
+                        menu_dict, combat_phase, game_state, order, messages = init_combat(curr_actor, order, command)
                                 
                 else:
                     curr_actor.fighter.end_turn = True
@@ -2686,6 +2733,9 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     loc_name = curr_actor.fighter.targets[0].fighter.name_location(location)
     angle_name = angle_id(angle)
     
+    #Add loc specific dodge/parry mods
+    dodge_mod += curr_target.fighter.loc_dodge_mod.get(loc_name)
+    parry_mod += curr_target.fighter.loc_parry_mod.get(loc_name)
 
     combat_menu_header = ('You are attacking with ' + wpn_title + ', aiming at ' + curr_target.name + '\'s ' 
         + loc_name + ' from a ' + angle_name + ' angle. ' 
@@ -2774,12 +2824,17 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     def_margin = None
     atk_margin = None
     rolls = None
+    hit = False
 
     #Find history mod
     if len(curr_actor.fighter.attacker_history) > 0:
         history_mod = calc_history_modifier(curr_actor, atk_name, enemy.fighter.combat_choices[2], enemy.fighter.combat_choices[3])
         dodge_mod += history_mod
         parry_mod += history_mod
+
+    #Account for loc mods
+    dodge_mod += curr_actor.fighter.loc_dodge_mod[loc_name]
+    parry_mod += curr_actor.fighter.loc_parry_mod[loc_name]
 
     #Find chances and see if curr_actor can parry/dodge
     parry_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.deflect + parry_mod))
@@ -2789,7 +2844,10 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     parry_ap = cs_p.get('parry ap')
     if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap: can_dodge = True
     if curr_actor.fighter.ap >= parry_ap: can_parry = True
-    
+    if enemy.fighter.counter_attack == curr_actor: 
+        can_dodge = False
+        can_parry = False
+        enemy.fighter.counter_attack = None
 
     #Choose how to defend '
     header_items.append(enemy.name + ' is attacking you in the ' + loc_name + ' with a ' + atk_name + ' from a ' + 
@@ -2839,6 +2897,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You dodged the attack. ')
                     else: message = (curr_actor.name + ' dodged the attack. ')
                 else:
+                    hit = True
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Parry'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.deflect, parry_mod, enemy.fighter.atk_result, final_to_hit)
@@ -2849,6 +2908,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You parried the attack. ')
                     else: message = (curr_actor.name + ' parried the blow. ')
                 else:
+                    hit = True
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Block'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.best_combat_skill, parry_mod, enemy.fighter.atk_result, final_to_hit)
@@ -2871,9 +2931,11 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
 
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, blocker, cs)
                 else:
+                    hit = True
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             menu_dict = dict()
     else:
+        hit = True
         effects = apply_dam(curr_actor, entities, enemy.fighter.dam_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
     
     
@@ -2891,6 +2953,8 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
             combat_phase = CombatPhase.disengage
             game_state = GameStates.default
             menu_dict = dict()
+        elif curr_actor.fighter.feint and not hit:
+            curr_actor.fighter.counter_attack = enemy
         else:
             #Show rolls
             if options.show_rolls: 
@@ -2909,6 +2973,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     game_state = GameStates.menu
                 else:
                     curr_actor.fighter.combat_choices.clear()
+
 
 
     for message in messages:
@@ -3059,7 +3124,7 @@ def phase_maneuver(curr_actor, command, logs, combat_phase) -> (int, dict):
     curr_actor.fighter.action = ['Return']
 
     if curr_actor.fighter.curr_target is not None:
-        if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap + min_ap + curr_actor.fighter.curr_target.min_ap():
+        if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap + min_ap + curr_actor.fighter.curr_target.get_min_ap():
             curr_actor.fighter.action.append('Leave opening and counter')
 
 
@@ -3110,19 +3175,21 @@ def phase_feint(curr_actor, command, logs, combat_phase) -> (int, dict, object):
                     if choice == 'Return':
                         curr_actor.fighter.action.clear()
                         combat_phase = CombatPhase.action
-                    elif not hasattr(curr_actor.fighter, 'ai'):
+                    else:
                         curr_actor.fighter.combat_choices.append(option)
-                        messages.append('You expose your ' + option + ' to ' + curr_target.name + ', hoping to tempt an attack. ')
+                        if not hasattr(curr_actor.fighter, 'ai'):
+                            messages.append('You expose your ' + option + ' to ' + curr_target.name + ', hoping to tempt an attack. ')
                         curr_actor.fighter.feint = True
+                        curr_actor.fighter.loc_dodge_mod[option] += curr_actor.fighter.best_combat_skill/3
+                        curr_actor.fighter.loc_parry_mod[option] += curr_actor.fighter.best_combat_skill/3
                         #See target is fooled
                         for t in curr_actor.fighter.targets:
                             if curr_actor in t.fighter.targets:
-                                i = t.fighter.targets.index(curr_actor)
                                 roll = roll_dice(1,100)
                                 result,_,_ = save_roll_con(curr_actor.fighter.best_combat_skill, 0, roll, t.fighter.best_combat_skill)
                                 if result is 's':
                                     #Adjust perceived hit location modifiers
-                                    t.fighter.adjust_location_diffs(curr_actor, option, 50)
+                                    t.fighter.adjust_loc_diffs(curr_actor, option, 50)
 
 
                         curr_actor = curr_target

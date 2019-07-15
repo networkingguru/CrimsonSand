@@ -52,6 +52,9 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
     elif combat_phase == CombatPhase.maneuver:
         combat_phase, menu_dict = phase_maneuver(active_entity, command, logs, combat_phase)
 
+    elif combat_phase == CombatPhase.feint:
+        combat_phase, menu_dict, active_entity = phase_feint(active_entity, command, logs, combat_phase)
+
     if combat_phase == CombatPhase.disengage:
         combat_phase, menu_dict, active_entity = phase_disengage(active_entity, entities, command, logs, combat_phase, game_map)
 

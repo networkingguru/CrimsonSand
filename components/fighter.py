@@ -21,9 +21,12 @@ class Fighter:
         self.last_atk_ap = 0
         self.targets = [] #This is a list of targets in AOC, set by update_targets
         self.curr_target = None
+        self.counter_attack = None #Hold the target against who a counter attack can be executed
         self.loc_hit_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived hit chances
         self.loc_dodge_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived dodge chances
         self.loc_parry_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived parry chances
+        self.loc_dodge_mod = dict() #A dict in 'location name':mod format with mods to dodge chance based on location(used in feints)
+        self.loc_parry_mod = dict() #A dict in 'location name':mod format with mods to dodge chance based on location(used in feints)
         self.visible_fighters = [] #This is a list of fighters in FOV, set by detect_enemies
         self.closest_fighter = None #The closest fighter, set by detect_enemies
         self.combat_choices = [] #List of chosen commands for combat menus
@@ -154,11 +157,18 @@ class Fighter:
                 amount = int(round(amount))
                 location[i] = amount
                 i += 1
+            
 
         self.max_locations = deepcopy(self.locations)
 
+
+        for l in self.get_locations():
+            #Fill dodge and parry mod dicts with 0's
+            self.loc_dodge_mod[l] = 0
+            self.loc_parry_mod[l] = 0
+
         self.location_ht = []
-        self.location_ratios = (1, .9, .87, .82, .82, .8, .8, .7, .7, .72, .72, .63, .63, .6, .6, .55, .55, .53, .53, .49, .49, .4, .4, .29, .29, .2, .2, .04, .04)
+        self.location_ratios = (1, .9, .87, .82, .82, .8, .8, .7, .7, .72, .72, .63, .63, .6, .6, .55, .55, .53, .53, .49, .49, .4, .4, .29, .29, .2, .2, .04, .04) #Used for location ht calc
         #Fill location heights
         i = 0
         for x in self.locations:
