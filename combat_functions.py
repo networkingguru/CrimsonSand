@@ -2459,6 +2459,7 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
                             if order[0] in t.fighter.targets:
                                 #Adjust perceived hit location modifiers
                                 t.fighter.adjust_loc_diffs(order[0], option, 0)
+                        order[0].fighter.combat_choices.clear()
 
                 elif combat_phase != CombatPhase.defend:
                     curr_actor = order[0]
@@ -2523,15 +2524,7 @@ def phase_action(curr_actor, players, entities, order, command, logs, game_map) 
                         combat_phase = CombatPhase.action
                 elif curr_actor.fighter.ap >= curr_actor.fighter.walk_ap:
                     if command[0] in ['move','spin','prone','stand','kneel']:
-                        moved = move_actor(game_map, curr_actor, entities, command, logs)
-                        # if moved:
-                        #     for entity in entities:
-                        #         entity.fighter.targets = aoc_check(entities, entity)
-                        #         for target in entity.fighter.targets:
-                        #             for location in target.fighter.get_locations():
-                        #                 #Set adjustments to zero
-                        #                 entity.fighter.adjust_loc_diffs(target,location)
-                            
+                        moved = move_actor(game_map, curr_actor, entities, command, logs)                         
 
                     if global_vars.debug: print(curr_actor.name + ' ap:' + str(curr_actor.fighter.ap))
 
@@ -2955,6 +2948,8 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
             menu_dict = dict()
         elif curr_actor.fighter.feint and not hit:
             curr_actor.fighter.counter_attack = enemy
+            enemy.fighter.combat_choices.clear()
+            combat_phase = CombatPhase.weapon
         else:
             #Show rolls
             if options.show_rolls: 
@@ -3134,6 +3129,7 @@ def phase_maneuver(curr_actor, command, logs, combat_phase) -> (int, dict):
         for option in curr_actor.fighter.action:
             choice = command.get(option)
             if choice:
+                menu_dict = dict()
                 if choice == 'Return':
                     curr_actor.fighter.action.clear()
                     combat_phase = CombatPhase.action
@@ -3170,6 +3166,7 @@ def phase_feint(curr_actor, command, logs, combat_phase) -> (int, dict, object):
     if len(command) != 0:    
         for option in curr_actor.fighter.action:
             if command.get(option):
+                menu_dict = dict()
                 choice = command.get(option)
                 if choice: 
                     if choice == 'Return':
@@ -3193,7 +3190,6 @@ def phase_feint(curr_actor, command, logs, combat_phase) -> (int, dict, object):
 
 
                         curr_actor = curr_target
-                        menu_dict = dict()
                         combat_phase = CombatPhase.action
     
     for message in messages:
