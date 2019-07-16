@@ -96,7 +96,7 @@ class Entity:
         p_psi = self.fighter.ep * attack.p_dam
         to_hit = attack.attack_mod + skill_rating
         to_parry = attack.parry_mod + skill_rating
-        dodge_mod = 0
+        dodge_mod = self.fighter.stance_dodge
         parry_mod = 0
         dam_mult = 1
         weight_factor = (self.fighter.weight/100)**.4

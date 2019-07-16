@@ -63,7 +63,7 @@ player_lf_weapon = 'Unarmed'
 player_weapons = {'r_wpn': player_r_weapon, 'l_wpn': player_l_weapon, 'rf_wpn': player_rf_weapon, 'lf_wpn': player_lf_weapon}
 
 #Enemy specs
-enemy_attr = fat
+enemy_attr = low_init
 enemy_fighter = ['Enemy', enemy_attr, 0, CombatAI]
 enemy_r_weapon = 'Unarmed'
 enemy_l_weapon = 'Unarmed'

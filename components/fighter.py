@@ -27,6 +27,7 @@ class Fighter:
         self.loc_parry_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived parry chances
         self.loc_dodge_mod = dict() #A dict in 'location name':mod format with mods to dodge chance based on location(used in feints)
         self.loc_parry_mod = dict() #A dict in 'location name':mod format with mods to dodge chance based on location(used in feints)
+        self.stance = 'Open, Short, Low, Rear'
         self.stance_stability = 0 #A var to hold the modifier to stability from stance
         self.stance_dodge = 0 #Var to adjust dodge chances based on stance
         self.stance_power = 1 # Var to adjust ep based on stanc. Multiplier
@@ -117,7 +118,7 @@ class Fighter:
         self.max_init = self.init
         self.stab_recovery = self.bal/4 #Determines rate of recovery of stability
         #Effective Power
-        self.ep = int(round(((self.pwr * 2) + self.weight + (self.bone * 0.1)) * ((self.brawling + (self.bal/2))/200)))
+        self.ep = int(round(self.stance_power * (((self.pwr * 2) + self.weight + (self.bone * 0.1)) * ((self.brawling + (self.bal/2))/200))))
         #Reach
         self.reach = clamp(inch_conv(self.er, 1), 2)
         #Base stamina cost for actions
@@ -371,6 +372,44 @@ class Fighter:
         target_hit[location] += hit_mod
         target_dodge[location] += dodge_mod
         target_parry[location] += parry_mod
+
+    def change_stance(self, stance) -> None:
+        self.stance_stability = 0 #Set back to neutral before applying mods
+        self.stance_dodge = 0
+        self.stance_power = 1
+        
+        if 'Open' in stance:
+            self.stance_stability += 10
+        if 'Long' in stance:
+            self.stance_stability += 10
+            self.stance_dodge += -10
+        elif 'Short' in stance:
+            self.stance_stability += -10
+            self.stance_dodge += 10
+        if 'High' in stance:
+            self.stance_dodge += 10
+        elif 'Low' in stance:
+            self.stance_power += .1
+        if 'Front' in stance:
+            self.stance_power += .1
+        elif 'Rear' in stance:
+            self.stance_power += -.1
+            self.stance_dodge += 10
+        
+        self.stance = stance
+
+    def get_defense_modifiers(self, location) -> dict:
+        dodge_mod = self.stance_dodge
+        parry_mod = 0
+
+        dodge_mod += self.loc_dodge_mod.get(location)
+        parry_mod += self.loc_parry_mod.get(location)
+
+        def_mods = {'dodge':dodge_mod, 'parry':parry_mod}
+
+        return def_mods
+
+            
 
 
 

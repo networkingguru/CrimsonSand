@@ -210,7 +210,16 @@ def update_targets(entity, targets) -> None:
     #Set current target if not set; hack, remove when target selection implemented
     if entity.fighter.curr_target == None and len(entity.fighter.targets) > 0: 
         entity.fighter.curr_target = entity.fighter.targets[0] 
-    
+
+def get_percieved_mods(attacker, defender, location) -> dict:
+    idx = attacker.fighter.targets.index(defender)
+    p_hit = attacker.fighter.loc_hit_diff[idx].get(location)
+    p_dodge = attacker.fighter.loc_dodge_diff[idx].get(location)
+    p_parry = attacker.fighter.loc_parry_diff[idx].get(location)
+
+    p_mods = {'p_hit':p_hit, 'p_dodge':p_dodge, 'p_parry': p_parry}
+
+    return p_mods
 
 def determine_valid_locs(attacker, defender, attack) -> list:
     #Factors and counters:
@@ -583,6 +592,8 @@ def handle_persistant_effects(entity, entities):
             handle_state_change(entity, entities, EntityState.unconscious)
             if hasattr(entity.fighter, 'ai'): messages.append(entity.name + ' has passed out due to fatigue. ')
             else: messages.append('You have passed out due to fatigue. ')
+        #Apply stance
+        entity.fighter.change_stance(entity.fighter.stance)
         #Reset turn end, acted, wait, opp attack
         entity.fighter.entities_opportunity_attacked.clear()
         entity.fighter.end_turn = False
@@ -2713,13 +2724,21 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     attack = curr_actor.fighter.combat_choices[1]
     location = curr_actor.fighter.combat_choices[2]
     angle = curr_actor.fighter.combat_choices[3]
-    curr_actor.fighter.action = ['Accept', 'Restart']
+    wpn_title = attack.name
+    loc_name = curr_actor.fighter.targets[0].fighter.name_location(location)
+    angle_name = angle_id(angle)
     
+    def_mods = curr_target.fighter.get_defense_modifiers(loc_name)
     cs = curr_actor.determine_combat_stats(weapon, attack, location, angle)
+    p_mods = get_percieved_mods(curr_actor, curr_target, loc_name)
     final_to_hit = cs.get('to hit')
-    dodge_mod = cs.get('dodge mod')
+    p_hit = p_mods.get('p_hit') + cs.get('to hit')
+    dodge_mod = cs.get('dodge mod') + def_mods.get('dodge')
+    p_dodge_mod = p_mods.get('p_dodge') + cs.get('dodge mod')
     final_ap = cs.get('final ap')
-    parry_mod = cs.get('parry mod')
+    parry_mod = cs.get('parry mod') + def_mods.get('parry')
+    p_parry_mod = p_mods.get('p_parry') + cs.get('parry mod')
+    
 
     total_ep = sum([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
 
@@ -2727,19 +2746,19 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
         history_mod = calc_history_modifier(curr_target, attack.name, location, angle)
         dodge_mod += history_mod
         parry_mod += history_mod
-    wpn_title = attack.name
-    loc_name = curr_actor.fighter.targets[0].fighter.name_location(location)
-    angle_name = angle_id(angle)
+        p_dodge_mod += history_mod
+        p_parry_mod += history_mod
     
-    #Add loc specific dodge/parry mods
-    dodge_mod += curr_target.fighter.loc_dodge_mod.get(loc_name)
-    parry_mod += curr_target.fighter.loc_parry_mod.get(loc_name)
+
+    #Adjust cs based on mods. Needed to feed into perform_attack
+    cs['dodge mod'] = dodge_mod
+    cs['parry_mod'] = parry_mod
 
     combat_menu_header = ('You are attacking with ' + wpn_title + ', aiming at ' + curr_target.name + '\'s ' 
         + loc_name + ' from a ' + angle_name + ' angle. ' 
-        + ' For this attack, you will have a: ' + str(final_to_hit) +  '% chance to hit, and do up to ' 
-        + str(total_ep) + ' PSI damage.' + ' Your opponent will get a ' + str(parry_mod) 
-        + '% modifier to parry, and a ' + str(dodge_mod) + '% modifier to dodge. \n' + 
+        + ' For this attack, you will have a: ' + str(p_hit) +  '% chance to hit, and do up to ' 
+        + str(total_ep) + ' PSI damage.' + ' Your opponent will get a ' + str(p_parry_mod) 
+        + '% modifier to parry, and a ' + str(p_dodge_mod) + '% modifier to dodge. \n' + 
         'It will cost you ' + str(final_ap) + ' of your remaining ' + str(curr_actor.fighter.ap) + ' AP to attack. \n'
         + ' Would you like to continue, or modify your choices?')
 
@@ -2815,8 +2834,9 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     angle_name = angle_id(enemy.fighter.combat_choices[3])
     loc_name = curr_actor.fighter.name_location(enemy.fighter.combat_choices[2])
     final_to_hit = cs.get('to hit')
-    parry_mod = cs.get('parry mod')
-    dodge_mod = cs.get('dodge mod')
+    def_mods = curr_actor.fighter.get_defense_modifiers(loc_name)
+    dodge_mod = cs.get('dodge mod') + def_mods.get('dodge')
+    parry_mod = cs.get('parry mod') + def_mods.get('parry')
     game_state = GameStates.default
     header_items = []
     def_margin = None
@@ -2830,9 +2850,9 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         dodge_mod += history_mod
         parry_mod += history_mod
 
-    #Account for loc mods
-    dodge_mod += curr_actor.fighter.loc_dodge_mod[loc_name]
-    parry_mod += curr_actor.fighter.loc_parry_mod[loc_name]
+    #Adjust cs based on mods. Needed to feed into apply_dam
+    cs['dodge mod'] = dodge_mod
+    cs['parry_mod'] = parry_mod
 
     #Find chances and see if curr_actor can parry/dodge
     parry_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.deflect + parry_mod))
@@ -2885,6 +2905,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
         if len(command) != 0:
             if command.get('Take the hit'):
+                hit = True
                 effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
             if command.get('Dodge'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
@@ -3238,28 +3259,8 @@ def phase_stance(curr_actor, command, logs, combat_phase) -> (int, dict):
 
                 if choice == 'Return':
                     curr_actor.fighter.action.clear()
-                else:
-                    curr_actor.fighter.stance_stability = 0 #Set back to neutral before applying mods
-                    curr_actor.fighter.stance_dodge = 0
-                    curr_actor.fighter.stance_power = 1
-                    
-                    if 'Open' in choice:
-                        curr_actor.fighter.stance_stability += 10
-                    if 'Long' in choice:
-                        curr_actor.fighter.stance_stability += 10
-                        curr_actor.fighter.stance_dodge += -10
-                    elif 'Short' in choice:
-                        curr_actor.fighter.stance_stability += -10
-                        curr_actor.fighter.stance_dodge += 10
-                    if 'High' in choice:
-                        curr_actor.fighter.stance_dodge += 10
-                    elif 'Low' in choice:
-                        curr_actor.fighter.stance_power += .1
-                    if 'Front' in choice:
-                        curr_actor.fighter.stance_power += .1
-                    elif 'Back' in choice:
-                        curr_actor.fighter.stance_power += -.1
-                        curr_actor.fighter.stance_dodge += 10
+                else:                    
+                    curr_actor.fighter.change_stance(choice)
                 
                     if not hasattr(curr_actor.fighter, 'ai'):
                         messages.append('You decide to use the ' + choice + ' stance.')
