@@ -1,6 +1,6 @@
 
 from combat_functions import (strafe_control, move_actor, update_targets, detect_enemies, phase_init, phase_action, phase_weapon, phase_option, phase_location,  
-    phase_option2, phase_confirm, phase_repeat, phase_defend, phase_disengage, phase_move, phase_maneuver, phase_feint)
+    phase_option2, phase_confirm, phase_repeat, phase_defend, phase_disengage, phase_move, phase_maneuver, phase_feint, phase_stance)
 from enums import CombatPhase, GameStates
 
 def combat_controller(game_map, active_entity, entities, players, command, logs, combat_phase, game_state, order) -> (dict, int, int, object, list):
@@ -54,6 +54,9 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
 
     elif combat_phase == CombatPhase.feint:
         combat_phase, menu_dict, active_entity = phase_feint(active_entity, command, logs, combat_phase)
+
+    elif combat_phase == CombatPhase.stance:
+        combat_phase, menu_dict = phase_stance(active_entity, command, logs, combat_phase)
 
     if combat_phase == CombatPhase.disengage:
         combat_phase, menu_dict, active_entity = phase_disengage(active_entity, entities, command, logs, combat_phase, game_map)

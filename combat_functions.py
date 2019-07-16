@@ -2348,7 +2348,11 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
         elif command.get('Maneuver'):
             if curr_actor.player:
                 messages.append('You decide to attempt a special maneuver')
-            combat_phase = CombatPhase.maneuver                  
+            combat_phase = CombatPhase.maneuver
+        elif command.get('Change Stance'):
+            if curr_actor.player:
+                messages.append('You decide to change your stance')
+            combat_phase = CombatPhase.stance                 
         elif command.get('Attack'):
             if curr_actor.player:
                 messages.append('You decide to attack')
@@ -2390,6 +2394,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
             if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 
                 curr_actor.fighter.action.append('Wait')
                 curr_actor.fighter.action.append('Maneuver')
+                curr_actor.fighter.action.append('Change Stance')
             if len(curr_actor.fighter.action) >= 1:
                 curr_actor.fighter.action.append('End Turn')
                 game_state = GameStates.menu
@@ -3200,3 +3205,70 @@ def phase_feint(curr_actor, command, logs, combat_phase) -> (int, dict, object):
         game_state = GameStates.default
 
     return combat_phase, menu_dict, curr_actor
+
+def phase_stance(curr_actor, command, logs, combat_phase) -> (int, dict):
+    combat_menu_header = None
+    menu_dict = dict()
+    messages = []
+    log = logs[2]
+    min_ap = curr_actor.get_min_ap()
+
+    curr_actor.fighter.action = ['Return']
+
+    stance_widths = ('Open', 'Closed')
+    stance_lengths = ('Long', 'Short')
+    stance_heights = ('High', 'Low')
+    stance_weights = ('Front', 'Neutral', 'Rear')
+
+    for w in stance_widths:
+        for l in stance_lengths:
+            for h in stance_heights:
+                for g in stance_weights:
+                    curr_actor.fighter.action.append(w + ', ' + l + ', ' + h + ', ' + g)
+
+
+    combat_menu_header = 'Choose your stance:'
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+    if len(command) != 0:
+        for option in curr_actor.fighter.action:
+            choice = command.get(option)
+            if choice:
+                menu_dict = dict()
+                combat_phase = CombatPhase.action
+
+                if choice == 'Return':
+                    curr_actor.fighter.action.clear()
+                else:
+                    curr_actor.fighter.stance_stability = 0 #Set back to neutral before applying mods
+                    curr_actor.fighter.stance_dodge = 0
+                    curr_actor.fighter.stance_power = 1
+                    
+                    if 'Open' in choice:
+                        curr_actor.fighter.stance_stability += 10
+                    if 'Long' in choice:
+                        curr_actor.fighter.stance_stability += 10
+                        curr_actor.fighter.stance_dodge += -10
+                    elif 'Short' in choice:
+                        curr_actor.fighter.stance_stability += -10
+                        curr_actor.fighter.stance_dodge += 10
+                    if 'High' in choice:
+                        curr_actor.fighter.stance_dodge += 10
+                    elif 'Low' in choice:
+                        curr_actor.fighter.stance_power += .1
+                    if 'Front' in choice:
+                        curr_actor.fighter.stance_power += .1
+                    elif 'Back' in choice:
+                        curr_actor.fighter.stance_power += -.1
+                        curr_actor.fighter.stance_dodge += 10
+                
+                    if not hasattr(curr_actor.fighter, 'ai'):
+                        messages.append('You decide to use the ' + choice + ' stance.')
+
+    for message in messages:
+        log.add_message(Message(message))
+
+    if hasattr(curr_actor.fighter, 'ai'):
+        menu_dict = dict()
+        game_state = GameStates.default
+
+    return combat_phase, menu_dict    

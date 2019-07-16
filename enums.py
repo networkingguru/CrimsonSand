@@ -45,3 +45,4 @@ class CombatPhase(Enum):
     move = auto()
     maneuver = auto()
     feint = auto()
+    stance = auto()
