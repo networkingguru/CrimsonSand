@@ -412,6 +412,49 @@ def calc_history_modifier(entity, attack, loc, angle) -> int:
     mod += ((repeats-1) * 15) + ((element_repeat) * 3)
     return mod
 
+def calc_final_mods(attacker, defender) -> dict:
+    '''Goal is to bring together all the various hidden and percieved mods for both sides and create a single dict with all of them taken into account'''
+    weapon = attacker.fighter.combat_choices[0]
+    attack = attacker.fighter.combat_choices[1]
+    location = attacker.fighter.combat_choices[2]
+    angle = attacker.fighter.combat_choices[3]
+    loc_name = attacker.fighter.targets[0].fighter.name_location(location)
+    
+    def_mods = defender.fighter.get_defense_modifiers(loc_name)
+    cs = attacker.determine_combat_stats(weapon, attack, location, angle)
+    p_mods = get_percieved_mods(attacker, defender, loc_name)
+    final_to_hit = cs.get('to hit') + def_mods.get('hit')
+    p_hit = p_mods.get('p_hit') + final_to_hit
+    dodge_mod = cs.get('dodge mod') + def_mods.get('dodge')
+    p_dodge_mod = p_mods.get('p_dodge') + cs.get('dodge mod')
+    parry_mod = cs.get('parry mod') + def_mods.get('parry')
+    p_parry_mod = p_mods.get('p_parry') + cs.get('parry mod')
+    
+
+    total_ep = sum([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
+
+    if len(defender.fighter.attacker_history) > 0:
+        history_mod = calc_history_modifier(defender, attack.name, location, angle)
+        dodge_mod += history_mod
+        parry_mod += history_mod
+        p_dodge_mod += history_mod
+        p_parry_mod += history_mod
+    
+
+    #Adjust cs based on mods. 
+    cs['dodge mod'] = dodge_mod
+    cs['parry_mod'] = parry_mod
+
+    final_mods = cs
+    final_mods['p_dodge'] = p_dodge_mod
+    final_mods['p_parry'] = p_parry_mod
+    final_mods['p_hit'] = p_hit
+    final_mods['auto-block'] = def_mods.get('auto-block')
+    final_mods['total ep'] = total_ep
+
+    return final_mods
+
+
 def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase) -> (list, int):
     effects = []
     messages = []
@@ -2723,7 +2766,6 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     missed = False
     log = logs[2]
     curr_target = curr_actor.fighter.targets[0]
-    weapon = curr_actor.fighter.combat_choices[0]
     attack = curr_actor.fighter.combat_choices[1]
     location = curr_actor.fighter.combat_choices[2]
     angle = curr_actor.fighter.combat_choices[3]
@@ -2731,31 +2773,16 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     loc_name = curr_actor.fighter.targets[0].fighter.name_location(location)
     angle_name = angle_id(angle)
     
-    def_mods = curr_target.fighter.get_defense_modifiers(loc_name)
-    cs = curr_actor.determine_combat_stats(weapon, attack, location, angle)
-    p_mods = get_percieved_mods(curr_actor, curr_target, loc_name)
+    cs = calc_final_mods(curr_actor, curr_target)
+
+    
     final_to_hit = cs.get('to hit')
-    p_hit = p_mods.get('p_hit') + cs.get('to hit')
-    dodge_mod = cs.get('dodge mod') + def_mods.get('dodge')
-    p_dodge_mod = p_mods.get('p_dodge') + cs.get('dodge mod')
+    p_hit = cs.get('p_hit')
+    p_dodge_mod = cs.get('p_dodge')
     final_ap = cs.get('final ap')
-    parry_mod = cs.get('parry mod') + def_mods.get('parry')
-    p_parry_mod = p_mods.get('p_parry') + cs.get('parry mod')
-    
+    p_parry_mod = cs.get('p_parry')
+    total_ep = cs.get('total ep')
 
-    total_ep = sum([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
-
-    if len(curr_target.fighter.attacker_history) > 0:
-        history_mod = calc_history_modifier(curr_target, attack.name, location, angle)
-        dodge_mod += history_mod
-        parry_mod += history_mod
-        p_dodge_mod += history_mod
-        p_parry_mod += history_mod
-    
-
-    #Adjust cs based on mods. Needed to feed into perform_attack
-    cs['dodge mod'] = dodge_mod
-    cs['parry_mod'] = parry_mod
 
     combat_menu_header = ('You are attacking with ' + wpn_title + ', aiming at ' + curr_target.name + '\'s ' 
         + loc_name + ' from a ' + angle_name + ' angle. ' 
@@ -2843,14 +2870,9 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     effects = []
     can_dodge = False
     can_parry = False
-    attack = enemy.fighter.combat_choices[1]
     atk_name = enemy.fighter.combat_choices[1].name 
     angle_name = angle_id(enemy.fighter.combat_choices[3])
     loc_name = curr_actor.fighter.name_location(enemy.fighter.combat_choices[2])
-    final_to_hit = cs.get('to hit')
-    def_mods = curr_actor.fighter.get_defense_modifiers(loc_name)
-    dodge_mod = cs.get('dodge mod') + def_mods.get('dodge')
-    parry_mod = cs.get('parry mod') + def_mods.get('parry')
     game_state = GameStates.default
     header_items = []
     def_margin = None
@@ -2858,11 +2880,16 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     rolls = None
     hit = False
 
-    #Find history mod
-    if len(curr_actor.fighter.attacker_history) > 0:
-        history_mod = calc_history_modifier(curr_actor, atk_name, enemy.fighter.combat_choices[2], enemy.fighter.combat_choices[3])
-        dodge_mod += history_mod
-        parry_mod += history_mod
+
+    cs = calc_final_mods(enemy, curr_actor)
+    
+    final_to_hit = cs.get('to hit')
+    dodge_mod = cs.get('dodge mod')
+    parry_mod = cs.get('parry mod')
+
+
+    
+
 
     #Find chances and see if curr_actor can parry/dodge
     cs_p = curr_actor.determine_combat_stats(curr_actor.weapons[0],curr_actor.weapons[0].attacks[0])
@@ -2872,11 +2899,9 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     if enemy.fighter.counter_attack == curr_actor: 
         can_parry = False
         dodge_mod -= 50
+        cs['dodge mod'] = dodge_mod
         enemy.fighter.counter_attack = None
 
-    #Adjust cs based on mods. Needed to feed into apply_dam
-    cs['dodge mod'] = dodge_mod
-    cs['parry_mod'] = parry_mod
 
     #Normalized (0-99) percentage scale of probabilities to p/d/b
     parry_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.deflect + parry_mod))

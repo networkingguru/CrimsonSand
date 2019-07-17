@@ -26,7 +26,11 @@ class Fighter:
         self.loc_dodge_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived dodge chances
         self.loc_parry_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived parry chances
         self.loc_dodge_mod = dict() #A dict in 'location name':mod format with mods to dodge chance based on location(used in feints)
-        self.loc_parry_mod = dict() #A dict in 'location name':mod format with mods to dodge chance based on location(used in feints)
+        self.loc_parry_mod = dict() #A dict in 'location name':mod format with mods to parry chance based on location(used in feints)
+        self.loc_hit_mod = dict() #A dict in 'location name':mod format with mods to hit chance based on location(guard mods)
+        self.auto_block_locs = [] #A list of locations autoblocked by the guard (ints)
+        self.guard_dodge_mod = 0
+        self.guard_parry_mod = 0
         self.stance = 'Open, Short, Low, Rear'
         self.stance_stability = 0 #A var to hold the modifier to stability from stance
         self.stance_dodge = 0 #Var to adjust dodge chances based on stance
@@ -253,12 +257,12 @@ class Fighter:
         # 2 Neck
         # 3 R Shoulder
         # 4 L Shoulder
-        # 5 Up R Chest
-        # 6 Up L Chest
+        # 5 R Chest
+        # 6 L Chest
         # 7 Up R Arm
         # 8 Up L Arm
-        # 9 Low R Chest
-        # 10 Low L Chest
+        # 9 R Ribs
+        # 10 L Ribs
         # 11 R Elbow
         # 12 L Elbow
         # 13 R Abdomen
@@ -399,13 +403,24 @@ class Fighter:
         self.stance = stance
 
     def get_defense_modifiers(self, location) -> dict:
-        dodge_mod = self.stance_dodge
-        parry_mod = 0
+        auto_block = False
+        loc_idx = self.name_location(location)
+        hit_mod = 0
+
+        dodge_mod = self.stance_dodge + self.guard_dodge_mod
+        parry_mod = self.guard_parry_mod
 
         dodge_mod += self.loc_dodge_mod.get(location)
         parry_mod += self.loc_parry_mod.get(location)
 
-        def_mods = {'dodge':dodge_mod, 'parry':parry_mod}
+        if location in self.loc_hit_mod:
+            hit_mod = self.loc_hit_mod.get(location)
+        
+        if loc_idx in self.auto_block_locs:
+            auto_block = True 
+
+
+        def_mods = {'dodge':dodge_mod, 'parry':parry_mod, 'hit': hit_mod, 'auto-block': auto_block}
 
         return def_mods
 

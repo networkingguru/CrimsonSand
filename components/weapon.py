@@ -41,6 +41,15 @@ class Attack():
         self.allowed_angles_r = allowed_angles_r #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
         self.allowed_angles_l = allowed_angles_l #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
 
+class Guard():
+    def __init__(self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []):
+        self.name = name
+        self.loc_hit_mods = loc_hit_mods #A dict in 'location name':mod format with mods to hit chance based on location
+        self.hit_mod = hit_mod
+        self.dodge_mod = dodge_mod
+        self.parry_mod = parry_mod
+        self.req_locs = req_locs #A list of locs required to be funtional to use the guard
+        self.auto_block = auto_block #A list of locations autoblocked
 
 class Unarmed(Weapon):
     def __init__(self):
@@ -60,6 +69,7 @@ class Unarmed(Weapon):
         self.weight = 0
         self.damage_type = 'B'
         self.base_ap = 0
+        #Attacks below
         #self, name, attack_mod, parry_mod, stamina, b_dam, s_dam, p_dam, t_dam, hands, damage_type, base_ap, 
         #hand = True, length = 0, side_restrict = True, restricted_locs = [], restricted_angles = []
         self.jab = Attack("Jab/Cross", 0, 0, 1, .5, 0, 0, 0, 1, 'B', 10, True, 0, True, [0], [8], [8])
@@ -75,6 +85,19 @@ class Unarmed(Weapon):
         self.knee = Attack("Knee Strike", -30, -10, 1, .4, 0, 0, 0, 1, 'B', 15, False, -18, False, [0,2,27,28], [3,4], [4,5])
         self.base_attacks = [self.jab, self.haymaker, self.hook, self.uppercut, self.hammerfist, self.elbow, self.frontkick, self.roundhousekick, self.sidekick, self.stomp, self.knee]
         self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.conventional = Guard('Conventional', {'Face': -10, 'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': -20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20}, 0, 0, [7,8,11,12,15,16], [9,10])
+        self.southpaw = Guard('Southpaw', {'Face': -10, 'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': -20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20}, 0, 0, [7,8,11,12,15,16],[9,10])
+        self.high = Guard('High', {'Scalp': -20, 'Face': -30, 'Neck': -60, 'R Chest': -40, 'L Chest': -40, 'R Ribs': -20, 'L Ribs': -20, 'R Elbow': 20, 'L Elbow': 20, 'R Forearm': 20, 
+                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20}, -10, -20, 20, [7,8,11,12,15,16], [0,1,2,5,6])
+        self.low = Guard('Low', {'Scalp': 20, 'Face': -10, 'Neck': -80, 'R Chest': -80, 'L Chest': -80, 'R Ribs': -80, 'L Ribs': -80, 'R Forearm': 20, 
+                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20, 'R Abdomen': -60, 'L Abdomen': -60}, -20, -10, 20, [7,8,11,12,15,16], [2,5,6,9,10,13,14])
+        self.half = Guard('Half', {'Neck': -10, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'R Ribs': -60, 
+                                'R Elbow': -60, 'R Forearm': -60, 'R Hand': -60}, 20, 20, 0, [7,11,15], [9])
+        self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half]                        
 
 
 weapon_master_list = [Unarmed]

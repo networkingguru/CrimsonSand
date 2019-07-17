@@ -16,6 +16,7 @@ class Entity:
         self.fighter = fighter
         self.state = state
         self.weapons = weapons
+        self.guard = None
 
         if self.fighter:
             self.fighter.owner = self
@@ -84,6 +85,12 @@ class Entity:
         #Sort the list of objects alphabetically using the name attribute            
         base_wpn.attacks.sort(key=lambda x: x.name)
 
+    def set_guard_def_mods(self) -> None:
+        self.fighter.loc_hit_mod = self.guard.loc_hit_mods
+        self.fighter.guard_dodge_mod = self.guard.dodge_mod
+        self.fighter.guard_parry_mod = self.guard.parry_mod
+        self.fighter.auto_block_locs = self.guard.auto_block
+        
 
     def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 10):
         weapon = weapon
@@ -104,6 +111,9 @@ class Entity:
         final_ap = int(attack.base_ap * (((100/skill_rating)**.2 + weight_factor)))
         if final_ap > self.fighter.swift: final_ap = self.fighter.swift
         parry_ap = int(weapon.parry_ap * (((100/skill_rating)**.2 + weight_factor)))  
+
+        if self.guard is not None:
+            to_hit += self.guard.hit_mod
 
         #Loc mods
         if location == 0 or 10 < location < 13:
@@ -221,7 +231,8 @@ class Entity:
             min_wpn_ap.append(min(wpn_ap))
         min_ap = min(min_wpn_ap)
         return min_ap
-        
+
+
 
 def create_entity_list(entity_list) -> list:
     entities = []
