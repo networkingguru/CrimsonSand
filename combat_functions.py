@@ -420,6 +420,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     active_entity = entity
     curr_actor = entity
     enemy = curr_target
+    missed =  False
 
     #Clear history if attacker changed
     if curr_target.fighter.attacker is not entity:
@@ -449,6 +450,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
 
     #No damage
     if atk_result[1] == 0:
+        missed = True
         if not hasattr(entity.fighter, 'ai'):
             messages.append('You missed. ')
             #Show rolls
@@ -509,7 +511,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     if combat_phase == CombatPhase.defend:
         active_entity = curr_target
 
-    return messages, combat_phase, active_entity
+    return messages, combat_phase, active_entity, missed
 
 def add_history(entity) -> None:
     history = entity.fighter.attacker_history
@@ -2458,7 +2460,7 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
                     else: 
                         order[0].fighter.wait = False
                         order[0].fighter.curr_target.fighter.acted = False
-                elif order[0].fighter.disengage and order[0] in curr_actor.fighter.entities_opportunity_attacked:
+                elif order[0] in curr_actor.fighter.entities_opportunity_attacked:
                     pass
                 elif order[0].fighter.feint:
                     if not order[0].fighter.curr_target.fighter.acted: 
@@ -2718,6 +2720,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
     combat_menu_header = None
     menu_dict = dict()
     messages = []
+    missed = False
     log = logs[2]
     curr_target = curr_actor.fighter.targets[0]
     weapon = curr_actor.fighter.combat_choices[0]
@@ -2768,7 +2771,7 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
 
     if len(command) != 0:
         if command.get('Accept'):
-            messages, combat_phase, active_entity = perform_attack(curr_actor, entities, final_to_hit, curr_target, cs, combat_phase)
+            messages, combat_phase, active_entity, missed = perform_attack(curr_actor, entities, final_to_hit, curr_target, cs, combat_phase)
             curr_actor.fighter.last_atk_ap = final_ap
             curr_actor.fighter.acted = True
             curr_actor.fighter.action.clear()
@@ -2778,6 +2781,17 @@ def phase_confirm(curr_actor, entities, command, logs, combat_phase) -> (int, di
             combat_phase = CombatPhase.action
         
         menu_dict = dict()
+
+    if missed:
+        min_ap = curr_target.get_min_ap()
+        if curr_target.fighter.ap >= min_ap and (curr_actor.x, curr_actor.y) in curr_target.fighter.aoc:
+            curr_target.fighter.entities_opportunity_attacked.append(curr_actor)
+            curr_target.fighter.counter_attack.append(curr_actor)
+            if hasattr(curr_target.fighter, 'ai'):
+                messages.append('You missed, allowing ' + curr_target.name + ' to counter-attack.')
+            else:
+                messages.append(curr_target.name + ' missed, giving you a chance to counter-attack.')
+            active_entity = curr_target
 
     for message in messages:
         log.add_message(Message(message))
@@ -2850,22 +2864,25 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         dodge_mod += history_mod
         parry_mod += history_mod
 
-    #Adjust cs based on mods. Needed to feed into apply_dam
-    cs['dodge mod'] = dodge_mod
-    cs['parry_mod'] = parry_mod
-
     #Find chances and see if curr_actor can parry/dodge
-    parry_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.deflect + parry_mod))
-    dodge_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.dodge + dodge_mod))
-    block_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.best_combat_skill + parry_mod))
     cs_p = curr_actor.determine_combat_stats(curr_actor.weapons[0],curr_actor.weapons[0].attacks[0])
     parry_ap = cs_p.get('parry ap')
     if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap: can_dodge = True
     if curr_actor.fighter.ap >= parry_ap: can_parry = True
     if enemy.fighter.counter_attack == curr_actor: 
-        can_dodge = False
         can_parry = False
+        dodge_mod -= 50
         enemy.fighter.counter_attack = None
+
+    #Adjust cs based on mods. Needed to feed into apply_dam
+    cs['dodge mod'] = dodge_mod
+    cs['parry_mod'] = parry_mod
+
+    #Normalized (0-99) percentage scale of probabilities to p/d/b
+    parry_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.deflect + parry_mod))
+    dodge_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.dodge + dodge_mod))
+    block_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.best_combat_skill + parry_mod))
+
 
     #Choose how to defend '
     header_items.append(enemy.name + ' is attacking you in the ' + loc_name + ' with a ' + atk_name + ' from a ' + 
