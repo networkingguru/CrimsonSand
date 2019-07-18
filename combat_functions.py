@@ -2877,6 +2877,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     can_parry = False
     atk_name = enemy.fighter.combat_choices[1].name 
     angle_name = angle_id(enemy.fighter.combat_choices[3])
+    location = enemy.fighter.combat_choices[2]
     loc_name = curr_actor.fighter.name_location(enemy.fighter.combat_choices[2])
     game_state = GameStates.default
     header_items = []
@@ -2884,6 +2885,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     atk_margin = None
     rolls = None
     hit = False
+    auto_block = False
 
 
     cs = calc_final_mods(enemy, curr_actor)
@@ -2962,9 +2964,10 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 if check == 's':
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You dodged the attack. ')
                     else: message = (curr_actor.name + ' dodged the attack. ')
-                else:
+                elif location not in curr_actor.fighter.auto_block_locs:
                     hit = True
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+                else: auto_block = True
             if command.get('Parry'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.deflect, parry_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
@@ -2973,14 +2976,18 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 if check == 's':
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You parried the attack. ')
                     else: message = (curr_actor.name + ' parried the blow. ')
-                else:
+                elif location not in curr_actor.fighter.auto_block_locs:
                     hit = True
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+                else: auto_block = True
             if command.get('Block'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.best_combat_skill, parry_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
-                curr_actor.fighter.mod_attribute('stamina', -(curr_actor.weapons[0].stamina*curr_actor.fighter.base_stam_cost))
-                curr_actor.fighter.mod_attribute('ap', -parry_ap)
+                if location not in curr_actor.fighter.auto_block_locs:
+                    curr_actor.fighter.mod_attribute('stamina', -(curr_actor.weapons[0].stamina*curr_actor.fighter.base_stam_cost))
+                    curr_actor.fighter.mod_attribute('ap', -parry_ap)
+                else:
+                    auto_block = True
                 if check == 's':
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You blocked the attack. ')
                     else: message = (curr_actor.name + ' blocked the blow. ')
@@ -2999,12 +3006,31 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                 else:
                     hit = True
                     effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+            
             menu_dict = dict()
     else:
-        hit = True
-        effects = apply_dam(curr_actor, entities, enemy.fighter.dam_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+        if location not in curr_actor.fighter.auto_block_locs:
+            hit = True
+            effects = apply_dam(curr_actor, entities, enemy.fighter.dam_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+        else:
+            auto_block = True
     
-    
+    if auto_block:
+        if not hasattr(curr_actor.fighter, 'ai'): message = ('Your guard automatically blocked the attack. ')
+        else: message = (curr_actor.name + 's guard automatically blocked the blow. ')
+        #Determine blocker to remove from
+        if enemy.fighter.combat_choices[2] <=2:
+            if curr_actor.fighter.l_blocker > curr_actor.fighter.r_blocker:
+                blocker = 16
+            else: blocker = 15
+        elif enemy.fighter.combat_choices[2] in [3,5,7,9,11,13,15,19]: blocker = 15
+        elif enemy.fighter.combat_choices[2] in [4,6,8,10,12,14,16,20]: blocker = 16
+        elif enemy.fighter.combat_choices[2] in [17,21,23,25]: blocker = 25
+        elif enemy.fighter.combat_choices[2] in [18,22,24,26]: blocker = 26
+
+
+        effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, blocker, cs)
+
     if message or effects:
         combat_phase = CombatPhase.action
         
