@@ -443,7 +443,7 @@ def calc_final_mods(attacker, defender) -> dict:
 
     #Adjust cs based on mods. 
     cs['dodge mod'] = dodge_mod
-    cs['parry_mod'] = parry_mod
+    cs['parry mod'] = parry_mod
 
     final_mods = cs
     final_mods['p_dodge'] = p_dodge_mod
