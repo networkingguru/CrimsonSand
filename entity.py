@@ -101,7 +101,7 @@ class Entity:
         s_psi = self.fighter.ep * attack.s_dam
         t_psi = self.fighter.ep * attack.t_dam
         p_psi = self.fighter.ep * attack.p_dam
-        to_hit = attack.attack_mod + skill_rating
+        to_hit = attack.attack_mod + skill_rating + self.fighter.guard_hit_mod
         to_parry = attack.parry_mod + skill_rating
         dodge_mod = self.fighter.stance_dodge
         parry_mod = 0
@@ -231,6 +231,16 @@ class Entity:
             min_wpn_ap.append(min(wpn_ap))
         min_ap = min(min_wpn_ap)
         return min_ap
+    
+    def set_default_guard(self):
+        for wpn in self.weapons:
+            for guard in wpn.guards:
+                if self.fighter.dom_hand == 'R' or 'A':
+                    if guard.rh_default: self.fighter.change_guard(guard)
+                else:
+                    if guard.lh_default: self.fighter.change_guard(guard)
+
+
 
 
 

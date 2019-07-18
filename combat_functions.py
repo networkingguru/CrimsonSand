@@ -454,7 +454,6 @@ def calc_final_mods(attacker, defender) -> dict:
 
     return final_mods
 
-
 def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase) -> (list, int):
     effects = []
     messages = []
@@ -2408,7 +2407,11 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
         elif command.get('Change Stance'):
             if curr_actor.player:
                 messages.append('You decide to change your stance')
-            combat_phase = CombatPhase.stance                 
+            combat_phase = CombatPhase.stance
+        elif command.get('Change Guard'):
+            if curr_actor.player:
+                messages.append('You decide to change your guard')
+            combat_phase = CombatPhase.guard                     
         elif command.get('Attack'):
             if curr_actor.player:
                 messages.append('You decide to attack')
@@ -2451,6 +2454,7 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
                 curr_actor.fighter.action.append('Wait')
                 curr_actor.fighter.action.append('Maneuver')
                 curr_actor.fighter.action.append('Change Stance')
+                curr_actor.fighter.action.append('Change Guard')
             if len(curr_actor.fighter.action) >= 1:
                 curr_actor.fighter.action.append('End Turn')
                 game_state = GameStates.menu
@@ -2548,6 +2552,7 @@ def phase_init(entities) -> (int, list):
         if hasattr(entity, 'fighter'):
             entity.fighter.end_turn = False
             entity.fighter.targets = aoc_check(entities, entity)
+            entity.set_default_guard()
     
     #Sort the entities by initiative
     if len(entities) > 1:    
@@ -3315,3 +3320,49 @@ def phase_stance(curr_actor, command, logs, combat_phase) -> (int, dict):
         game_state = GameStates.default
 
     return combat_phase, menu_dict    
+
+def phase_guard(curr_actor, command, logs, combat_phase) -> (int, dict):
+    combat_menu_header = None
+    menu_dict = dict()
+    messages = []
+    log = logs[2]
+
+    curr_actor.fighter.action = ['Return']
+
+    available_guards = []
+
+    for wpn in curr_actor.weapons:
+        for guard in wpn.guards:
+            for loc in guard.req_locs:
+                if loc not in curr_actor.fighter.paralyzed_locs and loc not in curr_actor.fighter.immobilized_locs:
+                    if guard not in available_guards:
+                        available_guards.append(guard)
+                        curr_actor.fighter.action.append(guard.name)
+  
+    combat_menu_header = 'Choose your guard:'
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+    if len(command) != 0:
+        for option in curr_actor.fighter.action:
+            choice = command.get(option)
+            if choice:
+                menu_dict = dict()
+                combat_phase = CombatPhase.action
+
+                if choice == 'Return':
+                    curr_actor.fighter.action.clear()
+                else:
+                    for guard in available_guards:
+                        if guard.name == choice:                    
+                            curr_actor.fighter.change_guard(guard)
+                
+                        if not hasattr(curr_actor.fighter, 'ai'):
+                            messages.append('You decide to use the ' + choice + ' guard.')
+
+    for message in messages:
+        log.add_message(Message(message))
+
+    if hasattr(curr_actor.fighter, 'ai'):
+        menu_dict = dict()
+
+    return combat_phase, menu_dict   
+

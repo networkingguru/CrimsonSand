@@ -29,8 +29,10 @@ class Fighter:
         self.loc_parry_mod = dict() #A dict in 'location name':mod format with mods to parry chance based on location(used in feints)
         self.loc_hit_mod = dict() #A dict in 'location name':mod format with mods to hit chance based on location(guard mods)
         self.auto_block_locs = [] #A list of locations autoblocked by the guard (ints)
+        self.guard = None
         self.guard_dodge_mod = 0
         self.guard_parry_mod = 0
+        self.guard_hit_mod = 0
         self.stance = 'Open, Short, Low, Rear'
         self.stance_stability = 0 #A var to hold the modifier to stability from stance
         self.stance_dodge = 0 #Var to adjust dodge chances based on stance
@@ -51,7 +53,7 @@ class Fighter:
         self.disengage_option = None
         #Attributes
         self.male = True
-        self.dom_hand = 'R' #'R', 'L', or 'Ambi'
+        self.dom_hand = 'R' #'R', 'L', or 'A'
         self.attributes = attributes
         self.max_attributes = attributes.copy()
         #log, mem, wis, comp, comm, cre, men, will, ss, pwr, man, ped, bal, swift, flex, sta, derm, 
@@ -207,6 +209,8 @@ class Fighter:
         #rds until dead from suffocation
         self.suffocation = None
         self.stam_drain = 0
+        #Temp effects
+        self.immobilized_locs = []
         #Will check modifier due to pain for movement
         self.pain_mod_mov = 0
         self.stance = FighterStance.standing
@@ -424,7 +428,13 @@ class Fighter:
 
         return def_mods
 
-            
+    def change_guard(self, guard) -> None:
+        self.guard = guard.name
+        self.guard_dodge_mod = guard.dodge_mod
+        self.guard_parry_mod = guard.parry_mod
+        self.auto_block_locs = guard.auto_block
+        self.guard_hit_mod = guard.hit_mod
+        self.loc_hit_mod = guard.loc_hit_mods
 
 
 
