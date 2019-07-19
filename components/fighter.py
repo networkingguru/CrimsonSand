@@ -38,7 +38,8 @@ class Fighter:
         self.stance_dodge = 0 #Var to adjust dodge chances based on stance
         self.stance_power = 1 # Var to adjust ep based on stanc. Multiplier
         self.atk_instability = 0 #A var to hold the modifier to stability from attacks
-        self.stability_mods = self.stance_stability + self.atk_instability
+        self.paralysis_instability = 0 #Var to hold stability modifications from being unable to use a leg
+        self.stability_mods = self.stance_stability + self.atk_instability + self.paralysis_instability
         self.visible_fighters = [] #This is a list of fighters in FOV, set by detect_enemies
         self.closest_fighter = None #The closest fighter, set by detect_enemies
         self.combat_choices = [] #List of chosen commands for combat menus
@@ -122,7 +123,9 @@ class Fighter:
         self.run_ap = round(self.ap / inch_conv(self.mv*2, 1))
         self.init = (self.men + self.swift)/4 + (self.sens + self.brawling)/4
         self.max_init = self.init
-        self.stab_recovery = self.bal/4 #Determines rate of recovery of stability
+        self.stability = self.stability_mods
+        self.clarity = self.will #For dizziness/unconsciousness
+        self.clar_recovery = self.will/4
         #Effective Power
         self.ep = int(round(self.stance_power * (((self.pwr * 2) + self.weight + (self.bone * 0.1)) * ((self.brawling + (self.bal/2))/200))))
         #Reach
@@ -213,7 +216,7 @@ class Fighter:
         self.immobilized_locs = []
         #Will check modifier due to pain for movement
         self.pain_mod_mov = 0
-        self.stance = FighterStance.standing
+        self.gen_stance = FighterStance.standing
         #fov arrays
         self.fov_visible = set()
         self.fov_wall = set()

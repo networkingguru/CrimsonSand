@@ -55,9 +55,9 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
     message_log = logs[2]
 
     #Set ap cost based on stance
-    if entity.fighter.stance == FighterStance.standing:
+    if entity.fighter.gen_stance == FighterStance.standing:
         ap_cost = entity.fighter.walk_ap
-    elif entity.fighter.stance == FighterStance.kneeling:
+    elif entity.fighter.gen_stance == FighterStance.kneeling:
         ap_cost = entity.fighter.walk_ap*2
     else:
         ap_cost = entity.fighter.walk_ap*4
@@ -112,17 +112,17 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
 
     if command[0] == 'prone':
         message = Message('You drop prone', 'black')
-        entity.fighter.stance = FighterStance.prone
+        entity.fighter.gen_stance = FighterStance.prone
         fov_recompute = True
     
     if command[0] == 'kneel':
         message = Message('You kneel', 'black')
-        entity.fighter.stance = FighterStance.kneeling
+        entity.fighter.gen_stance = FighterStance.kneeling
         fov_recompute = True
 
     if command[0] == 'stand' and entity.fighter.can_stand:
         message = Message('You stand up', 'black')
-        entity.fighter.stance = FighterStance.standing
+        entity.fighter.gen_stance = FighterStance.standing
         fov_recompute = True
 
     if fov_recompute == True:
@@ -305,15 +305,15 @@ def determine_valid_locs(attacker, defender, attack) -> list:
 def location_angle(attacker, defender, er, distance, attack, location) -> bool:
     can_reach = False
     #Determine defender height based on stance
-    if defender.fighter.stance == FighterStance.prone:
+    if defender.fighter.gen_stance == FighterStance.prone:
         location_ht = defender.fighter.location_ht[25]
-    elif defender.fighter.stance == FighterStance.kneeling or FighterStance.sitting:
+    elif defender.fighter.gen_stance == FighterStance.kneeling or FighterStance.sitting:
         location_ht = defender.fighter.location_ht[location] - defender.fighter.location_ht[23]
     else:
         location_ht = defender.fighter.location_ht[location]
 
     #Determine pivot point based on attacker stance
-    if attacker.fighter.stance == FighterStance.prone:
+    if attacker.fighter.gen_stance == FighterStance.prone:
         pivot = attacker.fighter.location_ht[25]
         if not attack.hand: er *= 1.2 #Legs average 1.2x longer than arms
     else:
@@ -322,7 +322,7 @@ def location_angle(attacker, defender, er, distance, attack, location) -> bool:
         else:
             pivot = attacker.fighter.location_ht[17]
             er *= 1.2 #Legs average 1.2x longer than arms
-        if attacker.fighter.stance == FighterStance.kneeling or FighterStance.sitting:
+        if attacker.fighter.gen_stance == FighterStance.kneeling or FighterStance.sitting:
             pivot -= attacker.fighter.location_ht[23]
 
     #Find length of hypotenuse(len of reach to hit location)
@@ -555,6 +555,19 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
 
     return messages, combat_phase, active_entity, missed
 
+def apply_stability_damage(target, damage, location) -> bool:
+    roll = False
+    if location < 3:
+        target.fighter.stability -= damage[2]/100
+        roll = True
+    elif 2 < location < 11:
+        target.fighter.stability -= damage[2]/25
+        roll = True
+    elif 12 < location < 15:
+        target.fighter.stability -= damage[2]/50
+        roll = True
+    return roll
+
 def add_history(entity) -> None:
     history = entity.fighter.attacker_history
     attacker = entity.fighter.attacker
@@ -632,10 +645,12 @@ def handle_persistant_effects(entity, entities):
         #Handle unconsiousness due to fatigue
         if entity.fighter.stamina <= 0:
             entity.fighter.stamina = 0
-            entity.fighter.stance = FighterStance.prone
+            entity.fighter.gen_stance = FighterStance.prone
             handle_state_change(entity, entities, EntityState.unconscious)
             if hasattr(entity.fighter, 'ai'): messages.append(entity.name + ' has passed out due to fatigue. ')
             else: messages.append('You have passed out due to fatigue. ')
+        #Restore stability
+        entity.fighter.stability = entity.fighter.stability_mods
         #Apply stance
         entity.fighter.change_stance(entity.fighter.stance)
         #Reset turn end, acted, wait, opp attack
@@ -659,6 +674,7 @@ def handle_mobility_change(entity):
     for loc in no_walk_locs:
         if loc in entity.fighter.paralyzed_locs:
             entity.fighter.can_walk = False
+            entity.fighter.paralysis_instability = -50
             break
     if not entity.fighter.can_walk:
         locs_found = []
@@ -674,8 +690,8 @@ def handle_mobility_change(entity):
         if odd != 0:
             if even != 0: 
                 entity.fighter.can_stand = False
-                entity.fighter.stance = FighterStance.prone
-    if entity.fighter.stance == FighterStance.prone:
+                entity.fighter.gen_stance = FighterStance.prone
+    if entity.fighter.gen_stance == FighterStance.prone:
         x_mod, y_mod = prone_aoc_dict.get(entity.fighter.facing)
         new_x = entity.x + x_mod
         new_y = entity.y + y_mod
@@ -768,7 +784,14 @@ def apply_dam(target, entities, roll, dam_type, dam_mult, location, cs) -> set:
         i += 1
         effects_set = set(effects)
 
+    bal_roll = apply_stability_damage(target, damage, location)
+
     handle_mobility_change(target)
+
+    if bal_roll:
+        stab_roll = save_roll_un(target.fighter.bal, target.fighter.stability)
+        if 'f' in stab_roll or 'cf' in stab_roll:
+            target.fighter.gen_stance = FighterStance.prone
 
     return effects_set
 
@@ -1815,7 +1838,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
             while i < 29:
                 entity.fighter.paralyzed_locs.extend([i])
                 i += 1
-            entity.fighter.stance = FighterStance.prone
+            entity.fighter.gen_stance = FighterStance.prone
             entity.fighter.mod_attribute('ss', (entity.fighter.ss*.6)*-1)
             entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.6)*-1)
             entity.fighter.mv *= .1
@@ -1827,7 +1850,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
             while i < 29:
                 entity.fighter.paralyzed_locs.extend([i])
                 i += 1
-            entity.fighter.stance = FighterStance.prone
+            entity.fighter.gen_stance = FighterStance.prone
             entity.fighter.mod_attribute('ss', (entity.fighter.ss*.5)*-1)
             entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.5)*-1)
             entity.fighter.mv *= .1
@@ -1844,7 +1867,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
 
             if check[0] == 'cs':
                 description.append('Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                entity.fighter.stance = FighterStance.sitting
+                entity.fighter.gen_stance = FighterStance.sitting
                 entity.fighter.temp_physical_mod -= 30
             elif check[0] == 'cf':
                 description.append(entity.name + ' collapses from the pain, and a portion of the shattered pelvis tears ' +
@@ -1856,13 +1879,13 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                 description.append('Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
                 'manages to remain conscious. ')
                 entity.fighter.temp_physical_mod -= 40
-                entity.fighter.stance = FighterStance.prone
+                entity.fighter.gen_stance = FighterStance.prone
             else:
                 description.append(('He ' if entity.fighter.male else 'She ') + 
                 'is knocked unconscious by the attack. ')
                 handle_state_change(entity, entities, EntityState.unconscious)
                 entity.fighter.temp_physical_mod -= 40
-                entity.fighter.stance = FighterStance.prone
+                entity.fighter.gen_stance = FighterStance.prone
 
             entity.fighter.pain_mod_mov += 50
             i = location
@@ -2038,7 +2061,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                 if check[0] == 'cs':
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         'Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.stance = FighterStance.sitting
+                    entity.fighter.gen_stance = FighterStance.sitting
                     entity.fighter.temp_physical_mod -= 30
                 elif check[0] == 'cf':
                     description.append(entity.name + ' collapses, and a portion of the broken femur tears ' +
@@ -2051,13 +2074,13 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                         'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
                         'manages to remain conscious. ')
                     entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
                 else:
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
                     handle_state_change(entity, entities, EntityState.unconscious)
                     entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
 
             entity.fighter.pain_mod_mov += 40
             entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4, location + 6])
@@ -2078,7 +2101,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                 if check[0] == 'cs':
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         'Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.stance = FighterStance.sitting
+                    entity.fighter.gen_stance = FighterStance.sitting
                     entity.fighter.temp_physical_mod -= 30
                 elif check[0] == 'cf':
                     description.append(entity.name + ' collapses, and a portion of the broken femur tears ' +
@@ -2091,13 +2114,13 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                         'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
                         'manages to remain conscious. ')
                     entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
                 else:
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
                     handle_state_change(entity, entities, EntityState.unconscious)
                     entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
 
             entity.fighter.pain_mod_mov += 80
             entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4, location + 6])
@@ -2124,7 +2147,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                 if check[0] == 'cs':
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the leg. ' + 
                         'Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.stance = FighterStance.sitting
+                    entity.fighter.gen_stance = FighterStance.sitting
                     entity.fighter.temp_physical_mod -= 20
                 elif check[0] == 'cf':
                     description.append(entity.name + ' collapses, and lands on the leg. ' 
@@ -2132,19 +2155,19 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                         + ('he ' if entity.fighter.male else 'she ') + 'falls unconscious. ')
                     handle_state_change(entity, entities, EntityState.unconscious)
                     entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
                 elif check[0] == 's':
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
                         'manages to remain conscious. ')
                     entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
                 else:
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
                     handle_state_change(entity, entities, EntityState.unconscious)
                     entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
 
             entity.fighter.pain_mod_mov += 20
             entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4, location + 6])
@@ -2164,7 +2187,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                 if check[0] == 'cs':
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the leg. ' + 
                         'Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.stance = FighterStance.sitting
+                    entity.fighter.gen_stance = FighterStance.sitting
                     entity.fighter.temp_physical_mod -= 20
                 elif check[0] == 'cf':
                     description.append(entity.name + ' collapses, and lands on the leg. ' 
@@ -2172,19 +2195,19 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                         + ('he ' if entity.fighter.male else 'she ') + 'falls unconscious. ')
                     handle_state_change(entity, entities, EntityState.unconscious)
                     entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
                 elif check[0] == 's':
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
                         'manages to remain conscious. ')
                     entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
                 else:
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
                     handle_state_change(entity, entities, EntityState.unconscious)
                     entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
 
             entity.fighter.pain_mod_mov += 20
             entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4, location + 6])
@@ -2217,7 +2240,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                 if check[0] == 'cs':
                     description.append(entity.name + 'falls bodily to the floor. ' + 
                         'Despite the pain of the fall, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.stance = FighterStance.sitting
+                    entity.fighter.gen_stance = FighterStance.sitting
                     entity.fighter.temp_physical_mod -= 20
                 elif check[0] == 'cf':
                     description.append(entity.name + ' collapses, and a portion of the broken shin tears ' +
@@ -2231,13 +2254,13 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                         'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
                         'manages to remain conscious. ')
                     entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
                 else:
                     description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
                         ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
                     handle_state_change(entity, entities, EntityState.unconscious)
                     entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.stance = FighterStance.prone
+                    entity.fighter.gen_stance = FighterStance.prone
 
             entity.fighter.pain_mod_mov += 30
             entity.fighter.paralyzed_locs.extend([location, location + 2])
