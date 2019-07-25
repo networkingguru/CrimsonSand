@@ -1253,7 +1253,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
             if organ == 6:
                 description.append(entity.name + '\'s gallbladder is badly damaged. The injury bleeds heavily inside the body. ')
             entity.fighter.bleed.append([entity.fighter.max_vitae*.04,10])
-        if title == 'Upper Right Digestive Organ Damage':
+        if title == 'Upper Left Digestive Organ Damage':
             organ = roll_dice(1, 6)
             if organ < 3:
                 entity.fighter.diseases.append('Cirrhosis')
