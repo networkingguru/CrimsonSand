@@ -33,7 +33,7 @@ class Injury:
         self.suffocation = None #In rounds till death
         self.stam_drain = None #Amount per round
         self.stam_regin = None #Scalar
-        self.pain_mv_mod = None
+        self.pain_mv_mod = None #Positive int
         self.diseases = None #set of objects
         self.atk_mod_r = None
         self.atk_mod_l = None
@@ -124,6 +124,7 @@ class Injury:
 class Light_Scraping(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Lightly '+ descriptors[0].capitalize()
         self.location = location
@@ -132,7 +133,6 @@ class Light_Scraping(Injury):
         self.description = self.description_filler(recipient, location, descriptors[0])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
-        self.layer = 0
         self.severity = 1
         self.locations = set(range(0,29))
         self.bleed_amount = 10 #Amount of blood loss
@@ -141,6 +141,7 @@ class Light_Scraping(Injury):
 class Major_Scraping(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Major '+ descriptors[0].capitalize()
         self.prerequisite = Light_Scraping
@@ -151,7 +152,6 @@ class Major_Scraping(Injury):
         self.damage_type = set(['s','p','t', 'b'])
         self.severity = 2
         self.duplicable = True
-        self.layer = 0
         self.locations = set(range(0,29))
         self.bleed_amount = 20 #Amount of blood loss
         self.bleed_duration = 1 #Duration of blood loss
@@ -159,6 +159,7 @@ class Major_Scraping(Injury):
 class Torn_Skin(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         if location == 0: 
             self.title = descriptors[1].capitalize() + ' Scalp'
@@ -181,6 +182,7 @@ class Torn_Skin(Injury):
 class Severe_Torn_Skin(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         if location == 0: 
             self.title = 'Severely ' + descriptors[1].capitalize() + ' Scalp'
@@ -203,6 +205,7 @@ class Severe_Torn_Skin(Injury):
 class Partial_Loss_Skin(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         if location == 0: 
             self.title = 'Scalp Paritally ' + descriptors[2].capitalize() + ' Off'
@@ -232,6 +235,7 @@ class Partial_Loss_Skin(Injury):
 class Complete_Loss_Skin(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         if location == 0: 
             self.title = 'Scalp ' + descriptors[2].capitalize() + ' Off'
@@ -262,6 +266,7 @@ class Complete_Loss_Skin(Injury):
 class Light_Disfigurement(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Light Disfigurement'
         self.location = location
@@ -271,9 +276,8 @@ class Light_Disfigurement(Injury):
         self.damage_type = set(['s','p','t'])
         self.duplicable = True
         self.healable = False
-        self.layer = 0
         self.severity = 3
-        self.locations = set(1)
+        self.locations = set([1])
         self.bleed_amount = 20 #Amount of blood loss
         self.bleed_duration = 1 #Duration of blood loss
         self.attr_name = ['fac'] #Name of the attribute to modify
@@ -282,6 +286,7 @@ class Light_Disfigurement(Injury):
 class Mild_Disfigurement(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Mild Disfigurement'
         self.location = location
@@ -292,9 +297,8 @@ class Mild_Disfigurement(Injury):
         self.duplicable = True
         self.healable = False
         self.prerequisite = Light_Disfigurement
-        self.layer = 0
         self.severity = 4
-        self.locations = set(1)
+        self.locations = set([1])
         self.bleed_amount = 30 #Amount of blood loss
         self.bleed_duration = 1 #Duration of blood loss
         self.attr_name = ['fac'] #Name of the attribute to modify
@@ -303,6 +307,7 @@ class Mild_Disfigurement(Injury):
 class Broken_Nose(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Broken Nose'
         self.location = location
@@ -312,9 +317,8 @@ class Broken_Nose(Injury):
         self.damage_type = set(['b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 0
         self.severity = 4
-        self.locations = set(1)
+        self.locations = set([1])
         self.bleed_amount = 10 #Amount of blood loss
         self.bleed_duration = 1 #Duration of blood loss
         self.attr_name = ['fac','ts'] #Name of the attribute to modify
@@ -323,6 +327,7 @@ class Broken_Nose(Injury):
 class Smashed_Lip(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Smashed Lip'
         self.location = location
@@ -331,9 +336,9 @@ class Smashed_Lip(Injury):
         self.description = self.description_filler(recipient, location, descriptors[0])
         self.damage_type = set(['b'])
         self.duplicable = False
-        self.layer = 0
+        
         self.severity = 3
-        self.locations = set(1)
+        self.locations = set([1])
         self.bleed_amount = 10 #Amount of blood loss
         self.bleed_duration = 1 #Duration of blood loss
         self.attr_name = ['fac'] #Name of the attribute to modify
@@ -342,6 +347,7 @@ class Smashed_Lip(Injury):
 class Closed_Eye(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Closed Eye'
         self.location = location
@@ -350,9 +356,9 @@ class Closed_Eye(Injury):
         self.description = self.description_filler(recipient, location, descriptors[0])
         self.damage_type = set(['b'])
         self.duplicable = True
-        self.layer = 0
+        
         self.severity = 4
-        self.locations = set(1)
+        self.locations = set([1])
         self.bleed_amount = 10 #Amount of blood loss
         self.bleed_duration = 1 #Duration of blood loss
         self.attr_name = ['fac','sit'] #Name of the attribute to modify
@@ -361,6 +367,7 @@ class Closed_Eye(Injury):
 class Crushed_Eye(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Crushed Eye'
         self.location = location
@@ -370,9 +377,9 @@ class Crushed_Eye(Injury):
         self.damage_type = set(['b'])
         self.duplicable = True
         self.healable = False
-        self.layer = 0
+        
         self.severity = 6
-        self.locations = set(1)
+        self.locations = set([1])
         self.bleed_amount = 10 #Amount of blood loss
         self.bleed_duration = 1 #Duration of blood loss
         self.attr_name = ['fac','sit'] #Name of the attribute to modify
@@ -381,6 +388,7 @@ class Crushed_Eye(Injury):
 class Nose_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
 
         self.title = 'Nose ' + descriptors[2].capitalize() + ' Off'
@@ -396,12 +404,13 @@ class Nose_Destroyed(Injury):
         self.severity = 6
         self.healable = False
         self.pain_check = True
-        self.locations = set(1)
+        self.locations = set([1])
         self.loc_max = .8 #Amount to reduce the location's max hits by. Scalar
 
 class Ear_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
 
         self.title = 'Ear ' + descriptors[2].capitalize() + ' Off'
@@ -418,12 +427,13 @@ class Ear_Destroyed(Injury):
         self.healable = False
         self.duplicable = True
         self.pain_check = True
-        self.locations = set(1)
+        self.locations = set([1])
         self.loc_max = .8 #Amount to reduce the location's max hits by. Scalar
 
 class Lip_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
 
         self.title = 'Lip ' + descriptors[2].capitalize() + ' Off'
@@ -440,12 +450,13 @@ class Lip_Destroyed(Injury):
         self.healable = False
         self.duplicable = True
         self.pain_check = True
-        self.locations = set(1)
+        self.locations = set([1])
         self.loc_max = .8 #Amount to reduce the location's max hits by. Scalar
 
 class Eye_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Eye ' + descriptors[2].capitalize()
         self.location = location
@@ -456,9 +467,9 @@ class Eye_Destroyed(Injury):
         self.duplicable = True
         self.healable = False
         self.pain_check = True
-        self.layer = 0
+        
         self.severity = 6
-        self.locations = set(1)
+        self.locations = set([1])
         self.bleed_amount = 10 #Amount of blood loss
         self.bleed_duration = 1 #Duration of blood loss
         self.attr_name = ['fac','sit'] #Name of the attribute to modify
@@ -467,6 +478,7 @@ class Eye_Destroyed(Injury):
 class Damaged_Facial_Muscles(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
         self.title = 'Facial Muscle Damage'
@@ -476,15 +488,16 @@ class Damaged_Facial_Muscles(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 4
-        self.locations = set(1)
+        self.locations = set([1])
         self.attr_name = ['fac'] #Name of the attribute to modify
         self.attr_amount = [-10] #Amount to modify attribute
 
 class Facial_Nerve_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
         self.title = 'Facial Nerve Damage'
@@ -495,15 +508,16 @@ class Facial_Nerve_Damage(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 1
+        
         self.severity = 5
-        self.locations = set(1)
+        self.locations = set([1])
         self.attr_name = ['fac'] #Name of the attribute to modify
         self.attr_amount = [-10] #Amount to modify attribute
 
 class Tongue_Cut_Out(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = 'Tongue Cut Out'
@@ -514,9 +528,9 @@ class Tongue_Cut_Out(Injury):
         self.damage_type = set(['s'])
         self.duplicable = False
         self.healable = False
-        self.layer = 1
+        
         self.severity = 6
-        self.locations = set(1)
+        self.locations = set([1])
         self.attr_name = ['fac'] #Name of the attribute to modify
         self.attr_amount = [-10] #Amount to modify attribute
         self.diseases = {'Mute'} #set of objects
@@ -524,6 +538,7 @@ class Tongue_Cut_Out(Injury):
 class Light_Muscle_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Lightly '+ descriptors[0].capitalize() + location.capitalize() + ' Muscles'
         self.location = location
@@ -532,7 +547,7 @@ class Light_Muscle_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptors[0])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 1
         l = list(range(2,11))
         l.extend(range(13,19))
@@ -546,6 +561,7 @@ class Light_Muscle_Damage(Injury):
 class Moderate_Muscle_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = descriptors[1].capitalize() + location.capitalize() + ' Muscles'
         self.location = location
@@ -554,7 +570,7 @@ class Moderate_Muscle_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptors[1])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 2
         l = list(range(2,12))
         l.extend(range(13,19))
@@ -590,15 +606,16 @@ class Moderate_Muscle_Damage(Injury):
 class Heavy_Muscle_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = descriptors[2].capitalize() + location.capitalize() + ' Muscles'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} muscles have been {3}. {5} can no longer move any affected limbs, and will likely never regain full strength. '
+        self.description = '{0}''s {2} muscles have been {3}. Because of this, {5} can no longer move any affected limbs, and will likely never regain full strength. '
         self.description = self.description_filler(recipient, location, descriptors[2])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 3
         self.diseases = {'Withered Body Part'}
         self.prerequisite = Moderate_Muscle_Damage
@@ -612,30 +629,30 @@ class Heavy_Muscle_Damage(Injury):
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1] #Amount to modify attribute
             if loc_idx % 2 == 0:
-                self.paralyzed_locs = {[7,11,15,19]} #set
+                self.paralyzed_locs = {7,11,15,19} #set
             else:
-                self.paralyzed_locs = {[8,12,16,20]} #set
+                self.paralyzed_locs = {8,12,16,20} #set
         elif loc_idx in [15,16]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1] #Amount to modify attribute
             if loc_idx == 15:
-                self.paralyzed_locs = {[15,19]} #set
+                self.paralyzed_locs = {15,19} #set
             else:
-                self.paralyzed_locs = {[16,20]} #set
+                self.paralyzed_locs = {16,20} #set
         elif loc_idx in [17,18,21,22]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25] #Amount to modify attribute
             if loc_idx == 21:
-                self.paralyzed_locs = {[21,25,27]} #set
+                self.paralyzed_locs = {21,25,27} #set
             else:
-                self.paralyzed_locs = {[22,26,28]} #set
+                self.paralyzed_locs = {22,26,28} #set
         elif loc_idx in [25,26]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25]  #Amount to modify attribute
             if loc_idx == 25:
-                self.paralyzed_locs = {[25,27]} #set
+                self.paralyzed_locs = {25,27} #set
             else:
-                self.paralyzed_locs = {[26,28]} #set
+                self.paralyzed_locs = {26,28} #set
         else:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25]  #Amount to modify attribute
@@ -647,6 +664,7 @@ class Heavy_Muscle_Damage(Injury):
 class Light_Nerve_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Lightly Damaged ' + location.capitalize() + ' Nerves'
         self.location = location
@@ -656,7 +674,7 @@ class Light_Nerve_Damage(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 1
+        
         self.severity = 4
         self.locations = set([7,8,15,16,19,20,21,22,25,26,27,28])
         self.attr_name = ['touch'] #Name of the attribute to modify
@@ -668,6 +686,7 @@ class Light_Nerve_Damage(Injury):
 class Moderate_Nerve_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Damaged ' + location.capitalize() + ' Nerves'
         self.location = location
@@ -677,7 +696,7 @@ class Moderate_Nerve_Damage(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([7,8,15,16,19,20,21,22,25,26,27,28])
         self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
@@ -689,6 +708,7 @@ class Moderate_Nerve_Damage(Injury):
 class Paralysis(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Paralysis'
         self.location = location
@@ -698,7 +718,7 @@ class Paralysis(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([7,8,15,16,19,20,21,22,25,26,27,28])
         loc_idx = recipient.fighter.name_location(location)
@@ -706,30 +726,30 @@ class Paralysis(Injury):
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-30,-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1] #Amount to modify attribute
             if loc_idx == 7:
-                self.paralyzed_locs = {[7,11,15,19]} #set
+                self.paralyzed_locs = {7,11,15,19} #set
             else:
-                self.paralyzed_locs = {[8,12,16,20]} #set
+                self.paralyzed_locs = {8,12,16,20} #set
         elif loc_idx in [15,16]:
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-30,-10,-10] #Amount to modify attribute
             if loc_idx == 15:
-                self.paralyzed_locs = {[15,19]} #set
+                self.paralyzed_locs = {15,19} #set
             else:
-                self.paralyzed_locs = {[16,20]} #set
+                self.paralyzed_locs = {16,20} #set
         elif loc_idx in [21,22]:
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-30,-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25] #Amount to modify attribute
             if loc_idx == 21:
-                self.paralyzed_locs = {[21,25,27]} #set
+                self.paralyzed_locs = {21,25,27} #set
             else:
-                self.paralyzed_locs = {[22,26,28]} #set
+                self.paralyzed_locs = {22,26,28} #set
         elif loc_idx in [25,26]:
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-30,-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25] #Amount to modify attribute
             if loc_idx == 25:
-                self.paralyzed_locs = {[25,27]} #set
+                self.paralyzed_locs = {25,27} #set
             else:
-                self.paralyzed_locs = {[26,28]} #set
+                self.paralyzed_locs = {26,28} #set
         else:
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-30,-5,-5] #Amount to modify attribute
@@ -741,6 +761,7 @@ class Paralysis(Injury):
 class Damaged_Artery(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
         self.title = descriptor.capitalize() + ' Artery in ' + location.capitalize()
@@ -751,7 +772,7 @@ class Damaged_Artery(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = True
-        self.layer = 1
+        
         self.severity = 3
         self.locations = set([2,7,8,11,12,15,16,21,22,25,26])
         loc_idx = recipient.fighter.name_location(location)
@@ -774,6 +795,7 @@ class Damaged_Artery(Injury):
 class Heavily_Damaged_Artery(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Artery in ' + location.capitalize()
@@ -785,7 +807,7 @@ class Heavily_Damaged_Artery(Injury):
         self.duplicable = False
         self.healable = True
         self.prerequisite = Damaged_Artery
-        self.layer = 1
+        
         self.severity = 4
         self.locations = set([2,7,8,11,12,15,16,21,22,25,26])
         loc_idx = recipient.fighter.name_location(location)
@@ -808,6 +830,7 @@ class Heavily_Damaged_Artery(Injury):
 class Destroyed_Artery(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = descriptor.capitalize() + ' Artery in ' + location.capitalize()
@@ -819,7 +842,7 @@ class Destroyed_Artery(Injury):
         self.duplicable = False
         self.healable = False
         self.prerequisite = Heavily_Damaged_Artery
-        self.layer = 1
+        
         self.severity = 5
         self.diseases = {'Gangrene'} #set of objects
         self.locations = set([2,7,8,11,12,15,16,21,22,25,26])
@@ -844,16 +867,15 @@ class Destroyed_Artery(Injury):
 class Destroyed_Windpipe(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = descriptor.capitalize() + ' Artery in ' + location.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s windpipe has been {3}. {5} will choke to death. '
-        self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([2])
         self.diseases = {'Mute'} #set of objects
@@ -863,10 +885,15 @@ class Destroyed_Windpipe(Injury):
             vitae_dam = max(80, recipient.fighter.vitae*.1)
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 10000 #Duration of blood loss
+            self.description = '{0}''s windpipe has been {3}. In short order, {5} will choke to death on his own blood. '
+        else:
+            self.description = '{0}''s windpipe has been {3}. Without medical aid, {5} will choke to death. '
+        self.description = self.description_filler(recipient, location, descriptor)
 
 class Lung_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Lung'
@@ -876,7 +903,7 @@ class Lung_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([5,6,9,10])
         self.stam_drain = 50 #Amount per round
@@ -888,6 +915,7 @@ class Lung_Damage(Injury):
 class Lung_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = descriptor.capitalize() + ' Lung'
@@ -899,7 +927,7 @@ class Lung_Destroyed(Injury):
         self.duplicable = False
         self.healable = False
         self.prerequisite = Lung_Damage
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([5,6,9,10])
         self.stam_drain = 100 #Amount per round
@@ -911,6 +939,7 @@ class Lung_Destroyed(Injury):
 class Heart_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = 'Heart ' + descriptor
@@ -921,43 +950,26 @@ class Heart_Destroyed(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([6])
-        self.state = EntityState.dead
-
-class Brain_Destroyed(Injury):
-    def __init__(self, location, recipient, dam_type):
-        super()
-        descriptors = self.damage_descriptor(self.layer, dam_type)
-        descriptor = descriptors[2]
-        self.title = 'Brain ' + descriptor
-        self.location = location
-        self.recipient = recipient
-        self.description = '{0}''s brain has been {3}, and {5} dies instantly. '
-        self.description = self.description_filler(recipient, location, descriptor)
-        self.damage_type = set(['s','p','t','b'])
-        self.duplicable = False
-        self.healable = False
-        self.layer = 1
-        self.severity = 6
-        self.locations = set([0,1])
         self.state = EntityState.dead
 
 class Partial_Decapitation(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = 'Partially Decapitated'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} has been {3}, nearly decapitating {4}. Only the spinal column keeps {4} head attatched. {5} dies almost instantly as blood spurts rhythmically from the wound. '
+        self.description = '{0}''s {2} has been {3}, nearly decapitating {4}. Only the spinal column keeps {4} head attatched. Blood spurts rhythmically from the wound, causing death in moments. '
         self.description = self.description_filler(recipient, location, descriptor)
-        self.damage_type = set(['s','p','t','b'])
+        self.damage_type = set(['s','p','t'])
         self.duplicable = False
         self.healable = False
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([2])
         self.state = EntityState.dead
@@ -965,6 +977,7 @@ class Partial_Decapitation(Injury):
 class Liver_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Liver'
@@ -983,7 +996,7 @@ class Liver_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([9,10])
         self.diseases = ['Cirrhosis']
@@ -993,6 +1006,7 @@ class Liver_Damage(Injury):
 class Pancreas_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Pancreas'
@@ -1011,7 +1025,7 @@ class Pancreas_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([9,10])
         self.diseases = ['Pancreatitis']
@@ -1019,6 +1033,7 @@ class Pancreas_Damage(Injury):
 class Gall_Bladder_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Gall Bladder'
@@ -1037,13 +1052,14 @@ class Gall_Bladder_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([9])
 
 class Spleen_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Spleen'
@@ -1062,7 +1078,7 @@ class Spleen_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([10])
         self.attr_name = ['immune'] #Names of the attribute to modify. List
@@ -1071,6 +1087,7 @@ class Spleen_Damage(Injury):
 class Spleen_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = descriptor.capitalize() + ' Spleen'
@@ -1091,7 +1108,7 @@ class Spleen_Destroyed(Injury):
         self.duplicable = False
         self.healable = False
         self.prerequisite = Spleen_Damage
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([10])
         self.attr_name = ['immune'] #Names of the attribute to modify. List
@@ -1100,6 +1117,7 @@ class Spleen_Destroyed(Injury):
 class Stomach_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Stomach'
@@ -1118,7 +1136,7 @@ class Stomach_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([10])
         self.diseases = ['Stomach perforation']
@@ -1127,6 +1145,7 @@ class Stomach_Damage(Injury):
 class Intestinal_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Intestines'
@@ -1147,7 +1166,7 @@ class Intestinal_Damage(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([13,14])
         self.diseases = ['Intestinal perforation']
@@ -1156,6 +1175,7 @@ class Intestinal_Damage(Injury):
 class Kidney_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Kidney'
@@ -1173,7 +1193,7 @@ class Kidney_Damage(Injury):
         self.pain_check = True
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([9,10])
         self.pain_mv_mod = 10
@@ -1181,6 +1201,7 @@ class Kidney_Damage(Injury):
 class Kidney_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = descriptor.capitalize() + ' Kidney'
@@ -1200,7 +1221,7 @@ class Kidney_Destroyed(Injury):
         self.prerequisite = Kidney_Damage
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([9,10])
         self.pain_mv_mod = 10
@@ -1208,6 +1229,7 @@ class Kidney_Destroyed(Injury):
 class Reproductive_Organs_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         if recipient.fighter.male: organ = 'testicles'
@@ -1220,7 +1242,7 @@ class Reproductive_Organs_Damaged(Injury):
         self.pain_check = True
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([17,18])
         self.pain_mv_mod = 40
@@ -1228,6 +1250,7 @@ class Reproductive_Organs_Damaged(Injury):
 class Reproductive_Organs_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         if recipient.fighter.male: 
@@ -1248,7 +1271,7 @@ class Reproductive_Organs_Destroyed(Injury):
         self.duplicable = False
         self.healable = False
         self.prerequisite = Reproductive_Organs_Damaged
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([17,18])
         self.pain_mv_mod = 80
@@ -1256,6 +1279,7 @@ class Reproductive_Organs_Destroyed(Injury):
 class Bladder_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Bladder'
@@ -1273,7 +1297,7 @@ class Bladder_Damage(Injury):
         self.pain_check = True
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 5
         self.locations = set([17,18])
         self.pain_mv_mod = 40
@@ -1283,6 +1307,7 @@ class Bladder_Damage(Injury):
 class Bladder_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = descriptor.capitalize() + ' Bladder'
@@ -1302,7 +1327,7 @@ class Bladder_Destroyed(Injury):
         self.duplicable = False
         self.healable = False
         self.prerequisite = Bladder_Damage
-        self.layer = 1
+        
         self.severity = 6
         self.locations = set([17,18])
         self.pain_mv_mod = 60
@@ -1313,16 +1338,17 @@ class Bladder_Destroyed(Injury):
 class Light_Tendon_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
-        self.title = descriptor.capitalize() + location.capitalize() + ' Tendons'
+        self.title = descriptor.capitalize() + ' ' + location.capitalize() + ' Tendons'
         self.location = location
         self.recipient = recipient
         self.description = '{0}''s {2} tendons have been {3}. This damage will restrict {1} movement. '
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 2
         self.locations = set([11,12,19,20,23,24,27,28])
         self.temp_phys_mod = -20
@@ -1335,16 +1361,17 @@ class Light_Tendon_Damage(Injury):
 class Moderate_Tendon_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
-        self.title = descriptor.capitalize() + location.capitalize() + ' Tendons'
+        self.title = descriptor.capitalize() + ' ' + location.capitalize() + ' Tendons'
         self.location = location
         self.recipient = recipient
         self.description = '{0}''s {2} tendons have been {3}. This damage will restrict {1} movement and reduce {1} strength. '
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 3
         self.locations = set([11,12,19,20,23,24,27,28])
         self.temp_phys_mod = -30
@@ -1374,16 +1401,17 @@ class Moderate_Tendon_Damage(Injury):
 class Heavy_Tendon_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
-        self.title = descriptor.capitalize() + location.capitalize() + ' Tendons'
+        self.title = descriptor.capitalize() + ' ' + location.capitalize() + ' Tendons'
         self.location = location
         self.recipient = recipient
         self.description = '{0}''s {2} tendons have been {3}. This damage will prevent {2} moving the affected limb until healed. '
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 1
+        
         self.severity = 4
         self.locations = set([11,12,19,20,23,24,27,28])
         self.temp_phys_mod = -40
@@ -1393,26 +1421,26 @@ class Heavy_Tendon_Damage(Injury):
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1] #Amount to modify attribute
             if loc_idx == 11:
-                self.paralyzed_locs = {[11,15,19]} #set
+                self.paralyzed_locs = {11,15,19} #set
             else:
-                self.paralyzed_locs = {[12,16,20]} #set
+                self.paralyzed_locs = {12,16,20} #set
         elif loc_idx in [19,20]:
             if loc_idx == 19:
-                self.paralyzed_locs = {[19]} #set
+                self.paralyzed_locs = {19} #set
             else:
-                self.paralyzed_locs = {[20]} #set
+                self.paralyzed_locs = {20} #set
         else:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25] #Amount to modify attribute
-            pain_mv_mod = 40
+            self.pain_mv_mod = 40
             if loc_idx == 27:
-                self.paralyzed_locs = {[27]} #set
+                self.paralyzed_locs = {27} #set
             elif loc_idx == 28:
-                self.paralyzed_locs = {[28]} #set
+                self.paralyzed_locs = {28} #set
             elif loc_idx == 23:
-                self.paralyzed_locs = {[23,25,27]} #set
+                self.paralyzed_locs = {23,25,27} #set
             else:
-                self.paralyzed_locs = {[24,26,28]} #set
+                self.paralyzed_locs = {24,26,28} #set
         if dam_type in ['s','p','t']:
             self.bleed_amount = 40 #Amount of blood loss
             self.bleed_duration = 1 #Duration of blood loss
@@ -1420,6 +1448,7 @@ class Heavy_Tendon_Damage(Injury):
 class Finger_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
         self.title = descriptor.capitalize() + ' Finger'
@@ -1430,7 +1459,7 @@ class Finger_Damaged(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
         self.max_dupes = 5
-        self.layer = 0
+        
         self.severity = 1
         self.locations = set([19,20])
         loc_idx = recipient.fighter.name_location(location)
@@ -1446,6 +1475,7 @@ class Finger_Damaged(Injury):
 class Toe_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
         self.title = descriptor.capitalize() + ' Toe'
@@ -1456,7 +1486,7 @@ class Toe_Damaged(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
         self.max_dupes = 5
-        self.layer = 0
+        
         self.severity = 1
         self.locations = set([27,28])
         self.pain_mv_mod = 10
@@ -1468,6 +1498,7 @@ class Toe_Damaged(Injury):
 class Finger_Bone_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Finger'
@@ -1479,7 +1510,7 @@ class Finger_Bone_Damaged(Injury):
         self.duplicable = True
         self.max_dupes = 5
         self.prerequisite = Finger_Damaged
-        self.layer = 2
+        
         self.severity = 3
         self.locations = set([19,20])
         loc_idx = recipient.fighter.name_location(location)
@@ -1495,6 +1526,7 @@ class Finger_Bone_Damaged(Injury):
 class Finger_Bone_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = descriptor.capitalize() + ' Finger'
@@ -1507,7 +1539,7 @@ class Finger_Bone_Destroyed(Injury):
         self.healable = False
         self.max_dupes = 5
         self.prerequisite = Finger_Bone_Damaged
-        self.layer = 2
+        
         self.severity = 4
         self.locations = set([19,20])
         loc_idx = recipient.fighter.name_location(location)
@@ -1523,6 +1555,7 @@ class Finger_Bone_Destroyed(Injury):
 class Toe_Bone_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Toe'
@@ -1534,7 +1567,7 @@ class Toe_Bone_Damaged(Injury):
         self.duplicable = True
         self.max_dupes = 5
         self.prerequisite = Toe_Damaged
-        self.layer = 2
+        
         self.severity = 3
         self.locations = set([27,28])
         self.pain_mv_mod = 10
@@ -1546,6 +1579,7 @@ class Toe_Bone_Damaged(Injury):
 class Toe_Bone_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = descriptor.capitalize() + ' Toe'
@@ -1558,7 +1592,7 @@ class Toe_Bone_Destroyed(Injury):
         self.healable = False
         self.max_dupes = 5
         self.prerequisite = Toe_Bone_Damaged
-        self.layer = 2
+        
         self.severity = 4
         self.locations = set([27,28])
         self.pain_mv_mod = 20
@@ -1572,6 +1606,7 @@ class Toe_Bone_Destroyed(Injury):
 class Metacarpals_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Metacarpals'
@@ -1581,7 +1616,7 @@ class Metacarpals_Damaged(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 2
+        
         self.severity = 5
         self.locations = set([19,20])
         loc_idx = recipient.fighter.name_location(location)
@@ -1597,9 +1632,10 @@ class Metacarpals_Damaged(Injury):
 class Hand_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
-        self.title = descriptor.capitalize() + location.capitalize()
+        self.title = descriptor.capitalize() + ' ' + location.capitalize()
         self.location = location
         self.recipient = recipient
         if dam_type in ['s','p']:
@@ -1611,7 +1647,7 @@ class Hand_Destroyed(Injury):
         self.duplicable = False
         self.healable = False
         self.pain_check = True
-        self.layer = 2
+        
         self.severity = 6
         self.locations = set([19,20])
         loc_idx = recipient.fighter.name_location(location)
@@ -1628,6 +1664,7 @@ class Hand_Destroyed(Injury):
 class Metatarsals_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Metatarsals'
@@ -1637,7 +1674,7 @@ class Metatarsals_Damaged(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 2
+        
         self.severity = 5
         self.locations = set([27,28])
         self.pain_mv_mod = 50
@@ -1650,9 +1687,10 @@ class Metatarsals_Damaged(Injury):
 class Foot_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
-        self.title = descriptor.capitalize() + location.capitalize()
+        self.title = descriptor.capitalize() + ' ' + location.capitalize()
         self.location = location
         self.recipient = recipient
         if dam_type in ['s','p']:
@@ -1663,7 +1701,7 @@ class Foot_Destroyed(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 2
+        
         self.severity = 6
         self.locations = set([27,28])
         loc_idx = recipient.fighter.name_location(location)
@@ -1684,6 +1722,7 @@ class Foot_Destroyed(Injury):
 class Light_Concussion(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
         self.title = 'Light Concussion'
@@ -1693,7 +1732,7 @@ class Light_Concussion(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
-        self.layer = 2
+        
         self.severity = 2
         self.locations = set([0,1])
         self.shock_check = True
@@ -1707,6 +1746,7 @@ class Light_Concussion(Injury):
 class Moderate_Concussion(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = 'Moderate Concussion'
@@ -1717,7 +1757,7 @@ class Moderate_Concussion(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.prerequisite = Light_Concussion
-        self.layer = 2
+        
         self.severity = 3
         self.locations = set([0,1])
         self.shock_check = True
@@ -1731,6 +1771,7 @@ class Moderate_Concussion(Injury):
 class Severe_Concussion(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = 'Severe Concussion'
@@ -1741,7 +1782,7 @@ class Severe_Concussion(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.prerequisite = Moderate_Concussion
-        self.layer = 2
+        
         self.severity = 4
         self.locations = set([0,1])
         self.shock_check = True
@@ -1755,6 +1796,7 @@ class Severe_Concussion(Injury):
 class Brain_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = 'Brain Damage'
@@ -1765,46 +1807,46 @@ class Brain_Damage(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 2
+        
         self.severity = 5
         self.locations = set([0,1])
         self.state = EntityState.unconscious
         self.gen_stance = FighterStance.prone
         roll = roll_dice(1,100)
         if roll <= 30: 
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.attr_name = ['log','wis'] #Names of the attribute to modify. List
             self.attr_amount = [-40,-40] #Amounts to modify attribute. List
         elif roll <= 60:
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.attr_name = ['log','wis','mem','comp','con','cre','men'] #Names of the attribute to modify. List
             self.attr_amount = [-10,-10,-10,-10,-10,-10,-10] #Amounts to modify attribute. List
         elif roll <= 70:
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.attr_name = ['sit'] #Names of the attribute to modify. List
             self.attr_amount = [-recipient.fighter.sit] #Amounts to modify attribute. List
             self.diseases = ['Blind']
         elif roll <= 80:
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.attr_name = ['hear'] #Names of the attribute to modify. List
             self.attr_amount = [-recipient.fighter.hear] #Amounts to modify attribute. List
             self.diseases = ['Deaf']
         elif roll <= 90:
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.attr_name = ['ts'] #Names of the attribute to modify. List
             self.attr_amount = [-recipient.fighter.ts] #Amounts to modify attribute. List
             self.diseases = ['Ageusia']
         elif roll <= 95:
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.diseases = ['Epilepsy']
         elif roll <= 97:
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             loc_roll = roll_dice(1,4)
             if loc_roll == 1: 
@@ -1827,7 +1869,7 @@ class Brain_Damage(Injury):
                 self.mv_mod = .4
         elif roll == 98:
             #Below randomly paralizes 2 limbs
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             i = 0
             limbs = [[7, 11, 15, 19], [8, 12, 16, 20], [21, 23, 25, 27], [22, 24, 26, 28]]
@@ -1855,13 +1897,13 @@ class Brain_Damage(Injury):
             if m_mod < 1: self.mv_mod = m_mod
 
         elif roll == 99:
-            self.description.append('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
+            self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.diseases = ['Quadriplegic']
             self.paralyzed_locs([7, 11, 15, 19, 8, 12, 16, 20, 21, 23, 25, 27, 22, 24, 26, 28])
             self.mv_mod = 0
         else: 
-            self.description.append(recipient.name + 'begins doing the dead man\'s shuffle, foam and blood bubbling from ' + 
+            self.description + str(recipient.name + 'begins doing the dead man\'s shuffle, foam and blood bubbling from ' + 
                 ('his ' if recipient.fighter.male else 'her ') + 'lips, and eyes wandering in alternate directions. ' +
                 ('He ' if recipient.fighter.male else 'She ') + 'is dead in moments. ')
             self.state = EntityState.dead
@@ -1869,6 +1911,7 @@ class Brain_Damage(Injury):
 class Spinal_Paralysis(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
         self.title = 'Paralysis'
@@ -1877,7 +1920,7 @@ class Spinal_Paralysis(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 2
+        
         self.severity = 6
         self.locations = set([2,5,6,9,10,13,14,17,18])
         loc_idx = recipient.fighter.name_location(location)
@@ -1895,7 +1938,7 @@ class Spinal_Paralysis(Injury):
             l=[]
             l.extend(range(21,29))
             l.extend([9,10,13,14,17,18])
-            self.paralyzed_locs = {l} #set
+            self.paralyzed_locs = set(l) #set
             self.mv_mod = 0
         else:
             self.description = '{0}''s spine has been {3}, leading to paralysis from the {2} down. '
@@ -1907,7 +1950,7 @@ class Spinal_Paralysis(Injury):
                 l.extend([13,14,17,18])
             elif loc_idx <17:
                 l.extend([17,18])
-            self.paralyzed_locs = {l} #set
+            self.paralyzed_locs = set(l) #set
             self.mv_mod = 0
         
         if dam_type in ['s','p','t']:
@@ -1919,6 +1962,7 @@ class Spinal_Paralysis(Injury):
 class Tooth_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = 'Tooth Damage'
@@ -1928,7 +1972,7 @@ class Tooth_Damage(Injury):
         self.description = self.description_filler(recipient, location, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
-        self.layer = 2
+        
         self.severity = 2
         self.locations = set([1])
         self.pain_check = True
@@ -1941,6 +1985,7 @@ class Tooth_Damage(Injury):
 class Damaged_Eye_Socket(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = 'Shattered Eye Socket'
@@ -1951,7 +1996,7 @@ class Damaged_Eye_Socket(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
         self.healable = False
-        self.layer = 2
+        
         self.severity = 4
         self.locations = set([1])
         self.pain_check = True
@@ -1963,6 +2008,7 @@ class Damaged_Eye_Socket(Injury):
 class Damaged_Cheekbone(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Cheekbone'
@@ -1973,7 +2019,7 @@ class Damaged_Cheekbone(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
         self.healable = False
-        self.layer = 2
+        
         self.severity = 4
         self.locations = set([1])
         self.pain_check = True
@@ -1983,6 +2029,7 @@ class Damaged_Cheekbone(Injury):
 class Damaged_Jawbone(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
         self.title = descriptor.capitalize() + ' Jaw'
@@ -1993,7 +2040,7 @@ class Damaged_Jawbone(Injury):
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.healable = False
-        self.layer = 2
+        
         self.severity = 5
         self.locations = set([1])
         self.pain_check = True
@@ -2003,15 +2050,16 @@ class Damaged_Jawbone(Injury):
 class Severed(Injury):
     def __init__(self, location, recipient, dam_type):
         super()
+        self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
-        descriptor = descriptors[3]
-        self.title = descriptor.capitalize() + location.capitalize()
+        descriptor = descriptors[2]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize()
         self.location = location
         self.recipient = recipient
         self.damage_type = set(['s'])
         self.duplicable = False
         self.healable = False
-        self.layer = 2
+        
         self.severity = 6
         self.locations = set([0,1,2,7,8,11,12,15,16,21,22,23,24,25,26])
         self.pain_check = True
@@ -2022,9 +2070,9 @@ class Severed(Injury):
         if loc_idx in [0,1,2]:
             self.state = EntityState.dead
             if loc_idx == 0:
-                self.description = 'The top of {0}''s head has been sliced off by the blow, spraying blood and brains. {5} wobbles unsteadily for a moment, arms twitching spasmodically, before falling in a heap. '
+                self.description = 'The top of {0}''s head has been sliced off by the blow, spraying blood and brains. A moment later, {5} wobbles unsteadily, arms twitching spasmodically, and then falls in a heap. '
             elif loc_idx == 1:
-                self.description = 'The blow cleanly splits {0}''s head in a red spray. {5} crumples like a rag doll. '
+                self.description = 'The blow cleanly splits {0}''s head in a red spray. Staring blankly, eyes pointed in two different directions, {5} crumples like a rag doll. '
             else:
                 self.description = 'Cleaving through {0}''s {2}, the blow sends {1} head toppling one way while {1} body falls the other. '
         elif loc_idx in [7,8,11,12,25,26]:
@@ -2034,54 +2082,342 @@ class Severed(Injury):
                 self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
                 self.attr_amount = [-30,-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1] #Amount to modify attribute
                 if loc_idx == 7:
-                    self.paralyzed_locs = {[7,11,15,19]} #set
-                    self.severed_locs = {[7,11,15,19]} #set
+                    self.paralyzed_locs = {7,11,15,19} #set
+                    self.severed_locs = {7,11,15,19} #set
                 else:
-                    self.paralyzed_locs = {[8,12,16,20]} #set
-                    self.severed_locs = {[8,12,16,20]} #set
+                    self.paralyzed_locs = {8,12,16,20} #set
+                    self.severed_locs = {8,12,16,20} #set
             elif loc_idx in [25,26]:
                 self.balance_check = True
                 self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
                 self.attr_amount = [-30,-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25] #Amount to modify attribute
                 if loc_idx == 25:
-                    self.paralyzed_locs = {[25,27]} #set
-                    self.severed_locs = {[25,27]} #set
+                    self.paralyzed_locs = {25,27} #set
+                    self.severed_locs = {25,27} #set
                 else:
-                    self.paralyzed_locs = {[26,28]} #set
-                    self.severed_locs = {[26,28]} #set
+                    self.paralyzed_locs = {26,28} #set
+                    self.severed_locs = {26,28} #set
             else:
                 self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
                 self.attr_amount = [-30,-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1] #Amount to modify attribute
                 if loc_idx == 11:
-                    self.paralyzed_locs = {[11,15,19]} #set
-                    self.severed_locs = {[11,15,19]} #set
+                    self.paralyzed_locs = {11,15,19} #set
+                    self.severed_locs = {11,15,19} #set
                 else:
-                    self.paralyzed_locs = {[12,16,20]} #set
-                    self.severed_locs = {[12,16,20]} #set
+                    self.paralyzed_locs = {12,16,20} #set
+                    self.severed_locs = {12,16,20} #set
         elif loc_idx in [15,16]:
             self.bleed_amount = vitae_dam/2 #Amount of blood loss
             self.bleed_duration = 400 #Duration of blood loss
             if loc_idx == 15:
-                self.paralyzed_locs = {[15,19]} #set
-                self.severed_locs = {[15,19]} #set
+                self.paralyzed_locs = {15,19} #set
+                self.severed_locs = {15,19} #set
             else:
-                self.paralyzed_locs = {[16,20]} #set
-                self.severed_locs = {[16,20]} #set
+                self.paralyzed_locs = {16,20} #set
+                self.severed_locs = {16,20} #set
         else:
             self.balance_check = True
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
             if loc_idx == 21:
-                self.paralyzed_locs = {[21,23,25,27]} #set
-                self.severed_locs = {[21,23,25,27]} #set
+                self.paralyzed_locs = {21,23,25,27} #set
+                self.severed_locs = {21,23,25,27} #set
             elif loc_idx == 22:
-                self.paralyzed_locs = {[22,24,26,28]} #set
-                self.severed_locs = {[22,24,26,28]} #set
+                self.paralyzed_locs = {22,24,26,28} #set
+                self.severed_locs = {22,24,26,28} #set
             elif loc_idx == 23:
-                self.paralyzed_locs = {[23,25,27]} #set
-                self.severed_locs = {[23,25,27]} #set
+                self.paralyzed_locs = {23,25,27} #set
+                self.severed_locs = {23,25,27} #set
             elif loc_idx == 24:
-                self.paralyzed_locs = {[24,26,28]} #set
-                self.severed_locs = {[24,26,28]} #set
+                self.paralyzed_locs = {24,26,28} #set
+                self.severed_locs = {24,26,28} #set
 
         self.description = self.description_filler(recipient, location, descriptor)
+
+class Brain_Destroyed(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[2]
+        if dam_type == 'b':
+            self.title = descriptor.capitalize() + ' Skull'
+        else:
+            self.title = 'Impaled Skull'
+        self.location = location
+        self.recipient = recipient
+        self.damage_type = set(['b','p'])
+        self.duplicable = False
+        self.healable = False
+        
+        self.severity = 6
+        self.locations = set([0,1])
+        loc_idx = recipient.fighter.name_location(location)
+        self.state = EntityState.dead
+        if loc_idx == 0:
+            if dam_type == 'b':
+                self.description = 'The top of {0}''s head has been crushed with a wet crunch, spraying blood and brains. The body drops in a lifeless heap. '
+            else:
+                self.description = 'The tip of the weapon peirces {0}''s skull with a sharp pop, sliding through brain to stop on the bone at the far side. The body slides off the weapon, now covered in gore. '
+        else:
+            if dam_type == 'b':
+                self.description = '{0} lets out a pitiful moan as {1} face is crushed by the blow. Bits of bone puncture {1} his eyes as others invade deeper. The body drops to the ground, limbs curling unnaturally as it soils itself. '
+            else:
+                self.description = 'As the tip peirces {0}''s eye, {5} screams, only for the scream to be cut off abruptly as the tip sinks deeper. As it falls, the body slides off and collapses in a heap. '
+        
+
+        self.description = self.description_filler(recipient, location, descriptor)
+
+class Vertebra_Damaged(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[0]
+        self.title = 'Vertebra ' + descriptor.capitalize()
+        self.location = location
+        self.recipient = recipient
+        self.description = 'The blow to {0}''s ' + location + ' seems to have {3} a verterba, causing some pain when moving. '
+        self.description = self.description_filler(recipient, location, descriptor)
+        self.damage_type = set(['s','p','t','b'])
+        self.duplicable = True
+        self.max_dupes = 2
+        
+        self.severity = 2
+        self.locations = set([2,5,6,9,10,13,14,17,18])
+        self.pain_mv_mod = 10
+
+        if dam_type in ['s','p','t']:
+            self.bleed_amount = 30 #Amount of blood loss
+            self.bleed_duration = 1 #Duration of blood loss
+
+class Vertebra_Heavily_Damaged(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[1]
+        self.title = 'Vertebra ' + descriptor.capitalize()
+        self.location = location
+        self.recipient = recipient
+        self.description = 'The blow to {0}''s ' + location + ' seems to have {3} a verterba, causing extreme pain at all times. '
+        self.description = self.description_filler(recipient, location, descriptor)
+        self.damage_type = set(['s','p','t','b'])
+        self.duplicable = True
+        self.healable = False
+        self.max_dupes = 2
+        self.prerequisite = Vertebra_Damaged
+        
+        self.severity = 5
+        self.locations = set([2,5,6,9,10,13,14,17,18])
+        self.pain_mv_mod = 30
+
+        if dam_type in ['s','p','t']:
+            self.bleed_amount = 40 #Amount of blood loss
+            self.bleed_duration = 1 #Duration of blood loss
+
+class Bone_Damaged(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[0]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize() + ' Bone'
+        self.location = location
+        self.recipient = recipient
+        self.description = '{0}''s {2} bone has been {3}. '
+        self.damage_type = set(['s','p','t','b'])
+        self.duplicable = False
+        
+        self.severity = 4
+        self.locations = set([3,4,7,8,11,12,15,16,21,22,23,24,25,26])
+        loc_idx = recipient.fighter.name_location(location)
+        if loc_idx in [3,4,7,8,11,12,15,16]:
+            self.description + str('This makes it painful for {4} to move {1} arm. ')
+            if loc_idx % 2 == 0:
+                self.atk_mod_l = -10
+            else:
+                self.atk_mod_r = -10
+        else:
+            self.description + str('This makes movement painful. ')
+            self.pain_mv_mod = 10
+
+        if dam_type in ['s','p','t']:
+            self.bleed_amount = 20 #Amount of blood loss
+            self.bleed_duration = 1 #Duration of blood loss
+
+        self.description = self.description_filler(recipient, location, descriptor)
+
+class Bone_Heavily_Damaged(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[1]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize() + ' Bone'
+        self.location = location
+        self.recipient = recipient
+        self.description = '{0}''s {2} bone has been {3}. '
+        self.damage_type = set(['b'])
+        self.duplicable = False
+        self.prerequisite = Bone_Damaged
+        
+        self.severity = 5
+        self.pain_check = True
+        self.locations = set([3,4,7,8,11,12,15,16,21,22,23,24,25,26])
+        loc_idx = recipient.fighter.name_location(location)
+        if loc_idx in [3,4,7,8]:
+            self.description + str('Jagged chunks of bone pierce the skin, causing intense pain, and rendering {1} arm unsusable until healed. ')
+            self.bleed_amount = 20 #Amount of blood loss
+            self.bleed_duration = 10 #Duration of blood loss
+            if loc_idx % 2 == 0:
+                self.paralyzed_locs = {4,8,12,16,20}
+            else:
+                self.paralyzed_locs = {3,7,11,15,19}
+        elif loc_idx in [11,12,15,16]:
+            self.description + str('Jagged chunks of bone peirce the skin, causing intense pain, and rendering {1} arm unsusable until healed. ')
+            self.bleed_amount = 10 #Amount of blood loss
+            self.bleed_duration = 10 #Duration of blood loss
+            if loc_idx % 2 == 0:
+                self.paralyzed_locs = {12,16,20}
+            else:
+                self.paralyzed_locs = {11,15,19}
+        else:
+            self.description + str('Jagged chunks of bone peirce the skin, causing intense pain. The leg immmediately unloads, bending in an unnatural direction. ')
+            self.bleed_amount = 30 #Amount of blood loss
+            self.bleed_duration = 10 #Duration of blood loss
+            self.mv_mod = .4
+            self.balance_check = True
+            if loc_idx % 2 == 0:
+                self.paralyzed_locs = {22,24,26,28}
+            else:
+                self.paralyzed_locs = {21,23,25,27}
+
+        self.description = self.description_filler(recipient, location, descriptor)
+
+class Bone_Destroyed(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[2]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize() + ' Bone'
+        self.location = location
+        self.recipient = recipient
+        self.description = '{0}''s {2} bone has been {3}, pulverized into too many peices to ever heal properly. Blood seeps from mangled arteries continuously, and the pain is constant and intense. '
+        self.damage_type = set(['b'])
+        self.duplicable = False
+        self.healable = False
+        self.prerequisite = Bone_Heavily_Damaged
+        
+        self.severity = 6
+        self.pain_check = True
+        self.shock_check = True
+        self.pain_mv_mod = 40
+        self.loc_max = .2 #Amount to reduce the location's max hits by. Scalar
+        self.locations = set([3,4,7,8,11,12,15,16,21,22,23,24,25,26])
+        loc_idx = recipient.fighter.name_location(location)
+        if loc_idx in [3,4,7,8]:
+            self.bleed_amount = 20 #Amount of blood loss
+            self.bleed_duration = 100 #Duration of blood loss
+            if loc_idx % 2 == 0:
+                self.paralyzed_locs = {4,8,12,16,20}
+            else:
+                self.paralyzed_locs = {3,7,11,15,19}
+        elif loc_idx in [11,12,15,16]:
+            self.bleed_amount = 10 #Amount of blood loss
+            self.bleed_duration = 50 #Duration of blood loss
+            if loc_idx % 2 == 0:
+                self.paralyzed_locs = {12,16,20}
+            else:
+                self.paralyzed_locs = {11,15,19}
+        else:
+            self.bleed_amount = 30 #Amount of blood loss
+            self.bleed_duration = 200 #Duration of blood loss
+            self.mv_mod = .4
+            self.balance_check = True
+            if loc_idx % 2 == 0:
+                self.paralyzed_locs = {22,24,26,28}
+            else:
+                self.paralyzed_locs = {21,23,25,27}
+
+        self.description = self.description_filler(recipient, location, descriptor)
+
+class Ribs_Damaged(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[0]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize()
+        self.location = location
+        self.recipient = recipient
+        self.description = '{0}''s {2} have been {3}. This makes breathing and moving very painful. '
+        self.damage_type = set(['s','p','t','b'])
+        self.duplicable = False
+        self.pain_check = True
+        
+        self.severity = 4
+        self.locations = set([9,10])
+        self.pain_mv_mod = 20
+        self.stam_regin = .8 #Scalar
+
+        if dam_type in ['s','p','t']:
+            self.bleed_amount = 20 #Amount of blood loss
+            self.bleed_duration = 1 #Duration of blood loss
+
+        self.description = self.description_filler(recipient, location, descriptor)
+
+class Ribs_Heavily_Damaged(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[1]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize()
+        self.location = location
+        self.recipient = recipient
+        self.description = '{0}''s {2} have been {3}, and jagged ends are poking through {1} flesh. This makes breathing and moving excruciating, and taking deep breaths is nearly impossible. '
+        self.damage_type = set(['s','p','t','b'])
+        self.duplicable = False
+        self.pain_check = True
+        self.prerequisite = Ribs_Damaged
+        
+        self.severity = 5
+        self.locations = set([9,10])
+        self.pain_mv_mod = 60
+        self.stam_regin = .6 #Scalar
+
+        if dam_type in ['s','p','t']:
+            self.bleed_amount = 30 #Amount of blood loss
+            self.bleed_duration = 5 #Duration of blood loss
+
+        self.description = self.description_filler(recipient, location, descriptor)
+
+class Ribs_Destroyed(Injury):
+    def __init__(self, location, recipient, dam_type):
+        super()
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[2]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize()
+        self.location = location
+        self.recipient = recipient
+        self.description = '{0}''s {2} have been {3}, and are just a collection of loose, bleeding bones in {1} body cavity that will never heal correctly. Just breathing is excruciatingly painful. Internal bleeding is severe, and will likely kill {4} if medical attention is not recieved.'
+        self.damage_type = set(['b'])
+        self.duplicable = False
+        self.pain_check = True
+        self.healable = False
+        self.shock_check = True
+        self.loc_max = .2 #Amount to reduce the location's max hits by. Scalar
+        self.prerequisite = Ribs_Heavily_Damaged
+        
+        self.severity = 6
+        self.locations = set([9,10])
+        self.pain_mv_mod = 80
+        self.stam_regin = .65 #Scalar
+        self.bleed_amount = 30 #Amount of blood loss
+        self.bleed_duration = 150 #Duration of blood loss
+
+        self.description = self.description_filler(recipient, location, descriptor)
+
