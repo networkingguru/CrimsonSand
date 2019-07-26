@@ -3,9 +3,7 @@ import weakref
 from utilities import roll_dice
 
 class Injury:
-    _instances = set()
     def __init__(self):
-        self._instances.add(weakref.ref(self))
         self.title = None #Use {} (str.format) to ID variables to be replaced at runtime {0}: Damage descriptor
         self.description = None #Use {} (str.format) to ID variables to be replaced at runtime {0}: Entity name {1}: Entity pronoun {2}: Loc name {3}: Damage descriptor
         self.damage_type = None #Acceptable damage types that can cause this injury. Set containing 'b', 's', 'p', or 't'
@@ -40,17 +38,6 @@ class Injury:
         self.mv_mod = None #Scalar
         self.gen_stance = None #Fighterstance
         self.state = None #EntityState
-
-    def getinstances(self, cls):
-        '''Goal: get a list of instances based on this class'''
-        dead = set()
-        for ref in cls._instances:
-            obj = ref()
-            if obj is not None:
-                yield obj
-            else:
-                dead.add(ref)
-        cls._instances -= dead
 
     def description_filler(self, recipient, location, descriptor) -> str:
         name = recipient.name
@@ -123,7 +110,7 @@ class Injury:
 
 class Light_Scraping(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Lightly '+ descriptors[0].capitalize()
@@ -140,7 +127,7 @@ class Light_Scraping(Injury):
 
 class Major_Scraping(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Major '+ descriptors[0].capitalize()
@@ -158,7 +145,7 @@ class Major_Scraping(Injury):
 
 class Torn_Skin(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         if location == 0: 
@@ -181,7 +168,7 @@ class Torn_Skin(Injury):
 
 class Severe_Torn_Skin(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         if location == 0: 
@@ -204,7 +191,7 @@ class Severe_Torn_Skin(Injury):
 
 class Partial_Loss_Skin(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         if location == 0: 
@@ -234,7 +221,7 @@ class Partial_Loss_Skin(Injury):
 
 class Complete_Loss_Skin(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         if location == 0: 
@@ -265,7 +252,7 @@ class Complete_Loss_Skin(Injury):
 
 class Light_Disfigurement(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Light Disfigurement'
@@ -285,7 +272,7 @@ class Light_Disfigurement(Injury):
 
 class Mild_Disfigurement(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Mild Disfigurement'
@@ -306,7 +293,7 @@ class Mild_Disfigurement(Injury):
 
 class Broken_Nose(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Broken Nose'
@@ -326,7 +313,7 @@ class Broken_Nose(Injury):
 
 class Smashed_Lip(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Smashed Lip'
@@ -346,7 +333,7 @@ class Smashed_Lip(Injury):
 
 class Closed_Eye(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Closed Eye'
@@ -366,7 +353,7 @@ class Closed_Eye(Injury):
 
 class Crushed_Eye(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Crushed Eye'
@@ -387,7 +374,7 @@ class Crushed_Eye(Injury):
 
 class Nose_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
 
@@ -409,7 +396,7 @@ class Nose_Destroyed(Injury):
 
 class Ear_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
 
@@ -432,7 +419,7 @@ class Ear_Destroyed(Injury):
 
 class Lip_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
 
@@ -455,7 +442,7 @@ class Lip_Destroyed(Injury):
 
 class Eye_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Eye ' + descriptors[2].capitalize()
@@ -477,7 +464,7 @@ class Eye_Destroyed(Injury):
 
 class Damaged_Facial_Muscles(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -496,7 +483,7 @@ class Damaged_Facial_Muscles(Injury):
 
 class Facial_Nerve_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -516,7 +503,7 @@ class Facial_Nerve_Damage(Injury):
 
 class Tongue_Cut_Out(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -537,7 +524,7 @@ class Tongue_Cut_Out(Injury):
 
 class Light_Muscle_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Lightly '+ descriptors[0].capitalize() + location.capitalize() + ' Muscles'
@@ -560,7 +547,7 @@ class Light_Muscle_Damage(Injury):
         
 class Moderate_Muscle_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = descriptors[1].capitalize() + location.capitalize() + ' Muscles'
@@ -605,7 +592,7 @@ class Moderate_Muscle_Damage(Injury):
 
 class Heavy_Muscle_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = descriptors[2].capitalize() + location.capitalize() + ' Muscles'
@@ -663,7 +650,7 @@ class Heavy_Muscle_Damage(Injury):
 
 class Light_Nerve_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Lightly Damaged ' + location.capitalize() + ' Nerves'
@@ -685,7 +672,7 @@ class Light_Nerve_Damage(Injury):
 
 class Moderate_Nerve_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Damaged ' + location.capitalize() + ' Nerves'
@@ -707,7 +694,7 @@ class Moderate_Nerve_Damage(Injury):
 
 class Paralysis(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         self.title = 'Paralysis'
@@ -760,7 +747,7 @@ class Paralysis(Injury):
 
 class Damaged_Artery(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -794,7 +781,7 @@ class Damaged_Artery(Injury):
 
 class Heavily_Damaged_Artery(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -829,7 +816,7 @@ class Heavily_Damaged_Artery(Injury):
             
 class Destroyed_Artery(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -866,7 +853,7 @@ class Destroyed_Artery(Injury):
 
 class Destroyed_Windpipe(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -892,7 +879,7 @@ class Destroyed_Windpipe(Injury):
 
 class Lung_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -914,7 +901,7 @@ class Lung_Damage(Injury):
 
 class Lung_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -938,7 +925,7 @@ class Lung_Destroyed(Injury):
 
 class Heart_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -957,7 +944,7 @@ class Heart_Destroyed(Injury):
 
 class Partial_Decapitation(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -976,7 +963,7 @@ class Partial_Decapitation(Injury):
 
 class Liver_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1005,7 +992,7 @@ class Liver_Damage(Injury):
             
 class Pancreas_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1032,7 +1019,7 @@ class Pancreas_Damage(Injury):
 
 class Gall_Bladder_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1058,7 +1045,7 @@ class Gall_Bladder_Damage(Injury):
 
 class Spleen_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1086,7 +1073,7 @@ class Spleen_Damage(Injury):
 
 class Spleen_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1116,7 +1103,7 @@ class Spleen_Destroyed(Injury):
 
 class Stomach_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1144,7 +1131,7 @@ class Stomach_Damage(Injury):
 
 class Intestinal_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1174,7 +1161,7 @@ class Intestinal_Damage(Injury):
 
 class Kidney_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1200,7 +1187,7 @@ class Kidney_Damage(Injury):
 
 class Kidney_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1228,7 +1215,7 @@ class Kidney_Destroyed(Injury):
 
 class Reproductive_Organs_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1249,7 +1236,7 @@ class Reproductive_Organs_Damaged(Injury):
 
 class Reproductive_Organs_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1278,7 +1265,7 @@ class Reproductive_Organs_Destroyed(Injury):
 
 class Bladder_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1306,7 +1293,7 @@ class Bladder_Damage(Injury):
 
 class Bladder_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1337,7 +1324,7 @@ class Bladder_Destroyed(Injury):
 
 class Light_Tendon_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -1360,7 +1347,7 @@ class Light_Tendon_Damage(Injury):
 
 class Moderate_Tendon_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1400,7 +1387,7 @@ class Moderate_Tendon_Damage(Injury):
 
 class Heavy_Tendon_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 1
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1447,7 +1434,7 @@ class Heavy_Tendon_Damage(Injury):
 
 class Finger_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -1474,7 +1461,7 @@ class Finger_Damaged(Injury):
 
 class Toe_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -1497,7 +1484,7 @@ class Toe_Damaged(Injury):
 
 class Finger_Bone_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1525,7 +1512,7 @@ class Finger_Bone_Damaged(Injury):
 
 class Finger_Bone_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1554,7 +1541,7 @@ class Finger_Bone_Destroyed(Injury):
 
 class Toe_Bone_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1578,7 +1565,7 @@ class Toe_Bone_Damaged(Injury):
 
 class Toe_Bone_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1605,7 +1592,7 @@ class Toe_Bone_Destroyed(Injury):
 
 class Metacarpals_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1631,7 +1618,7 @@ class Metacarpals_Damaged(Injury):
 
 class Hand_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1663,7 +1650,7 @@ class Hand_Destroyed(Injury):
 
 class Metatarsals_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1686,7 +1673,7 @@ class Metatarsals_Damaged(Injury):
 
 class Foot_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1721,7 +1708,7 @@ class Foot_Destroyed(Injury):
 
 class Light_Concussion(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -1745,7 +1732,7 @@ class Light_Concussion(Injury):
 
 class Moderate_Concussion(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1770,7 +1757,7 @@ class Moderate_Concussion(Injury):
 
 class Severe_Concussion(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1795,7 +1782,7 @@ class Severe_Concussion(Injury):
 
 class Brain_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1910,7 +1897,7 @@ class Brain_Damage(Injury):
 
 class Spinal_Paralysis(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -1961,7 +1948,7 @@ class Spinal_Paralysis(Injury):
 
 class Tooth_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -1984,7 +1971,7 @@ class Tooth_Damage(Injury):
 
 class Damaged_Eye_Socket(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -2007,7 +1994,7 @@ class Damaged_Eye_Socket(Injury):
 
 class Damaged_Cheekbone(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -2028,7 +2015,7 @@ class Damaged_Cheekbone(Injury):
 
 class Damaged_Jawbone(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -2049,7 +2036,7 @@ class Damaged_Jawbone(Injury):
 
 class Severed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -2117,6 +2104,8 @@ class Severed(Injury):
                 self.severed_locs = {16,20} #set
         else:
             self.balance_check = True
+            self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
+            self.attr_amount = [-30,-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25] #Amount to modify attribute
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
             if loc_idx == 21:
@@ -2136,7 +2125,7 @@ class Severed(Injury):
 
 class Brain_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -2170,7 +2159,7 @@ class Brain_Destroyed(Injury):
 
 class Vertebra_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -2193,7 +2182,7 @@ class Vertebra_Damaged(Injury):
 
 class Vertebra_Heavily_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -2218,7 +2207,7 @@ class Vertebra_Heavily_Damaged(Injury):
 
 class Bone_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -2230,7 +2219,7 @@ class Bone_Damaged(Injury):
         self.duplicable = False
         
         self.severity = 4
-        self.locations = set([3,4,7,8,11,12,15,16,21,22,23,24,25,26])
+        self.locations = set([3,4,7,8,11,12,15,16,17,18,21,22,23,24,25,26])
         loc_idx = recipient.fighter.name_location(location)
         if loc_idx in [3,4,7,8,11,12,15,16]:
             self.description + str('This makes it painful for {4} to move {1} arm. ')
@@ -2250,7 +2239,7 @@ class Bone_Damaged(Injury):
 
 class Bone_Heavily_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -2264,9 +2253,11 @@ class Bone_Heavily_Damaged(Injury):
         
         self.severity = 5
         self.pain_check = True
-        self.locations = set([3,4,7,8,11,12,15,16,21,22,23,24,25,26])
+        self.locations = set([3,4,7,8,11,12,15,16,17,18,21,22,23,24,25,26])
         loc_idx = recipient.fighter.name_location(location)
         if loc_idx in [3,4,7,8]:
+            self.attr_name = ['pwr','ss'] #Name of the attribute to modify
+            self.attr_amount = [-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1]  #Amount to modify attribute
             self.description + str('Jagged chunks of bone pierce the skin, causing intense pain, and rendering {1} arm unsusable until healed. ')
             self.bleed_amount = 20 #Amount of blood loss
             self.bleed_duration = 10 #Duration of blood loss
@@ -2275,6 +2266,8 @@ class Bone_Heavily_Damaged(Injury):
             else:
                 self.paralyzed_locs = {3,7,11,15,19}
         elif loc_idx in [11,12,15,16]:
+            self.attr_name = ['pwr','ss'] #Name of the attribute to modify
+            self.attr_amount = [-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1]  #Amount to modify attribute
             self.description + str('Jagged chunks of bone peirce the skin, causing intense pain, and rendering {1} arm unsusable until healed. ')
             self.bleed_amount = 10 #Amount of blood loss
             self.bleed_duration = 10 #Duration of blood loss
@@ -2288,16 +2281,18 @@ class Bone_Heavily_Damaged(Injury):
             self.bleed_duration = 10 #Duration of blood loss
             self.mv_mod = .4
             self.balance_check = True
+            self.attr_name = ['pwr','ss'] #Name of the attribute to modify
+            self.attr_amount = [-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25]  #Amount to modify attribute
             if loc_idx % 2 == 0:
-                self.paralyzed_locs = {22,24,26,28}
+                self.paralyzed_locs = {18,22,24,26,28}
             else:
-                self.paralyzed_locs = {21,23,25,27}
+                self.paralyzed_locs = {17,21,23,25,27}
 
         self.description = self.description_filler(recipient, location, descriptor)
 
 class Bone_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -2315,16 +2310,20 @@ class Bone_Destroyed(Injury):
         self.shock_check = True
         self.pain_mv_mod = 40
         self.loc_max = .2 #Amount to reduce the location's max hits by. Scalar
-        self.locations = set([3,4,7,8,11,12,15,16,21,22,23,24,25,26])
+        self.locations = set([3,4,7,8,11,12,15,16,17,18,21,22,23,24,25,26])
         loc_idx = recipient.fighter.name_location(location)
         if loc_idx in [3,4,7,8]:
             self.bleed_amount = 20 #Amount of blood loss
             self.bleed_duration = 100 #Duration of blood loss
+            self.attr_name = ['pwr','ss'] #Name of the attribute to modify
+            self.attr_amount = [-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1]  #Amount to modify attribute
             if loc_idx % 2 == 0:
                 self.paralyzed_locs = {4,8,12,16,20}
             else:
                 self.paralyzed_locs = {3,7,11,15,19}
         elif loc_idx in [11,12,15,16]:
+            self.attr_name = ['pwr','ss'] #Name of the attribute to modify
+            self.attr_amount = [-recipient.fighter.pwr*.1,-recipient.fighter.ss*.1]  #Amount to modify attribute
             self.bleed_amount = 10 #Amount of blood loss
             self.bleed_duration = 50 #Duration of blood loss
             if loc_idx % 2 == 0:
@@ -2332,20 +2331,22 @@ class Bone_Destroyed(Injury):
             else:
                 self.paralyzed_locs = {11,15,19}
         else:
+            self.attr_name = ['pwr','ss'] #Name of the attribute to modify
+            self.attr_amount = [-recipient.fighter.pwr*.25,-recipient.fighter.ss*.25]  #Amount to modify attribute
             self.bleed_amount = 30 #Amount of blood loss
             self.bleed_duration = 200 #Duration of blood loss
             self.mv_mod = .4
             self.balance_check = True
             if loc_idx % 2 == 0:
-                self.paralyzed_locs = {22,24,26,28}
+                self.paralyzed_locs = {18,22,24,26,28}
             else:
-                self.paralyzed_locs = {21,23,25,27}
+                self.paralyzed_locs = {17,21,23,25,27}
 
         self.description = self.description_filler(recipient, location, descriptor)
 
 class Ribs_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[0]
@@ -2370,7 +2371,7 @@ class Ribs_Damaged(Injury):
 
 class Ribs_Heavily_Damaged(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[1]
@@ -2396,7 +2397,7 @@ class Ribs_Heavily_Damaged(Injury):
 
 class Ribs_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
-        super()
+        Injury.__init__(self)
         self.layer = 2
         descriptors = self.damage_descriptor(self.layer, dam_type)
         descriptor = descriptors[2]
@@ -2421,3 +2422,52 @@ class Ribs_Destroyed(Injury):
 
         self.description = self.description_filler(recipient, location, descriptor)
 
+class Pelvis_Damaged(Injury):
+    def __init__(self, location, recipient, dam_type):
+        Injury.__init__(self)
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[0]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize()
+        self.location = location
+        self.recipient = recipient
+        self.description = 'A sharp crack and stab of pain seems to indicate that {0}''s {2} has been {3}. This makes moving very painful. '
+        self.damage_type = set(['s','p','t','b'])
+        self.duplicable = False
+        self.pain_check = True
+        
+        self.severity = 4
+        self.locations = set([17,18])
+        self.pain_mv_mod = 30
+
+        if dam_type in ['s','p','t']:
+            self.bleed_amount = 30 #Amount of blood loss
+            self.bleed_duration = 10 #Duration of blood loss
+            self.description + str('The wound also bleeds heavily. ')
+
+        self.description = self.description_filler(recipient, location, descriptor)
+
+class Pelvis_Heavily_Damaged(Injury):
+    def __init__(self, location, recipient, dam_type):
+        Injury.__init__(self)
+        self.layer = 2
+        descriptors = self.damage_descriptor(self.layer, dam_type)
+        descriptor = descriptors[0]
+        self.title = descriptor.capitalize() + ' ' + location.capitalize()
+        self.location = location
+        self.recipient = recipient
+        self.description = 'An intense, radiant pain and the immediate loss of support for both legs signals that {0}''s {2} has been {3}. Walking is impossible, and the pelvis is unlikely to heal cleanly. '
+        self.damage_type = set(['b'])
+        self.duplicable = False
+        self.pain_check = True
+        self.shock_check = True
+        self.gen_stance = FighterStance.prone
+        self.severity = 6
+        self.locations = set([17,18])
+        self.pain_mv_mod = 90
+        self.paralyzed_locs = set([21,22,23,24,25,26])
+        self.diseases = ['Shattered Pelvis']
+        self.attr_name = ['pwr','ss'] #Name of the attribute to modify
+        self.attr_amount = [-recipient.fighter.pwr*.6,-recipient.fighter.ss*.6]  #Amount to modify attribute
+
+        self.description = self.description_filler(recipient, location, descriptor)

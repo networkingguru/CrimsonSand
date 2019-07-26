@@ -7,7 +7,7 @@ from enums import CombatPhase, MenuTypes, EntityState, GameStates, FighterStance
 from entity import get_blocking_entities_at_location
 from fov_aoc import modify_fov, change_face, aoc_check
 from game_messages import Message
-from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un, find_defense_probability
+from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un, find_defense_probability, itersubclasses
 from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
 
 def detect_enemies(entities) -> int:
@@ -2332,6 +2332,44 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
                 
 
     return description
+
+def filter_injuries(master_class, location, damage_type, severity, layer, recipient):
+    injuries = set(itersubclasses(master_class))
+    loc_idx = recipient.fighter.name_location(location)
+    loc_matches = set()
+    dt_matches = set()
+    sev_matches = set()
+    layer_matches = set()
+    avail_prereqs = []
+
+    for injury in injuries:
+        a = injury(location, recipient, damage_type)
+        dupes = 0
+        #Block below to find duplicates and remove injury if not allowed
+        for i in recipient.fighter.injuries:
+            if type(i) is type(a):
+                if not injury in avail_prereqs:
+                    avail_prereqs.append(injury)
+                if i.location == location:
+                    if not a.duplicable:
+                        continue 
+                    else:
+                        dupes += 1
+        if dupes >= a.max_dupes:
+            continue 
+        if a.prerequisite is not None and a.prerequisite not in avail_prereqs:
+            continue
+        if loc_idx in a.locations:
+            loc_matches.add(injury)
+        if damage_type in a.damage_type:
+            dt_matches.add(injury)
+        if severity >= a.severity:
+            sev_matches.add(injury)
+        if layer == a.layer:
+            layer_matches.add(injury) 
+
+    valid = loc_matches.intersection(dt_matches,sev_matches,layer_matches)
+    return valid
 
 def calc_modifiers(weapon, location, angle_id) -> (int, int, int, int):
     #Weapon mods
