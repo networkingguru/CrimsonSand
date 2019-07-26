@@ -3,7 +3,7 @@ import time
 from components import fighter, injuries, weapon
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from utilities import itersubclasses
-from combat_functions import filter_injuries
+from combat_functions import filter_injuries, apply_injuries
 
 entity_list = options.entities
 entities = create_entity_list(entity_list)
@@ -13,8 +13,8 @@ weapons = options.weapons
 add_weapons(entities, weapons)
 inj_1 = injuries.Light_Scraping('Face',entities[0],'b')
 inj_2 = injuries.Light_Scraping('Face',entities[0],'s')
-# entities[0].fighter.injuries.append(inj_1)
-# entities[0].fighter.injuries.append(inj_2)
+entities[0].fighter.injuries.append(inj_1)
+entities[0].fighter.injuries.append(inj_2)
 
 
 """ for entity in entities:
@@ -40,9 +40,15 @@ t2 = time.time()
 iter_time = t2 - t1
 print('Sort time: ' + str(iter_time)) """
 
+t0 = time.time()
 
+valid = filter_injuries(injuries.Injury, 'Face', 'b', 4, 0, entities[0])
+apply_injuries(valid, 'Face', entities[0], 'b')
+test = entities[0].fighter.injuries
 
-test = filter_injuries(injuries.Injury, 'Face', 'b', 4, 0, entities[0])
+t1 = time.time()
+iter_time = t1 - t0
+print('Iteration time: ' + str(iter_time))
 
 for t in test:
-    print(t.__name__)
+    print(t.title)

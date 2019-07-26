@@ -2333,7 +2333,7 @@ def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
 
     return description
 
-def filter_injuries(master_class, location, damage_type, severity, layer, recipient):
+def filter_injuries(master_class, location, damage_type, severity, layer, recipient) -> set:
     injuries = set(itersubclasses(master_class))
     loc_idx = recipient.fighter.name_location(location)
     loc_matches = set()
@@ -2370,6 +2370,23 @@ def filter_injuries(master_class, location, damage_type, severity, layer, recipi
 
     valid = loc_matches.intersection(dt_matches,sev_matches,layer_matches)
     return valid
+
+def apply_injuries(valid_injuries, location, recipient, damage_type):
+    roll = roll_dice(1,len(valid_injuries))
+    injuries = list(valid_injuries)
+    injury = injuries[roll-1](location, recipient, damage_type)
+    
+    #Remove prereq if one exists
+    if injury.prerequisite is not None:
+        idx = None
+        for i in recipient.fighter.injuries:
+            if type(i) is injury.prerequisite:
+                idx = recipient.fighter.injuries.index(i)
+        recipient.fighter.injuries.pop(idx)
+
+    recipient.fighter.injuries.append(injury)
+
+
 
 def calc_modifiers(weapon, location, angle_id) -> (int, int, int, int):
     #Weapon mods

@@ -130,7 +130,7 @@ class Major_Scraping(Injury):
         Injury.__init__(self)
         self.layer = 0
         descriptors = self.damage_descriptor(self.layer, dam_type)
-        self.title = 'Major '+ descriptors[0].capitalize()
+        self.title = 'Heavily '+ descriptors[0].capitalize()
         self.prerequisite = Light_Scraping
         self.location = location
         self.recipient = recipient
