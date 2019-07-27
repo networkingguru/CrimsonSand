@@ -2388,6 +2388,7 @@ def apply_injuries(valid_injuries, location, recipient, damage_type):
 
 
 
+
 def calc_modifiers(weapon, location, angle_id) -> (int, int, int, int):
     #Weapon mods
     atk_mod = weapon.attack_mod

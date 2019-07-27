@@ -1125,7 +1125,7 @@ class Stomach_Damage(Injury):
         self.duplicable = False
         
         self.severity = 5
-        self.locations = set([10])
+        self.locations = set([6,9])
         self.diseases = ['Stomach perforation']
         self.pain_mv_mod = 60
 
@@ -1155,7 +1155,7 @@ class Intestinal_Damage(Injury):
         self.healable = False
         
         self.severity = 6
-        self.locations = set([13,14])
+        self.locations = set([9,10,13,14])
         self.diseases = ['Intestinal perforation']
         self.pain_mv_mod = 80
 
