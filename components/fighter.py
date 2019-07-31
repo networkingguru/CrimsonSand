@@ -39,7 +39,6 @@ class Fighter:
         self.stance_power = 1 # Var to adjust ep based on stanc. Multiplier
         self.atk_instability = 0 #A var to hold the modifier to stability from attacks
         self.paralysis_instability = 0 #Var to hold stability modifications from being unable to use a leg
-        self.stability_mods = self.stance_stability + self.atk_instability + self.paralysis_instability
         self.visible_fighters = [] #This is a list of fighters in FOV, set by detect_enemies
         self.closest_fighter = None #The closest fighter, set by detect_enemies
         self.combat_choices = [] #List of chosen commands for combat menus
@@ -56,7 +55,7 @@ class Fighter:
         self.male = True
         self.dom_hand = 'R' #'R', 'L', or 'A'
         self.attributes = attributes
-        self.max_attributes = attributes.copy()
+        self.max_attributes = deepcopy(self.attributes)
         #log, mem, wis, comp, comm, cre, men, will, ss, pwr, man, ped, bal, swift, flex, sta, derm, 
         #bone, immune, shock, toxic, sit, hear, ts, touch, fac, ht, fat, shape
         self.log = attributes[0]
@@ -88,6 +87,36 @@ class Fighter:
         self.ht = attributes[26]
         self.fat = attributes[27]
         self.shape = attributes[28]
+        #Max Attributes
+        self.max_log = attributes[0]
+        self.max_mem = attributes[1]
+        self.max_wis = attributes[2]
+        self.max_comp = attributes[3]
+        self.max_comm = attributes[4]
+        self.max_cre = attributes[5]
+        self.max_men = attributes[6]
+        self.max_will = attributes[7]
+        self.max_ss = attributes[8]
+        self.max_pwr = attributes[9]
+        self.max_man = attributes[10]
+        self.max_ped = attributes[11]
+        self.max_bal = attributes[12]
+        self.max_swift = attributes[13]
+        self.max_flex = attributes[14]
+        self.max_sta = attributes[15]
+        self.max_derm = attributes[16]
+        self.max_bone = attributes[17]
+        self.max_immune = attributes[18]
+        self.max_shock = attributes[19]
+        self.max_toxic = attributes[20]
+        self.max_sit = attributes[21]
+        self.max_hear = attributes[22]
+        self.max_ts = attributes[23]
+        self.max_touch = attributes[24]
+        self.max_fac = attributes[25]
+        self.max_ht = attributes[26]
+        self.max_fat = attributes[27]
+        self.max_shape = attributes[28]
         #Super-Attributes
         self.int = int(round((mean([self.log, self.mem, self.comm, self.comp, self.cre, self.men, self.will, self.wis])),0))
         self.str = int(round((mean([self.ss, self.pwr])),0))
@@ -123,9 +152,11 @@ class Fighter:
         self.run_ap = round(self.ap / inch_conv(self.mv*2, 1))
         self.init = (self.men + self.swift)/4 + (self.sens + self.brawling)/4
         self.max_init = self.init
-        self.stability = self.stability_mods
         self.clarity = self.will #For dizziness/unconsciousness
         self.clar_recovery = self.will/4
+        self.stability_mods = self.stance_stability + self.atk_instability + self.paralysis_instability + (100 - self.clarity)
+        self.stability = self.stability_mods
+        
         #Effective Power
         self.ep = int(round(self.stance_power * (((self.pwr * 2) + self.weight + (self.bone * 0.1)) * ((self.brawling + (self.bal/2))/200))))
         #Reach
@@ -200,8 +231,9 @@ class Fighter:
         self.injuries = []
         #Static injury effects
         self.temp_physical_mod = 0
-        self.paralyzed_locs = []
-        self.diseases = []
+        self.paralyzed_locs = set()
+        self.severed_locs = set()
+        self.diseases = set()
         self.atk_mod_r = 0
         self.atk_mod_l = 0
         self.can_act = True

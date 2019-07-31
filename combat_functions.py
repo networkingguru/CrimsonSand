@@ -9,6 +9,7 @@ from fov_aoc import modify_fov, change_face, aoc_check
 from game_messages import Message
 from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un, find_defense_probability, itersubclasses
 from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
+from components.injuries import Injury
 
 def detect_enemies(entities) -> int:
     '''Goal is to see if enemies exist in each entity's FOV, and if so, change the combat phase. 
@@ -463,6 +464,10 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     curr_actor = entity
     enemy = curr_target
     missed =  False
+    location = entity.fighter.combat_choices[2]
+    loc_idx = curr_target.fighter.name_location(location)
+    dam_type = curr_actor.fighter.combat_choices[1].damage_type[0]
+    dam_mult = curr_actor.fighter.dam_result
 
     #Clear history if attacker changed
     if curr_target.fighter.attacker is not entity:
@@ -472,7 +477,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     else:
         add_history(curr_target)
     
-    atk_result = make_attack_roll(final_to_hit, 1, entity.fighter.combat_choices[2])
+    atk_result = make_attack_roll(final_to_hit, 1, location)
     entity.fighter.atk_result, entity.fighter.dam_result, entity.fighter.new_loc_result = atk_result[0], atk_result[1], atk_result[2]
 
     
@@ -521,8 +526,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
         if entity in curr_target.fighter.targets:
             combat_phase = CombatPhase.defend
         else:
-            effects = apply_dam(enemy, entities, curr_actor.fighter.atk_result, curr_actor.fighter.combat_choices[1].damage_type[0], curr_actor.fighter.dam_result, curr_actor.fighter.combat_choices[2], cs)
-    
+            effects = damage_controller(curr_target, curr_actor, loc_idx, dam_type, dam_mult, entity.fighter.atk_result, cs)
     
             if effects:
                 combat_phase = CombatPhase.action
@@ -697,1653 +701,17 @@ def handle_mobility_change(entity):
         new_y = entity.y + y_mod
         entity.fighter.aoc = [(new_x, new_y)]
        
-def apply_dam(target, entities, roll, dam_type, dam_mult, location, cs) -> set:
-    """This  is the  main damage function. dam_effect_finder returns into this. """
-    #Set deflect and soak rates
-    if dam_type == 'B':
-        deflect = [15, 25, 0]        
-        soak =  [.8 + ((((target.fighter.derm)*.75) + ((target.fighter.fat)*.25))/100 *.08),
-                 .75 + ((((target.fighter.fat)*.6) + ((target.fighter.str)*.4))/100 *.08), 
-                 .4 + (sqrt(target.fighter.flex)/100)]
-        for i in soak:
-            if i > .95: i = .95
-        dam_amount = dam_mult * cs.get('b psi')
-        multi_apply = True
-    elif dam_type == 'S':
-        deflect = [0, 0, 15]
-        soak =  [.8, .7, .15]
-        multi_apply = False
-        dam_amount = dam_mult * cs.get('s psi')
-    elif dam_type == 'P':
-        deflect = [0, 0, 90]
-        soak =  [.85, .8, .05]
-        multi_apply = False
-        dam_amount = dam_mult * cs.get('p psi')
-    elif dam_type == 'T':
-        deflect = [0, 0, 100]
-        soak =  [.5 + (sqrt(target.fighter.derm)/50), 
-                .5 + (sqrt(target.fighter.fat)/50), 
-                0]
-        multi_apply = False
-        dam_amount = dam_mult * cs.get('t psi')
-
-    #Store previous damage level to avoid repeating damage effects
-    prev_health = [0,0,0]
-    i = 0
-    for layer in target.fighter.locations[location]:
-        prev_health[i] = layer
-        i += 1
-
-    #Calc final damage
-    damage = [int(round((1-soak[0])*dam_amount)), int(round((1-soak[1])*dam_amount)), int(round((1-soak[2])*dam_amount))]
-
-    #CHeck deflect
-    i = 0
-    for i in range(3):  
-        if roll <= deflect[i]: damage[i] = 0
-        i += 1
-
-    #Apply damage
-    if multi_apply:
-        i = 0
-        for i in range(3):
-            target.fighter.locations[location][i] -= damage[i]
-            if target.fighter.locations[location][i] < 0: target.fighter.locations[location][i] = 0
-            i += 1
-    else:
-        i = 0
-        for i in range(3):
-            if target.fighter.locations[location][i] <= 0:
-                target.fighter.locations[location][i] = 0
-                i += 1
-            else:
-                target.fighter.locations[location][i] -= damage[i]
-                i = 3
-
-    #Determine damage effect level
-    #Find % damage
-    dam_percent = [0,0,0]
-    for layer in target.fighter.locations[location]:
-        layer_id = target.fighter.locations[location].index(layer)
-        if layer == 0: dam_percent[layer_id] = 0
-        elif prev_health[layer_id] == layer: dam_percent[layer_id] = 1
-        else:
-            dam_percent[layer_id] = (target.fighter.locations[location][layer_id]/target.fighter.max_locations[location][layer_id])
-
-    effects = []
-    dam_thresh = [0,0,0]
-    i = 0
-    for layer in dam_percent:
-        if layer <= .9: dam_thresh[i] += 1
-        if layer <= .75: dam_thresh[i] += 1
-        if layer <= .5: dam_thresh[i] += 1
-        if layer <= .25: dam_thresh[i] += 1
-        if layer <= .1: dam_thresh[i] += 1
-        if layer <= 0: dam_thresh[i] += 1
-        effects.extend(dam_effect_finder(location, i, dam_thresh[i], target, entities))
-        i += 1
-        effects_set = set(effects)
-
-    bal_roll = apply_stability_damage(target, damage, location)
-
-    handle_mobility_change(target)
-
-    if bal_roll:
-        stab_roll = save_roll_un(target.fighter.bal, target.fighter.stability)
-        if 'f' in stab_roll or 'cf' in stab_roll:
-            target.fighter.gen_stance = FighterStance.prone
-
-    return effects_set
-
-def dam_effect_finder(location, hit_layer, dam_thresh, target, entities) -> list:
-    """Second damage function. Generates effect titles and feeds them to dam_effects one at a time. 
-    Returns output to apply_dam"""
-    effects = []
-    #Skin
-    if hit_layer == 0:
-        if dam_thresh == 0: effects.append('None')
-        elif location == 0:
-            if dam_thresh == 1: effects.append('Light Scraping')
-            elif dam_thresh == 2: effects.append('Major Scraping')
-            elif dam_thresh == 3: effects.append('Torn Scalp')
-            elif dam_thresh == 4: effects.append('Severe Torn Scalp')
-            elif dam_thresh == 5: effects.append('Partial Loss of Scalp')
-            elif dam_thresh == 6: effects.append('Scalped')
-        elif location == 1:
-            if dam_thresh == 1: effects.append('Light Scraping')
-            elif dam_thresh == 2: effects.append('Major Scraping')
-            elif dam_thresh == 3: effects.append('Light Disfigurement')
-            elif dam_thresh == 4: effects.append('Mild Disfigurement')
-            elif dam_thresh == 5: effects.append('Heavy Disfigurement')
-            elif dam_thresh == 6: effects.append('Horrid Disfigurement')
-        else:
-            if dam_thresh == 1: effects.append('Light Scraping')
-            elif dam_thresh == 2: effects.append('Major Scraping')
-            elif dam_thresh == 3: effects.append('Torn Skin')
-            elif dam_thresh == 4: effects.append('Severe Torn Skin')
-            elif dam_thresh == 5: effects.append('Partial Loss of Skin')
-            elif dam_thresh == 6: effects.append('Complete Loss of Skin')
-    #Tissue
-    elif hit_layer == 1:
-        if dam_thresh == 0: effects.append('None')
-        elif location == 0: effects.append('None')
-        elif location == 1:
-            if dam_thresh <= 3: effects.append('None')
-            elif dam_thresh == 4: effects.append('Cut Facial Muscles')
-            elif dam_thresh == 5: effects.append('Light Nerve Damage')
-            elif dam_thresh == 6: effects.append('Heavy Nerve Damage')
-        elif location == 2:
-            if dam_thresh >= 1: effects.append('Light Muscle Bruising')
-            if dam_thresh >= 2: effects.append('Heavy Muscle Bruising')
-            if dam_thresh >= 3: effects.append('Mild Bleeding')
-            if dam_thresh >= 4: effects.append('Major Bleeding')
-            if dam_thresh >= 5: effects.append('Massive Bleeding')
-            if dam_thresh == 6: effects.append('Windpipe Damaged')
-        elif 2 < location < 5:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Moderate Muscle Bruising')
-            elif dam_thresh == 3: effects.append('Heavy Muscle Bruising')
-            if dam_thresh >= 4: effects.append('Deltoid Muscle Damage')
-            if dam_thresh == 5: effects.append('Light Nerve Damage')
-            if dam_thresh == 6: effects.append('Heavy Nerve Damage')
-        elif 4 < location < 7:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Heavy Muscle Bruising')
-            elif dam_thresh == 3: effects.append('Pectoral Muscle Damage')
-            elif dam_thresh >= 4: effects.append('Heavy Pectoral Muscle Damage')
-            if dam_thresh >= 5: effects.append('Lung Damage')
-            if dam_thresh == 6: 
-                if location == 5: effects.append('Lung Destroyed')
-                else: effects.append('Dead')
-        elif 6 < location < 9:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Moderate Muscle Bruising')
-            elif dam_thresh == 3: effects.append('Heavy Muscle Bruising')
-            elif dam_thresh >= 4: effects.append('Biceps Muscle Damage')
-            if dam_thresh == 5: effects.append('Light Nerve Damage')
-            if dam_thresh == 6: effects.append('Heavy Nerve Damage')
-        elif 8 < location < 11:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Heavy Muscle Bruising')
-            elif dam_thresh == 3: effects.append('Mid-abdominal Muscle Damage')
-            if dam_thresh >= 4: effects.append('Heavy Mid-abdominal Muscle Damage')
-            if dam_thresh >= 5: 
-                if location == 7: effects.append('Upper Right Digestive Organ Damage')
-                else: effects.append('Upper Left Digestive Organ Damage')
-            if dam_thresh == 6: 
-                if location == 7: effects.append('Upper Right Digestive Organs Damaged')
-                else: effects.append('Upper Left Digestive Organs Damaged')
-        elif 10 < location < 13:
-            if dam_thresh == 1: effects.append('Heavy Muscle Bruising')
-            elif 1 < dam_thresh < 4: effects.append('Arm Tendon Damage')
-            elif dam_thresh >= 4: effects.append('Heavy Arm Tendon Damage')
-            if dam_thresh == 5: effects.append('Light Nerve Damage')
-            if dam_thresh == 6: effects.append('Heavy Nerve Damage')
-        elif 12 < location < 15:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Moderate Muscle Bruising')
-            elif dam_thresh == 3: effects.append('Heavy Muscle Bruising')
-            elif dam_thresh == 4: effects.append('Abdominal Muscle Damage')
-            if dam_thresh >= 5: effects.append('Heavy Abdominal Muscle Damage')
-            elif dam_thresh == 6: effects.append('Intestinal Damage')
-        elif 14 < location < 17:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Heavy Muscle Bruising')
-            elif dam_thresh >= 3: effects.append('Extensors Damaged')
-            elif dam_thresh >= 4: effects.append('Flexors Damaged')
-            if dam_thresh == 5: effects.append('Light Nerve Damage')
-            if dam_thresh == 6: effects.append('Heavy Nerve Damage')
-        elif 16 < location < 19:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Heavy Muscle Bruising')
-            elif dam_thresh >= 3: effects.append('Oblique Muscle Damage')
-            if dam_thresh >= 4: effects.append('Damaged Reproductive Organs')
-            if dam_thresh >= 5: effects.append('Damaged Kidney')
-            if dam_thresh == 6: effects.append('Damaged Bladder')
-        elif 18 < location < 21:
-            if dam_thresh == 1: effects.append('Finger Damaged')
-            elif 1 < dam_thresh < 6: effects.append('Hand Tendons Damaged')
-            elif dam_thresh == 6: effects.append('Hand Mutilated')
-        elif 20 < location < 23:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Heavy Muscle Bruising')
-            elif dam_thresh == 3: effects.append('Quadriceps Damage')
-            if dam_thresh >= 4: effects.append('Heavy Quadriceps Damage')
-            if dam_thresh == 5: effects.append('Light Nerve Damage')
-            elif dam_thresh == 6: effects.append('Heavy Nerve Damage')
-        elif 22 < location < 25:
-            if dam_thresh == 1: effects.append('Heavy Muscle Bruising')
-            elif 1 < dam_thresh < 4: effects.append('Leg Tendon Damage')
-            if dam_thresh >= 4: effects.append('Heavy Leg Tendon Damage')
-            if dam_thresh == 5: effects.append('Light Nerve Damage')
-            elif dam_thresh == 6: effects.append('Heavy Nerve Damage')
-        elif 24 < location < 27:
-            if dam_thresh == 1: effects.append('Light Muscle Bruising')
-            elif dam_thresh == 2: effects.append('Heavy Muscle Bruising')
-            elif dam_thresh == 3: effects.append('Calf Muscle Damage')
-            if dam_thresh >= 4: effects.append('Heavy Calf Muscle Damage')
-            if dam_thresh == 5: effects.append('Light Nerve Damage')
-            elif dam_thresh == 6: effects.append('Heavy Nerve Damage')
-        else:
-            if dam_thresh == 1: effects.append('Toe Damaged')
-            elif 1 < dam_thresh < 6: effects.append('Foot Tendons Severed')
-            elif dam_thresh == 6: effects.append('Foot Mutilated')
-    #Bone
-    else:
-        if dam_thresh == 0: effects.append('None')
-        elif location == 0:
-            if dam_thresh == 1: effects.append('Light Concussion')
-            elif dam_thresh == 2: effects.append('Moderate Concussion')
-            elif dam_thresh == 3: effects.append('Severe Concussion')
-            elif dam_thresh == 4: effects.append('Brain Damage')
-            elif dam_thresh == 5: effects.append('Crushed Skull')
-            elif dam_thresh == 6: effects.append('Dead')
-        elif location == 1:
-            if dam_thresh >= 1: effects.append('Mild Disfigurement')
-            if dam_thresh == 2: effects.append('Minor loss of sense')
-            if dam_thresh >= 3: effects.append('Major loss of sense')
-            if dam_thresh == 4: effects.append('Brain Damage')
-            if dam_thresh == 5: effects.append('Crushed Skull')
-            if dam_thresh == 6: effects.append('Dead')
-        elif location == 2:
-            if dam_thresh == 1: effects.append('Chipped Vertebra')
-            elif 1 < dam_thresh < 4: effects.append('Cracked Vertebra')
-            elif 3 < dam_thresh < 6: effects.append('Paralysis (Neck Down)')
-            elif dam_thresh == 6: effects.append('Dead')
-        elif 2 < location < 5:
-            if dam_thresh == 1: effects.append('Bruised Bone')
-            elif 1 < dam_thresh < 4: effects.append('Simple Collarbone Fracture')
-            elif 3 < dam_thresh < 6: effects.append('Complex Collarbone Fracture')
-            elif dam_thresh == 6: effects.append('Shattered Shoulder')
-        elif 4 < location < 7:
-            if dam_thresh == 1: effects.append('Bruised Bone')
-            elif 1 < dam_thresh < 4: effects.append('Cracked Ribs')
-            elif 3 < dam_thresh < 6: effects.append('Badly Broken Ribs')
-            elif dam_thresh == 6: 
-                if location == 5: effects.append('Shattered Ribs')
-                else: effects.append('Dead')
-        elif 6 < location < 9:
-            if dam_thresh <= 2: effects.append('Bruised Bone')
-            elif 2 < dam_thresh < 5: effects.append('Simple Humerus Fracture')
-            elif dam_thresh == 5: effects.append('Complex Humerus Fracture')
-            elif dam_thresh == 6: effects.append('Shattered Humerus')
-        elif 8 < location < 11:
-            if dam_thresh <= 3: effects.append('Chipped Vertebra')
-            elif dam_thresh == 4: effects.append('Cracked Vertebra')
-            elif dam_thresh > 4: effects.append('Paralysis (Waist Down)')
-        elif 10 < location < 13:
-            if dam_thresh <= 2: effects.append('Bruised Bone')
-            elif dam_thresh == 3: effects.append('Hyper-extended Elbow')
-            elif 3 < dam_thresh < 6: effects.append('Broken Elbow')
-            elif dam_thresh == 6: effects.append('Shattered Elbow')
-        elif 12 < location < 15:
-            if dam_thresh <= 3: effects.append('Chipped Vertebra')
-            elif dam_thresh == 4: effects.append('Cracked Vertebra')
-            elif dam_thresh > 4: effects.append('Paralysis (Chest Down)')
-        elif 14 < location < 17:
-            if dam_thresh <= 2: effects.append('Bruised Bone')
-            if dam_thresh >= 3: effects.append('Radius Broken')
-            if dam_thresh == 5: effects.append('Ulna Broken')
-            if dam_thresh == 6: effects.append('Shattered Forearm')
-        elif 16 < location < 19:
-            if dam_thresh <= 2: effects.append('Bruised Bone')
-            elif dam_thresh == 3: effects.append('Cracked Pelvis')
-            elif dam_thresh == 4: effects.append('Broken Pelvis')
-            elif dam_thresh >= 5: effects.append('Crushed Pelvis')
-            elif dam_thresh == 6: effects.append('Paralysis (Waist Down)')
-        elif 18 < location < 21:
-            if dam_thresh == 1: effects.append('Sprained Wrist')
-            if dam_thresh >= 2: effects.append('Crushed/Severed Little Finger')
-            if dam_thresh >= 3: effects.append('Crushed/Severed Ring Finger')
-            if dam_thresh >= 4: effects.append('Crushed/Severed Middle Finger')
-            if dam_thresh >= 5: effects.append('Crushed/Severed Index Finger')
-            if dam_thresh == 6: effects.append('Crushed/Severed Hand')
-        elif 20 < location < 23:
-            if dam_thresh <= 2: effects.append('Bruised Bone')
-            elif 2 < dam_thresh < 5: effects.append('Simple Femur Fracture')
-            elif dam_thresh == 5: effects.append('Complex Femur Fracture')
-            elif dam_thresh == 6: effects.append('Shattered Femur')
-        elif 22 < location < 25:
-            if dam_thresh <= 2: effects.append('Bruised Bone')
-            elif dam_thresh == 3: effects.append('Hyper-extended Knee')
-            elif 3 < dam_thresh < 6: effects.append('Broken Knee')
-            elif dam_thresh == 6: effects.append('Shattered Knee')
-        elif 24 < location < 27:
-            if dam_thresh <= 2: effects.append('Bruised Bone')
-            if dam_thresh >= 3: effects.append('Fibula Broken')
-            if dam_thresh == 5: effects.append('Tibia Broken')
-            if dam_thresh == 6: effects.append('Shattered Shin')
-        else:
-            if dam_thresh == 1: effects.append('Sprained Ankle')
-            elif dam_thresh == 2: effects.append('1 toe destroyed')
-            elif dam_thresh == 3: effects.append('2 toes destroyed')
-            elif dam_thresh == 4: effects.append('3 toes destroyed')
-            elif dam_thresh == 5: effects.append('4 toes destroyed')
-            elif dam_thresh == 6: effects.append('Crushed/Severed Foot')
-    
-    #Check and see if pre-existing injury, skip effect if so
-    for effect in effects:
-        if str(target.fighter.name_location(location) + ': ' + effect) in target.fighter.injuries:
-            effects.remove(effect)   
-    #Add null effect if effect empty
-    if len(effects) == 0:
-        effects.append('None')
-
-    dam_result = dam_effects(effects, target, entities, location)
-
-    return dam_result
-
-def dam_effects(titles, entity, entities, location, dam_type = 'B') -> list:
-    description = []
-
-    #Main effect gen code
-    for title in titles:
-        if title == 'None':
-            description.append(entity.name + ' was hit in the ' + entity.fighter.name_location(location))
-        if title == 'Light Scraping':
-            description.append(entity.name +' has been lightly scraped and lacerated. ')
-            entity.fighter.vitae -= 10
-        if title == 'Major Scraping':
-            description.append(entity.name + ' has been badly lacerated. ')
-            entity.fighter.vitae -= 20
-        if title == 'Torn Scalp':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' has been torn open and is bleeding. ')
-            entity.fighter.bleed.append([5,100])
-        if title == 'Severe Torn Scalp':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' has been torn badly and is bleeding profusely. ')
-            entity.fighter.bleed.append([10,100])
-        if title == 'Partial Loss of Scalp':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' has been nearly torn off and is bleeding profusely, causing the face to sag. ')
-            entity.fighter.bleed.append([20,1000])
-            entity.fighter.mod_attribute('fac', -10)
-            entity.fighter.adjust_max_locations(0,0,(entity.fighter.max_locations[0][0] * .5))
-            
-        if title == 'Scalped':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' has been completely torn off and is bleeding profusely, causing the face to sag. ')
-            entity.fighter.bleed.append([40,1000])
-            entity.fighter.mod_attribute('fac', -20)
-            entity.fighter.locations[0][0] == 0
-            entity.fighter.adjust_max_locations(0,0,(entity.fighter.max_locations[0][0]))
-        if title == 'Torn Skin':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' skin has been torn open and is bleeding. ')
-            entity.fighter.bleed.append([5,100])
-        if title == 'Severe Torn Skin':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' skin has been torn badly and is bleeding profusely. ')
-            entity.fighter.bleed.append([10,100])
-        if title == 'Partial Loss of Skin':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' skin has been nearly torn off and is bleeding profusely. ')
-            entity.fighter.bleed.append([10,1000])
-            entity.fighter.adjust_max_locations(location,0,(entity.fighter.max_locations[location][0] * .5))
-        if title == 'Complete Loss of Skin':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' skin has been completely torn off and is bleeding profusely. ')
-            entity.fighter.bleed.append([20,1000])
-            entity.fighter.locations[location][0] = 0
-            entity.fighter.adjust_max_locations(location,0,entity.fighter.max_locations[location][0])
-        if title == 'Light Disfigurement':
-            description.append(entity.name + ' has suffered a small facial wound that is disfiguring. ')
-            entity.fighter.vitae -= 20
-            entity.fighter.mod_attribute('fac', -20)
-        if title == 'Mild Disfigurement':
-            description.append(entity.name + ' has suffered a moderate sized facial wound that is disfiguring. ')
-            entity.fighter.vitae -= 30
-            entity.fighter.mod_attribute('fac', -30)
-        if title == 'Heavy Disfigurement':
-            feature = roll_dice(1,6)
-
-            if feature == 1:
-                description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'nose torn off. ')
-                entity.fighter.mod_attribute('ts', -20)
-            elif feature == 2:
-                description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'left ear ripped off. ')
-                entity.fighter.mod_attribute('hear', -10)
-            elif feature == 3:
-                description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'right ear ripped off. ')
-                entity.fighter.mod_attribute('hear', -10)
-            elif feature == 4:
-                description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'upper lip ripped off. ')
-            elif feature == 5:
-                description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'lower lip ripped off. ')
-            elif feature == 6:
-                description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'front row of teeth shattered. ')
-            entity.fighter.vitae -= 30
-            entity.fighter.mod_attribute('fac', -50)
-            entity.fighter.adjust_max_locations(1,0,entity.fighter.max_locations[1][0] * .5)
-        if title == 'Horrid Disfigurement':
-            features = []
-            i = 0
-            while i < 3:
-                roll = roll_dice(1,6)
-                if roll in features:
-                    continue
-                else:
-                    features.append(roll)
-                    i += 1
-            for feature in features:
-                if feature == 1:
-                    description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'nose torn off. ')
-                    entity.fighter.mod_attribute('ts', -20)
-                elif feature == 2:
-                    description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'left ear ripped off. ')
-                    entity.fighter.mod_attribute('hear', -10)
-                elif feature == 3:
-                    description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'right ear ripped off. ')
-                    entity.fighter.mod_attribute('hear', -10)
-                elif feature == 4:
-                    description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'upper lip ripped off. ')
-                elif feature == 5:
-                    description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'lower lip ripped off. ')
-                elif feature == 6:
-                    description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'front row of teeth shattered. ')
-            entity.fighter.vitae -= 60
-            entity.fighter.mod_attribute('fac', -80)
-            entity.fighter.adjust_max_locations(1,0,entity.fighter.max_locations[1][0] * .2)
-            
-        if title == 'Light Muscle Bruising':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' muscles have been bruised, mildly affecting physical actions. ')
-            entity.fighter.temp_physical_mod -= 5
-        if title == 'Moderate Muscle Bruising':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' muscles have been badly bruised, moderately affecting physical actions. ')
-            entity.fighter.temp_physical_mod -= 10
-        if title == 'Heavy Muscle Bruising':
-            description.append(entity.name + '\'s ' + entity.fighter.name_location(location) + ' muscles have been severely bruised, heavily affecting physical actions. ')
-            entity.fighter.temp_physical_mod -= 20
-        if title == 'Cut Facial Muscles':
-            description.append(entity.name + ' has had '+ ('his ' if entity.fighter.male else 'her ') + 'facial muscles damaged, resulting in a permanent droop. ')
-            entity.fighter.mod_attribute('fac', -10)
-        if title == 'Light Nerve Damage':
-            description.append(entity.name + '\'s nerves have been damaged, leading to a loss of feeling. ')
-            entity.fighter.mod_attribute('touch', -10)
-        if title == 'Heavy Nerve Damage':
-            description.append(entity.name + '\'s nerves have been destroyed in '+ ('his ' if entity.fighter.male else 'her ') + entity.fighter.name_location(location) + '.')
-            entity.fighter.paralyzed_locs.append(location)
-        if title == 'Mild Bleeding':
-            description.append(entity.name + ' has begun bleeding from the neck wound. ')
-            entity.fighter.bleed.append([10,100])
-        if title == 'Major Bleeding':
-            description.append(entity.name + ' is bleeding badly from the neck wound. ')
-            entity.fighter.bleed.append([20,100])
-        if title == 'Massive Bleeding':
-            description.append(entity.name + ' is bleeding profusely from the neck wound. ')
-            entity.fighter.bleed.append([(entity.fighter.max_vitae*.04),1000])
-        if title == 'Windpipe Damaged':
-            description.append(entity.name + '\'s windpipe has been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'is choking to death. ')
-            entity.fighter.suffocation = (entity.fighter.sta/10)*12
-        if title == 'Deltoid Muscle Damage':
-            if location == 3:
-                entity.fighter.paralyzed_locs.extend([3, 7, 11, 15, 19])
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.2)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.2)*-1)
-                entity.fighter.bleed.append([10,1000])
-                description.append(entity.name + '\'s right shoulder muscle has been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will not be able to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right arm until it is healed. ')
-            else:
-                entity.fighter.paralyzed_locs.extend([4, 8, 12, 16, 20])
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.2)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.2)*-1)
-                entity.fighter.bleed.append([10,1000])
-                description.append(entity.name + '\'s left shoulder muscle has been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will not be able to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left arm until it is healed. ')
-        if title == 'Pectoral Muscle Damage':
-            if location == 5:
-                entity.fighter.paralyzed_locs.extend([3, 7, 11, 15, 19])
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-                description.append(entity.name + '\'s right chest muscle has been damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will not be able to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right arm until it is healed. ')
-            else:
-                entity.fighter.paralyzed_locs.extend([4, 8, 12, 16, 20])
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-                description.append(entity.name + '\'s left chest muscle has been damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will not be able to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left arm until it is healed. ')
-        if title == 'Heavy Pectoral Muscle Damage':
-            if location == 5:
-                entity.fighter.paralyzed_locs.extend([3, 7, 11, 15, 19])
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.15)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.15)*-1)
-                entity.fighter.bleed.append([5,1000])
-                description.append(entity.name + '\'s right chest muscle has been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will not be able to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right arm until it is healed. ')
-            else:
-                entity.fighter.paralyzed_locs.extend([4, 8, 12, 16, 20])
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.15)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.15)*-1)
-                entity.fighter.bleed.append([5,1000])
-                description.append(entity.name + '\'s left chest muscle has been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will not be able to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left arm until it is healed. ')
-        if title == 'Lung Damage':
-            entity.fighter.stam_drain += 50
-            entity.fighter.mod_attribute('sta', (entity.fighter.sta*.5)*-1)
-            entity.fighter.bleed.append([5,1000])
-            description.append(entity.name + '\'s lung has collapsed, and '+ ('he ' if entity.fighter.male else 'she ') + 'begins gasping for breath. ')
-        if title == 'Lung Destroyed':
-            entity.fighter.stam_drain += 100
-            entity.fighter.mod_attribute('sta', (entity.fighter.sta*.5)*-1)
-            entity.fighter.bleed.append([entity.fighter.max_vitae*.02,1000])
-            description.append(entity.name + '\'s lung has been destroyed, and '+ ('he ' if entity.fighter.male else 'she ') + 'begins gasping for breath. ')
-        if title == 'Dead':
-            description.append(entity.name + ' was mortally injured due to damage to a vital organ. '+ ('He ' if entity.fighter.male else 'She ') +
-            'is dead. ')
-        if title == 'Mid-abdominal Muscle Damage':
-            description.append(entity.name + '\'s mid-abdominal muscles have been damaged, rendering those muscles inoperative until healed. '
-                +  'All movement is very painful. ')
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-        if title == 'Heavy Mid-abdominal Muscle Damage':
-            description.append(entity.name + '\'s mid-abdominal muscles have been badly damaged, rendering those muscles inoperative until healed. '
-                +  'All movement is excruciatingly painful. The wound bleeds heavily.')
-            entity.fighter.pain_mod_mov += 80
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-            entity.fighter.bleed.append([5,1000])
-        if title == 'Upper Right Digestive Organ Damage':
-            organ = roll_dice(1, 6)
-            if organ < 3:
-                entity.fighter.diseases.append('Cirrhosis')
-                description.append(entity.name + '\'s liver is badly damaged. The injury bleeds heavily. Additionally, liver damage will kill '
-                        + ('him ' if entity.fighter.male else 'her ') +  'within several months. ')
-            if 2 < organ < 5:
-                entity.fighter.mod_attribute('immune', (entity.fighter.immune*.05)*-1)
-                description.append(entity.name + '\'s omentum is badly damaged. This makes '
-                        + ('him ' if entity.fighter.male else 'her ') +  'more succeptable to disease. The injury also bleeds heavily.')
-            if organ == 5:
-                entity.fighter.diseases.append('Pancreatitis')
-                description.append(entity.name + '\'s pancreas is badly damaged. The injury bleeds heavily. ')
-            if organ == 6:
-                description.append(entity.name + '\'s gallbladder is badly damaged. The injury bleeds heavily inside the body. ')
-            entity.fighter.bleed.append([entity.fighter.max_vitae*.04,10])
-        if title == 'Upper Left Digestive Organ Damage':
-            organ = roll_dice(1, 6)
-            if organ < 3:
-                entity.fighter.diseases.append('Cirrhosis')
-                description.append(entity.name + '\'s liver is badly damaged. The injury bleeds heavily. Additionally, liver damage will kill '
-                        + ('him ' if entity.fighter.male else 'her ') +  'within several months. ')
-            if 2 < organ < 5:
-                entity.fighter.mod_attribute('immune', (entity.fighter.immune*.05)*-1)
-                description.append(entity.name + '\'s omentum is badly damaged. This makes '
-                        + ('him ' if entity.fighter.male else 'her ') +  'more succeptable to disease. The injury also bleeds heavily.')
-            if organ == 5:
-                entity.fighter.diseases.append('Pancreatitis')
-                description.append(entity.name + '\'s pancreas is badly damaged. The injury bleeds heavily internally. ')
-            if organ == 6:
-                description.append(entity.name + '\'s gallbladder is badly damaged. The injury bleeds heavilyinternally. ')
-            entity.fighter.bleed.append([entity.fighter.max_vitae*.04,10])
-        if title ==' Upper Right Digestive Organs Damaged':
-            description.append(entity.name + '\'s liver, pancreas, and omentum are all damaged badly. The injury bleeds heavily internally, and '
-                + entity.name + 'will slowly die without these organs. ')
-            entity.fighter.diseases.extend(['Cirrhosis', 'Pancreatitis'])
-            entity.fighter.mod_attribute('immune', (entity.fighter.immune*.05)*-1)
-            entity.fighter.bleed.append([entity.fighter.max_vitae*.08,10])
-        if title == 'Upper Left Digestive Organ Damage':
-            organ = roll_dice(1, 6)
-            if organ < 4:
-                description.append(entity.name + '\'s spleen has ruptured. The injury bleeds heavily inside the body cavity, and will not stop without treatment. ')
-                entity.fighter.bleed.append([entity.fighter.max_vitae*.04,1000])
-                entity.fighter.mod_attribute('immune', (entity.fighter.immune*.05)*-1)
-            if 3 < organ < 6:
-                description.append(entity.name + '\'s stomach has ruptured. This injury will cause a slow and painful death. ')
-                entity.fighter.diseases.append('Stomach Rupture')
-            if organ == 6:
-                entity.fighter.diseases.append('Pancreatitis')
-                description.append(entity.name + '\'s pancreas is badly damaged. The injury bleeds heavily internally. ')
-            entity.fighter.bleed.append([entity.fighter.max_vitae*.04,10])
-        if title == 'Upper Left Digestive Organs Damaged':
-            description.append(entity.name + '\'s spleen, pancreas, and stomach are all damaged badly. The injury bleeds heavily internally, and '
-                + entity.name + 'will slowly die without these organs. ')
-            entity.fighter.diseases.extend(['Stomach Rupture', 'Pancreatitis'])
-            entity.fighter.bleed.append([entity.fighter.max_vitae*.04,10])
-            entity.fighter.bleed.append([10,1000])
-        if title == 'Abdominal Muscle Damage':
-            description.append(entity.name + '\'s abdominal muscles have been damaged, rendering those muscles inoperative until healed. '
-                +  'All movement is very painful. ')
-            entity.fighter.pain_mod_mov += 60
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-        if title == 'Heavy Abdominal Muscle Damage':
-            description.append(entity.name + '\'s abdominal muscles have been badly damaged, rendering those muscles inoperative until healed. '
-                +  'All movement is excruciatingly painful. The wound bleeds heavily.')
-            entity.fighter.pain_mod_mov += 120
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-            entity.fighter.bleed.append([10,100])
-        if title == 'Intestinal Damage':
-            description.append(entity.name + '\'s intestines have been ruptured, and ' + ('he ' if entity.fighter.male else 'she ') 
-                + 'is doomed to die a slow, painful death. ')
-            entity.fighter.diseases.append('Intestinal Rupture')
-            entity.fighter.bleed.append([entity.fighter.max_vitae*.02,1000])
-        if title == 'Oblique Muscle Damage':
-            description.append(entity.name + '\'s oblique muscles have been damaged, rendering those muscles inoperative until healed. '
-                +  'All movement is painful. ')
-            entity.fighter.pain_mod_mov += 30
-        if title == 'Damaged Reproductive Organs':
-            check = save_roll_un(entity.fighter.will, -100)
-            if check[0] == 'cs':
-                description.append(entity.name + '\'s ' + ('testicles ' if entity.fighter.male else 'ovaries ') + 'have been damaged. '
-                +  'Despite the intense pain, however, ' + entity.name + ' continues to fight unimpeded.')
-            elif check[0] == 'cf':
-                description.append(entity.name + '\'s ' + ('testicles ' if entity.fighter.male else 'ovaries ') + 'have been damaged. '
-                + entity.name + ' falls unconscious from the pain.')
-                handle_state_change(entity, entities, EntityState.unconscious)
-            elif check[0] == 's':
-                description.append(entity.name + '\'s ' + ('testicles ' if entity.fighter.male else 'ovaries ') + 'have been damaged. '
-                + entity.name + ' manages to remain fighting, but the pain will affect ' + ('him ' if entity.fighter.male else 'her ') + 
-                'until treated. ')
-                entity.fighter.pain_mod_mov += 30
-            else:
-                description.append(entity.name + '\'s ' + ('testicles ' if entity.fighter.male else 'ovaries ') + 'have been damaged. '
-                + entity.name + ' drops to the ground, writhing in pain. ')
-                handle_state_change(entity, entities, EntityState.stunned)
-        if title == 'Damaged Kidney':
-            check = save_roll_un(entity.fighter.will, -50)
-            if check[0] == 'cs':
-                description.append(entity.name + '\'s kidney has been ruptured. This causes blinding pain and internal bleeding. '
-                +  'Despite the intense pain, however, ' + entity.name + ' continues to fight unimpeded.')
-            elif check[0] == 'cf':
-                description.append(entity.name + '\'s kidney has been ruptured. This causes blinding pain and internal bleeding. '
-                + entity.name + ' falls unconscious from the pain.')
-                handle_state_change(entity, entities, EntityState.unconscious)
-            elif check[0] == 's':
-                description.append(entity.name + '\'s kidney has been ruptured. This causes blinding pain and internal bleeding. '
-                + entity.name + ' manages to remain fighting, but the pain will affect ' + ('him ' if entity.fighter.male else 'her ') + 
-                'until treated. ')
-                entity.fighter.pain_mod_mov += 10
-            else:
-                description.append(entity.name + '\'s kidney has been ruptured. This causes blinding pain and internal bleeding. '
-                + entity.name + ' drops to the ground, writhing in pain. ')
-                handle_state_change(entity, entities, EntityState.stunned)
-            entity.fighter.bleed.append([5,1000])
-        if title == 'Damaged Bladder':
-            entity.fighter.diseases.append('Ruptured Bladder')
-            description.append(entity.name + '\'s bladder has ruptured. This will not kill ' + ('him ' if entity.fighter.male else 'her ') + 
-                'directly, but the rest of ' + ('him ' if entity.fighter.male else 'her ') + 'life will be messy and infection-prone.')
-            entity.fighter.mod_attribute('immune', (entity.fighter.immune*.1)*-1)
-        if title == 'Biceps Muscle Damage':
-            if location == 7:
-                entity.fighter.paralyzed_locs.extend([15, 19])
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-                entity.fighter.bleed.append([5,100])
-                description.append(entity.name + '\'s right biceps muscles have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will not be able to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right forearm until it is healed. ')
-            else:
-                entity.fighter.paralyzed_locs.extend([16, 20])
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-                entity.fighter.bleed.append([5,100])
-                description.append(entity.name + '\'s left biceps muscles have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will not be able to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left forearm until it is healed. ')
-        if title == 'Arm Tendon Damage':
-            if location == 11:
-                entity.fighter.atk_mod_r += -40
-                description.append(entity.name + '\'s right arm tendons have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right forearm until it is healed. ')
-            else:
-                entity.fighter.atk_mod_l += -40
-                description.append(entity.name + '\'s left arm tendons have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left forearm until it is healed. ')
-        if title == 'Heavy Arm Tendon Damage':
-            if location == 11:
-                entity.fighter.paralyzed_locs.extend([15, 19])
-                description.append(entity.name + '\'s right arm tendons have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right forearm until it is healed. ')
-            else:
-                entity.fighter.paralyzed_locs.extend([16, 20])
-                description.append(entity.name + '\'s left arm tendons have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left forearm until it is healed. ')
-        if title == 'Extensors Damaged':
-            if location == 15:
-                entity.fighter.atk_mod_r += -20
-                description.append(entity.name + '\'s right forearm muscles have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right forearm until it is healed. ')
-            else:
-                entity.fighter.atk_mod_l += -20
-                description.append(entity.name + '\'s left forearm muscles have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left forearm until it is healed. ')
-        if title == 'Flexors Damaged':
-            if location == 15:
-                entity.fighter.atk_mod_r += -40
-                description.append(entity.name + '\'s right forearm muscles have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right forearm until it is healed. ')
-            else:
-                entity.fighter.atk_mod_l += -40
-                description.append(entity.name + '\'s left forearm muscles have been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left forearm until it is healed. ')
-        if title == 'Finger Damaged':
-            if location == 19:
-                entity.fighter.atk_mod_r += -20
-                description.append(entity.name + '\'s right index finger has been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'right hand until it is healed. ')
-            else:
-                entity.fighter.atk_mod_l += -20
-                description.append(entity.name + '\'s left index finger has been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulthy using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'left hand until it is healed. ')
-        if title == 'Hand Tendons Damaged':
-            if location == 19:
-                entity.fighter.paralyzed_locs.extend([19])
-                description.append(entity.name + '\'s right hand tendons have been torn. '+ ('His ' if entity.fighter.male else 'Her ') + 'fingers are limp, and '
-                    + ('he ' if entity.fighter.male else 'she ') + 'will be unable to use' + ('his ' if entity.fighter.male else 'her ') 
-                    + 'right hand until it is healed. ')
-            else:
-                entity.fighter.paralyzed_locs.extend([20])
-                description.append(entity.name + '\'s right hand tendons have been torn. '+ ('His ' if entity.fighter.male else 'Her ') + 'fingers are limp, and '
-                    + ('he ' if entity.fighter.male else 'she ') + 'will be unable to use' + ('his ' if entity.fighter.male else 'her ') 
-                    + 'right hand until it is healed. ')
-        if title == 'Hand Mutilated':
-            if location == 19:
-                description.append(entity.name + '\'s right hand has been mutilated beyond repair. '+ ('His ' if entity.fighter.male else 'Her ') + 
-                    'tendons, veins, and nerves are so extensively damaged that the hand will never function again. ')
-            else:
-                description.append(entity.name + '\'s left hand has been mutilated beyond repair. '+ ('His ' if entity.fighter.male else 'Her ') + 
-                    'tendons, veins, and nerves are so extensively damaged that the hand will never function again. ')
-            entity.fighter.paralyzed_locs.extend([location])
-            entity.fighter.locations[location][1] = 0
-            entity.fighter.adjust_max_locations(location,1,entity.fighter.max_locations[location][1])
-        if title == 'Quadriceps Damage':
-            description.append(entity.name + '\'s frontal thigh muscles have been torn, rendering those muscles greatly compromised until healed. '
-                + ('He ' if entity.fighter.male else 'She ') + 'can still move, but it is painful and slow. ')
-            entity.fighter.pain_mod_mov += 60
-            entity.fighter.mv *= .4
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-        if title == 'Heavy Quadriceps Damage':
-            description.append(entity.name + '\'s frontal thigh muscles have been severed, rendering those muscles inoperative until healed. '
-                + 'Additionally, the femoral artery has hemmorhaged, and bleeding is severe. ' +
-                ('He ' if entity.fighter.male else 'She ') + 'can no longer use this leg. Movement is possible via hopping or crawling.')
-            entity.fighter.paralyzed_locs.extend([location])
-            entity.fighter.mv *= .1
-            entity.fighter.temp_physical_mod -= 70
-            entity.fighter.bleed.append([entity.fighter.max_vitae*.02,1000])
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-        if title == 'Leg Tendon Damage':
-            description.append(entity.name + '\'s ligaments and tendons have been torn, rendering the knee greatly compromised until healed. '
-                + ('He ' if entity.fighter.male else 'She ') + 'can still move, but it is painful and slow. ')
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.mv *= .6
-        if title == 'Heavy Leg Tendon Damage':
-            description.append(entity.name + '\'s ligaments and tendons have been severed, rendering the knee inoperative until healed. '
-                + ('He ' if entity.fighter.male else 'She ') + 'can no longer use this leg. Movement is possible via hopping or crawling.')
-            entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4])
-            entity.fighter.mv *= .1
-            entity.fighter.temp_physical_mod -= 70
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-        if title == 'Calf Muscle Damage':
-            description.append(entity.name + '\'s calf muscle has been torn. ' + ('He ' if entity.fighter.male else 'She ') + 'can still move, but it is painful and slow. ')
-            entity.fighter.pain_mod_mov += 30
-            entity.fighter.mv *= .8
-        if title == 'Heavy Calf Muscle Damage':
-            description.append(entity.name + '\'s calf muscle has been severed. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still move, but that foot is inoperable, making it unstable, painful, and very slow. ')
-            entity.fighter.pain_mod_mov += 60
-            entity.fighter.mv *= .4
-            entity.fighter.paralyzed_locs.extend([location + 2])
-            entity.fighter.temp_physical_mod -= 40
-        if title == 'Toe Damaged':
-            description.append(entity.name + '\'s big toe has been badly damaged, and '+ ('he ' if entity.fighter.male else 'she ') + 'will have difficulty using '
-                    + ('his ' if entity.fighter.male else 'her ') + 'foot until it is healed. ')
-            entity.fighter.pain_mod_mov += 20
-            entity.fighter.mv *= .8
-            entity.fighter.temp_physical_mod -= 10
-        if title == 'Foot Tendons Severed':
-            description.append(entity.name + '\'s foot tendons have been torn, and '+ ('he ' if entity.fighter.male else 'she ') + 'will be unable to use '
-                    + ('his ' if entity.fighter.male else 'her ') + 'foot until it is healed. ')
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.mv *= .4
-            entity.fighter.paralyzed_locs.extend([location])
-            entity.fighter.temp_physical_mod -= 40
-        if title == 'Foot Mutilated':
-            description.append(entity.name + '\'s foot has been mutilated beyond repair. '+ ('His ' if entity.fighter.male else 'Her ') + 
-                    'tendons, veins, and nerves are so extensively damaged that the foot will never function again. ')
-            entity.fighter.paralyzed_locs.extend([location])
-            entity.fighter.locations[location][1] = 0
-            entity.fighter.max_locations[location][1] = 0
-            entity.fighter.pain_mod_mov += 50
-            entity.fighter.mv *= .4
-            entity.fighter.temp_physical_mod -= 40
-        if title == 'Light Concussion':
-            description.append('The blow to the head has concussed ' + entity.name + '. ')
-            check = save_roll_un(entity.fighter.shock, 0)
-            if check[0] == 'cs':
-                description.append('However, ' + entity.name + ' continues to fight unimpeded.')
-            elif check[0] == 'cf':
-                description.append(entity.name + ' falls unconscious from the blow.')
-                handle_state_change(entity, entities, EntityState.unconscious)
-                entity.fighter.temp_physical_mod -= 10
-            elif check[0] == 's':
-                description.append('This renders ' + ('him ' if entity.fighter.male else 'her ') + 
-                'dizzy. ')
-                entity.fighter.temp_physical_mod -= 10
-            else:
-                description.append(('He ' if entity.fighter.male else 'She ') + 
-                'is dazed by the attack. ')
-                handle_state_change(entity, entities, EntityState.stunned)
-                entity.fighter.temp_physical_mod -= 10
-            
-        if title == 'Moderate Concussion':
-            description.append('The blow to the head has concussed ' + entity.name + '. ')
-            check = save_roll_un(entity.fighter.shock, -40)
-            if check[0] == 'cs':
-                description.append('However, ' + entity.name + ' continues to fight with only minor difficulty.')
-                entity.fighter.temp_physical_mod -= 10
-                entity.fighter.diseases.append(title)
-            elif check[0] == 'cf':
-                description.append(entity.name + ' falls unconscious from the blow.')
-                handle_state_change(entity, entities, EntityState.unconscious)
-                entity.fighter.temp_physical_mod -= 20
-                entity.fighter.diseases.append(title)
-            elif check[0] == 's':
-                description.append('This renders ' + ('him ' if entity.fighter.male else 'her ') + 
-                'very dizzy and disoriented. ')
-                entity.fighter.temp_physical_mod -= 20
-                entity.fighter.diseases.append(title)
-            else:
-                description.append(('He ' if entity.fighter.male else 'She ') + 
-                'is dazed by the attack. ')
-                handle_state_change(entity, entities, EntityState.stunned)
-                entity.fighter.temp_physical_mod -= 20
-                entity.fighter.diseases.append(title)
-            
-        if title == 'Severe Concussion':
-            description.append('The blow to the head has badly fractured ' + entity.name + '\'s skull. ')
-            check = save_roll_un(entity.fighter.shock, -80)
-            if check[0] == 'cs':
-                description.append('However, ' + entity.name + ' manages to largely keep ' + ('his ' if entity.fighter.male else 'her ') 
-                + 'wits.')
-                entity.fighter.temp_physical_mod -= 20
-                entity.fighter.diseases.append(title)
-            elif check[0] == 'cf':
-                description.append(entity.name + ' suffers a brain hemorrhage and dies.')
-                handle_state_change(entity, entities, EntityState.dead)
-            elif check[0] == 's':
-                description.append('This renders ' + ('him ' if entity.fighter.male else 'her ') + 
-                'very dizzy and disoriented. ')
-                entity.fighter.temp_physical_mod -= 30
-                entity.fighter.diseases.append(title)
-            else:
-                description.append(('He ' if entity.fighter.male else 'She ') + 
-                'is knocked unconscious by the attack. ')
-                handle_state_change(entity, entities, EntityState.unconscious)
-                entity.fighter.temp_physical_mod -= 30
-                entity.fighter.diseases.append(title)
-
-        if title == 'Brain Damage':
-            description.append('The blow to the head has caused permanent brain damage to ' + entity.name + 
-            '. ' + ('He ' if entity.fighter.male else 'She ') + 'immediately falls into a coma. ')
-            handle_state_change(entity, entities, EntityState.unconscious)
-            entity.fighter.diseases.extend('Coma')
-            roll = roll_dice(1,100)
-            if roll <= 30: 
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.mod_attribute('log', -40)
-                entity.fighter.mod_attribute('wis', -40)
-            elif roll <= 60:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.mod_attribute('log', -10)
-                entity.fighter.mod_attribute('wis', -10)
-                entity.fighter.mod_attribute('mem', -10)
-                entity.fighter.mod_attribute('comp', -10)
-                entity.fighter.mod_attribute('con', -10)
-                entity.fighter.mod_attribute('cre', -10)
-                entity.fighter.mod_attribute('men', -10)
-            elif roll <= 70:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.sit = 0
-            elif roll <= 80:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.hear = 0
-            elif roll <= 90:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.ts = 0
-            elif roll <= 95:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.diseases.append('Epilepsy')
-            elif roll <= 97:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                loc_roll = roll_dice(1,4)
-                if loc_roll == 1: 
-                    entity.fighter.paralyzed_locs.extend([7, 11, 15, 19])
-                    entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-                    entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-                if loc_roll == 2: 
-                    entity.fighter.paralyzed_locs.extend([8, 12, 16, 20])
-                    entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-                    entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-                if loc_roll == 3: 
-                    entity.fighter.paralyzed_locs.extend([21, 23, 25, 27])
-                    entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-                    entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-                    entity.fighter.mv *= .4
-                if loc_roll == 4: 
-                    entity.fighter.paralyzed_locs.extend([22, 24, 26, 28])
-                    entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-                    entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-                    entity.fighter.mv *= .4
-            elif roll == 98:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                i = 0
-                limbs = [[7, 11, 15, 19], [8, 12, 16, 20], [21, 23, 25, 27], [22, 24, 26, 28]]
-                while i < 2:
-                    loc_roll = roll_dice(1,len(limbs))-1
-                    entity.fighter.paralyzed_locs.extend([limbs.pop(roll)])
-                    i += 1
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.4)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.4)*-1)
-                if [21, 23, 25, 27] in entity.fighter.paralyzed_locs:
-                    entity.fighter.mv *= .4
-                if [22, 24, 26, 28] in entity.fighter.paralyzed_locs:
-                    entity.fighter.mv *= .4
-            elif roll == 99:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.paralyzed_locs.extend([7, 11, 15, 19, 8, 12, 16, 20, 21, 23, 25, 27, 22, 24, 26, 28])
-                entity.fighter.mv = 0
-            else: 
-                description.append(entity.name + 'begins doing the dead man\'s shuffle, foam and blood bubbling from ' + 
-                    ('his ' if entity.fighter.male else 'her ') + 'lips, and eyes wandering in alternate directions. ' +
-                    ('He ' if entity.fighter.male else 'She ') + 'is dead in moments. ')
-                handle_state_change(entity, entities, EntityState.dead)
-
-        if title == 'Crushed Skull':
-            description.append('The blow to the head has caved ' + entity.name + 
-            '\'s skull in. ' + ('He ' if entity.fighter.male else 'She ') + 'immediately falls into a coma. ')
-            #Reduce INT attribs by 50%
-            attrib_list = ['log', 'wis', 'mem', 'comp', 'con', 'cre', 'men']
-            for attrib in attrib_list:
-                atr = getattr(entity.fighter, attrib)
-                entity.fighter.mod_attribute(attrib, (atr*.5)*-1)
-
-            entity.fighter.mod_attribute('fac', -30)
-
-            handle_state_change(entity, entities, EntityState.unconscious)
-            entity.fighter.diseases.extend('Coma')
-
-            roll = roll_dice(1,100)
-            if roll <= 30: 
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.mod_attribute('log', -40)
-                entity.fighter.mod_attribute('wis', -40)
-            elif roll <= 60:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.mod_attribute('log', -10)
-                entity.fighter.mod_attribute('wis', -10)
-                entity.fighter.mod_attribute('mem', -10)
-                entity.fighter.mod_attribute('comp', -10)
-                entity.fighter.mod_attribute('con', -10)
-                entity.fighter.mod_attribute('cre', -10)
-                entity.fighter.mod_attribute('men', -10)
-            elif roll <= 70:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.sit = 0
-            elif roll <= 80:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.hear = 0
-            elif roll <= 90:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.ts = 0
-            elif roll <= 95:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.diseases.append('Epilepsy')
-            elif roll <= 97:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                loc_roll = roll_dice(1,4)
-                if loc_roll == 1: 
-                    entity.fighter.paralyzed_locs.extend([7, 11, 15, 19])
-                    entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-                    entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-                if loc_roll == 2: 
-                    entity.fighter.paralyzed_locs.extend([8, 12, 16, 20])
-                    entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-                    entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-                if loc_roll == 3: 
-                    entity.fighter.paralyzed_locs.extend([21, 23, 25, 27])
-                    entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-                    entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-                    entity.fighter.mv *= .4
-                if loc_roll == 4: 
-                    entity.fighter.paralyzed_locs.extend([22, 24, 26, 28])
-                    entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-                    entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-                    entity.fighter.mv *= .4
-            elif roll == 98:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                i = 0
-                limbs = [[7, 11, 15, 19], [8, 12, 16, 20], [21, 23, 25, 27], [22, 24, 26, 28]]
-                while i < 2:
-                    loc_roll = roll_dice(1,len(limbs))-1
-                    entity.fighter.paralyzed_locs.extend([limbs.pop(roll)])
-                    i += 1
-                entity.fighter.mod_attribute('ss', (entity.fighter.ss*.4)*-1)
-                entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.4)*-1)
-                if [21, 23, 25, 27] in entity.fighter.paralyzed_locs:
-                    entity.fighter.mv *= .4
-                if [22, 24, 26, 28] in entity.fighter.paralyzed_locs:
-                    entity.fighter.mv *= .4
-            elif roll == 99:
-                description.append('If ' + ('he ' if entity.fighter.male else 'she ') + 'survives, ' +
-                    ('he ' if entity.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
-                entity.fighter.paralyzed_locs.extend([7, 11, 15, 19, 8, 12, 16, 20, 21, 23, 25, 27, 22, 24, 26, 28])
-            else: 
-                description.append(entity.name + 'begins doing the dead man\'s shuffle, foam and blood bubbling from ' + 
-                    ('his ' if entity.fighter.male else 'her ') + 'lips, and eyes wandering in alternate directions. ' +
-                    ('He ' if entity.fighter.male else 'She ') + 'is dead in moments. ')
-                handle_state_change(entity, entities, EntityState.dead)
-
-        if title == 'Minor loss of sense':
-            attrib_list = ['sit', 'ts', 'hear']
-            roll = roll_dice(1,3) - 1
-            attrib = attrib_list[roll]
-            atr = getattr(entity.fighter, attrib)
-            entity.fighter.mod_attribute(attrib, (atr*.5)*-1)
-            description.append('The damage to ' + entity.name + '\'s deep facial nerves has caused a minor loss to one of ' + 
-                ('his ' if entity.fighter.male else 'her ') + 'senses. ')
-        
-        if title == 'Major loss of sense':
-            attrib_list = ['sit', 'ts', 'hear']
-            roll = roll_dice(1,3) - 1
-            attrib = attrib_list[roll]
-            atr = getattr(entity.fighter, attrib)
-            entity.fighter.mod_attribute(attrib, (atr*.9)*-1)
-            description.append('The damage to ' + entity.name + '\'s deep facial nerves has caused a major loss to one of ' + 
-                ('his ' if entity.fighter.male else 'her ') + 'senses. ')
-        
-        if title == 'Chipped Vertebra':
-            description.append('The blow seemes to have chipped a vertebra in ' + entity.name + '\'s spine. ')
-            entity.fighter.diseases.extend('Chronic pain, minor')
-            entity.fighter.adjust_max_locations(location,2,5)
-            entity.fighter.pain_mod_mov += 10
-
-        if title == 'Cracked Vertebra':
-            description.append('The blow seemes to have cracked a vertebra in ' + entity.name + '\'s spine. ' + 
-                'This is intensely painful and immediately reduces ' + ('his ' if entity.fighter.male else 'her ') + 
-                'physical ability tremendously. ')
-            entity.fighter.diseases.extend('Chronic pain, major')
-            entity.fighter.adjust_max_locations(location,2,5)
-            attrib_list = ['ss', 'pwr']
-            for attrib in attrib_list:
-                atr = getattr(entity.fighter, attrib)
-                entity.fighter.mod_attribute(attrib, (atr*.5)*-1)
-            entity.fighter.pain_mod_mov += 40
-
-        if title == 'Paralysis (Neck Down)':
-            description.append('The blow seemes to have severed something in ' + entity.name + '\'s spine. ' + 
-                ('He ' if entity.fighter.male else 'She ') + 'is now paralyzed from the neck down, and will die within minutes. ')
-            handle_state_change(entity, entities, EntityState.dead)
-        
-        if title == 'Bruised Bone':
-            description.append('A bone has been bruised, leading to serious pain whenever pressure is placed upon the bone. ')
-            entity.fighter.pain_mod_mov += 10
-
-        if title == 'Simple Collarbone Fracture':
-            description.append(entity.name + '\'s collarbone has been cracked, but is still capable of supporting weight, albeit painfully. ')
-            entity.fighter.pain_mod_mov += 20
-
-        if title == 'Complex Collarbone Fracture':
-            description.append(entity.name + '\'s collarbone has been badly broken, and bone is protruding from the skin. ' + 
-                ('He ' if entity.fighter.male else 'She ') + 'may not use the arm supported by the bone until healed. ')
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.paralyzed_locs.extend([location, location + 4, location + 8, location + 12, location + 16])
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-
-        if title == 'Shattered Shoulder':
-            description.append(entity.name + '\'s shoulder is shattered, and will never heal well enough to be used. ')
-            entity.fighter.pain_mod_mov += 60
-            entity.fighter.paralyzed_locs.extend([location, location + 4, location + 8, location + 12, location + 16])
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-
-        if title == 'Cracked Ribs':
-            description.append(entity.name + '\'s ribs have been cracked, making movement and deep breathing incredibly painful. ')
-            entity.fighter.pain_mod_mov += 20
-            entity.fighter.stamr *= 0.5
-
-        if title == 'Badly Broken Ribs':
-            description.append(entity.name + '\'s ribs are broken and protruding through the skin. All movement is intensely painful, and only short, quick breaths may be taken. ')
-            entity.fighter.pain_mod_mov += 60
-            entity.fighter.stamr *= 0.1
-            entity.fighter.adjust_max_locations(location,2,entity.fighter.max_locations[location][2] * 0.5)
-            
-
-        if title == 'Shattered Ribs':
-            description.append(entity.name + '\'s ribs are shattered, just collection of loose, bleeding bones in the body cavity.' + 
-                ('He ' if entity.fighter.male else 'She ') + 'will always be more prone to internal damage in this location. ' + 
-                'All movement is intensely painful, and breathing is incredibly difficult. ')
-            entity.fighter.pain_mod_mov += 80
-            entity.fighter.stamr *= 0.05
-            entity.fighter.adjust_max_locations(location,2,entity.fighter.max_locations[location][2])
-            entity.fighter.adjust_max_locations(location,1,entity.fighter.max_locations[location][1] * 0.2)            
-
-        if title == 'Paralysis (Chest Down)':
-            description.append('The blow seemes to have severed something in ' + entity.name + '\'s spine. ' + 
-                ('He ' if entity.fighter.male else 'She ') + 'is now paralyzed from the chest down. ')
-            i = location
-            while i < 29:
-                entity.fighter.paralyzed_locs.extend([i])
-                i += 1
-            entity.fighter.gen_stance = FighterStance.prone
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.6)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.6)*-1)
-            entity.fighter.mv *= .1
-        
-        if title == 'Paralysis (Waist Down)':
-            description.append('The blow seemes to have severed something in ' + entity.name + '\'s spine. ' + 
-                ('He ' if entity.fighter.male else 'She ') + 'is now paralyzed from the chest down. ')
-            i = location
-            while i < 29:
-                entity.fighter.paralyzed_locs.extend([i])
-                i += 1
-            entity.fighter.gen_stance = FighterStance.prone
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.5)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.5)*-1)
-            entity.fighter.mv *= .1
-
-        if title == 'Broken Pelvis':
-            description.append('A sharp crack and stab of pain seems to indicate that ' + entity.name + '\'s pelvis is broken. ' + 
-                ('He ' if entity.fighter.male else 'She ') + 'finds moving very painful. ')
-            entity.fighter.pain_mod_mov += 30
-
-        if title == 'Crushed Pelvis':
-            description.append('An intense, radiant pain and the immediate loss of support for both legs signals that ' + entity.name + 
-            '\'s pelvis is shattered. ' + ('He ' if entity.fighter.male else 'She ') + 'will never walk again. ')
-            check = save_roll_un(entity.fighter.will, -40)
-
-            if check[0] == 'cs':
-                description.append('Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                entity.fighter.gen_stance = FighterStance.sitting
-                entity.fighter.temp_physical_mod -= 30
-            elif check[0] == 'cf':
-                description.append(entity.name + ' collapses from the pain, and a portion of the shattered pelvis tears ' +
-                    ('his ' if entity.fighter.male else 'her ') + 'femoral artery. ' + ('He ' if entity.fighter.male else 'She ') +
-                    'is rapidly bleeding out. ')
-                handle_state_change(entity, entities, EntityState.unconscious)
-                entity.fighter.bleed.append([entity.fighter.max_vitae*.02,1000])
-            elif check[0] == 's':
-                description.append('Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
-                'manages to remain conscious. ')
-                entity.fighter.temp_physical_mod -= 40
-                entity.fighter.gen_stance = FighterStance.prone
-            else:
-                description.append(('He ' if entity.fighter.male else 'She ') + 
-                'is knocked unconscious by the attack. ')
-                handle_state_change(entity, entities, EntityState.unconscious)
-                entity.fighter.temp_physical_mod -= 40
-                entity.fighter.gen_stance = FighterStance.prone
-
-            entity.fighter.pain_mod_mov += 50
-            i = location
-            while i < 29:
-                entity.fighter.paralyzed_locs.extend([i])
-                i += 1
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.5)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.5)*-1)
-            entity.fighter.mv *= .1
-        
-        if title == 'Simple Humerus Fracture':
-            description.append('An audible crack accompanies the pain of a broken upper arm. ' + 
-                entity.name + ' instantly finds ' + ('his ' if entity.fighter.male else 'her ') + 
-                'arm difficult to use without pain. ')
-
-            entity.fighter.pain_mod_mov += 20
-            if location % 2 == 0: entity.fighter.atk_mod_r += -10
-            else: entity.fighter.atk_mod_l += -10
-
-        if title == 'Complex Humerus Fracture':
-            description.append('A loud pop and a shard of bone poking rudely through skin announce that ' + 
-                entity.name + '\'s upper arm is badly broken. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'will be unable to use it until healed, and every movement is agony. ')
-
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.temp_physical_mod -= 20
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-            entity.fighter.paralyzed_locs.extend([location, location + 4, location + 8, location + 12, location + 16])
-
-        if title == 'Shattered Humerus':
-            description.append('A horrifying crunch and ' + entity.name + 
-                '\'s upper arm goes completely limp, the flesh bending in unnatural angles. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'will never again be able to use this shattered limb. ')
-
-            entity.fighter.pain_mod_mov += 60
-            entity.fighter.temp_physical_mod -= 20
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-            entity.fighter.paralyzed_locs.extend([location, location + 4, location + 8, location + 12, location + 16])
-            entity.fighter.adjust_max_locations(location,2,entity.fighter.max_locations[location][2])
-        
-        if title == 'Hyper-extended Elbow':
-            description.append('A small pop and an explosion of pain signals that ' + entity.name + 
-                '\'s elbow has bent in the wrong direction. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 20
-            if location % 2 == 0: entity.fighter.atk_mod_r += -10
-            else: entity.fighter.atk_mod_l += -10
-
-        if title == 'Broken Elbow':
-            description.append('A loud cracking sound, sharp pain, and instability in ' + entity.name + 
-                '\'s elbow shows that it has been broken. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it if the pain of doing so can be resisted, but strength and accuracy are affected. ')
-            entity.fighter.pain_mod_mov += 30
-            entity.fighter.temp_physical_mod -= 20
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.05)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.05)*-1)
-
-        if title == 'Shattered Elbow':
-            description.append('The crunching, grinding noise that accompanies the blow to ' + entity.name + 
-                '\'s elbow tells the tale nearly as well as the sickening way ' + ('his ' if entity.fighter.male else 'her ') + 
-                'forearm goes limp. The elbow is shattered irreparably. ')
-            entity.fighter.pain_mod_mov += 30
-            entity.fighter.temp_physical_mod -= 20
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-            entity.fighter.paralyzed_locs.extend([location, location + 4, location + 8])
-            entity.fighter.adjust_max_locations(location,2,entity.fighter.max_locations[location][2])
-
-        if title == 'Radius Broken':
-            description.append('A small pop and sharp pain is the only sign that ' + entity.name + 
-                '\'s radius has been broken. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use the arm if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 10
-
-        if title == 'Ulna Broken':
-            description.append('A loud pop accompanies a new bend in ' + entity.name + 
-                '\'s forearm as the second arm bone gives way. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can no longer use the arm until it is set and healed. ')
-            entity.fighter.pain_mod_mov += 20
-            entity.fighter.temp_physical_mod -= 20
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-            entity.fighter.paralyzed_locs.extend([location, location + 4])
-
-        if title == 'Shattered Forearm':
-            description.append('A bright stab of blinding pain, a sound like wet twigs crunching under foot, and the sight of ' + entity.name + 
-                '\'s hand drooping bonelessly signals the shattering of ' + ('his ' if entity.fighter.male else 'her ') + 
-                'forearm. If ' + ('he ' if entity.fighter.male else 'she ') + 'ever fights again, it will be with one arm. ')
-            entity.fighter.pain_mod_mov += 30
-            entity.fighter.temp_physical_mod -= 20
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.1)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.1)*-1)
-            entity.fighter.paralyzed_locs.extend([location, location + 4])
-            entity.fighter.adjust_max_locations(location,2,entity.fighter.max_locations[location][2])
-
-        if title == 'Sprained Wrist':
-            description.append(entity.name + '\'s wrist gives a little to the blow and now exhibits pain when used. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 10
-
-        if title == 'Crushed/Severed Little Finger':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow catches ' + entity.name + '\'s little finger, ' + adj + 'ing it.' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it the hand if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 10
-
-        if title == 'Crushed/Severed Ring Finger':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow catches ' + entity.name + '\'s ring finger, ' + adj + 'ing it.' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it the hand if the pain of doing so can be resisted, but the loss of two fingers will reduce ' +
-                ('his ' if entity.fighter.male else 'her ') + 'effectiveness somewhat.')
-            entity.fighter.pain_mod_mov += 20
-            if location % 2 == 0: entity.fighter.atk_mod_r += -10
-            else: entity.fighter.atk_mod_l += -10
-
-        if title == 'Crushed/Severed Middle Finger':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow catches ' + entity.name + '\'s middle finger, ' + adj + 'ing it.' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it the hand if the pain of doing so can be resisted, but the loss of three fingers will reduce ' +
-                ('his ' if entity.fighter.male else 'her ') + 'effectiveness significantly.')
-            entity.fighter.pain_mod_mov += 30
-            if location % 2 == 0: entity.fighter.atk_mod_r += -40
-            else: entity.fighter.atk_mod_l += -40
-
-        if title == 'Crushed/Severed Index Finger':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow catches ' + entity.name + '\'s index finger, ' + adj + 'ing it.' +  
-                'With only the thumb remaining, ' + ('his ' if entity.fighter.male else 'her ') + 'hand is effectively useless.')
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.paralyzed_locs.extend([location])
-            entity.fighter.adjust_max_locations(location,2,entity.fighter.max_locations[location][2] * .5)
-
-        if title == 'Crushed/Severed Hand':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow has ' + adj + 'ed '+ entity.name + '\'s hand. '+  
-                ('His ' if entity.fighter.male else 'Her ') + 'hand is destroyed.')
-            entity.fighter.pain_mod_mov += 60
-            entity.fighter.paralyzed_locs.extend([location])
-            entity.fighter.adjust_max_locations(location,2,entity.fighter.max_locations[location][2])
-            if dam_type != 'B':
-                description.append('Aterial blood spurts from the stump with every heartbeat.')
-                entity.fighter.bleed.append([entity.fighter.max_vitae*.02,1000])
-                entity.fighter.adjust_max_locations(location,0,entity.fighter.max_locations[location][0])
-                entity.fighter.adjust_max_locations(location,1,entity.fighter.max_locations[location][1])
-
-        if title == 'Simple Femur Fracture':
-            description.append('A sharp pain signals that ' + entity.name + 
-                '\'s femur has been cracked. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use the leg if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 20
-
-        if title == 'Complex Femur Fracture':
-            description.append('A wet pop is followed searing pain as ' + entity.name + 
-                '\'s femur splinters and breaks. ')
-
-            check = save_roll_un(entity.fighter.bal, -20)
-            if check[0] == 'cs' or 's':
-                    description.append(('He ' if entity.fighter.male else 'She ') + 'manages to remain standing. ')
-            else: 
-                check = save_roll_un(entity.fighter.will, -40)
-                if check[0] == 'cs':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        'Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.gen_stance = FighterStance.sitting
-                    entity.fighter.temp_physical_mod -= 30
-                elif check[0] == 'cf':
-                    description.append(entity.name + ' collapses, and a portion of the broken femur tears ' +
-                        'open an artery. ' + ('He ' if entity.fighter.male else 'She ') + 'is bleeding profusely. The pain is more than ' 
-                        + ('he ' if entity.fighter.male else 'she ') + ' can take, and' + ('he ' if entity.fighter.male else 'she ') + 'falls unconscious. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.bleed.append([entity.fighter.max_vitae*.04,10])
-                elif check[0] == 's':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
-                        'manages to remain conscious. ')
-                    entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.gen_stance = FighterStance.prone
-                else:
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.gen_stance = FighterStance.prone
-
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4, location + 6])
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-            entity.fighter.mv *= .4
-
-        if title == 'Shattered Femur':
-            description.append('Several loud, wet pops herald the shattering of ' + entity.name + 
-                '\'s femur in several smaller pieces. The leg unloads completely, wiggling like something made of jelly as '
-                + entity.name + 'is thrown unceremoniously off balance. ')
-                    
-            check = save_roll_un(entity.fighter.bal, -40)
-            if check[0] == 'cs' or 's':
-                    description.append('Amazingly, ' + ('he ' if entity.fighter.male else 'she ') + 'manages to remain standing. ')
-            else: 
-                check = save_roll_un(entity.fighter.will, -40)
-                if check[0] == 'cs':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        'Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.gen_stance = FighterStance.sitting
-                    entity.fighter.temp_physical_mod -= 30
-                elif check[0] == 'cf':
-                    description.append(entity.name + ' collapses, and a portion of the broken femur tears ' +
-                        'open the femoral artery. ' + ('He ' if entity.fighter.male else 'She ') + 'is bleeding out rapidly. The pain is more than ' 
-                        + ('he ' if entity.fighter.male else 'she ') + ' can take, and' + ('he ' if entity.fighter.male else 'she ') + 'falls unconscious. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.bleed.append([entity.fighter.max_vitae*.02,1000])
-                elif check[0] == 's':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
-                        'manages to remain conscious. ')
-                    entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.gen_stance = FighterStance.prone
-                else:
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.gen_stance = FighterStance.prone
-
-            entity.fighter.pain_mod_mov += 80
-            entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4, location + 6])
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-            entity.fighter.mv *= .4
-
-        if title == 'Hyper-extended Knee':
-            description.append('A small pop and a burst of pain signals that ' + entity.name + 
-                '\'s knee has bent in the wrong direction. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.mv *= .9
-
-        if title == 'Broken Knee':
-            description.append('A wet pop and the feeling of something being very out of place is followed searing pain as ' + entity.name + 
-                '\'s knee breaks. ' + ('His ' if entity.fighter.male else 'Her ') + 'leg immediately buckles. ')
-
-            check = save_roll_un(entity.fighter.bal, -20)
-            if check[0] == 'cs' or 's':
-                    description.append('However, ' + ('he ' if entity.fighter.male else 'she ') + 'manages to remain standing. ')
-            else: 
-                check = save_roll_un(entity.fighter.will, -40)
-                if check[0] == 'cs':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the leg. ' + 
-                        'Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.gen_stance = FighterStance.sitting
-                    entity.fighter.temp_physical_mod -= 20
-                elif check[0] == 'cf':
-                    description.append(entity.name + ' collapses, and lands on the leg. ' 
-                        + ' The pain is more than ' + ('he ' if entity.fighter.male else 'she ') + ' can take, and' 
-                        + ('he ' if entity.fighter.male else 'she ') + 'falls unconscious. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.gen_stance = FighterStance.prone
-                elif check[0] == 's':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
-                        'manages to remain conscious. ')
-                    entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.gen_stance = FighterStance.prone
-                else:
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.gen_stance = FighterStance.prone
-
-            entity.fighter.pain_mod_mov += 20
-            entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4, location + 6])
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-            entity.fighter.mv *= .4
-
-        if title == 'Shattered Knee':
-            description.append('A horrible crunching, grating sound and starburst of pain signal that ' + entity.name + 
-                '\'s knee has been shattered. ' + ('His ' if entity.fighter.male else 'Her ') + 'leg immediately buckles. ')
-
-            check = save_roll_un(entity.fighter.bal, -30)
-            if check[0] == 'cs' or 's':
-                    description.append('However, ' + ('he ' if entity.fighter.male else 'she ') + 'manages to remain standing. ')
-            else: 
-                check = save_roll_un(entity.fighter.will, -60)
-                if check[0] == 'cs':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the leg. ' + 
-                        'Despite the pain, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.gen_stance = FighterStance.sitting
-                    entity.fighter.temp_physical_mod -= 20
-                elif check[0] == 'cf':
-                    description.append(entity.name + ' collapses, and lands on the leg. ' 
-                        + ' The pain is more than ' + ('he ' if entity.fighter.male else 'she ') + ' can take, and' 
-                        + ('he ' if entity.fighter.male else 'she ') + 'falls unconscious. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.gen_stance = FighterStance.prone
-                elif check[0] == 's':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
-                        'manages to remain conscious. ')
-                    entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.gen_stance = FighterStance.prone
-                else:
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.gen_stance = FighterStance.prone
-
-            entity.fighter.pain_mod_mov += 20
-            entity.fighter.paralyzed_locs.extend([location, location + 2, location + 4, location + 6])
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-            entity.fighter.mv *= .4
-
-        if title == 'Fibula Broken':
-            description.append('A bright flash of pain in ' + entity.name + 
-                '\'s shin signals that something has cracked. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use the leg if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 20
-
-        if title == 'Tibia Broken':
-            description.append('A second sharp pain and muted crack is a message that ' + entity.name + 
-                '\'s second shin bone has broken. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use the leg, but it is incredibly painful. ')
-            entity.fighter.pain_mod_mov += 30
-
-        if title == 'Shattered Shin':
-            description.append('A sound like a wet piece of wood being split accompanies a roaring pain in ' + entity.name + 
-                '\'s shin. It shatters, and the foot bends unnaturally as the shin buckles under ' + entity.name + 
-                '\'s weight. ')
-
-            check = save_roll_un(entity.fighter.bal, -30)
-            if check[0] == 'cs' or 's':
-                    description.append('Amazingly, ' + ('he ' if entity.fighter.male else 'she ') + 'manages to remain standing. ')
-            else: 
-                check = save_roll_un(entity.fighter.will, -40)
-                if check[0] == 'cs':
-                    description.append(entity.name + 'falls bodily to the floor. ' + 
-                        'Despite the pain of the fall, ' + entity.name + ' manages to stay conscious and ease into a seated position. ')
-                    entity.fighter.gen_stance = FighterStance.sitting
-                    entity.fighter.temp_physical_mod -= 20
-                elif check[0] == 'cf':
-                    description.append(entity.name + ' collapses, and a portion of the broken shin tears ' +
-                        'open an artery. ' + ('He ' if entity.fighter.male else 'She ') + 'is bleeding profusely. The pain is more than ' 
-                        + ('he ' if entity.fighter.male else 'she ') + ' can take, and' + ('he ' if entity.fighter.male else 'she ') + 'falls unconscious. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.bleed.append([entity.fighter.max_vitae*.04,10])
-                    entity.fighter.temp_physical_mod -= 40
-                elif check[0] == 's':
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        'Despite the pain of the fall, ' + ('he ' if entity.fighter.male else 'she ') + 
-                        'manages to remain conscious. ')
-                    entity.fighter.temp_physical_mod -= 30
-                    entity.fighter.gen_stance = FighterStance.prone
-                else:
-                    description.append(entity.name + 'falls bodily to the floor, landing hard on the broken leg. ' + 
-                        ('He ' if entity.fighter.male else 'She ') + 'is knocked unconscious by the pain. ')
-                    handle_state_change(entity, entities, EntityState.unconscious)
-                    entity.fighter.temp_physical_mod -= 40
-                    entity.fighter.gen_stance = FighterStance.prone
-
-            entity.fighter.pain_mod_mov += 30
-            entity.fighter.paralyzed_locs.extend([location, location + 2])
-            entity.fighter.mod_attribute('ss', (entity.fighter.ss*.25)*-1)
-            entity.fighter.mod_attribute('pwr', (entity.fighter.pwr*.25)*-1)
-            entity.fighter.mv *= .4
-
-        if title == 'Sprained Ankle':
-            description.append(entity.name + '\'s ankle gives a little to the blow and each step is now painful. ' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 20
-
-        if title == '1 toe destroyed':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow catches ' + entity.name + '\'s toe, ' + adj + 'ing it.' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use it the foot if the pain of doing so can be resisted. ')
-            entity.fighter.pain_mod_mov += 10
-
-        if title == '2 toes destroyed':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow catches two of ' + entity.name + '\'s toes, ' + adj + 'ing them.' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use the foot if the pain of doing so can be resisted, but the loss of two toes will reduce ' +
-                ('his ' if entity.fighter.male else 'her ') + 'speed somewhat.')
-            entity.fighter.pain_mod_mov += 20
-            entity.fighter.mv *= .9
-
-        if title == '3 toes destroyed':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow catches three of ' + entity.name + '\'s toes, ' + adj + 'ing them.' + ('He ' if entity.fighter.male else 'She ') + 
-                'can still use the foot if the pain of doing so can be resisted, but the loss of three toes will reduce ' +
-                ('his ' if entity.fighter.male else 'her ') + 'speed significantly.')
-            entity.fighter.pain_mod_mov += 40
-            entity.fighter.mv *= .6
-
-        if title == '4 toes destroyed':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow catches four of ' + entity.name + '\'s toes, ' + adj + 'ing them.' + ('He ' if entity.fighter.male else 'She ') + 
-                'will find it difficult to maintain balance or move with nearly all of ' +
-                ('his ' if entity.fighter.male else 'her ') + 'toes' + adj + 'ed. ')
-            entity.fighter.pain_mod_mov += 50
-            entity.fighter.mv *= .5
-            entity.fighter.temp_physical_mod -= 20
-
-        if title == 'Crushed/Severed Foot':
-            adj = ''
-            if dam_type == 'B': adj = 'crush'
-            else: adj = 'sever'
-            description.append('The blow ' + adj + 'ed ' + entity.name + '\'s foot.' + ('He ' if entity.fighter.male else 'She ') + 
-                'must balance on the heel, as the rest of the foot is destroyed. ')
-            entity.fighter.pain_mod_mov += 60
-            entity.fighter.mv *= .4
-            entity.fighter.temp_physical_mod -= 30
-            entity.fighter.paralyzed_locs.extend([location])
-            entity.fighter.adjust_max_locations(location,2,entity.fighter.max_locations[location][2])
-            if dam_type != 'B':
-                entity.fighter.adjust_max_locations(location,0,entity.fighter.max_locations[location][0])
-                entity.fighter.adjust_max_locations(location,1,entity.fighter.max_locations[location][1])
-
-        if title != 'None' and entity.state is not EntityState.dead:
-            entity.fighter.injuries.extend([entity.fighter.name_location(location) + ': ' + title])
-                
-
-    return description
-
 def filter_injuries(master_class, location, damage_type, severity, layer, recipient) -> set:
     injuries = set(itersubclasses(master_class))
-    loc_idx = recipient.fighter.name_location(location)
     loc_matches = set()
     dt_matches = set()
     sev_matches = set()
     layer_matches = set()
     avail_prereqs = []
+    loc_name = recipient.fighter.name_location(location)
 
     for injury in injuries:
-        a = injury(location, recipient, damage_type)
+        a = injury(loc_name, recipient, damage_type)
         dupes = 0
         #Block below to find duplicates and remove injury if not allowed
         for i in recipient.fighter.injuries:
@@ -2359,7 +727,7 @@ def filter_injuries(master_class, location, damage_type, severity, layer, recipi
             continue 
         if a.prerequisite is not None and a.prerequisite not in avail_prereqs:
             continue
-        if loc_idx in a.locations:
+        if location in a.locations:
             loc_matches.add(injury)
         if damage_type in a.damage_type:
             dt_matches.add(injury)
@@ -2371,10 +739,11 @@ def filter_injuries(master_class, location, damage_type, severity, layer, recipi
     valid = loc_matches.intersection(dt_matches,sev_matches,layer_matches)
     return valid
 
-def apply_injuries(valid_injuries, location, recipient, damage_type):
+def apply_injuries(valid_injuries, location, recipient, damage_type) -> list:
     roll = roll_dice(1,len(valid_injuries))
     injuries = list(valid_injuries)
     injury = injuries[roll-1](location, recipient, damage_type)
+    messages = []
     
     #Remove prereq if one exists
     if injury.prerequisite is not None:
@@ -2382,12 +751,317 @@ def apply_injuries(valid_injuries, location, recipient, damage_type):
         for i in recipient.fighter.injuries:
             if type(i) is injury.prerequisite:
                 idx = recipient.fighter.injuries.index(i)
-        recipient.fighter.injuries.pop(idx)
+        apply_injury_effects(recipient, recipient.fighter.injuries.pop(idx), location, True) 
 
+    #apply new injury
+    messages = apply_injury_effects(recipient, injury, location)
     recipient.fighter.injuries.append(injury)
 
+    return messages
+
+def find_next_location(location, atk_angle, entity_angle) -> int:
+    '''Finds the next location along the path in a pass-through attack'''
+    if 0 <= entity_angle < 45 or 315 < entity_angle: #Directly in front
+        #Key is loc, List is list of next locs based on atk_angle in atk_angle order (clockwise; N->S, NE->SW, etc.)
+        loc_dict = {0:[1,1,None,None,None,None,None,1,None],1:[2,3,None,0,0,0,None,4,None],2:[6,5,None,1,1,1,None,6,None],
+                    3:[5,7,None,None,None,2,4,6,None],4:[6,5,3,2,None,None,None,8,None], 5:[9,11,9,3,3,2,6,10,None],6:[10,9,5,2,4,4,8,12,None],
+                    7:[11,None,None,None,3,3,5,9,None],8:[12,10,6,4,4,None,None,None,None],9:[13,15,11,7,5,6,10,14,None],10:[14,13,9,5,6,8,12,16,None],
+                    11:[15,None,None,None,7,5,10,13,None],12:[16,14,10,6,8,None,None,None,None],13:[17,19,15,11,9,10,14,18,None],
+                    14:[18,17,13,9,10,12,16,20,None],15:[19,None,None,None,11,9,13,17,None],16:[20,18,14,10,12,None,None,None,None],
+                    17:[21,None,19,15,13,14,18,22,None],18:[22,21,17,13,14,20,None,None,None],19:[None,None,None,None,15,13,17,21,None],
+                    20:[None,22,18,14,16,None,None,None,None],21:[23,None,None,19,17,18,22,24,None],22:[24,23,21,17,18,20,None,None,None],
+                    23:[25,None,None,None,21,22,24,26,None],24:[26,25,23,21,22,None,None,None,None],25:[27,None,None,None,23,24,26,28,None],
+                    26:[28,27,25,23,24,None,None,None,None],27:[None,None,None,None,25,26,28,None,None],28:[None,None,27,25,26,None,None,None,None]}
+        
+    elif 135 < entity_angle < 225: #Directly behind
+        loc_dict = {0:[1,1,None,None,None,None,None,1,None],1:[2,4,None,0,0,0,None,3,None],2:[5,6,None,1,1,1,None,5,None],
+                    3:[5,6,4,2,None,None,None,7,None],4:[6,8,None,None,None,2,3,5,None], 5:[9,10,6,2,3,3,7,11,None],6:[10,12,8,4,4,2,5,9,None],
+                    7:[11,9,5,3,3,None,None,None,None],8:[12,None,None,None,4,4,6,10,None],9:[13,14,10,6,5,7,11,15,None],10:[14,16,12,8,6,5,9,13,None],
+                    11:[15,13,10,5,7,None,None,None,None],12:[16,None,None,None,8,6,10,14,None],13:[17,18,14,10,9,11,15,19,None],
+                    14:[18,20,16,12,10,9,13,17,None],15:[19,17,13,9,11,None,None,None,None],16:[20,None,None,None,12,10,14,18,None],
+                    17:[21,22,18,14,13,15,19,None,None],18:[22,None,20,16,14,13,17,21,None],19:[None,21,17,13,15,None,None,None,None],
+                    20:[None,None,None,None,16,14,18,22,None],21:[23,24,22,18,17,19,None,None,None],22:[24,None,None,20,18,17,21,23,None],
+                    23:[25,26,24,22,21,None,None,None,None],24:[26,None,None,None,22,21,23,25,None],25:[27,28,26,24,23,None,None,None,None],
+                    26:[28,None,None,None,24,27,25,23,None],27:[None,None,28,26,25,None,None,None,None],28:[None,None,None,None,26,27,25,None,None]}
+    elif 45 <= entity_angle <= 135: #Left side
+        loc_dict = {0:[1,None,None,None,None,None,None,None,None],1:[2,None,None,None,0,None,None,None,None],2:[4,None,None,None,1,None,None,None,None],
+                    3:[5,None,None,None,2,None,None,None,None],4:[6,None,None,None,None,None,None,None,3], 5:[9,None,None,None,3,None,None,None,7],6:[10,None,None,None,4,None,None,None,5],
+                    7:[11,None,None,None,3,None,None,None,None],8:[12,None,None,None,4,None,None,None,6],9:[13,None,None,None,5,None,None,None,11],10:[14,None,None,None,6,None,None,None,9],
+                    11:[15,None,None,None,7,None,None,None,None],12:[16,None,None,None,8,None,None,None,11],13:[17,None,None,None,9,None,None,None,15],
+                    14:[18,None,None,None,10,None,None,None,13],15:[19,None,None,None,11,None,None,None,None],16:[20,None,None,None,12,None,None,None,14],
+                    17:[21,None,None,None,13,None,None,None,19],18:[22,None,None,None,14,None,None,None,17],19:[None,None,None,None,15,None,None,None,None],
+                    20:[None,None,None,None,16,None,None,None,18],21:[23,None,None,None,17,None,None,None,None],22:[24,None,None,None,18,None,None,None,21],
+                    23:[25,None,None,None,21,None,None,None,None],24:[26,None,None,None,22,None,None,None,23],25:[27,None,None,None,23,None,None,None,None],
+                    26:[28,None,None,None,24,None,None,None,25],27:[None,None,None,None,25,None,None,None,None],28:[None,None,None,None,26,None,None,None,27]}
+    else: #Right side
+        loc_dict = {0:[1,None,None,None,None,None,None,None,None],1:[2,None,None,None,0,None,None,None,None],2:[3,None,None,None,1,None,None,None,None],
+                    3:[5,None,None,None,2,None,None,None,4],4:[6,None,None,None,None,None,None,None,None], 5:[9,None,None,None,3,None,None,None,6],6:[10,None,None,None,4,None,None,None,8],
+                    7:[11,None,None,None,3,None,None,None,5],8:[12,None,None,None,4,None,None,None,None],9:[13,None,None,None,5,None,None,None,10],10:[14,None,None,None,6,None,None,None,12],
+                    11:[15,None,None,None,7,None,None,None,9],12:[16,None,None,None,8,None,None,None,None],13:[17,None,None,None,9,None,None,None,14],
+                    14:[18,None,None,None,10,None,None,None,16],15:[19,None,None,None,11,None,None,None,13],16:[20,None,None,None,12,None,None,None,None],
+                    17:[21,None,None,None,13,None,None,None,18],18:[22,None,None,None,14,None,None,None,20],19:[None,None,None,None,15,None,None,None,17],
+                    20:[None,None,None,None,16,None,None,None,None],21:[23,None,None,None,17,None,None,None,22],22:[24,None,None,None,18,None,None,None,None],
+                    23:[25,None,None,None,21,None,None,None,24],24:[26,None,None,None,22,None,None,None,None],25:[27,None,None,None,23,None,None,None,26],
+                    26:[28,None,None,None,24,None,None,None,None],27:[None,None,None,None,25,None,None,None,28],28:[None,None,None,None,26,None,None,None,None]}
+
+    new_loc = loc_dict.get(location)[atk_angle]
+
+    return new_loc
+
+def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs) -> list:
+    atk_angle = angle_id(attacker.fighter.combat_choices[3])
+    rel_angle = entity_angle(defender, attacker)
+
+    deflect, soak = calc_damage_soak(dam_type, defender)
+    dam_type = attacker.fighter.combat_choices[1].damage_type[0]
+
+    messages = []
+    
+    
+    #Calc pre-soak damage total
+    dam_amount = dam_mult * cs.get(dam_type + ' psi')
+    
+    #Just to start while loop
+    damage = dam_amount
+
+    layer = 0
+
+    while location is not None and damage > 0:
+
+        if roll <= deflect[layer]: 
+            messages.append(attacker.name + ' hit ' + defender.name + ', but the blow deflected harmlessly. ')
+            break
+        
+        #Store previous damage level to avoid repeating damage effects
+        prev_health = defender.fighter.locations[location][layer]
+        
+        #determine how much damage is done to loc/layer and if pass-through occurs
+        new_damage, new_location, new_layer = calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk_angle, rel_angle)  
+
+        messages = get_injuries(defender, prev_health, location, layer, dam_type)
+
+        if new_location != location or new_layer != layer:
+            damage = new_damage
+            layer = new_layer
+            location = new_location
+        else:
+            damage = 0
+            location = None
+
+        handle_mobility_change(defender)
+        
+    
+    return messages
 
 
+def calc_damage_soak(dam_type, target) -> (list, list):
+    if dam_type == 'b':
+        deflect = [15, 25, 0]        
+        soak =  [.8 + ((((target.fighter.derm)*.75) + ((target.fighter.fat)*.25))/100 *.08),
+                 .75 + ((((target.fighter.fat)*.6) + ((target.fighter.str)*.4))/100 *.08), 
+                 .4 + (sqrt(target.fighter.flex)/100)]
+        for i in soak:
+            if i > .95: i = .95
+
+    elif dam_type == 's':
+        deflect = [0, 0, 15]
+        soak =  [.8, .7, .65]
+
+    elif dam_type == 'p':
+        deflect = [0, 0, 90]
+        soak =  [.85, .8, .05]
+
+
+    elif dam_type == 't':
+        deflect = [0, 0, 100]
+        soak =  [.5 + (sqrt(target.fighter.derm)/50), 
+                .5 + (sqrt(target.fighter.fat)/50), 
+                0]
+
+
+    return deflect, soak
+
+def calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk_angle, entity_angle) -> (int, int, int):
+
+    
+    #Calc final damage
+    damage = int(round((1-soak[layer])*dam_amount))
+
+    if defender.fighter.locations[location][layer] < damage:
+        damage -= defender.fighter.locations[location][layer]
+        defender.fighter.locations[location][layer] = 0
+        if layer < 2:
+            layer += 1
+        else:
+            layer = 0
+            location = find_next_location(location, atk_angle, entity_angle)
+    else:
+        defender.fighter.locations[location][layer] -= damage
+        if layer == 2 and dam_type == 'p':
+            location = find_next_location(location, atk_angle, entity_angle)
+            layer = 0
+        else:
+            damage = 0
+    
+    return location, layer, damage
+
+def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
+    messages = []
+    loc_name = defender.fighter.name_location(location)
+    #Determine damage effect level
+    #Find % damage
+    dam_percent = 0
+    layer_health = defender.fighter.locations[location][layer]
+    if layer_health != 0: 
+        dam_percent = (defender.fighter.locations[location][layer]/defender.fighter.max_locations[location][layer])
+        prev_percent = (prev_health/defender.fighter.max_locations[location][layer])
+
+    dam_thresh = find_dam_threshold(dam_percent)
+    prev_thresh = find_dam_threshold(prev_percent)
+
+    new_thresh = dam_thresh - prev_thresh
+
+    if new_thresh > 0:
+        for i in range(new_thresh):
+            valid_injuries = filter_injuries(Injury, location, dam_type, dam_thresh, layer, defender)
+            messages = apply_injuries(valid_injuries, loc_name, defender, dam_type)
+
+    return messages
+
+def find_dam_threshold(percent) -> int:
+    dam_thresh = 0
+
+    if percent <= .9: dam_thresh += 1
+    if percent <= .75: dam_thresh += 1
+    if percent <= .5: dam_thresh += 1
+    if percent <= .25: dam_thresh += 1
+    if percent <= .1: dam_thresh += 1
+    if percent <= 0: dam_thresh += 1
+
+    return dam_thresh
+
+def apply_injury_effects(recipient, injury, location, remove = False) -> list:
+    '''Generic injury effect applier. remove bool reverses any reversible or non-temp effects'''
+    messages = []
+
+    if not remove:
+        messages.append(injury.description)
+
+    if injury.pain_check and not remove:
+        check = save_roll_un(recipient.fighter.wil, 0)
+        if 'f' in check:
+            recipient.state = EntityState.stunned
+            messages.append(recipient.name + ' is overcome by the pain from the blow, and is stunned for a short while.')
+
+        elif 'cf' in check:
+            recipient.fighter.gen_stance = FighterStance.prone
+            recipient.state = EntityState.unconscious
+            messages.append(recipient.name + ' faints due to the intense pain of the wound.')
+
+    if injury.shock_check and not remove:
+        check = save_roll_un(recipient.fighter.shock, 0)
+        if 'f' in check:
+            recipient.state = EntityState.shock
+            messages.append(recipient.name + ' is experiencing the early effects of shock, and is disoriented and unstable.')
+            recipient.fighter.mod_attribute('clarity',-20)
+
+        elif 'cf' in check:
+            recipient.fighter.gen_stance = FighterStance.prone
+            recipient.state = EntityState.unconscious
+            recipient.fighter.bleed.append([100,100])
+            messages.append(recipient.name + ' rapidly goes into shock and collapses.')
+
+    if injury.balance_check and not remove:
+        check = save_roll_un(recipient.fighter.shock, 0)
+        if 'f' in check or 'cf' in check:
+            recipient.fighter.gen_stance = FighterStance.prone
+            messages.append(recipient.name + ' is toppled by the blow.')
+
+    if injury.clarity_reduction is not None:
+        if remove:
+            recipient.fighter.mod_attribute('clarity',injury.clarity_reduction)
+        else:
+            recipient.fighter.mod_attribute('clarity',-injury.clarity_reduction)
+
+    if injury.bleed_amount is not None and not remove:
+        recipient.fighter.bleed.append([injury.bleed_amount, injury.bleed_duration])
+
+    if injury.attr_name is not None:
+        for a in injury.attr_name:
+            if remove:
+                recipient.fighter.mod_attribute(injury.attr_name[a], -injury.attr_amount[a])
+            else:
+                recipient.fighter.mod_attribute(injury.attr_name[a], injury.attr_amount[a])
+
+    if injury.loc_reduction is not None and not remove:
+        recipient.fighter.locations[location][injury.layer] -= injury.loc_reduction
+
+    if injury.loc_max is not None and not remove:
+        recipient.fighter.max_locations[location][injury.layer] = recipient.fighter.max_locations[location][injury.layer]*injury.loc_reduction
+    
+    if injury.severed_locs is not None and not remove:
+        recipient.fighter.severed_locs.update(injury.severed_locs)
+
+    if injury.paralyzed_locs is not None and not remove:
+        recipient.fighter.paralyzed_locs.update(injury.paralyzed_locs)
+
+    if injury.temp_phys_mod is not None and not remove:
+        recipient.fighter.temp_physical_mod -= injury.temp_phys_mod
+
+    if injury.suffocation is not None and not remove:
+        if recipient.fighter.suffocation is not None and recipient.fighter.suffocation > injury.suffocation:
+           recipient.fighter.suffocation = injury.suffocation
+    
+    if injury.stam_drain is not None:
+        if remove:
+            recipient.fighter.mod_attribute('stam_drain',-injury.stam_drain)
+        else:
+            recipient.fighter.mod_attribute('stam_drain',injury.stam_drain)
+    
+    if injury.stam_regin is not None:
+        if remove:
+            recipient.fighter.mod_attribute('stamr',recipient.fighter.max_stamr * injury.stam_regin)
+        else:
+            recipient.fighter.mod_attribute('stam_regin',-(recipient.fighter.max_stamr * injury.stam_regin))
+
+    if injury.pain_mv_mod is not None:
+        if remove:
+            recipient.fighter.pain_mod_mov -= injury.pain_mv_mod
+        else:
+            recipient.fighter.pain_mod_mov += injury.pain_mv_mod
+
+    if injury.diseases is not None and not remove:
+        recipient.fighter.diseases.update(injury.diseases)
+
+    if injury.atk_mod_r is not None:
+        if remove:
+            recipient.fighter.atk_mod_r += -injury.atk_mod_r
+        else:
+            recipient.fighter.atk_mod_r += injury.atk_mod_r
+    
+    if injury.atk_mod_l is not None:
+        if remove:
+            recipient.fighter.atk_mod_l += -injury.atk_mod_l
+        else:
+            recipient.fighter.atk_mod_l += injury.atk_mod_l
+    
+    if injury.mv_mod:
+        if remove:
+            recipient.fighter.mod_attribute('mv',recipient.fighter.max_mv * injury.mv_mod)
+        else:
+            recipient.fighter.mod_attribute('mv',-(recipient.fighter.max_mv * injury.mv_mod))
+
+    if injury.gen_stance is not None and not remove:
+        recipient.fighter.gen_stance = injury.gen_stance
+        if recipient.fighter.gen_stance == FighterStance.prone:
+            messages.append(recipient.name + ' is knocked prone. ')
+        elif recipient.fighter.gen_stance == FighterStance.kneeling:
+            messages.append(recipient.name + ' is forced to their knees. ')
+
+    if injury.state is not None and not remove:
+        recipient.fighter.state = injury.state
+
+    return messages
 
 def calc_modifiers(weapon, location, angle_id) -> (int, int, int, int):
     #Weapon mods
@@ -3034,7 +1708,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         if len(command) != 0:
             if command.get('Take the hit'):
                 hit = True
-                effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+                effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
             if command.get('Dodge'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
@@ -3045,7 +1719,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     else: message = (curr_actor.name + ' dodged the attack. ')
                 elif location not in curr_actor.fighter.auto_block_locs:
                     hit = True
-                    effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
                 else: auto_block = True
             if command.get('Parry'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.deflect, parry_mod, enemy.fighter.atk_result, final_to_hit)
@@ -3057,7 +1731,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     else: message = (curr_actor.name + ' parried the blow. ')
                 elif location not in curr_actor.fighter.auto_block_locs:
                     hit = True
-                    effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
                 else: auto_block = True
             if command.get('Block'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.best_combat_skill, parry_mod, enemy.fighter.atk_result, final_to_hit)
@@ -3081,16 +1755,17 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     elif enemy.fighter.combat_choices[2] in [18,22,24,26]: blocker = 26
 
 
-                    effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, blocker, cs)
+                    
+                    effects = damage_controller(curr_actor, enemy, blocker, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, enemy.fighter.atk_result, cs)
                 else:
                     hit = True
-                    effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
             
             menu_dict = dict()
     else:
         if location not in curr_actor.fighter.auto_block_locs:
             hit = True
-            effects = apply_dam(curr_actor, entities, enemy.fighter.dam_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.combat_choices[2], cs)
+            effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
         else:
             auto_block = True
     
@@ -3107,8 +1782,8 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         elif enemy.fighter.combat_choices[2] in [17,21,23,25]: blocker = 25
         elif enemy.fighter.combat_choices[2] in [18,22,24,26]: blocker = 26
 
-
-        effects = apply_dam(curr_actor, entities, enemy.fighter.atk_result, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, blocker, cs)
+        effects = damage_controller(curr_actor, enemy, blocker, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, enemy.fighter.atk_result, cs)
+        
 
     if message or effects:
         combat_phase = CombatPhase.action
