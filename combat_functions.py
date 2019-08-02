@@ -526,7 +526,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
         if entity in curr_target.fighter.targets:
             combat_phase = CombatPhase.defend
         else:
-            effects = damage_controller(curr_target, curr_actor, loc_idx, dam_type, dam_mult, entity.fighter.atk_result, cs)
+            effects = damage_controller(curr_target, curr_actor, loc_idx, dam_type, dam_mult, entity.fighter.atk_result, cs, entities)
     
             if effects:
                 combat_phase = CombatPhase.action
@@ -631,12 +631,10 @@ def handle_persistant_effects(entity, entities):
             entity.fighter.vitae += entity.fighter.vitr/12
             #Handle bleeding to death
             if entity.fighter.max_vitae*.25 >= entity.fighter.vitae:
-                handle_state_change(entity, entities, EntityState.dead)
                 messages.append(entity.name + ' has passed out from blood loss and will soon be dead. ')
         #Handle suffocation
         if entity.fighter.suffocation:
             if entity.fighter.suffocation == 0:
-                handle_state_change(entity, entities, EntityState.dead)
                 messages.append(entity.name + ' has suffocated an died. ')
             else: 
                 entity.fighter.suffocation -= 1
@@ -650,9 +648,13 @@ def handle_persistant_effects(entity, entities):
         if entity.fighter.stamina <= 0:
             entity.fighter.stamina = 0
             entity.fighter.gen_stance = FighterStance.prone
-            handle_state_change(entity, entities, EntityState.unconscious)
             if hasattr(entity.fighter, 'ai'): messages.append(entity.name + ' has passed out due to fatigue. ')
             else: messages.append('You have passed out due to fatigue. ')
+        #Handle unconsousness
+        if entity.state == EntityState.unconscious:
+            handle_state_change(entity, entities, EntityState.unconscious)
+            if hasattr(entity.fighter, 'ai'): messages.append(entity.name + ' has passed out. ')
+            else: messages.append('You have passed out. ')
         #Restore stability
         entity.fighter.stability = entity.fighter.stability_mods
         #Apply stance
@@ -663,6 +665,9 @@ def handle_persistant_effects(entity, entities):
         entity.fighter.acted = False
         entity.fighter.wait = False
         entity.fighter.feint = False
+        #Handle death
+        if entity.state == EntityState.dead:
+            handle_state_change(entity, entities, EntityState.dead)
         if not hasattr(entity.fighter, 'ai'): messages.append('A new round has begun. ')
 
     return messages
@@ -811,7 +816,8 @@ def find_next_location(location, atk_angle, entity_angle) -> int:
 
     return new_loc
 
-def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs) -> list:
+def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs, entities) -> list:
+    '''Main damage function.'''
     atk_angle = angle_id(attacker.fighter.combat_choices[3])
     rel_angle = entity_angle(defender, attacker)
 
@@ -829,11 +835,12 @@ def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs
 
     layer = 0
 
+    #Loops until no more damage is left to do, allowing for pass-through damage
     while location is not None and damage > 0:
 
         if roll <= deflect[layer]: 
             l_names = ['skin','tissue','bone']
-            messages.append(attacker.name + ' hit , but the blow deflected harmlessly off of ' + defender.name + '\'s ' + l_names[layer])
+            messages.append(attacker.name + ' hit ' + defender.name +', but the blow deflected harmlessly off of ' + defender.name + '\'s ' + l_names[layer])
             break
         
         #Store previous damage level to avoid repeating damage effects
@@ -858,6 +865,11 @@ def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs
     if len(cleave_messages) > 0:
         messages.extend(cleave_messages)
         defender.state = EntityState.dead
+    
+    #Handle death and unconsciousness
+    if defender.state != EntityState.conscious:
+        handle_state_change(defender, entities, defender.state)
+        
 
     return messages
 
@@ -1197,7 +1209,7 @@ def handle_state_change(entity, entities, state) -> None:
     entity.state = state
     if entity.state == EntityState.dead:
         entity.char = '#'
-        entity.color = libtcodpy.crimson
+        entity.color = 'crimson'
         entity.fighter = None
         for item in entities:
             if hasattr(item, 'fighter') and item is not entity:
@@ -1311,7 +1323,10 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
         #Check and see if anyone can still act
         remaining_fighters = 0
         for entity in order:
-            if entity.fighter.end_turn or entity.state == EntityState.unconscious:
+            if entity.state != EntityState.conscious:
+                order.remove(entity)
+                global_vars.turn_order.remove(entity)
+            elif entity.fighter.end_turn:
                 order.remove(entity)
                 global_vars.turn_order.remove(entity)
         remaining_fighters = len(order)
@@ -1776,7 +1791,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         if len(command) != 0:
             if command.get('Take the hit'):
                 hit = True
-                effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
+                effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs, entities)
             if command.get('Dodge'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
@@ -1787,7 +1802,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     else: message = (curr_actor.name + ' dodged the attack. ')
                 elif location not in curr_actor.fighter.auto_block_locs:
                     hit = True
-                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
+                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs, entities)
                 else: auto_block = True
             if command.get('Parry'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.deflect, parry_mod, enemy.fighter.atk_result, final_to_hit)
@@ -1799,7 +1814,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
                     else: message = (curr_actor.name + ' parried the blow. ')
                 elif location not in curr_actor.fighter.auto_block_locs:
                     hit = True
-                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
+                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs, entities)
                 else: auto_block = True
             if command.get('Block'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.best_combat_skill, parry_mod, enemy.fighter.atk_result, final_to_hit)
@@ -1824,16 +1839,16 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
 
 
                     
-                    effects = damage_controller(curr_actor, enemy, blocker, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, enemy.fighter.atk_result, cs)
+                    effects = damage_controller(curr_actor, enemy, blocker, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, enemy.fighter.atk_result, cs, entities)
                 else:
                     hit = True
-                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
+                    effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs, entities)
             
             menu_dict = dict()
     else:
         if location not in curr_actor.fighter.auto_block_locs:
             hit = True
-            effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs)
+            effects = damage_controller(curr_actor, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs, entities)
         else:
             auto_block = True
     
@@ -1850,7 +1865,7 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         elif enemy.fighter.combat_choices[2] in [17,21,23,25]: blocker = 25
         elif enemy.fighter.combat_choices[2] in [18,22,24,26]: blocker = 26
 
-        effects = damage_controller(curr_actor, enemy, blocker, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, enemy.fighter.atk_result, cs)
+        effects = damage_controller(curr_actor, enemy, blocker, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result*.2, enemy.fighter.atk_result, cs, entities)
         
 
     if message or effects:
@@ -1862,33 +1877,34 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
         if effects:
             for effect in effects:
                 messages.append(effect)
-
-        if curr_actor.fighter.disengage:       
-            combat_phase = CombatPhase.disengage
-            game_state = GameStates.default
-            menu_dict = dict()
-        elif curr_actor.fighter.feint and not hit:
-            curr_actor.fighter.counter_attack = enemy
-            enemy.fighter.combat_choices.clear()
-            combat_phase = CombatPhase.weapon
-        else:
-            #Show rolls
-            if options.show_rolls: 
-                if atk_margin is not None and def_margin is not None:
-                    rolls = curr_actor.name + ' had a margin of success of ' + str(def_margin) + ', while ' + enemy.name + ' had a margin of ' + str(atk_margin) + '. '
-                elif atk_margin is not None:
-                    rolls = enemy.name + ' had a margin of success of ' + str(atk_margin) + '. '
-                if rolls is not None: messages.insert(0, rolls)
-            curr_actor.fighter.action.clear()
-            curr_actor = enemy
-            
-            if curr_actor.player:
-                #See if curr_actor has AP for repeat
-                if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
-                    combat_phase = CombatPhase.repeat
-                    game_state = GameStates.menu
-                else:
-                    curr_actor.fighter.combat_choices.clear()
+        if curr_actor.state == EntityState.conscious:
+            if curr_actor.fighter.disengage:       
+                combat_phase = CombatPhase.disengage
+                game_state = GameStates.default
+                menu_dict = dict()
+            elif curr_actor.fighter.feint and not hit:
+                curr_actor.fighter.counter_attack = enemy
+                enemy.fighter.combat_choices.clear()
+                combat_phase = CombatPhase.weapon
+            else:
+                curr_actor.fighter.action.clear()
+        #Show rolls
+        if options.show_rolls: 
+            if atk_margin is not None and def_margin is not None:
+                rolls = curr_actor.name + ' had a margin of success of ' + str(def_margin) + ', while ' + enemy.name + ' had a margin of ' + str(atk_margin) + '. '
+            elif atk_margin is not None:
+                rolls = enemy.name + ' had a margin of success of ' + str(atk_margin) + '. '
+            if rolls is not None: messages.insert(0, rolls)
+        
+        curr_actor = enemy
+        
+        if curr_actor.player:
+            #See if curr_actor has AP for repeat
+            if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
+                combat_phase = CombatPhase.repeat
+                game_state = GameStates.menu
+            else:
+                curr_actor.fighter.combat_choices.clear()
 
 
 

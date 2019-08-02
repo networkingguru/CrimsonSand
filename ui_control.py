@@ -5,7 +5,7 @@ from tcod import event, console
 import textwrap
 import options
 import global_vars
-from enums import MenuTypes, GameStates, CombatPhase
+from enums import MenuTypes, GameStates, CombatPhase, EntityState
 from game_messages import Message
 from utilities import inch_conv
 
@@ -231,11 +231,14 @@ def print_entities(entities, ox, oy) -> None:
     
     players = set()
     enemies = set()
+    corpses = set()
     players_aoc = set()
     players_visible = set()
     players_explored = set()
     for entity in entities:
-        if entity.player:
+        if entity.state == EntityState.dead:
+            corpses.add(entity)
+        elif entity.player:
             players.add(entity)
         else:
             enemies.add(entity)
@@ -279,6 +282,13 @@ def print_entities(entities, ox, oy) -> None:
             terminal.puts(enemy.x+ox, enemy.y+oy, '[bk_color=dark amber][color='+enemy.color+']'+enemy.char+'[/color][/bk_color]')
         elif (enemy.x, enemy.y) in players_explored:
             terminal.puts(enemy.x+ox, enemy.y+oy, '[bk_color=darker amber][color=darker gray]'+enemy.char+'[/color][/bk_color]')
+
+    #Place visible corpses
+    for corpse in corpses:
+        if (corpse.x, corpse.y) in players_visible:
+            terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=dark amber][color='+corpse.color+']'+corpse.char+'[/color][/bk_color]')
+        elif (corpse.x, corpse.y) in players_explored:
+            terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=darker amber][color=darker gray]'+corpse.char+'[/color][/bk_color]')
 
 
 
