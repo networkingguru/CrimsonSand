@@ -738,10 +738,11 @@ def filter_injuries(master_class, location, damage_type, severity, layer, recipi
     valid = loc_matches.intersection(dt_matches,sev_matches,layer_matches)
     return valid
 
-def apply_injuries(valid_injuries, location, recipient, damage_type) -> list:
+def apply_injuries(valid_injuries, location, recipient, damage_type) -> (list, int):
     roll = roll_dice(1,len(valid_injuries))
     injuries = list(valid_injuries)
     injury = injuries[roll-1](location, recipient, damage_type)
+    sev = 0 #Used to signal that this injury is a maximum severity injury
     
     messages = set()
     
@@ -756,9 +757,10 @@ def apply_injuries(valid_injuries, location, recipient, damage_type) -> list:
 
     #apply new injury
     messages = set(apply_injury_effects(recipient, injury, location))
+    sev = injury.severity
     recipient.fighter.injuries.append(injury)
 
-    return messages
+    return messages, sev
 
 def find_next_location(location, atk_angle, entity_angle) -> int:
     '''Finds the next location along the path in a pass-through attack'''
@@ -852,6 +854,58 @@ def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs
 
         handle_mobility_change(defender)
         
+    cleave_messages = cleave_checker(defender)
+    if len(cleave_messages) > 0:
+        messages.extend(cleave_messages)
+        defender.state = EntityState.dead
+
+    return messages
+
+def cleave_checker(entity) -> list:
+    '''Purpose is to identify when body has been cut in two'''
+    messages = []
+    severed_locs = set()
+    hor_chest = {5,6}
+    hor_shoulder = {3,4}
+    hor_ribs = {9,10}
+    hor_abd = {13,14}
+    hor_hips = {17,18}
+    hor_sets = [hor_chest, hor_shoulder, hor_ribs, hor_abd, hor_hips]
+    vert_l = {4,6,10,14,18}
+    vert_r = {3,5,9,13,17}
+    vert_sets = [vert_l, vert_r]
+    x_1 = {4,5}
+    x_2 = {3,6}
+    x_3 = {5,2}
+    x_4 = {6,2}
+    x_5 = {5,10}
+    x_6 = {6,9}
+    x_7 = {9,14}
+    x_8 = {9,6,4}
+    x_9 = {10,5,3}
+    x_10 = {10,13}
+    x_11 = {13,10}
+    x_12 = {14,9}
+    x_13 = {17,14}
+    x_14 = {18,13}
+    x_sets = [x_1,x_2,x_3,x_4,x_5,x_6,x_7,x_8,x_9,x_10,x_11,x_12,x_13,x_14]
+
+    for index in range(len(entity.fighter.locations)):
+        if entity.fighter.locations[index][2] == 0:
+            severed_locs.add(index)
+
+    for s in hor_sets:
+        if s.issubset(severed_locs):
+            message = entity.name + ' is split in half horizonatally. '
+            messages.append(message)
+    for s in vert_sets:
+        if s.issubset(severed_locs):
+            message = entity.name + ' is split in half vertically. '
+            messages.append(message)
+    for s in x_sets:
+        if s.issubset(severed_locs):
+            message = entity.name + ' is split in half diagonally. '
+            messages.append(message)
     
     return messages
 
@@ -909,7 +963,11 @@ def calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk
     return location, layer, damage
 
 def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
+    '''Determines damage level and calls filter_injuries and apply_injuries to add injuries'''
     messages = set()
+    inj_messages = set()
+    sev = 0
+    max_sev = 0
     #Determine damage effect level
     #Find % damage
     dam_percent = 0
@@ -927,7 +985,11 @@ def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
     if new_thresh > 0:
         for i in range(new_thresh):
             valid_injuries = filter_injuries(Injury, location, dam_type, dam_thresh, layer, defender)
-            messages.update(apply_injuries(valid_injuries, location, defender, dam_type))
+            #Max_sev used to clear all lower inujury effecxt messages and only use the max damage one
+            inj_messages, sev = apply_injuries(valid_injuries, location, defender, dam_type)
+            if sev >= max_sev:
+                messages.clear()
+                messages.update(inj_messages)
             i += 1
 
     return messages
