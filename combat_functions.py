@@ -708,10 +708,9 @@ def filter_injuries(master_class, location, damage_type, severity, layer, recipi
     sev_matches = set()
     layer_matches = set()
     avail_prereqs = []
-    loc_name = recipient.fighter.name_location(location)
 
     for injury in injuries:
-        a = injury(loc_name, recipient, damage_type)
+        a = injury(location, recipient, damage_type)
         dupes = 0
         #Block below to find duplicates and remove injury if not allowed
         for i in recipient.fighter.injuries:
@@ -743,7 +742,8 @@ def apply_injuries(valid_injuries, location, recipient, damage_type) -> list:
     roll = roll_dice(1,len(valid_injuries))
     injuries = list(valid_injuries)
     injury = injuries[roll-1](location, recipient, damage_type)
-    messages = []
+    
+    messages = set()
     
     #Remove prereq if one exists
     if injury.prerequisite is not None:
@@ -751,10 +751,11 @@ def apply_injuries(valid_injuries, location, recipient, damage_type) -> list:
         for i in recipient.fighter.injuries:
             if type(i) is injury.prerequisite:
                 idx = recipient.fighter.injuries.index(i)
+        #Remove prereq injury
         apply_injury_effects(recipient, recipient.fighter.injuries.pop(idx), location, True) 
 
     #apply new injury
-    messages = apply_injury_effects(recipient, injury, location)
+    messages = set(apply_injury_effects(recipient, injury, location))
     recipient.fighter.injuries.append(injury)
 
     return messages
@@ -829,16 +830,17 @@ def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs
     while location is not None and damage > 0:
 
         if roll <= deflect[layer]: 
-            messages.append(attacker.name + ' hit ' + defender.name + ', but the blow deflected harmlessly. ')
+            l_names = ['skin','tissue','bone']
+            messages.append(attacker.name + ' hit , but the blow deflected harmlessly off of ' + defender.name + '\'s ' + l_names[layer])
             break
         
         #Store previous damage level to avoid repeating damage effects
         prev_health = defender.fighter.locations[location][layer]
         
         #determine how much damage is done to loc/layer and if pass-through occurs
-        new_damage, new_location, new_layer = calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk_angle, rel_angle)  
+        new_location, new_layer, new_damage = calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk_angle, rel_angle)  
 
-        messages = get_injuries(defender, prev_health, location, layer, dam_type)
+        messages.extend(get_injuries(defender, prev_health, location, layer, dam_type))
 
         if new_location != location or new_layer != layer:
             damage = new_damage
@@ -883,7 +885,8 @@ def calc_damage_soak(dam_type, target) -> (list, list):
 
 def calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk_angle, entity_angle) -> (int, int, int):
 
-    
+    atk_angle = angle_id(atk_angle)
+
     #Calc final damage
     damage = int(round((1-soak[layer])*dam_amount))
 
@@ -906,15 +909,15 @@ def calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk
     return location, layer, damage
 
 def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
-    messages = []
-    loc_name = defender.fighter.name_location(location)
+    messages = set()
     #Determine damage effect level
     #Find % damage
     dam_percent = 0
+    prev_percent = (prev_health/defender.fighter.max_locations[location][layer])
     layer_health = defender.fighter.locations[location][layer]
+
     if layer_health != 0: 
         dam_percent = (defender.fighter.locations[location][layer]/defender.fighter.max_locations[location][layer])
-        prev_percent = (prev_health/defender.fighter.max_locations[location][layer])
 
     dam_thresh = find_dam_threshold(dam_percent)
     prev_thresh = find_dam_threshold(prev_percent)
@@ -924,7 +927,8 @@ def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
     if new_thresh > 0:
         for i in range(new_thresh):
             valid_injuries = filter_injuries(Injury, location, dam_type, dam_thresh, layer, defender)
-            messages = apply_injuries(valid_injuries, loc_name, defender, dam_type)
+            messages.update(apply_injuries(valid_injuries, location, defender, dam_type))
+            i += 1
 
     return messages
 
@@ -944,11 +948,12 @@ def apply_injury_effects(recipient, injury, location, remove = False) -> list:
     '''Generic injury effect applier. remove bool reverses any reversible or non-temp effects'''
     messages = []
 
+    
     if not remove:
         messages.append(injury.description)
 
     if injury.pain_check and not remove:
-        check = save_roll_un(recipient.fighter.wil, 0)
+        check = save_roll_un(recipient.fighter.will, 0)
         if 'f' in check:
             recipient.state = EntityState.stunned
             messages.append(recipient.name + ' is overcome by the pain from the blow, and is stunned for a short while.')
@@ -988,16 +993,17 @@ def apply_injury_effects(recipient, injury, location, remove = False) -> list:
 
     if injury.attr_name is not None:
         for a in injury.attr_name:
+            idx = injury.attr_name.index(a)
             if remove:
-                recipient.fighter.mod_attribute(injury.attr_name[a], -injury.attr_amount[a])
+                recipient.fighter.mod_attribute(a, -injury.attr_amount[idx])
             else:
-                recipient.fighter.mod_attribute(injury.attr_name[a], injury.attr_amount[a])
+                recipient.fighter.mod_attribute(a, injury.attr_amount[idx])
 
     if injury.loc_reduction is not None and not remove:
         recipient.fighter.locations[location][injury.layer] -= injury.loc_reduction
 
     if injury.loc_max is not None and not remove:
-        recipient.fighter.max_locations[location][injury.layer] = recipient.fighter.max_locations[location][injury.layer]*injury.loc_reduction
+        recipient.fighter.max_locations[location][injury.layer] = recipient.fighter.max_locations[location][injury.layer]*injury.loc_max
     
     if injury.severed_locs is not None and not remove:
         recipient.fighter.severed_locs.update(injury.severed_locs)
@@ -1022,7 +1028,7 @@ def apply_injury_effects(recipient, injury, location, remove = False) -> list:
         if remove:
             recipient.fighter.mod_attribute('stamr',recipient.fighter.max_stamr * injury.stam_regin)
         else:
-            recipient.fighter.mod_attribute('stam_regin',-(recipient.fighter.max_stamr * injury.stam_regin))
+            recipient.fighter.mod_attribute('stamr',-(recipient.fighter.max_stamr * injury.stam_regin))
 
     if injury.pain_mv_mod is not None:
         if remove:

@@ -1,4 +1,5 @@
 from enums import WeaponTypes
+from utilities import itersubclasses
 
 
 
@@ -103,5 +104,60 @@ class Unarmed(Weapon):
                                 'R Elbow': -60, 'R Forearm': -60, 'R Hand': -60}, 20, 20, 0, [7,11,15], [9])
         self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half]                        
 
+class Long_Sword_Steel(Weapon):
+    def __init__(self):
+        super()
+        self.name = 'Steel Long Sword'
+        self.skill = 'long_sword'
+        self.attack_mod = -20
+        self.parry_mod = 30
+        self.parry_ap = 10
+        self.parry_mult = 3
+        self.parry_threshold = 3000
+        self.parry_durability = 30000
+        self.stamina = 0
+        self.b_dam = 0
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 1
+        self.length = 47
+        self.weight = 2.8
+        self.min_str_1h = 75
+        self.damage_type = 's'
+        self.base_ap = 0
+        #Attacks below
+        #self, name, attack_mod, parry_mod, stamina, b_dam, s_dam, p_dam, t_dam, hands, damage_type, base_ap, 
+        #hand = True, length = 0, side_restrict = True, restricted_locs = [], allowed_angles_r = [], allowed_angles_l = []
+        self.slash = Attack("Slash", -20, 20, 6, 0, 25, 0, 0, 1, 's', 30, True, 47, False, [], [0,1,2,3,4,5,6,7], [0,1,2,3,4,5,6,7])
+        self.stab = Attack("Stab", -10, -10, 3, 0, 0, 100, 0, 1, 'p', 20, True, 47, False, [0], [8], [8])
+        self.pommel = Attack("Pommel Strike", 0, -10, 3, 1, 0, 0, 0, 1, 'b', 20, True, 0, True, [], [0,8], [0,8])
+        self.base_attacks = [self.slash, self.stab, self.pommel]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.ox_r = Guard('Hanging, Right-handed', {'Neck': -60, 'R Shoulder': -80, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [19,20])
+        self.ox_l = Guard('Hanging, Left-handed', {'Neck': -60, 'L Shoulder': -80, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [19,20])
+        self.plow_r = Guard('Middle, Right-handed', {'Neck': -20, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': -20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -80, 
+                                'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': -40, 'R Abdomen': -80, 'R Hip': -80, 'L Hip': -40}, 10, 20, 0, [7,8,11,12,15,16,19,20], 
+                                [4,6,8,10,12,14,16,19,20], True)
+        self.plow_l = Guard('Middle, Left-handed', {'Neck': -20, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': -20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -80, 
+                                'L Shin': -100, 'L Foot': -100, 'R Knee': 30, 'R Shin': 20, 'R Abdomen': -40, 'L Abdomen': -80, 'L Hip': -80, 'R Hip': -40}, 10, 20, 0, [7,8,11,12,15,16,19,20], 
+                                [3,5,7,9,11,13,15,19,20], False, True)
+        self.low = Guard('Low', {'Neck': -20, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'L Elbow': -40, 'R Elbow': 20, 'L Forearm': -20, 'R Forearm': 20, 'L Thigh': -60, 'L Knee': -80, 
+                                'L Shin': -100, 'L Foot': -100, 'R Knee': 30, 'R Shin': 20, 'R Abdomen': -40, 'L Abdomen': -20, 'L Hip': -80, 'R Hip': -40}, 0, 30, -10, [7,8,11,12,15,16,19,20], 
+                                [23,24,25,26,27,28])
+        self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
+                                'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
+                                'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
+                                [0,1])
+        self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
 
-weapon_master_list = [Unarmed]
+weapon_master_list = [Unarmed, Long_Sword_Steel]

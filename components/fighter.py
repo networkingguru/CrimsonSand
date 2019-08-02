@@ -126,6 +126,7 @@ class Fighter:
         self.appear = int(round((mean([self.fac, self.ht, self.shape, (100-self.fat)])),0))
         #Skills
         self.brawling = int(round(self.agi*0.4 + self.str*0.4 + ((self.men+self.wis)/2)*0.2))
+        self.long_sword = int(round(self.agi*0.6 + ((self.men + self.pwr)/2)*0.3 + self.wis*0.1))
         self.dodge = int(round(self.swift*.6 + ((self.ped + self.bal)/2)*.2 + ((self.men + self.wis)/2)*.2))
         self.deflect = int(round(((self.men + self.wis)/2)*.5 + self.swift*.3 + self.agi*.2))
         #Derived Attributes
