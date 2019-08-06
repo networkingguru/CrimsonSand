@@ -465,9 +465,8 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     enemy = curr_target
     missed =  False
     location = entity.fighter.combat_choices[2]
-    loc_idx = curr_target.fighter.name_location(location)
     dam_type = curr_actor.fighter.combat_choices[1].damage_type[0]
-    dam_mult = curr_actor.fighter.dam_result
+    
 
     #Clear history if attacker changed
     if curr_target.fighter.attacker is not entity:
@@ -479,7 +478,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     
     atk_result = make_attack_roll(final_to_hit, 1, location)
     entity.fighter.atk_result, entity.fighter.dam_result, entity.fighter.new_loc_result = atk_result[0], atk_result[1], atk_result[2]
-
+    dam_mult = curr_actor.fighter.dam_result
     
     
     #Subtract attack AP and stamina
@@ -526,7 +525,7 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
         if entity in curr_target.fighter.targets:
             combat_phase = CombatPhase.defend
         else:
-            effects = damage_controller(curr_target, curr_actor, loc_idx, dam_type, dam_mult, entity.fighter.atk_result, cs, entities)
+            effects = damage_controller(curr_target, curr_actor, location, dam_type, dam_mult, entity.fighter.atk_result, cs, entities)
     
             if effects:
                 combat_phase = CombatPhase.action
@@ -822,7 +821,6 @@ def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs
     rel_angle = entity_angle(defender, attacker)
 
     deflect, soak = calc_damage_soak(dam_type, defender)
-    dam_type = attacker.fighter.combat_choices[1].damage_type[0]
 
     messages = []
     
@@ -1307,14 +1305,16 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
 
     return menu_dict, combat_phase, game_state, order, messages
 
-def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list):
+def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) -> (int, int, list, object):
     messages = []
     log = logs[2]
     round_end = False
+    
+    
 
     #Exit without making changes if in defend phase
     if combat_phase == CombatPhase.defend:
-        return combat_phase, order, curr_actor
+        return combat_phase, game_state, order, curr_actor
 
     if len(order) == 0:
         round_end = True
@@ -1330,6 +1330,14 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
                 order.remove(entity)
                 global_vars.turn_order.remove(entity)
         remaining_fighters = len(order)
+        if remaining_fighters == 1:
+            targets = 0
+            for entity in order:
+                if hasattr(entity, 'fighter'):
+                    targets += len(entity.fighter.targets)
+            if targets == 0:
+                remaining_fighters = 0
+                game_state = GameStates.default
         if global_vars.debug and len(order) != len(global_vars.turn_order) : print('order length: ' + str(len(order)) + ', global order length: ' + str(len(global_vars.turn_order)))
         
         if remaining_fighters == 0: 
@@ -1380,18 +1388,21 @@ def change_actor(order, entities, curr_actor, combat_phase, logs) -> (int, list)
         log.add_message(Message(message))
         
             
-    return combat_phase, order, curr_actor
+    return combat_phase, game_state, order, curr_actor
 
 def phase_init(entities) -> (int, list):
+    active_fighters = 0
 
     for entity in entities:
-        if hasattr(entity, 'fighter'):
+        if entity.fighter is not None:
+            active_fighters += 1
             entity.fighter.end_turn = False
             entity.fighter.targets = aoc_check(entities, entity)
-            entity.set_default_guard()
+            if entity.fighter.guard is None:
+                entity.set_default_guard()
     
     #Sort the entities by initiative
-    if len(entities) > 1:    
+    if active_fighters > 1:    
         order = turn_order(entities)
         global_vars.turn_order = list(order)
         if global_vars.debug: print('order length: ' + str(len(order)) + ', global order length: ' + str(len(global_vars.turn_order)))

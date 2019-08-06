@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
         render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, modal_dialog)
 
-        combat_phase, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, logs)
+        combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
         if curr_actor != new_curr_actor:
             if global_vars.debug: print(curr_actor.name + ' ' + new_curr_actor.name)
             curr_actor = new_curr_actor
