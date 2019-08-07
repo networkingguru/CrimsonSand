@@ -17,11 +17,11 @@ def detect_enemies(entities) -> int:
     combat_phase = CombatPhase.explore
     for entity in entities:
         #For each fighter, create a list of opponents. Then see if any of them are in FOV. If so, start combat by changing phase
-        if hasattr(entity, 'fighter'):
+        if entity.fighter is not None:
             opponents = entities.copy()
             opponents.remove(entity)
             for opponent in opponents:
-                if not hasattr(opponent, 'fighter'):
+                if opponent.fighter is None:
                     opponents.remove(opponent)
                 elif (opponent.x, opponent.y) in entity.fighter.fov_visible:
                     combat_phase = CombatPhase.init
@@ -30,7 +30,7 @@ def detect_enemies(entities) -> int:
                     if opponent in entity.fighter.visible_fighters:
                         entity.fighter.visible_fighters.remove(opponent)
     
-        find_closest_enemy(entity)
+            find_closest_enemy(entity)
 
     return combat_phase
 
@@ -132,7 +132,7 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
     if hasattr(entity, 'fighter') and fov_recompute == True:
         if global_vars.debug_time: t0 = time.time()
         for e in entities:
-            if  hasattr(e, 'fighter'):
+            if e.fighter is not None:
                 fov_radius = int(round(e.fighter.sit/5))
                 game_map.compute_fov(e.x, e.y, fov_radius, True, libtcodpy.FOV_SHADOW)
                 modify_fov(e, game_map)
@@ -1336,8 +1336,11 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
                 if hasattr(entity, 'fighter'):
                     targets += len(entity.fighter.targets)
             if targets == 0:
-                remaining_fighters = 0
+                #Below exits combat when all enemies are dispatched
+                combat_phase = CombatPhase.explore
                 game_state = GameStates.default
+                return combat_phase, game_state, order, curr_actor
+
         if global_vars.debug and len(order) != len(global_vars.turn_order) : print('order length: ' + str(len(order)) + ', global order length: ' + str(len(global_vars.turn_order)))
         
         if remaining_fighters == 0: 
