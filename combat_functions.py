@@ -1332,9 +1332,9 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
         remaining_fighters = len(order)
         if remaining_fighters == 1:
             targets = 0
-            for entity in order:
-                if hasattr(entity, 'fighter'):
-                    targets += len(entity.fighter.targets)
+            for entity in entities:
+                if hasattr(entity, 'fighter') and entity is not curr_actor:
+                    targets += 1
             if targets == 0:
                 #Below exits combat when all enemies are dispatched
                 combat_phase = CombatPhase.explore
@@ -2021,7 +2021,7 @@ def phase_move(curr_actor, entities, command, logs, combat_phase, game_map) -> (
         curr_actor.fighter.disengage_option = action            
 
         if action[0] != 'exit':
-            action_offset = tuple(command_to_offset(command))
+            action_offset = tuple(command_to_offset(action))
             
             if action_offset in d_offsets:
                 curr_actor.fighter.disengage = True
