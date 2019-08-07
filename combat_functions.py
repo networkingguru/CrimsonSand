@@ -1333,7 +1333,7 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
         if remaining_fighters == 1:
             targets = 0
             for entity in entities:
-                if hasattr(entity, 'fighter') and entity is not curr_actor:
+                if entity.fighter is not None and entity is not curr_actor:
                     targets += 1
             if targets == 0:
                 #Below exits combat when all enemies are dispatched
