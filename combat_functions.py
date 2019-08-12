@@ -993,7 +993,7 @@ def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
     new_thresh = dam_thresh - prev_thresh
 
     if new_thresh > 0:
-        for i in range(new_thresh):
+        for i in range(new_thresh + 1):
             valid_injuries = filter_injuries(Injury, location, dam_type, dam_thresh, layer, defender)
             #Max_sev used to clear all lower inujury effecxt messages and only use the max damage one
             inj_messages, sev = apply_injuries(valid_injuries, location, defender, dam_type)

@@ -328,7 +328,7 @@ class Smashed_Lip(Injury):
         self.title = 'Smashed Lip'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s lip has been brutally split open. '
+        self.description = '{0}\'s lip has been brutally split open. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[0])
         self.damage_type = set(['b'])
         self.duplicable = False
@@ -349,7 +349,7 @@ class Closed_Eye(Injury):
         self.title = 'Closed Eye'
         self.location = location
         self.recipient = recipient
-        self.description = 'The skin around {0}''s eye has been badly bruised, and has swollen shut. '
+        self.description = 'The skin around {0}\'s eye has been badly bruised, and has swollen shut. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[0])
         self.damage_type = set(['b'])
         self.duplicable = True
@@ -370,7 +370,7 @@ class Crushed_Eye(Injury):
         self.title = 'Crushed Eye'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s eye has been crushed, and {5} will never be able to see out of it again. '
+        self.description = '{0}\'s eye has been crushed, and {5} will never be able to see out of it again. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[0])
         self.damage_type = set(['b'])
         self.duplicable = True
@@ -463,7 +463,7 @@ class Eye_Destroyed(Injury):
         self.title = 'Eye ' + descriptors[2].capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s eye has been ' + descriptors[2] + ', and {5} will never be able to see out of it again. '
+        self.description = '{0}\'s eye has been ' + descriptors[2] + ', and {5} will never be able to see out of it again. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[2])
         self.damage_type = set(['s','p','t'])
         self.duplicable = True
@@ -487,7 +487,7 @@ class Damaged_Facial_Muscles(Injury):
         self.title = 'Facial Muscle Damage'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s facial muscles have been damaged, resulting in a droop. '
+        self.description = '{0}\'s facial muscles have been damaged, resulting in a droop. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -507,7 +507,7 @@ class Facial_Nerve_Damage(Injury):
         self.title = 'Facial Nerve Damage'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s facial nerves have been damaged, resulting in a permanent droop. '
+        self.description = '{0}\'s facial nerves have been damaged, resulting in a permanent droop. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -528,7 +528,7 @@ class Tongue_Cut_Out(Injury):
         self.title = 'Tongue Cut Out'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s tongue has been neatly severed, resulting in {4} being rendered mute. '
+        self.description = '{0}\'s tongue has been neatly severed, resulting in {4} being rendered mute. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s'])
         self.duplicable = False
@@ -549,7 +549,7 @@ class Light_Muscle_Damage(Injury):
         self.title = 'Lightly '+ descriptors[0].capitalize() + self.loc_name.capitalize() + ' Muscles'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} muscles have been lightly {3}. '
+        self.description = '{0}\'s {2} muscles have been lightly {3}. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[0])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -573,7 +573,7 @@ class Moderate_Muscle_Damage(Injury):
         self.title = descriptors[1].capitalize() + self.loc_name.capitalize() + ' Muscles'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} muscles have been {3}. This damage will restrict {1} movement. '
+        self.description = '{0}\'s {2} muscles have been {3}. This damage will restrict {1} movement. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[1])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -619,7 +619,7 @@ class Heavy_Muscle_Damage(Injury):
         self.title = descriptors[2].capitalize() + self.loc_name.capitalize() + ' Muscles'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} muscles have been {3}. Because of this, {5} can no longer move any affected limbs, and will likely never regain full strength. '
+        self.description = '{0}\'s {2} muscles have been {3}. Because of this, {5} can no longer move any affected limbs, and will likely never regain full strength. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[2])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -678,7 +678,7 @@ class Light_Nerve_Damage(Injury):
         self.title = 'Lightly Damaged ' + self.loc_name.capitalize() + ' Nerves'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} nerves have been damaged, leading to a loss of feeling. '
+        self.description = '{0}\'s {2} nerves have been damaged, leading to a loss of feeling. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[0])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -701,7 +701,7 @@ class Moderate_Nerve_Damage(Injury):
         self.title = 'Damaged ' + self.loc_name.capitalize() + ' Nerves'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} nerves have been badly damaged, leading to a severe loss of feeling and muscular strength. '
+        self.description = '{0}\'s {2} nerves have been badly damaged, leading to a severe loss of feeling and muscular strength. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[0])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -724,7 +724,7 @@ class Paralysis(Injury):
         self.title = 'Paralysis'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} nerves have been destroyed, leading to paralysis. '
+        self.description = '{0}\'s {2} nerves have been destroyed, leading to paralysis. '
         self.description = self.description_filler(recipient, self.loc_name, descriptors[0])
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -779,7 +779,7 @@ class Damaged_Artery(Injury):
         self.title = descriptor.capitalize() + ' Artery in ' + self.loc_name.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} arteries have been {3}, leading to significant bleeding. '
+        self.description = '{0}\'s {2} arteries have been {3}, leading to significant bleeding. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -814,7 +814,7 @@ class Heavily_Damaged_Artery(Injury):
         self.title = descriptor.capitalize() + ' Artery in ' + self.loc_name.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} arteries have been {3}, leading to severe bleeding. '
+        self.description = '{0}\'s {2} arteries have been {3}, leading to severe bleeding. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -850,7 +850,7 @@ class Destroyed_Artery(Injury):
         self.title = descriptor.capitalize() + ' Artery in ' + self.loc_name.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} arteries have been {3}, leading to severe bleeding. '
+        self.description = '{0}\'s {2} arteries have been {3}, leading to severe bleeding. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -900,9 +900,9 @@ class Destroyed_Windpipe(Injury):
             vitae_dam = max(80, recipient.fighter.vitae*.1)
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 10000 #Duration of blood loss
-            self.description = '{0}''s windpipe has been {3}. In short order, {5} will choke to death on his own blood. '
+            self.description = '{0}\'s windpipe has been {3}. In short order, {5} will choke to death on his own blood. '
         else:
-            self.description = '{0}''s windpipe has been {3}. Without medical aid, {5} will choke to death. '
+            self.description = '{0}\'s windpipe has been {3}. Without medical aid, {5} will choke to death. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
 
 class Lung_Damage(Injury):
@@ -915,7 +915,7 @@ class Lung_Damage(Injury):
         self.title = descriptor.capitalize() + ' Lung'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s lung has collapsed, and {5} begins gasping for breath. '
+        self.description = '{0}\'s lung has collapsed, and {5} begins gasping for breath. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -938,7 +938,7 @@ class Lung_Destroyed(Injury):
         self.title = descriptor.capitalize() + ' Lung'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s lung has been {3}, and {5} begins gasping for breath. '
+        self.description = '{0}\'s lung has been {3}, and {5} begins gasping for breath. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -963,7 +963,7 @@ class Heart_Destroyed(Injury):
         self.title = 'Heart ' + descriptor
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s heart has been {3}, and {5} dies instantly. '
+        self.description = '{0}\'s heart has been {3}, and {5} dies instantly. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -983,7 +983,7 @@ class Partial_Decapitation(Injury):
         self.title = 'Partially Decapitated'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} has been {3}, nearly decapitating {4}. Only the spinal column keeps {4} head attatched. Blood spurts rhythmically from the wound, causing death in moments. '
+        self.description = '{0}\'s {2} has been {3}, nearly decapitating {4}. Only the spinal column keeps {4} head attatched. Blood spurts rhythmically from the wound, causing death in moments. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t'])
         self.duplicable = False
@@ -1004,12 +1004,12 @@ class Liver_Damage(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s liver has been {3}. The pain is excruciating, and the wound bleeds heavily internally. '
+            self.description = '{0}\'s liver has been {3}. The pain is excruciating, and the wound bleeds heavily internally. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s liver has been {3}. The pain is excruciating, and the wound bleeds heavily. '
+            self.description = '{0}\'s liver has been {3}. The pain is excruciating, and the wound bleeds heavily. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 20 #Duration of blood loss
@@ -1034,12 +1034,12 @@ class Pancreas_Damage(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s pancreas has been {3}. The wound bleeds heavily internally. '
+            self.description = '{0}\'s pancreas has been {3}. The wound bleeds heavily internally. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s pancreas has been {3}. The wound bleeds heavily. '
+            self.description = '{0}\'s pancreas has been {3}. The wound bleeds heavily. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 20 #Duration of blood loss
@@ -1062,12 +1062,12 @@ class Gall_Bladder_Damage(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s gall bladder has been {3}. The wound bleeds internally. '
+            self.description = '{0}\'s gall bladder has been {3}. The wound bleeds internally. '
             vitae_dam = recipient.fighter.max_vitae*.005
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s gall bladder has been {3} and is bleeding. '
+            self.description = '{0}\'s gall bladder has been {3} and is bleeding. '
             vitae_dam = recipient.fighter.max_vitae*.005
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 10 #Duration of blood loss
@@ -1089,12 +1089,12 @@ class Spleen_Damage(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s spleen has been {3}. The wound bleeds heavily internally. '
+            self.description = '{0}\'s spleen has been {3}. The wound bleeds heavily internally. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s spleen has been {3} and is bleeding heavily. '
+            self.description = '{0}\'s spleen has been {3} and is bleeding heavily. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 200 #Duration of blood loss
@@ -1118,12 +1118,12 @@ class Spleen_Destroyed(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s spleen has been {3}. The wound bleeds heavily internally. '
+            self.description = '{0}\'s spleen has been {3}. The wound bleeds heavily internally. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s spleen has been {3} and is bleeding heavily. '
+            self.description = '{0}\'s spleen has been {3} and is bleeding heavily. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 200 #Duration of blood loss
@@ -1149,12 +1149,12 @@ class Stomach_Damage(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s stomach has been {3}. The wound bleeds heavily internally and is incredibly painful. '
+            self.description = '{0}\'s stomach has been {3}. The wound bleeds heavily internally and is incredibly painful. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 100 #Duration of blood loss
         else:
-            self.description = '{0}''s stomach has been {3}. The wound bleeds heavily, and is incredibly painful. '
+            self.description = '{0}\'s stomach has been {3}. The wound bleeds heavily, and is incredibly painful. '
             vitae_dam = recipient.fighter.max_vitae*.04
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 20 #Duration of blood loss
@@ -1178,12 +1178,12 @@ class Intestinal_Damage(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s intestines have been {3}. The wound bleeds internally and will not stop without treatment. '
+            self.description = '{0}\'s intestines have been {3}. The wound bleeds internally and will not stop without treatment. '
             vitae_dam = recipient.fighter.max_vitae*.02
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s intestines have been {3}. Blood seeps from the open wound, and the sight of {4} own intestines spilling out causes {0} a large degree of alarm. '
+            self.description = '{0}\'s intestines have been {3}. Blood seeps from the open wound, and the sight of {4} own intestines spilling out causes {0} a large degree of alarm. '
             vitae_dam = recipient.fighter.max_vitae*.02
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 100 #Duration of blood loss
@@ -1209,11 +1209,11 @@ class Kidney_Damage(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s kidney has been {3}. This causes blinding pain and internal bleeding.'
+            self.description = '{0}\'s kidney has been {3}. This causes blinding pain and internal bleeding.'
             self.bleed_amount = 5 #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s kidney has been {3}. This causes blinding pain. '
+            self.description = '{0}\'s kidney has been {3}. This causes blinding pain. '
             self.bleed_amount = 5 #Amount of blood loss
             self.bleed_duration = 10 #Duration of blood loss
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
@@ -1236,11 +1236,11 @@ class Kidney_Destroyed(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s kidney has been {3}. This causes blinding pain and internal bleeding.'
+            self.description = '{0}\'s kidney has been {3}. This causes blinding pain and internal bleeding.'
             self.bleed_amount = 10 #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s kidney has been {3}. This causes blinding pain. '
+            self.description = '{0}\'s kidney has been {3}. This causes blinding pain. '
             self.bleed_amount = 10 #Amount of blood loss
             self.bleed_duration = 20 #Duration of blood loss
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
@@ -1266,7 +1266,7 @@ class Reproductive_Organs_Damaged(Injury):
         self.title = descriptor.capitalize() + ' ' + organ.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s '+ organ +' have been {3}. This causes blinding pain.'
+        self.description = '{0}\'s '+ organ +' have been {3}. This causes blinding pain.'
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.pain_check = True
         self.damage_type = set(['s','p','t','b'])
@@ -1294,7 +1294,7 @@ class Reproductive_Organs_Destroyed(Injury):
         self.title = descriptor.capitalize() + ' ' + organ.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s '+ organ +' have been {3}. This causes blinding pain.' + '{0} has been ' + result
+        self.description = '{0}\'s '+ organ +' have been {3}. This causes blinding pain.' + '{0} has been ' + result
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.pain_check = True
         self.damage_type = set(['s','p','t','b'])
@@ -1317,11 +1317,11 @@ class Bladder_Damage(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s bladder has been {3}, causing intense pain and internal bleeding.'
+            self.description = '{0}\'s bladder has been {3}, causing intense pain and internal bleeding.'
             self.bleed_amount = 5 #Amount of blood loss
             self.bleed_duration = 100 #Duration of blood loss
         else:
-            self.description = '{0}''s bladder has been {3}. This causes intense pain and a continuous flow of urine and blood from the wound. '
+            self.description = '{0}\'s bladder has been {3}. This causes intense pain and a continuous flow of urine and blood from the wound. '
             self.bleed_amount = 5 #Amount of blood loss
             self.bleed_duration = 10 #Duration of blood loss
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
@@ -1346,11 +1346,11 @@ class Bladder_Destroyed(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type == 'b':
-            self.description = '{0}''s bladder has been {3}, causing intense pain and internal bleeding.'
+            self.description = '{0}\'s bladder has been {3}, causing intense pain and internal bleeding.'
             self.bleed_amount = 20 #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}''s bladder has been {3}. This causes intense pain and a continuous flow of urine and blood from the wound. '
+            self.description = '{0}\'s bladder has been {3}. This causes intense pain and a continuous flow of urine and blood from the wound. '
             self.bleed_amount = 20 #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
@@ -1377,7 +1377,7 @@ class Light_Tendon_Damage(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize() + ' Tendons'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} tendons have been {3}. This damage will restrict {1} movement. '
+        self.description = '{0}\'s {2} tendons have been {3}. This damage will restrict {1} movement. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1401,7 +1401,7 @@ class Moderate_Tendon_Damage(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize() + ' Tendons'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} tendons have been {3}. This damage will restrict {1} movement and reduce {1} strength. '
+        self.description = '{0}\'s {2} tendons have been {3}. This damage will restrict {1} movement and reduce {1} strength. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1442,7 +1442,7 @@ class Heavy_Tendon_Damage(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize() + ' Tendons'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} tendons have been {3}. This damage will prevent {2} moving the affected limb until healed. '
+        self.description = '{0}\'s {2} tendons have been {3}. This damage will prevent {2} moving the affected limb until healed. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1490,7 +1490,7 @@ class Finger_Damaged(Injury):
         self.title = descriptor.capitalize() + ' Finger'
         self.location = location
         self.recipient = recipient
-        self.description = 'One of {0}''s fingers has been {3}. This damage makes it difficult for {4} to use the affected hand. '
+        self.description = 'One of {0}\'s fingers has been {3}. This damage makes it difficult for {4} to use the affected hand. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -1518,7 +1518,7 @@ class Toe_Damaged(Injury):
         self.title = descriptor.capitalize() + ' Toe'
         self.location = location
         self.recipient = recipient
-        self.description = 'One of {0}''s toes has been {3}. This damage makes moving painful for {4}. '
+        self.description = 'One of {0}\'s toes has been {3}. This damage makes moving painful for {4}. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -1542,7 +1542,7 @@ class Finger_Bone_Damaged(Injury):
         self.title = descriptor.capitalize() + ' Finger'
         self.location = location
         self.recipient = recipient
-        self.description = 'One of {0}''s fingers has been {3}. This damage makes it impossible to use the finger, which makes it difficult for {4} to use the affected hand. '
+        self.description = 'One of {0}\'s fingers has been {3}. This damage makes it impossible to use the finger, which makes it difficult for {4} to use the affected hand. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -1571,7 +1571,7 @@ class Finger_Bone_Destroyed(Injury):
         self.title = descriptor.capitalize() + ' Finger'
         self.location = location
         self.recipient = recipient
-        self.description = 'One of {0}''s fingers has been {3}. This damage makes it impossible to use the finger, which makes it difficult for {4} to use the affected hand. '
+        self.description = 'One of {0}\'s fingers has been {3}. This damage makes it impossible to use the finger, which makes it difficult for {4} to use the affected hand. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -1601,7 +1601,7 @@ class Toe_Bone_Damaged(Injury):
         self.title = descriptor.capitalize() + ' Toe'
         self.location = location
         self.recipient = recipient
-        self.description = 'One of {0}''s toes has been {3}. This damage makes it very painful to move. '
+        self.description = 'One of {0}\'s toes has been {3}. This damage makes it very painful to move. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -1626,7 +1626,7 @@ class Toe_Bone_Destroyed(Injury):
         self.title = descriptor.capitalize() + ' Toe'
         self.location = location
         self.recipient = recipient
-        self.description = 'One of {0}''s toes has been {3}, making moving extremely painful and affecting {4} balance. '
+        self.description = 'One of {0}\'s toes has been {3}, making moving extremely painful and affecting {4} balance. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -1682,9 +1682,9 @@ class Hand_Destroyed(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type in ['s','p']:
-            self.description = '{0}''s ' + self.loc_name + ' has been {3}. Arterial blood spurts from the stump in long jets. '
+            self.description = '{0}\'s ' + self.loc_name + ' has been {3}. Arterial blood spurts from the stump in long jets. '
         else:
-            self.description = '{0}''s ' + self.loc_name +' has been {3}. Blood pours from the crevases of the mangled appendage. '
+            self.description = '{0}\'s ' + self.loc_name +' has been {3}. Blood pours from the crevases of the mangled appendage. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1739,9 +1739,9 @@ class Foot_Destroyed(Injury):
         self.location = location
         self.recipient = recipient
         if dam_type in ['s','p']:
-            self.description = '{0}''s ' + self.loc_name + ' has been {3}. Blood drips from the stump. '
+            self.description = '{0}\'s ' + self.loc_name + ' has been {3}. Blood drips from the stump. '
         else:
-            self.description = '{0}''s ' + self.loc_name +' has been {3}. Blood pours from the crevases of the mangled appendage. '
+            self.description = '{0}\'s ' + self.loc_name +' has been {3}. Blood pours from the crevases of the mangled appendage. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1774,7 +1774,7 @@ class Light_Concussion(Injury):
         self.title = 'Light Concussion'
         self.location = location
         self.recipient = recipient
-        self.description = 'The blow to {0}''s ' + self.loc_name + ' has mildly concussed {4}, making {4} a little dizzy and disoriented. '
+        self.description = 'The blow to {0}\'s ' + self.loc_name + ' has mildly concussed {4}, making {4} a little dizzy and disoriented. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1799,7 +1799,7 @@ class Moderate_Concussion(Injury):
         self.title = 'Moderate Concussion'
         self.location = location
         self.recipient = recipient
-        self.description = 'The blow to {0}''s ' + self.loc_name + ' has concussed {4}, making {4} dizzy and disoriented. '
+        self.description = 'The blow to {0}\'s ' + self.loc_name + ' has concussed {4}, making {4} dizzy and disoriented. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1825,7 +1825,7 @@ class Severe_Concussion(Injury):
         self.title = 'Severe Concussion'
         self.location = location
         self.recipient = recipient
-        self.description = 'The blow to {0}''s ' + self.loc_name + ' has severely concussed {4}, making {4} extremely dizzy and disoriented. '
+        self.description = 'The blow to {0}\'s ' + self.loc_name + ' has severely concussed {4}, making {4} extremely dizzy and disoriented. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1851,7 +1851,7 @@ class Brain_Damage(Injury):
         self.title = 'Brain Damage'
         self.location = location
         self.recipient = recipient
-        self.description = 'The blow to {0}''s ' + self.loc_name + ' has caused something to rupture deep inside {4} brain, leading to an instantanious coma and brain damage. '
+        self.description = 'The blow to {0}\'s ' + self.loc_name + ' has caused something to rupture deep inside {4} brain, leading to an instantanious coma and brain damage. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -1975,14 +1975,14 @@ class Spinal_Paralysis(Injury):
         self.locations = set([2,5,6,9,10,13,14,17,18])
         
         if location == 2:
-            self.description = '{0}''s spine has been {3} at the neck, leading to complete paralysis. '
+            self.description = '{0}\'s spine has been {3} at the neck, leading to complete paralysis. '
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.max_touch,-recipient.fighter.max_pwr,-recipient.fighter.max_ss] #Amount to modify attribute
             self.paralyzed_locs = {range(3,29)} #set
             self.diseases = ['Quadriplegic']
             self.mv_mod = 0
         elif location in [5,6]:
-            self.description = '{0}''s spine has been {3} at the chest, leading to paralysis from the chest down. '
+            self.description = '{0}\'s spine has been {3} at the chest, leading to paralysis from the chest down. '
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.max_touch*.6,-recipient.fighter.max_pwr*.8,-recipient.fighter.max_ss*.8] #Amount to modify attribute
             l=[]
@@ -1991,7 +1991,7 @@ class Spinal_Paralysis(Injury):
             self.paralyzed_locs = set(l) #set
             self.mv_mod = 0
         else:
-            self.description = '{0}''s spine has been {3}, leading to paralysis from the {2} down. '
+            self.description = '{0}\'s spine has been {3}, leading to paralysis from the {2} down. '
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.max_touch*.4,-recipient.fighter.max_pwr*.6,-recipient.fighter.max_ss*.6] #Amount to modify attribute
             l=[]
@@ -2019,7 +2019,7 @@ class Tooth_Damage(Injury):
         self.title = 'Tooth Damage'
         self.location = location
         self.recipient = recipient
-        self.description = 'The blow to {0}''s ' + self.loc_name + ' has broken several teeth, causing pain and bleeding. '
+        self.description = 'The blow to {0}\'s ' + self.loc_name + ' has broken several teeth, causing pain and bleeding. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -2043,7 +2043,7 @@ class Damaged_Eye_Socket(Injury):
         self.title = 'Shattered Eye Socket'
         self.location = location
         self.recipient = recipient
-        self.description = 'The blow to {0}''s ' + self.loc_name + ' has shattered {1} eye socket, causing intense pain and disrupting {1} vision. '
+        self.description = 'The blow to {0}\'s ' + self.loc_name + ' has shattered {1} eye socket, causing intense pain and disrupting {1} vision. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -2067,7 +2067,7 @@ class Damaged_Cheekbone(Injury):
         self.title = descriptor.capitalize() + ' Cheekbone'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s cheekbone has been {3}, causing intense pain and disrupting {1} vision. '
+        self.description = '{0}\'s cheekbone has been {3}, causing intense pain and disrupting {1} vision. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -2089,7 +2089,7 @@ class Damaged_Jawbone(Injury):
         self.title = descriptor.capitalize() + ' Jaw'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s jaw has been {3}, causing excruciating pain. '
+        self.description = '{0}\'s jaw has been {3}, causing excruciating pain. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
@@ -2119,17 +2119,17 @@ class Severed(Injury):
         self.locations = set([0,1,2,7,8,11,12,15,16,21,22,23,24,25,26])
         self.pain_check = True
         self.shock_check = True
-        self.description = '{0}''s {2} has been {3}, causing excruciating pain and intense shock. '
+        self.description = '{0}\'s {2} has been {3}, causing excruciating pain and intense shock. '
         
         vitae_dam = max(80, recipient.fighter.vitae*.04)
         if location in [0,1,2]:
             self.state = EntityState.dead
             if location == 0:
-                self.description = 'The top of {0}''s head has been sliced off by the blow, spraying blood and brains. A moment later, {5} wobbles unsteadily, arms twitching spasmodically, and then falls in a heap. '
+                self.description = 'The top of {0}\'s head has been sliced off by the blow, spraying blood and brains. A moment later, {5} wobbles unsteadily, arms twitching spasmodically, and then falls in a heap. '
             elif location == 1:
-                self.description = 'The blow cleanly splits {0}''s head in a red spray. Staring blankly, eyes pointed in two different directions, {5} crumples like a rag doll. '
+                self.description = 'The blow cleanly splits {0}\'s head in a red spray. Staring blankly, eyes pointed in two different directions, {5} crumples like a rag doll. '
             else:
-                self.description = 'Cleaving through {0}''s {2}, the blow sends {1} head toppling one way while {1} body falls the other. '
+                self.description = 'Cleaving through {0}\'s {2}, the blow sends {1} head toppling one way while {1} body falls the other. '
         elif location in [7,8,11,12,25,26]:
             self.bleed_amount = vitae_dam/2 #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
@@ -2214,14 +2214,14 @@ class Brain_Destroyed(Injury):
         self.state = EntityState.dead
         if location == 0:
             if dam_type == 'b':
-                self.description = 'The top of {0}''s head has been crushed with a wet crunch, spraying blood and brains. The body drops in a lifeless heap. '
+                self.description = 'The top of {0}\'s head has been crushed with a wet crunch, spraying blood and brains. The body drops in a lifeless heap. '
             else:
-                self.description = 'The tip of the weapon peirces {0}''s skull with a sharp pop, sliding through brain to stop on the bone at the far side. The body slides off the weapon, now covered in gore. '
+                self.description = 'The tip of the weapon peirces {0}\'s skull with a sharp pop, sliding through brain to stop on the bone at the far side. The body slides off the weapon, now covered in gore. '
         else:
             if dam_type == 'b':
                 self.description = '{0} lets out a pitiful moan as {1} face is crushed by the blow. Bits of bone puncture {1} his eyes as others invade deeper. The body drops to the ground, limbs curling unnaturally as it soils itself. '
             else:
-                self.description = 'As the tip peirces {0}''s eye, {5} screams, only for the scream to be cut off abruptly as the tip sinks deeper. As it falls, the body slides off and collapses in a heap. '
+                self.description = 'As the tip peirces {0}\'s eye, {5} screams, only for the scream to be cut off abruptly as the tip sinks deeper. As it falls, the body slides off and collapses in a heap. '
         
 
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
@@ -2236,7 +2236,7 @@ class Vertebra_Damaged(Injury):
         self.title = 'Vertebra ' + descriptor.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = 'The blow to {0}''s ' + self.loc_name + ' seems to have {3} a verterba, causing some pain when moving. '
+        self.description = 'The blow to {0}\'s ' + self.loc_name + ' seems to have {3} a verterba, causing some pain when moving. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -2260,7 +2260,7 @@ class Vertebra_Heavily_Damaged(Injury):
         self.title = 'Vertebra ' + descriptor.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = 'The blow to {0}''s ' + self.loc_name + ' seems to have {3} a verterba, causing extreme pain at all times. '
+        self.description = 'The blow to {0}\'s ' + self.loc_name + ' seems to have {3} a verterba, causing extreme pain at all times. '
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = True
@@ -2286,7 +2286,7 @@ class Bone_Damaged(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize() + ' Bone'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} bone has been {3}. '
+        self.description = '{0}\'s {2} bone has been {3}. '
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         
@@ -2319,7 +2319,7 @@ class Bone_Heavily_Damaged(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize() + ' Bone'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} bone has been {3}. '
+        self.description = '{0}\'s {2} bone has been {3}. '
         self.damage_type = set(['b'])
         self.duplicable = False
         self.prerequisite = Bone_Damaged
@@ -2373,7 +2373,7 @@ class Bone_Destroyed(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize() + ' Bone'
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} bone has been {3}, pulverized into too many peices to ever heal properly. Blood seeps from mangled arteries continuously, and the pain is constant and intense. '
+        self.description = '{0}\'s {2} bone has been {3}, pulverized into too many peices to ever heal properly. Blood seeps from mangled arteries continuously, and the pain is constant and intense. '
         self.damage_type = set(['b'])
         self.duplicable = False
         self.healable = False
@@ -2428,7 +2428,7 @@ class Ribs_Damaged(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} have been {3}. This makes breathing and moving very painful. '
+        self.description = '{0}\'s {2} have been {3}. This makes breathing and moving very painful. '
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.pain_check = True
@@ -2454,7 +2454,7 @@ class Ribs_Heavily_Damaged(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} have been {3}, and jagged ends are poking through {1} flesh. This makes breathing and moving excruciating, and taking deep breaths is nearly impossible. '
+        self.description = '{0}\'s {2} have been {3}, and jagged ends are poking through {1} flesh. This makes breathing and moving excruciating, and taking deep breaths is nearly impossible. '
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.pain_check = True
@@ -2481,7 +2481,7 @@ class Ribs_Destroyed(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = '{0}''s {2} have been {3}, and are just a collection of loose, bleeding bones in {1} body cavity that will never heal correctly. Just breathing is excruciatingly painful. Internal bleeding is severe, and will likely kill {4} if medical attention is not recieved.'
+        self.description = '{0}\'s {2} have been {3}, and are just a collection of loose, bleeding bones in {1} body cavity that will never heal correctly. Just breathing is excruciatingly painful. Internal bleeding is severe, and will likely kill {4} if medical attention is not recieved.'
         self.damage_type = set(['b'])
         self.duplicable = False
         self.pain_check = True
@@ -2509,7 +2509,7 @@ class Pelvis_Damaged(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = 'A sharp crack and stab of pain seems to indicate that {0}''s {2} has been {3}. This makes moving very painful. '
+        self.description = 'A sharp crack and stab of pain seems to indicate that {0}\'s {2} has been {3}. This makes moving very painful. '
         self.damage_type = set(['s','p','t','b'])
         self.duplicable = False
         self.pain_check = True
@@ -2535,7 +2535,7 @@ class Pelvis_Heavily_Damaged(Injury):
         self.title = descriptor.capitalize() + ' ' + self.loc_name.capitalize()
         self.location = location
         self.recipient = recipient
-        self.description = 'An intense, radiant pain and the immediate loss of support for both legs signals that {0}''s {2} has been {3}. Walking is impossible, and the pelvis is unlikely to heal cleanly. '
+        self.description = 'An intense, radiant pain and the immediate loss of support for both legs signals that {0}\'s {2} has been {3}. Walking is impossible, and the pelvis is unlikely to heal cleanly. '
         self.damage_type = set(['b'])
         self.duplicable = False
         self.pain_check = True

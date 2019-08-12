@@ -85,7 +85,7 @@ if __name__ == "__main__":
         game_map.compute_fov(entity.x, entity.y, fov_radius, True)
         modify_fov(entity, game_map)
 
-    
+    #Begin main loop
     while not leave:
         if global_vars.debug_time: t0 = time.time()
 
