@@ -2,6 +2,7 @@ import math
 from copy import deepcopy
 from components.fighter import Fighter
 from components import weapon
+from utilities import clamp, inch_conv
 
 class Entity:
 
@@ -55,7 +56,7 @@ class Entity:
 
 
                 for a in base_wpn.base_attacks:
-                    if (loc <=1 and not a.hand) or (loc > 1 and a.hand): #loc variable defines the 'location' the attrack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
+                    if (loc <=1 and not a.hand) or (loc > 1 and a.hand): #loc variable defines the 'location' the attack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
                         continue
                     atk = deepcopy(a)
                     base_wpn.attacks.append(atk)
@@ -84,6 +85,8 @@ class Entity:
 
         #Sort the list of objects alphabetically using the name attribute            
         base_wpn.attacks.sort(key=lambda x: x.name)
+
+    
 
     def set_guard_def_mods(self) -> None:
         self.fighter.loc_hit_mod = self.guard.loc_hit_mods
@@ -240,8 +243,21 @@ class Entity:
                 else:
                     if guard.lh_default: self.fighter.change_guard(guard)
 
-
-
+    def set_reach(self) -> None:
+        if self.fighter.dom_hand == 'R':
+            self.fighter.reach = clamp(inch_conv(self.fighter.er + self.weapons[0].length, 1), 2)
+            if len(self.weapons) > 1: 
+                self.fighter.reach_oh = clamp(inch_conv(self.fighter.er + self.weapons[1].length, 1), 2)
+            else:
+                self.fighter.reach_oh = self.fighter.reach
+        else:
+            self.fighter.reach = clamp(inch_conv(self.fighter.er + self.weapons[1].length, 1), 2)
+            if len(self.weapons) > 1: 
+                self.fighter.reach_oh = clamp(inch_conv(self.fighter.er + self.weapons[0].length, 1), 2)
+            else:
+                self.fighter.reach_oh = self.fighter.reach
+                
+        self.fighter.reach_leg = clamp(inch_conv((self.fighter.height*self.fighter.location_ratios[17]) + self.weapons[0].length, 1), 2)
 
 
 def create_entity_list(entity_list) -> list:
@@ -275,6 +291,8 @@ def add_weapons(entities, weapon_dict) -> None:
             entity.add_weapon_component(wpns.get('l_wpn'), 1)
             entity.add_weapon_component(wpns.get('rf_wpn'), 2)
             entity.add_weapon_component(wpns.get('lf_wpn'), 3)
+            #Set reach for all weapons
+            entity.set_reach()
 
 
 def get_blocking_entities_at_location(entities, destination_x, destination_y) -> object or None:

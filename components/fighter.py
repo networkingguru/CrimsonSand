@@ -161,7 +161,9 @@ class Fighter:
         #Effective Power
         self.ep = int(round(self.stance_power * (((self.pwr * 2) + self.weight + (self.bone * 0.1)) * ((self.brawling + (self.bal/2))/200))))
         #Reach
-        self.reach = clamp(inch_conv(self.er, 1), 2)
+        self.reach = None #Main hand reach. All reach vars set by entity.set_reach
+        self.reach_oh = None #Off hand reach
+        self.reach_leg = None #Leg reach
         #Base stamina cost for actions
         self.base_stam_cost = int(round((self.fat/self.str)*(self.weight/100)))
 

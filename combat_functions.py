@@ -505,8 +505,6 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
                 messages.insert(0, rolls)
         else:
             messages.append(entity.name + ' missed you. ')
-            menu_dict = dict()
-            game_state = GameStates.default
         
         if enemy.fighter.disengage:       
             combat_phase = CombatPhase.disengage
@@ -532,14 +530,14 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
                 curr_actor.fighter.action.clear()
                 for effect in effects:
                     messages.append(effect)
-
-                if enemy.fighter.disengage:       
-                    combat_phase = CombatPhase.disengage
-                    active_entity = enemy
-                    game_state = GameStates.default
-                    menu_dict = dict()
+                if enemy.fighter is not None:
+                    if enemy.fighter.disengage:       
+                        combat_phase = CombatPhase.disengage
+                        active_entity = enemy
+                        game_state = GameStates.default
+                        menu_dict = dict()
                 else:
-                    if curr_actor.player:
+                    if curr_actor.player and len(curr_actor.fighter.targets) > 0:
                         #See if curr_actor has AP for repeat
                         if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
                             combat_phase = CombatPhase.repeat
@@ -743,7 +741,9 @@ def filter_injuries(master_class, location, damage_type, severity, layer, recipi
     return valid
 
 def apply_injuries(valid_injuries, location, recipient, damage_type) -> (list, int):
-    roll = roll_dice(1,len(valid_injuries))
+    roll = 1
+    if len(valid_injuries) > 1:
+        roll = roll_dice(1,len(valid_injuries))
     injuries = list(valid_injuries)
     injury = injuries[roll-1](location, recipient, damage_type)
     sev = 0 #Used to signal that this injury is a maximum severity injury
