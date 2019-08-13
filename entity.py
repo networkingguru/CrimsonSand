@@ -2,7 +2,9 @@ import math
 from copy import deepcopy
 from components.fighter import Fighter
 from components import weapon
-from utilities import clamp, inch_conv
+from utilities import clamp, inch_conv, itersubclasses
+
+weapon_master_list = list(itersubclasses(weapon.Weapon))
 
 class Entity:
 
@@ -39,7 +41,7 @@ class Entity:
         '''Assign attacks to fighter component by copying them from base_attacks and then modifying as necessary'''
         scalar = .8 #Adjust this to reduce damage from off hand
         if self.weapons is None: self.weapons=[]
-        for w in weapon.weapon_master_list:
+        for w in weapon_master_list:
             new_wpn = w()
             if wpn == new_wpn.name:
                 #Add a new weapon if it doesn't exist, else, retreive existing weapon

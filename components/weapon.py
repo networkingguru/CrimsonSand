@@ -54,6 +54,58 @@ class Guard():
         self.rh_default = rh_default
         self.lh_default = lh_default
 
+class Maneuver():
+    def __init__(self):
+        self.name = ''
+        self.desc = ''
+        self.succeed_desc = ''
+        self.fail_desc = ''
+        self.aggressor = None #Used to indicate person controlling hold
+        self.base_diff = 0 #Mod to initial roll
+        self.counter_mod = 0 #Mod to counter
+        self.dodge_mod = 0
+        self.escape_mod = 0 #Positive int
+        self.reversal_mod = 0 #Positive int
+        self.reversible = False
+        self.counterable = False
+        self.counters = [] #List of maneuvers that can be used to counter this one
+        self.stamina = 0
+        self.b_dam = 0
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 1
+        self.locs_allowed = set() #Locs maneuver can target
+        self.prereq = [] #Maneuvers required to be in place before this one can be used
+        self.base_ap = 0
+        self.hand = True
+        self.length = 0
+        self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.immobilized_locs = set()
+        self.agg_immob_locs = set() #LOcs immobilized on the aggressor
+        self.stability_mod = 0 #Positive int
+        self.pain_check = False 
+        self.balance_check = False
+        self.clarity_reduction = None #Positive int
+        self.temp_phys_mod = None
+        self.paralyzed_locs = None #set
+        self.suffocation = None #In rounds till death
+        self.stam_drain = None #Amount per round
+        self.stam_regin = None #Scalar
+        self.atk_mod_r = None
+        self.atk_mod_l = None
+        self.gen_stance = None #Fighterstance
+        self.state = None #EntityState
+        self.escape_uses_skill = True
+        self.escape_skill = None #Skill used to escape/reverse.
+        self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
+        self.stance = None #Stance the defender is in if the manuever succeeds
+        self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
+        self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
+        
+
+
+
 class Unarmed(Weapon):
     def __init__(self):
         super()
@@ -160,4 +212,4 @@ class Long_Sword_Steel(Weapon):
                                 [0,1])
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
 
-weapon_master_list = [Unarmed, Long_Sword_Steel]
+

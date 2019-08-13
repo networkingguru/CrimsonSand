@@ -12,12 +12,9 @@ add_fighters(entities, fighters)
 weapons = options.weapons
 add_weapons(entities, weapons)
 
-set1 = {1,2,3,4,5,6,7}
-set2 = {2,7}
-set3 = {5,9}
 
-for s in [set2, set3]:
-    if s.issubset(set1):
-        print('True')
-    else:
-        print('False')
+
+classes = itersubclasses(weapon.Weapon)
+
+for c in classes:
+    print(c.__name__)
