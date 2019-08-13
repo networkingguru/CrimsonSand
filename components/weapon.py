@@ -1,5 +1,5 @@
-from enums import WeaponTypes
-from utilities import itersubclasses
+from enums import WeaponTypes, FighterStance, EntityState
+from utilities import itersubclasses, clamp
 
 
 
@@ -68,7 +68,8 @@ class Maneuver():
         self.reversal_mod = 0 #Positive int
         self.reversible = False
         self.counterable = False
-        self.counters = [] #List of maneuvers that can be used to counter this one
+        self.mutual_hold = False #When true, once initiated, both parties are the aggressor and must release or escape
+        self.counters = [] #List of maneuvers that can be used to counter this one. 'Or' list.
         self.stamina = 0
         self.b_dam = 0
         self.s_dam = 0
@@ -76,7 +77,7 @@ class Maneuver():
         self.t_dam = 0
         self.hands = 1
         self.locs_allowed = set() #Locs maneuver can target
-        self.prereq = [] #Maneuvers required to be in place before this one can be used
+        self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 0
         self.hand = True
         self.length = 0
@@ -94,7 +95,6 @@ class Maneuver():
         self.stam_regin = None #Scalar
         self.atk_mod_r = None
         self.atk_mod_l = None
-        self.gen_stance = None #Fighterstance
         self.state = None #EntityState
         self.escape_uses_skill = True
         self.escape_skill = None #Skill used to escape/reverse.
@@ -102,6 +102,10 @@ class Maneuver():
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
         self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
+        self.mv_scalar = 1 #Used to reduce movement as long as the hold is maintained
+        self.can_move = True #Used to block movement
+        self.inv_move = False #Used to trigger an involuntary move (such as in a push or throw)
+        self.inv_move_back = False #If inv moved, is defender thrown back? Forward if false.
         
 
 
@@ -154,7 +158,8 @@ class Unarmed(Weapon):
                                 'L Forearm': 20, 'R Hand': 20, 'L Hand': 20, 'R Abdomen': -60, 'L Abdomen': -60}, -20, -10, 20, [7,8,11,12,15,16], [2,5,6,9,10,13,14])
         self.half = Guard('Half', {'Neck': -10, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'R Ribs': -60, 
                                 'R Elbow': -60, 'R Forearm': -60, 'R Hand': -60}, 20, 20, 0, [7,11,15], [9])
-        self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half]                        
+        self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half]
+        self.maneuvers = [Headbutt, Tackle, Push, Trip, Bearhug, Collar_Tie]                        
 
 class Long_Sword_Steel(Weapon):
     def __init__(self):
@@ -212,4 +217,327 @@ class Long_Sword_Steel(Weapon):
                                 [0,1])
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
 
+class Headbutt(Maneuver):
+    def __init__(self, aggressor, target, loc_name):
+        Maneuver.__init__(self)
+        self.name = 'Head Butt'
+        self.desc = ''
+        self.succeed_desc = aggressor.name + ' headbutts ' + target.name
+        self.fail_desc = aggressor.name + ' attempts to headbutt ' + target.name + ', but fails'
+        self.aggressor = aggressor #Used to indicate person controlling hold
+        self.base_diff = -30 #Mod to initial roll
+        self.counter_mod = 0 #Mod to counter
+        self.dodge_mod = -10
+        self.escape_mod = 0 #Positive int
+        self.reversal_mod = 0 #Positive int
+        self.reversible = False
+        self.counterable = False
+        self.counters = [] #List of maneuvers that can be used to counter this one. 'Or' list.
+        self.stamina = 1
+        self.b_dam = .7
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 1
+        self.locs_allowed = set(0,1,2,3,4) #Locs maneuver can target
+        self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
+        self.base_ap = 10
+        self.hand = False
+        self.length = 0
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.immobilized_locs = set()
+        self.agg_immob_locs = set() #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
+        self.stability_mod = 0 #Positive int
+        self.pain_check = False 
+        self.balance_check = False
+        self.clarity_reduction = None #Positive int
+        self.temp_phys_mod = None
+        self.paralyzed_locs = None #set
+        self.suffocation = None #In rounds till death
+        self.stam_drain = None #Amount per round
+        self.stam_regin = None #Scalar
+        self.atk_mod_r = None
+        self.atk_mod_l = None
+        self.state = None #EntityState
+        self.escape_uses_skill = True
+        self.escape_skill = None #Skill used to escape/reverse.
+        self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
+        self.stance = None #Stance the defender is in if the manuever succeeds
+        self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
+        self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
 
+
+class Tackle(Maneuver):
+    def __init__(self, aggressor, target, loc_name):
+        Maneuver.__init__(self)
+        self.name = 'Tackle'
+        self.desc = ''
+        self.succeed_desc = aggressor.name + ' tackles ' + target.name + ', forcing both to the ground. '
+        self.fail_desc = aggressor.name + ' attempts to tackle ' + target.name + ', but fails. ' + ('He ' if aggressor.fighter.male else 'She ') + 'falls to the ground. '
+        self.aggressor = aggressor #Used to indicate person controlling hold
+        self.base_diff = 20 #Mod to initial roll
+        self.counter_mod = -10 #Mod to counter
+        self.dodge_mod = -10
+        self.escape_mod = 0 #Positive int
+        self.reversal_mod = 0 #Positive int
+        self.reversible = False
+        self.counterable = True
+        self.counters = [Trip, Push, Hip_Throw, Shoulder_Throw, Reap, Sacrifice_Throw] #List of maneuvers that can be used to counter this one. 'Or' list.
+        self.stamina = 5
+        self.b_dam = .4
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 2
+        self.locs_allowed = set(range(0-27)) #Locs maneuver can target
+        self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
+        self.base_ap = 40
+        self.hand = True
+        self.length = aggressor.fighter.height
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.immobilized_locs = set()
+        self.agg_immob_locs = set() #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
+        self.stability_mod = 0 #Positive int
+        self.pain_check = False 
+        self.balance_check = False
+        self.clarity_reduction = None #Positive int
+        self.temp_phys_mod = None
+        self.paralyzed_locs = None #set
+        self.suffocation = None #In rounds till death
+        self.stam_drain = None #Amount per round
+        self.stam_regin = None #Scalar
+        self.atk_mod_r = None
+        self.atk_mod_l = None
+        self.state = None #EntityState
+        self.escape_uses_skill = True
+        self.escape_skill = None #Skill used to escape/reverse.
+        self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
+        self.stance = FighterStance.prone #Stance the defender is in if the manuever succeeds
+        self.agg_suc_stance = FighterStance.prone #Stance the aggressor is in if the maneuver succeeds
+        self.agg_fail_stance = FighterStance.prone #Stance the aggressor is in if the maneuver fails
+
+class Push(Maneuver):
+    def __init__(self, aggressor, target, loc_name):
+        Maneuver.__init__(self)
+        self.name = 'Push'
+        self.desc = ''
+        self.succeed_desc = aggressor.name + ' pushes ' + target.name + ', forcing ' + ('him ' if aggressor.fighter.male else 'her ') + 'back. '
+        self.fail_desc = aggressor.name + ' attempts to push ' + target.name + ', but fails. '
+        self.aggressor = aggressor #Used to indicate person controlling hold
+        self.base_diff = 40 #Mod to initial roll
+        self.counter_mod = -20 #Mod to counter
+        self.dodge_mod = -20
+        self.escape_mod = 0 #Positive int
+        self.reversal_mod = 0 #Positive int
+        self.reversible = False
+        self.counterable = True
+        self.counters = [Hip_Throw, Shoulder_Throw, Sacrifice_Throw, Limb_Capture] #List of maneuvers that can be used to counter this one. 'Or' list.
+        self.stamina = 2
+        self.b_dam = 0
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 2
+        self.locs_allowed = set(range(1-11)) #Locs maneuver can target
+        self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
+        self.base_ap = 10
+        self.hand = True
+        self.length = 0
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.immobilized_locs = set()
+        self.agg_immob_locs = set() #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
+        self.stability_mod = 20 #Positive int
+        self.pain_check = False 
+        self.balance_check = True
+        self.clarity_reduction = None #Positive int
+        self.temp_phys_mod = None
+        self.paralyzed_locs = None #set
+        self.suffocation = None #In rounds till death
+        self.stam_drain = None #Amount per round
+        self.stam_regin = None #Scalar
+        self.atk_mod_r = None
+        self.atk_mod_l = None
+        self.state = None #EntityState
+        self.escape_uses_skill = True
+        self.escape_skill = None #Skill used to escape/reverse.
+        self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
+        self.stance = None #Stance the defender is in if the manuever succeeds
+        self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
+        self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
+        self.mv_scalar = 1 #Used to reduce movement as long as the hold is maintained
+        self.can_move = True #Used to block movement
+        self.inv_move = True #Used to trigger an involuntary move (such as in a push or throw)
+        self.inv_move_back = True #If inv moved, is defender thrown back? Forward if false.
+
+
+class Trip(Maneuver):
+    def __init__(self, aggressor, target, loc_name):
+        Maneuver.__init__(self)
+        self.name = 'Bear Hug'
+        self.desc = ''
+        self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' in a bear hug, pinning ' + ('him ' if aggressor.fighter.male else 'her ') + 'arms and squeezing. '
+        self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' in a bear hug, but fails. '
+        self.aggressor = aggressor #Used to indicate person controlling hold
+        self.base_diff = -20 #Mod to initial roll
+        self.counter_mod = 0 #Mod to counter
+        self.dodge_mod = -10
+        self.escape_mod = 30 #Positive int
+        self.reversal_mod = 0 #Positive int
+        self.reversible = False
+        self.counterable = True
+        self.counters = [Hip_Throw, Shoulder_Throw, Sacrifice_Throw, Headbutt, Collar_Tie] #List of maneuvers that can be used to counter this one. 'Or' list.
+        self.stamina = 1
+        self.b_dam = 0
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 0
+        self.locs_allowed = set(range(23-29)) #Locs maneuver can target
+        self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
+        self.base_ap = 10
+        self.hand = False
+        self.length = 0
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.immobilized_locs = set()
+        self.agg_immob_locs = set() #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
+        self.stability_mod = 40 #Positive int
+        self.pain_check = False 
+        self.balance_check = True
+        self.clarity_reduction = None #Positive int
+        self.temp_phys_mod = None
+        self.paralyzed_locs = None #set
+        self.suffocation = None #In rounds till death
+        self.stam_drain = None #Amount per round
+        self.stam_regin = None #Scalar
+        self.atk_mod_r = None
+        self.atk_mod_l = None
+        self.state = None #EntityState
+        self.escape_uses_skill = True
+        self.escape_skill = None #Skill used to escape/reverse.
+        self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
+        self.stance = None #Stance the defender is in if the manuever succeeds
+        self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
+        self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
+        self.mv_scalar = 1 #Used to reduce movement as long as the hold is maintained
+        self.can_move = True #Used to block movement
+        self.inv_move = False #Used to trigger an involuntary move (such as in a push or throw)
+        self.inv_move_back = True #If inv moved, is defender thrown back? Forward if false.
+
+class Bearhug(Maneuver):
+    def __init__(self, aggressor, target, loc_name):
+        Maneuver.__init__(self)
+        self.name = 'Trip'
+        self.desc = ''
+        self.succeed_desc = aggressor.name + ' trips ' + target.name + '. '
+        self.fail_desc = aggressor.name + ' attempts to trip ' + target.name + ', but fails. '
+        self.aggressor = aggressor #Used to indicate person controlling hold
+        self.base_diff = 10 #Mod to initial roll
+        self.counter_mod = 0 #Mod to counter
+        self.dodge_mod = 0
+        self.escape_mod = 0 #Positive int
+        self.reversal_mod = 30 #Positive int
+        self.reversible = True
+        self.counterable = False
+        self.counters = [] #List of maneuvers that can be used to counter this one. 'Or' list.
+        self.stamina = 6
+        
+        damage_scalar = .2 * (aggressor.fighter.ss/target.fighter.ss)
+
+        self.b_dam = clamp(damage_scalar, 0, 1)
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 2
+        self.locs_allowed = set(5,6,9,10,13,14) #Locs maneuver can target
+        self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
+        self.base_ap = 10
+        self.hand = True
+        self.length = 0
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.immobilized_locs = set()
+
+        loc_idx = target.fighter.name_location(loc_name)
+        
+        if  4 < loc_idx:
+            self.immobilized_locs.update([3,4,7,8])
+        if 12 < loc_idx:
+            self.immobilized_locs.update([11,12,15,16])
+        
+        self.agg_immob_locs = set(3,4,7,8,11,12,15,16) #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
+        self.stability_mod = 0 #Positive int
+        self.pain_check = False 
+        self.balance_check = False
+        self.clarity_reduction = None #Positive int
+        self.temp_phys_mod = None
+        self.paralyzed_locs = None #set
+        self.suffocation = None #In rounds till death
+        self.stam_drain = 100*damage_scalar #Amount per round
+        self.stam_regin = None #Scalar
+        self.atk_mod_r = None
+        self.atk_mod_l = None
+        self.state = None #EntityState
+        self.escape_uses_skill = False
+        self.escape_skill = None #Skill used to escape/reverse.
+        self.escape_attr = 'pwr' #Attr used to escape (i.e. Bear hug) 
+        self.stance = None #Stance the defender is in if the manuever succeeds
+        self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
+        self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
+        self.mv_scalar = 1 #Used to reduce movement as long as the hold is maintained
+        self.can_move = False #Used to block movement
+        self.inv_move = False #Used to trigger an involuntary move (such as in a push or throw)
+        self.inv_move_back = False #If inv moved, is defender thrown back? Forward if false.
+
+
+class Collar_Tie(Maneuver):
+    def __init__(self, aggressor, target, loc_name):
+        Maneuver.__init__(self)
+        self.name = 'Collar Tie'
+        self.desc = ''
+        self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' in a collar tie, gaining control of ' + ('his ' if aggressor.fighter.male else 'her ') + 'head and preventing movement. '
+        self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' in a collar tie, but fails. '
+        self.aggressor = aggressor #Used to indicate person controlling hold
+        self.base_diff = 20 #Mod to initial roll
+        self.counter_mod = 0 #Mod to counter
+        self.dodge_mod = 20
+        self.escape_mod = 0 #Positive int
+        self.reversal_mod = 0 #Positive int
+        self.reversible = False
+        self.counterable = True
+        self.mutual_hold = False #When true, once initiated, both parties are the aggressor and must release or escape
+        self.counters = [Limb_Capture] #List of maneuvers that can be used to counter this one. 'Or' list.
+        self.stamina = 1
+        self.b_dam = 0
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 1
+        self.locs_allowed = set(1,2) #Locs maneuver can target
+        self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
+        self.base_ap = 10
+        self.hand = True
+        self.length = 0
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.immobilized_locs = set(0,1,2)
+        self.agg_immob_locs = set() #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
+        self.stability_mod = 0 #Positive int
+        self.pain_check = False 
+        self.balance_check = False
+        self.clarity_reduction = None #Positive int
+        self.temp_phys_mod = None
+        self.paralyzed_locs = None #set
+        self.suffocation = None #In rounds till death
+        self.stam_drain = None #Amount per round
+        self.stam_regin = None #Scalar
+        self.atk_mod_r = None
+        self.atk_mod_l = None
+        self.state = None #EntityState
+        self.escape_uses_skill = True
+        self.escape_skill = 'brawling' #Skill used to escape/reverse.
+        self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
+        self.stance = None #Stance the defender is in if the manuever succeeds
+        self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
+        self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
+        self.mv_scalar = 1 #Used to reduce movement as long as the hold is maintained
+        self.can_move = False #Used to block movement
+        self.inv_move = False #Used to trigger an involuntary move (such as in a push or throw)
+        self.inv_move_back = True #If inv moved, is defender thrown back? Forward if false.

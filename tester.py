@@ -12,9 +12,9 @@ add_fighters(entities, fighters)
 weapons = options.weapons
 add_weapons(entities, weapons)
 
+aggressor = entities[0]
+target = entities[1]
 
+say = aggressor.name + ' attempts to tackle ' + target.name + ', but fails. ' + ('He ' if aggressor.fighter.male else 'She ') + 'falls to the ground. '
 
-classes = itersubclasses(weapon.Weapon)
-
-for c in classes:
-    print(c.__name__)
+print(say)
