@@ -88,35 +88,35 @@ class Fighter:
         self.fat = attributes[27]
         self.shape = attributes[28]
         #Max Attributes
-        self.max_log = attributes[0]
-        self.max_mem = attributes[1]
-        self.max_wis = attributes[2]
-        self.max_comp = attributes[3]
-        self.max_comm = attributes[4]
-        self.max_cre = attributes[5]
-        self.max_men = attributes[6]
-        self.max_will = attributes[7]
-        self.max_ss = attributes[8]
-        self.max_pwr = attributes[9]
-        self.max_man = attributes[10]
-        self.max_ped = attributes[11]
-        self.max_bal = attributes[12]
-        self.max_swift = attributes[13]
-        self.max_flex = attributes[14]
-        self.max_sta = attributes[15]
-        self.max_derm = attributes[16]
-        self.max_bone = attributes[17]
-        self.max_immune = attributes[18]
-        self.max_shock = attributes[19]
-        self.max_toxic = attributes[20]
-        self.max_sit = attributes[21]
-        self.max_hear = attributes[22]
-        self.max_ts = attributes[23]
-        self.max_touch = attributes[24]
-        self.max_fac = attributes[25]
-        self.max_ht = attributes[26]
-        self.max_fat = attributes[27]
-        self.max_shape = attributes[28]
+        self.max_log = self.max_attributes[0]
+        self.max_mem = self.max_attributes[1]
+        self.max_wis = self.max_attributes[2]
+        self.max_comp = self.max_attributes[3]
+        self.max_comm = self.max_attributes[4]
+        self.max_cre = self.max_attributes[5]
+        self.max_men = self.max_attributes[6]
+        self.max_will = self.max_attributes[7]
+        self.max_ss = self.max_attributes[8]
+        self.max_pwr = self.max_attributes[9]
+        self.max_man = self.max_attributes[10]
+        self.max_ped = self.max_attributes[11]
+        self.max_bal = self.max_attributes[12]
+        self.max_swift = self.max_attributes[13]
+        self.max_flex = self.max_attributes[14]
+        self.max_sta = self.max_attributes[15]
+        self.max_derm = self.max_attributes[16]
+        self.max_bone = self.max_attributes[17]
+        self.max_immune = self.max_attributes[18]
+        self.max_shock = self.max_attributes[19]
+        self.max_toxic = self.max_attributes[20]
+        self.max_sit = self.max_attributes[21]
+        self.max_hear = self.max_attributes[22]
+        self.max_ts = self.max_attributes[23]
+        self.max_touch = self.max_attributes[24]
+        self.max_fac = self.max_attributes[25]
+        self.max_ht = self.max_attributes[26]
+        self.max_fat = self.max_attributes[27]
+        self.max_shape = self.max_attributes[28]
         #Super-Attributes
         self.int = int(round((mean([self.log, self.mem, self.comm, self.comp, self.cre, self.men, self.will, self.wis])),0))
         self.str = int(round((mean([self.ss, self.pwr])),0))
@@ -126,6 +126,8 @@ class Fighter:
         self.appear = int(round((mean([self.fac, self.ht, self.shape, (100-self.fat)])),0))
         #Skills
         self.brawling = int(round(self.agi*0.4 + self.str*0.4 + ((self.men+self.wis)/2)*0.2))
+        self.wrestling = int(round(self.agi*0.5 + self.str*0.25 + ((self.men+self.wis)/2)*0.25))
+        self.martial_arts = int(round(self.men*0.4 + ((self.mem+self.wis)/2)*0.4 + self.agi*0.2))
         self.long_sword = int(round(self.agi*0.6 + ((self.men + self.pwr)/2)*0.3 + self.wis*0.1))
         self.dodge = int(round(self.swift*.6 + ((self.ped + self.bal)/2)*.2 + ((self.men + self.wis)/2)*.2))
         self.deflect = int(round(((self.men + self.wis)/2)*.5 + self.swift*.3 + self.agi*.2))
@@ -136,13 +138,13 @@ class Fighter:
         wt_mod = ((((self.bone-100)/20)+((self.fat-100)/4)+((self.str-100)/8))/100)+1
         self.weight = int(round((self.ht*1.6)*wt_mod))
         self.stamina = int(round((self.sta * 2) + self.shock + self.ss))
-        self.max_stamina = self.stamina
+        self.max_stamina = deepcopy(self.stamina)
         #Local var to handle secondary calc for stamr
         sr_mod = (self.stamina + ((self.immune / 5) + (self.toxic/20) + (self.shock/10)))/100
         self.stamr = int(round((self.stamina/100)*sr_mod))
-        self.max_stamr = self.stamr
+        self.max_stamr = deepcopy(self.stamr)
         self.vitae = int(round(self.weight/0.03))
-        self.max_vitae = self.vitae
+        self.max_vitae = deepcopy(self.vitae)
         self.vitr = int((((self.immune/100)*self.weight)/60))
         self.max_mv = int(round(((self.ht/2) * 7.5) * (((self.ht * 2.5) / self.weight) * (self.swift / 100) * (self.flex / 100))))
         self.mv = self.max_mv
@@ -152,7 +154,7 @@ class Fighter:
         self.jog_ap = round(self.ap / inch_conv(self.mv*1.5, 1))
         self.run_ap = round(self.ap / inch_conv(self.mv*2, 1))
         self.init = (self.men + self.swift)/4 + (self.sens + self.brawling)/4
-        self.max_init = self.init
+        self.max_init = deepcopy(self.init)
         self.clarity = self.will #For dizziness/unconsciousness
         self.clar_recovery = self.will/4
         self.stability_mods = self.stance_stability + self.atk_instability + self.paralysis_instability + (100 - self.clarity)
@@ -164,8 +166,8 @@ class Fighter:
         self.reach = None #Main hand reach. All reach vars set by entity.set_reach
         self.reach_oh = None #Off hand reach
         self.reach_leg = None #Leg reach
-        #Base stamina cost for actions
-        self.base_stam_cost = int(round((self.fat/self.str)*(self.weight/100)))
+        #Base stamina cost for actions; clamped so all actions require at least some stamina over regin
+        self.base_stam_cost = clamp(int(round(((self.fat/self.str)*(self.weight/100)*10))),self.max_stamr+1) 
 
 
 
@@ -264,7 +266,9 @@ class Fighter:
             self.l_blocker = self.locations[16][2]
         if self.r_blocker == None:
             self.r_blocker = self.locations[15][2]
-        self.best_combat_skill = self.brawling
+        self.best_combat_skill = max([self.brawling, self.long_sword, self.martial_arts, self.wrestling]) 
+        self.best_unarmed_skill = max([self.brawling, self.martial_arts, self.wrestling]) 
+        self.best_grappling_skill = max([self.martial_arts, self.wrestling]) 
 
     def update_aoc_facing(self) -> None:
         #Hack to handle incongruity between aoc facing and fov facing

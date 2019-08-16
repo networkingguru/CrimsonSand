@@ -919,7 +919,6 @@ def cleave_checker(entity) -> list:
     
     return messages
 
-
 def calc_damage_soak(dam_type, target) -> (list, list):
     if dam_type == 'b':
         deflect = [15, 25, 0]        
