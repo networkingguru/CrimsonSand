@@ -155,6 +155,69 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
 
     return fov_recompute #Used to id that entity moved for ap reduction in combat
 
+def relo_actor(game_map, target, aggressor, entities, direction, distance) -> bool:
+    '''Used to relocate an actor, suich as when they are pushed or thrown by something else'''
+    #Dict containing x,y offset based on facing direction  
+    offset_dict = {6:(-1,0),5:(-1,1),7:(-1,-1),1:(1,-1),3:(1,1),2:(1,0),4:(0,1),0:(0,-1)}
+    #Dict containing facing direction based on angle
+    angle_dict = {0:2,45:1,90:0,135:7,180:6,225:5,270:4,315:3}
+    mobility_changed = False #Used to signal not to run handle mobility change in calling function
+
+    for x_mod,y_mod in offset_dict.get(direction):
+        x = x_mod * distance
+        y = y_mod * distance
+
+    fx, fy = target.x + x, target.y + y
+    #Boundary and blocker checking
+    blocker = get_blocking_entities_at_location(entities, fx, fy)
+    if (game_map.width -1 >= fx and game_map.height -1 >= fy) and (game_map.walkable[fx, fy] and not (fx < 0  or fy < 0) and blocker is None):
+            target.mod_attribute('x', x_mod)
+            target.mod_attribute('y', y_mod)
+    else:
+        #Find first free square within 1 square of original target
+        for x in range(fx-1,fx+1):
+            for y in range(fy-1,fy+1):
+                blocker = get_blocking_entities_at_location(entities, x, y)
+                if (game_map.width -1 >= x and game_map.height -1 >= y) and (game_map.walkable[x, y] and not (x < 0  or y < 0) and blocker is None):
+                    target.mod_attribute('x', x)
+                    target.mod_attribute('y', y)
+
+
+    #Mark last known pos of entity for AI
+    for e in entities:
+        if e is not target and hasattr(e.fighter, 'ai'):
+            e.fighter.ai.update_enemy_pos(target)
+
+    
+    if hasattr(target, 'fighter'):
+        if global_vars.debug_time: t0 = time.time()
+        for e in entities:
+            if e.fighter is not None:
+                fov_radius = int(round(e.fighter.sit/5))
+                game_map.compute_fov(e.x, e.y, fov_radius, True, libtcodpy.FOV_SHADOW)
+                modify_fov(e, game_map)
+
+        #Added to handle prone stance changes        
+        handle_mobility_change(target)
+        mobility_changed = True
+
+    targets = aoc_check(entities, target)
+
+    if targets is not None:
+        update_targets(target, targets)
+        for t in targets:
+            e_targets = aoc_check(entities, t)
+            update_targets(t, e_targets)
+
+    #Update aggressor facing to face target
+    if aggressor is not None:
+        angle = entity_angle(target, aggressor, False)
+        aggressor.fighter.facing = angle_dict.get(angle)
+        aggressor.fighter.update_aoc_facing()
+        aggressor.fighter.aoc = change_face(aggressor.fighter.aoc_facing, aggressor.x, aggressor.y, aggressor.fighter.reach)
+    
+    return mobility_changed
+
 def strafe_control(entity):
     #Cycle through the strafe modes
     if entity.fighter.strafe == 'auto': 
@@ -673,7 +736,7 @@ def handle_mobility_change(entity):
     #DIct containing direction to x,y AOC mapping for square directly in front of entity
     prone_aoc_dict = {0:(0,-1),1:(1,-1),2:(1,0),3:(1,1),4:(0,1),5:(-1,1),6:(-1,0),7:(-1,-1)}
     #Handle unconsciousness
-    if entity.state == EntityState.unconscious or entity.state == EntityState.dead:
+    if entity.state in [EntityState.unconscious,EntityState.dead,EntityState.stunned,EntityState.shock]:
         entity.fighter.can_act = False
     #Handle leg paralysis
     no_walk_locs = (17,18,21,22,23,24,25,26,27,28)
@@ -815,18 +878,24 @@ def find_next_location(location, atk_angle, entity_angle) -> int:
 
     return new_loc
 
-def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs, entities) -> list:
+def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs, entities, maneuver = False) -> list:
     '''Main damage function.'''
-    atk_angle = angle_id(attacker.fighter.combat_choices[3])
+    if maneuver:
+        atk_angle = 4
+    else:
+        atk_angle = angle_id(attacker.fighter.combat_choices[3])
+    
     rel_angle = entity_angle(defender, attacker)
 
     deflect, soak = calc_damage_soak(dam_type, defender)
 
     messages = []
     
-    
     #Calc pre-soak damage total
-    dam_amount = dam_mult * cs.get(dam_type + ' psi')
+    if maneuver:
+        dam_amount = dam_mult
+    else:
+        dam_amount = dam_mult * cs.get(dam_type + ' psi')
     
     #Just to start while loop
     damage = dam_amount
@@ -1201,6 +1270,266 @@ def calc_modifiers(weapon, location, angle_id) -> (int, int, int, int):
         dodge_mod += 5
     
     return dam_mult, atk_mod, parry_mod, dodge_mod
+
+def valid_maneuvers(aggressor, target) -> set:
+    all_maneuvers = set()
+    invalid_maneuvers = set()
+    dup_maneuvers = set()
+    
+    
+    for w in aggressor.weapons:
+        all_maneuvers = all_maneuvers | set(w.maneuvers)
+
+    #Eliminate duplicates
+    for mnvr in all_maneuvers:
+        count = 0
+        for m in all_maneuvers:
+            if mnvr.name == m.name:
+                count += 1
+        if count > 1:
+            dup_maneuvers.add(mnvr)
+
+    all_maneuvers = all_maneuvers.difference(dup_maneuvers)
+
+    for mnvr in all_maneuvers:
+
+        #Find valid locations based on angle/dist
+        reachable_locs = set(determine_valid_locs(aggressor, target, mnvr))
+        #Remove any maneuvers that cannot reach a valid target
+        if reachable_locs.isdisjoint(mnvr.locs_allowed):
+            invalid_maneuvers.add(mnvr)
+            continue
+        
+        #Check prereqs and remove maneuvers that do not meet them
+        if len(mnvr.prereq) != 0:
+            valid = False
+            for p in mnvr.prereq:
+                for a in aggressor.fighter.maneuvers:
+                    if type(p) is type(a) and a.aggressor is aggressor:
+                        valid = True
+            if not valid: 
+                invalid_maneuvers.add(mnvr)
+                continue
+
+        #Check if aggressor has ap
+        skill_ratings = []
+        for s in mnvr.skill:
+            skill_ratings.append(getattr(aggressor.fighter, s))
+        skill_rating = max(skill_ratings)
+        
+        final_ap = int(mnvr.base_ap * ((100/skill_rating)**.2 ))
+        
+        if aggressor.fighter.ap < final_ap:
+            invalid_maneuvers.add(mnvr)
+            continue  
+        
+        #See if both hands are free if it's a two handed maneuver
+        if mnvr.hand:
+            if mnvr.hands == 2:
+                if mnvr not in aggressor.weapons[0].maneuvers and mnvr not in aggressor.weapons[1].maneuvers:
+                    invalid_maneuvers.add(mnvr)
+                    continue 
+
+        #See if aggressor stance is valid for the maneuver
+        if aggressor.fighter.gen_stance not in mnvr.agg_stance_pre:
+            invalid_maneuvers.add(mnvr)
+            continue
+
+        #See if target stance is valid for the maneuver
+        if target.fighter.gen_stance not in mnvr.target_stance_pre:
+            invalid_maneuvers.add(mnvr)
+            continue
+
+    all_maneuvers = all_maneuvers.difference(invalid_maneuvers)
+
+
+    return all_maneuvers
+
+def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) -> list:
+    mnvr = maneuver(aggressor, target, location)
+    dam_type = None
+    messages = []
+    check = []
+    damage_list = []
+    loc_list = []
+    dam_types_list = []
+    skill_rating = 0
+    mobility_changed = False
+    #Dict containing x,y offset based on facing direction  
+    offset_dict = {6:(-1,0),5:(-1,1),7:(-1,-1),1:(1,-1),3:(1,1),2:(1,0),4:(0,1),0:(0,-1)}
+    
+    #Apply any clarity reductions before making balance checks
+    if mnvr.clarity_reduction > 0:
+        target.fighter.mod_attribute('clarity', -1 * mnvr.clarity_reduction)
+
+    #Apply any direct damage
+    if mnvr.random_dam_loc:
+        roll = roll_dice(1,99) - 1
+        location = target.fighter.find_location(roll)
+    
+    for i in [mnvr.b_dam,mnvr.s_dam,mnvr.p_dam,mnvr.t_dam]:
+        if i > 0:
+            if i is mnvr.b_dam: dam_type = 'b'
+            elif i is mnvr.s_dam: dam_type = 's'
+            elif i is mnvr.p_dam: dam_type = 'p'
+            else: dam_type = 't'
+            damage_list.append(i * aggressor.fighter.ep)
+            loc_list.append(location)
+            dam_types_list.append(dam_type)
+
+    #See if target falls
+    if mnvr.balance_check:
+        check = save_roll_un(target.fighter.bal, target.fighter.stability + mnvr.stability_mod)
+        if 'f' in check[0]:
+            dam_amount, num_locs = calc_falling_damage(target, target.fighter.height, mnvr.throw_force)
+            l = 0
+            while l < num_locs:
+                damage_list.append(dam_amount)
+                roll = roll_dice(1,99) - 1
+                location = target.fighter.find_location(roll)
+                loc_list.append(location)
+                dam_types_list.append('b')
+                l += 1
+            
+
+    #Pass each damage instgance to the damage controller for application
+    idx = 0
+    for d in damage_list:
+        idx += 1
+        roll = roll = roll_dice(1,99) - 1
+        cs = dict()
+        messages.extend(damage_controller(target, aggressor, loc_list[idx], dam_types_list[idx], d, roll, cs, entities, True))
+
+    #Remove the prereq if one exists
+    if len(mnvr.prereq) > 0:
+        for p in mnvr.prereq:
+                for a in target.fighter.maneuvers:
+                    if type(p) is type(a) and a.aggressor is aggressor and a.loc_idx == location:
+                        target.fighter.maneuvers.remove(a)
+                        continue
+
+    #Subtract the AP
+    skill_ratings = []
+    for s in mnvr.skill:
+        skill_ratings.append(getattr(aggressor.fighter, s))
+    skill_rating = max(skill_ratings)
+        
+    final_ap = int(mnvr.base_ap * ((100/skill_rating)**.2 ))
+
+    aggressor.fighter.mod_attribute('ap', final_ap)
+
+    #Immobilize locations
+    for l in mnvr.immobilized_locs:
+        target.fighter.immobilize_locs.add(l)
+    for l in mnvr.agg_immob_locs: 
+        aggressor.fighter.immobilize_locs.add(l)
+
+    #Perform pain check and immobilize for round if failed
+    if mnvr.pain_check:
+        check = save_roll_un(target.fighter.will, 0)
+        if 'f' in check:
+            target.state = EntityState.stunned
+            messages.append(target.name + ' is overcome by the pain from the blow, and is stunned for a short while.')
+
+        elif 'cf' in check:
+            target.fighter.gen_stance = FighterStance.prone
+            target.state = EntityState.unconscious
+            messages.append(target.name + ' faints due to the intense pain of the wound.')
+
+    #Apply any temp phys mod
+    if mnvr.temp_phys_mod is not None:
+        target.fighter.temp_physical_mod -= mnvr.temp_phys_mod
+
+    #Add paralyzed locations
+    if mnvr.paralyzed_locs is not None:
+        target.fighter.paralyzed_locs.update(mnvr.paralyzed_locs)
+
+    #Apply suffocation
+    if mnvr.suffocation is not None:
+        if target.fighter.suffocation is not None and target.fighter.suffocation > mnvr.suffocation:
+           target.fighter.suffocation = mnvr.suffocation
+
+    #Apply Stam drain and regin mods
+    if mnvr.stam_drain is not None:
+        target.fighter.mod_attribute('stam_drain',mnvr.stam_drain)
+    
+    if mnvr.stam_regin is not None:
+        target.fighter.mod_attribute('stamr',-(target.fighter.max_stamr * mnvr.stam_regin))
+
+    #Apply attack mods
+    if mnvr.atk_mod_r is not None:
+        target.fighter.atk_mod_r += mnvr.atk_mod_r
+    
+    if mnvr.atk_mod_l is not None:
+        target.fighter.atk_mod_l += mnvr.atk_mod_l
+    
+    #Apply target stance and state
+    if mnvr.gen_stance is not None:
+        target.fighter.gen_stance = mnvr.gen_stance
+        if target.fighter.gen_stance == FighterStance.prone:
+            messages.append(target.name + ' is knocked prone. ')
+        elif target.fighter.gen_stance == FighterStance.kneeling:
+            messages.append(target.name + ' is forced to their knees. ')
+
+    if mnvr.state is not None:
+        target.fighter.state = mnvr.state
+
+    #Apply aggressor stance (succeed)
+    if mnvr.agg_suc_stance is not None:
+        aggressor.fighter.stance = mnvr.agg_suc_stance
+
+    #Apply movement mods
+    if mnvr.mv_scalar is not 1 or mnvr.can_move is False:
+
+        if mnvr.can_move is False:
+            mv_mod = target.fighter.max_mv
+        else:
+            mv_mod = (1-mnvr.mv_scalar) * target.fighter.max_mv
+
+        target.fighter.mod_attribute('mv',-mv_mod)
+
+    #Apply involuntary movement
+    if mnvr.inv_move:
+        direction = target.fighter.facing
+        if mnvr.inv_move_back:
+            direction = target.fighter.facing + 4
+            #Handle boundary
+            if direction > 7:
+                direction -= 8  
+
+        mobility_changed = relo_actor(game_map, target, aggressor, entities, direction, 2)    
+
+    if not mobility_changed:
+        handle_mobility_change(target)
+    
+    return messages  
+       
+def calc_falling_damage(target, distance, add_force = 0, surface_hardness = .8) -> (int, int):
+    weight = target.fighter.weight
+    g = 9.81 * 3.28 #Convert to feet
+    distance = distance / 12 #Convert to feet
+    velocity = sqrt(2 * distance * g)
+
+    force = weight * (velocity * velocity)
+    force = force / .5 #Account for 6" of compression on impact
+    force += add_force
+    force = force * surface_hardness #SH is a scalar, 1 is maximum
+    force = force / 144 #convert to inches
+    
+    num_locs = roll_dice(1,3)
+    if force > 100 and num_locs < 2:
+        num_locs += roll_dice(1,3) - 1
+    if force > 200 and num_locs <= 3:
+        num_locs += roll_dice(1,3) - 1
+    if force > 400 and num_locs <= 5:
+        num_locs += roll_dice(1,3) - 1
+    if force > 800 and num_locs <= 6:
+        num_locs += roll_dice(1,3) - 1
+
+    force = force / num_locs
+    force = int(force)
+
+    return force, num_locs
 
 def handle_state_change(entity, entities, state) -> None:
     entity.state = state

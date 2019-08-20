@@ -84,9 +84,17 @@ class Entity:
                             atk.t_dam *= scalar
                             atk.attack_mod -= 20
                             atk.parry_mod -= 20
+                
+                for m in base_wpn.base_maneuvers:
+                    mnvr = m(self,self,'Scalp')
+                    if (loc <=1 and not mnvr.hand) or (loc > 1 and mnvr.hand): #loc variable defines the 'location' the attack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
+                        continue
+                    base_wpn.maneuvers.append(mnvr)
+                    
 
-        #Sort the list of objects alphabetically using the name attribute            
+        #Sort the lists of objects alphabetically using the name attribute            
         base_wpn.attacks.sort(key=lambda x: x.name)
+        base_wpn.maneuvers.sort(key=lambda x: x.name)
 
     
 
@@ -97,7 +105,7 @@ class Entity:
         self.fighter.auto_block_locs = self.guard.auto_block
         
 
-    def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 10):
+    def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 0):
         weapon = weapon
         skill = weapon.skill
         skill_rating = getattr(self.fighter, skill)

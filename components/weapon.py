@@ -59,6 +59,7 @@ class Maneuver():
     def __init__(self):
         self.name = ''
         self.desc = ''
+        self.skill = [] #List of skills that can use this maneuver
         self.loc_idx = None
         self.succeed_desc = ''
         self.fail_desc = ''
@@ -74,12 +75,14 @@ class Maneuver():
         self.counters = [] #List of maneuvers that can be used to counter this one. 'Or' list.
         self.continuous = False #If True, hold can be held continuously without additional rolls, but still use AP/Sta
         self.stamina = 0
+        self.random_dam_loc = False
         self.b_dam = 0
         self.s_dam = 0
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 1
         self.locs_allowed = set() #Locs maneuver can target
+        self.restricted_locs = []
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 0
         self.hand = True
@@ -162,7 +165,8 @@ class Unarmed(Weapon):
         self.half = Guard('Half', {'Neck': -10, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'R Ribs': -60, 
                                 'R Elbow': -60, 'R Forearm': -60, 'R Hand': -60}, 20, 20, 0, [7,11,15], [9])
         self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half]
-        self.maneuvers = [Headbutt, Tackle, Push, Trip, Bearhug, Collar_Tie, Strangle_Hold, Reap, Sacrifice_Throw]                        
+        self.base_maneuvers = [Headbutt, Tackle, Push, Trip, Bearhug, Collar_Tie, Strangle_Hold, Reap, Sacrifice_Throw]
+        self.maneuvers = []                        
 
 class Long_Sword_Steel(Weapon):
     def __init__(self):
@@ -219,12 +223,15 @@ class Long_Sword_Steel(Weapon):
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
                                 [0,1])
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
+        self.base_maneuvers = []
+        self.maneuvers = [] 
 
 class Headbutt(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Head Butt'
         self.desc = ''
+        self.skill = ['brawling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' headbutts ' + target.name
         self.fail_desc = aggressor.name + ' attempts to headbutt ' + target.name + ', but fails'
@@ -243,7 +250,8 @@ class Headbutt(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 1
-        self.locs_allowed = set(0,1,2,3,4) #Locs maneuver can target
+        self.locs_allowed = set([0,1,2,3,4]) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = False
@@ -275,6 +283,7 @@ class Tackle(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Tackle'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' tackles ' + target.name + ', forcing both to the ground. '
         self.fail_desc = aggressor.name + ' attempts to tackle ' + target.name + ', but fails. ' + ('He ' if aggressor.fighter.male else 'She ') + 'falls to the ground. '
@@ -288,12 +297,14 @@ class Tackle(Maneuver):
         self.counterable = True
         self.counters = [Trip, Push, Hip_Throw, Shoulder_Throw, Reap, Sacrifice_Throw] #List of maneuvers that can be used to counter this one. 'Or' list.
         self.stamina = 5
+        self.random_dam_loc = True
         self.b_dam = .4
         self.s_dam = 0
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 2
         self.locs_allowed = set(range(0-27)) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 40
         self.hand = True
@@ -327,6 +338,7 @@ class Push(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Push'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' pushes ' + target.name + ', forcing ' + ('him ' if aggressor.fighter.male else 'her ') + 'back. '
         self.fail_desc = aggressor.name + ' attempts to push ' + target.name + ', but fails. '
@@ -346,6 +358,7 @@ class Push(Maneuver):
         self.t_dam = 0
         self.hands = 2
         self.locs_allowed = set(range(1-11)) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
@@ -383,6 +396,7 @@ class Trip(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Trip'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.succeed_desc = aggressor.name + ' trips ' + target.name + '. '
         self.fail_desc = aggressor.name + ' attempts to trip ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
@@ -401,6 +415,7 @@ class Trip(Maneuver):
         self.t_dam = 0
         self.hands = 0
         self.locs_allowed = set(range(23-29)) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = False
@@ -438,6 +453,7 @@ class Bearhug(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Bear Hug'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' in a bear hug, pinning ' + ('him ' if aggressor.fighter.male else 'her ') + 'arms and squeezing. '
         self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' in a bear hug, but fails. '
@@ -460,7 +476,8 @@ class Bearhug(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 2
-        self.locs_allowed = set(5,6,9,10,13,14) #Locs maneuver can target
+        self.locs_allowed = set([5,6,9,10,13,14]) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
@@ -504,6 +521,7 @@ class Collar_Tie(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Collar Tie'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' in a collar tie, gaining control of ' + ('his ' if aggressor.fighter.male else 'her ') + 'head and preventing movement. '
         self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' in a collar tie, but fails. '
@@ -526,13 +544,14 @@ class Collar_Tie(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 2
-        self.locs_allowed = set(1,2) #Locs maneuver can target
+        self.locs_allowed = set([1,2]) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
         self.length = 0
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
-        self.immobilized_locs = set(0,1,2)
+        self.immobilized_locs = set([0,1,2])
         self.agg_immob_locs = global_vars.arm_locs #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
         self.stability_mod = 0 
         self.pain_check = False 
@@ -562,6 +581,7 @@ class Limb_Capture(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Limb Capture'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.succeed_desc = aggressor.name + ' grabs ' + target.name + '\'s' + loc_name + ', immobilizing it. ' 
         self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + '\'s' + loc_name + ', but' + ('he ' if aggressor.fighter.male else 'she ') + 'fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
@@ -615,6 +635,7 @@ class Limb_Capture(Maneuver):
         self.t_dam = 0
         self.hands = 1
         self.locs_allowed = global_vars.leg_locs|global_vars.arm_locs #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 5
         self.hand = True
@@ -646,6 +667,7 @@ class Wind_Choke(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Wind Choke'
         self.desc = ''
+        self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' converts the collar tie on ' + target.name + ' to a wind choke, slowly suffocating ' + ('him.' if aggressor.fighter.male else 'her.')
         self.fail_desc = aggressor.name + ' attempts to convert the collar tie on ' + target.name + ' to a wind choke in order to suffocate' + ('him ' if aggressor.fighter.male else 'her ') + ', but fails. '
@@ -669,13 +691,14 @@ class Wind_Choke(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 2
-        self.locs_allowed = set(2) #Locs maneuver can target
+        self.locs_allowed = set([2]) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [Collar_Tie] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
         self.length = 0
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
-        self.immobilized_locs = set(0,1,2)
+        self.immobilized_locs = set([0,1,2])
         self.agg_immob_locs = global_vars.arm_locs #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
         self.stability_mod = 0 
         self.pain_check = False 
@@ -705,6 +728,7 @@ class Strangle_Hold(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Strangle Hold'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' by the throat and begins to throttle ' + ('him.' if aggressor.fighter.male else 'her.')
         self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' by the throat, but fails. '
@@ -724,13 +748,14 @@ class Strangle_Hold(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 2
-        self.locs_allowed = set(2) #Locs maneuver can target
+        self.locs_allowed = set([2]) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
         self.length = 0
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
-        self.immobilized_locs = set(0,1,2)
+        self.immobilized_locs = set([0,1,2])
         self.agg_immob_locs = global_vars.arm_locs #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
         self.stability_mod = 0 
         self.pain_check = False 
@@ -760,6 +785,7 @@ class Compression_Lock(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Compression Lock'
         self.desc = ''
+        self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' places ' + target.name + '\'s' + loc_name + 'in a compression lock, compressing ' + ('his ' if aggressor.fighter.male else 'her ') + 'muscles and causing intense pain.'
         self.fail_desc = aggressor.name + ' attempts to place a compression lock on ' + target.name + '\'s' + loc_name + ', but fails. '
@@ -781,6 +807,7 @@ class Compression_Lock(Maneuver):
         self.t_dam = 0
         self.hands = 2
         self.locs_allowed = global_vars.arm_locs|global_vars.leg_locs #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [Limb_Capture] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
@@ -840,6 +867,7 @@ class Blood_Choke(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Blood Choke'
         self.desc = ''
+        self.skill = ['martial_arts']
         self.succeed_desc = aggressor.name + ' places ' + target.name + ' in a blood choke, cutting off blood flow to ' + ('his ' if aggressor.fighter.male else 'her ') + 'head.'
         self.fail_desc = aggressor.name + ' attempts to execute a blood choke on ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
@@ -859,13 +887,14 @@ class Blood_Choke(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 2
-        self.locs_allowed = set(2) #Locs maneuver can target
+        self.locs_allowed = set([2]) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [Collar_Tie] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
         self.length = 0
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
-        self.immobilized_locs = set(0,1,2)
+        self.immobilized_locs = set([0,1,2])
         self.agg_immob_locs = global_vars.arm_locs #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
         self.stability_mod = 0 
         self.pain_check = False 
@@ -895,6 +924,7 @@ class Joint_Lock(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Joint Lock'
         self.desc = ''
+        self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' places ' + target.name + '\'s' + loc_name + 'in a joint lock, inflicting terrible damage to ' + ('him' if aggressor.fighter.male else 'her') + '.'
         self.fail_desc = aggressor.name + ' attempts to place a joint lock on ' + target.name + '\'s' + loc_name + ', but fails. '
@@ -916,6 +946,7 @@ class Joint_Lock(Maneuver):
         self.t_dam = 0
         self.hands = 2
         self.locs_allowed = global_vars.arm_locs|global_vars.leg_locs #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [Limb_Capture] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
@@ -975,6 +1006,7 @@ class Neck_Crank(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Neck Crank'
         self.desc = ''
+        self.skill = ['martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' begins violently twisting ' + target.name + '\'s' + loc_name + ', inflicting terrible damage to ' + ('his' if aggressor.fighter.male else 'her') + ' spine.'
         self.fail_desc = aggressor.name + ' attempts to twist ' + target.name + '\'s' + loc_name + ', but fails. '
@@ -997,13 +1029,14 @@ class Neck_Crank(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 2
-        self.locs_allowed = global_vars.arm_locs|global_vars.leg_locs #Locs maneuver can target
+        self.locs_allowed = set([2]) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [Neck_Crank] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = True
         self.length = 0
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
-        self.immobilized_locs = set(0,1,2)
+        self.immobilized_locs = set([0,1,2])
         self.agg_immob_locs = global_vars.arm_locs #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
         self.stability_mod = 0 
         self.pain_check = False 
@@ -1033,6 +1066,7 @@ class Reap(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Reap'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.succeed_desc = aggressor.name + ' trips ' + target.name + ' while pushing him forcefully. '
         self.fail_desc = aggressor.name + ' attempts to trip ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
@@ -1051,6 +1085,7 @@ class Reap(Maneuver):
         self.t_dam = 0
         self.hands = 0
         self.locs_allowed = set(range(23-29)) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
         self.hand = False
@@ -1088,6 +1123,7 @@ class Sacrifice_Throw(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Sacrifice Throw'
         self.desc = ''
+        self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if aggressor.fighter.male else 'her') + ', landing on top of '  + ('him.' if aggressor.fighter.male else 'her.')
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
@@ -1108,6 +1144,7 @@ class Sacrifice_Throw(Maneuver):
         self.t_dam = 0
         self.hands = 2
         self.locs_allowed = set(range(1-11)) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [Bearhug, Collar_Tie, Limb_Capture] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 30
         self.hand = True
@@ -1146,6 +1183,7 @@ class Hip_Throw(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Hip Throw'
         self.desc = ''
+        self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if aggressor.fighter.male else 'her') + ', using '  + ('his ' if aggressor.fighter.male else 'her ') + 'hip as a fulcrum. '
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
@@ -1166,6 +1204,7 @@ class Hip_Throw(Maneuver):
         self.t_dam = 0
         self.hands = 1
         self.locs_allowed = global_vars.arm_locs #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [Limb_Capture] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 20
         self.hand = True
@@ -1204,6 +1243,7 @@ class Shoulder_Throw(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Shoulder Throw'
         self.desc = ''
+        self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if aggressor.fighter.male else 'her') + ', using '  + ('his ' if aggressor.fighter.male else 'her ') + 'shoulder and back as a fulcrum. '
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
@@ -1224,6 +1264,7 @@ class Shoulder_Throw(Maneuver):
         self.t_dam = 0
         self.hands = 2
         self.locs_allowed = global_vars.arm_locs #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [Limb_Capture] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 20
         self.hand = True
@@ -1262,6 +1303,7 @@ class Single_Leg_Takedown(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Single Leg Takedown'
         self.desc = ''
+        self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' darts quickly in, grabbing ' + target.name + '\'s' + loc_name + ', and jerking it out from under ' + ('him.' if aggressor.fighter.male else 'her.') 
         self.fail_desc = aggressor.name + ' attempts to take down ' + target.name + ', but fails, ending up in a kneeling position. '
@@ -1286,6 +1328,7 @@ class Single_Leg_Takedown(Maneuver):
         self.t_dam = 0
         self.hands = 2
         self.locs_allowed = global_vars.leg_locs #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 20
         self.hand = True
@@ -1324,6 +1367,7 @@ class Double_Leg_Takedown(Maneuver):
         Maneuver.__init__(self)
         self.name = 'Double Leg Takedown'
         self.desc = ''
+        self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' darts quickly in, grabbing ' + target.name + '\'s legs, and jerking them out from under ' + ('him.' if aggressor.fighter.male else 'her.') 
         self.fail_desc = aggressor.name + ' attempts to take down ' + target.name + ', but fails, ending up in a kneeling position. '
@@ -1348,6 +1392,7 @@ class Double_Leg_Takedown(Maneuver):
         self.t_dam = 0
         self.hands = 2
         self.locs_allowed = global_vars.leg_locs #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 20
         self.hand = True

@@ -250,10 +250,12 @@ class Fighter:
         self.suffocation = None
         self.stam_drain = 0
         #Temp effects
-        self.immobilized_locs = []
+        self.immobilized_locs = set()
         #Will check modifier due to pain for movement
         self.pain_mod_mov = 0
         self.gen_stance = FighterStance.standing
+        #Active Grappling maneuvers
+        self.maneuvers = []
         #fov arrays
         self.fov_visible = set()
         self.fov_wall = set()
@@ -266,6 +268,7 @@ class Fighter:
             self.l_blocker = self.locations[16][2]
         if self.r_blocker == None:
             self.r_blocker = self.locations[15][2]
+        #Best skills
         self.best_combat_skill = max([self.brawling, self.long_sword, self.martial_arts, self.wrestling]) 
         self.best_unarmed_skill = max([self.brawling, self.martial_arts, self.wrestling]) 
         self.best_grappling_skill = max([self.martial_arts, self.wrestling]) 
@@ -410,7 +413,7 @@ class Fighter:
                 location += 1
             if roll > 98:
                 location += 1
-            return location
+        return location
 
     def adjust_loc_diffs(self, target, location, hit_mod = 0, dodge_mod = 0, parry_mod = 0) -> None:
         i = self.targets.index(target)
