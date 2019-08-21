@@ -1405,9 +1405,12 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
         for p in mnvr.prereq:
                 for a in target.fighter.maneuvers:
                     if type(p) is type(a) and a.aggressor is aggressor and a.loc_idx == location:
-                        target.fighter.maneuvers.remove(a)
+                        remove_maneuver(target, aggressor, a)
+                for a in aggressor.fighter.maneuvers:
+                    if type(p) is type(a) and a.aggressor is aggressor and a.loc_idx == location:
+                        aggressor.fighter.maneuvers.remove(a)
                         continue
-
+    
     #Subtract the AP
     skill_ratings = []
     for s in mnvr.skill:
@@ -1503,7 +1506,96 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
         handle_mobility_change(target)
     
     return messages  
-       
+
+def remove_maneuver(target, aggressor, maneuver):
+    mnvr = maneuver
+    
+    #Apply any clarity reductions before making balance checks
+    if mnvr.clarity_reduction > 0:
+        target.fighter.mod_attribute('clarity', mnvr.clarity_reduction)
+
+    #Mobilize locations
+    for l in mnvr.immobilized_locs:
+        #Remove loc from list
+        target.fighter.immobilize_locs.remove(l)
+        for m in target.fighter.maneuvers:
+            if m is not mnvr:
+                if l in m:
+                    #Re-add loc if included in another maneuver
+                    target.fighter.immobilize_locs.add(l)
+        
+    for l in mnvr.agg_immob_locs: 
+        aggressor.fighter.immobilize_locs.remove(l)
+        for m in aggressor.fighter.maneuvers:
+            if m is not mnvr:
+                if l in m:
+                    aggressor.fighter.immobilize_locs.add(l)
+
+    #Remove any temp phys mod
+    if mnvr.temp_phys_mod is not None:
+        target.fighter.temp_physical_mod += mnvr.temp_phys_mod
+
+    #Remove paralyzed locations
+    if mnvr.paralyzed_locs is not None:
+        for l in mnvr.paralyzed.locs:
+            target.fighter.paralyzed_locs.remove(l)
+            for m in target.fighter.maneuvers:
+                if m is not mnvr:
+                    if l in m:
+                        target.fighter.paralyzed_locs.add(l)
+            #Re-add if injuiries paralyze the loc
+            for i in target.fighter.injuries:
+                if l in i.paralyzed_locs:
+                    target.fighter.paralyzed_locs.add(l)
+
+    #Remove suffocation
+    if mnvr.suffocation is not None:
+        if target.fighter.suffocation is not None:
+            max_suff = None
+            #Check each injury and find the one with the lowest suffocation number (min rnds to suffocation) and apply it
+            for i in target.fighter.injuries:
+               if i.suffocation is not None:
+                   if max_suff is None:
+                       max_suff = i.suffocation
+                   elif i.suffocation < max_suff:
+                       max_suff = i.suffocation
+            
+            target.fighter.suffocation = max_suff
+
+    #Remove Stam drain and regin mods
+    if mnvr.stam_drain is not None:
+        target.fighter.mod_attribute('stam_drain',-mnvr.stam_drain)
+    
+    if mnvr.stam_regin is not None:
+        target.fighter.mod_attribute('stamr',(target.fighter.max_stamr * mnvr.stam_regin))
+
+    #Remove attack mods
+    if mnvr.atk_mod_r is not None:
+        target.fighter.atk_mod_r -= mnvr.atk_mod_r
+    
+    if mnvr.atk_mod_l is not None:
+        target.fighter.atk_mod_l -= mnvr.atk_mod_l
+    
+    #Remove movement mods
+    if mnvr.mv_scalar is not 1 or mnvr.can_move is False:
+        if mnvr.can_move is False:
+            mv_mod = target.fighter.max_mv
+        else:
+            mv_mod = (1-mnvr.mv_scalar) * target.fighter.max_mv
+
+        for m in target.fighter.maneuvers:
+            if m.mv_scalar is not 1 or m.can_move is False:
+                if mnvr.can_move is False:
+                    mv_mod = target.fighter.max_mv
+                else:
+                    mv_mod -= (1-m.mv_scalar) * target.fighter.max_mv
+
+        for i in target.fighter.injuries:
+            if i.mv_mod is not None:
+                mv_mod -= (1-i.mv_mod) * target.fighter.max_mv
+
+        target.fighter.mod_attribute('mv',mv_mod)
+
 def calc_falling_damage(target, distance, add_force = 0, surface_hardness = .8) -> (int, int):
     weight = target.fighter.weight
     g = 9.81 * 3.28 #Convert to feet
