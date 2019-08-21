@@ -230,7 +230,7 @@ class Headbutt(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Head Butt'
-        self.desc = ''
+        self.desc = 'Head butt ' + target.name
         self.skill = ['brawling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' headbutts ' + target.name
@@ -282,11 +282,11 @@ class Tackle(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Tackle'
-        self.desc = ''
+        self.desc = 'Rush forward and attept to tackle ' + target.name
         self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' tackles ' + target.name + ', forcing both to the ground. '
-        self.fail_desc = aggressor.name + ' attempts to tackle ' + target.name + ', but fails. ' + ('He ' if aggressor.fighter.male else 'She ') + 'falls to the ground. '
+        self.fail_desc = aggressor.name + ' attempts to tackle ' + target.name + ', but fails. ' + ('He ' if target.fighter.male else 'She ') + 'falls to the ground. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = 20 #Mod to initial roll
         self.counter_mod = -10 #Mod to counter
@@ -337,10 +337,10 @@ class Push(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Push'
-        self.desc = ''
+        self.desc = 'Shove ' + target.name
         self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' pushes ' + target.name + ', forcing ' + ('him ' if aggressor.fighter.male else 'her ') + 'back. '
+        self.succeed_desc = aggressor.name + ' pushes ' + target.name + ', forcing ' + ('him ' if target.fighter.male else 'her ') + 'back. '
         self.fail_desc = aggressor.name + ' attempts to push ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = 40 #Mod to initial roll
@@ -395,7 +395,7 @@ class Trip(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Trip'
-        self.desc = ''
+        self.desc = 'Attempt to hook ' + target.name + '\'s leg and trip ' + ('him' if target.fighter.male else 'her')
         self.skill = ['brawling','wrestling','martial_arts']
         self.succeed_desc = aggressor.name + ' trips ' + target.name + '. '
         self.fail_desc = aggressor.name + ' attempts to trip ' + target.name + ', but fails. '
@@ -452,10 +452,10 @@ class Bearhug(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Bear Hug'
-        self.desc = ''
+        self.desc = 'Place ' + target.name + ' in a Bear Hug'
         self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' in a bear hug, pinning ' + ('him ' if aggressor.fighter.male else 'her ') + 'arms and squeezing. '
+        self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' in a bear hug, pinning ' + ('his ' if target.fighter.male else 'her ') + 'arms and squeezing. '
         self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' in a bear hug, but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = 10 #Mod to initial roll
@@ -520,10 +520,10 @@ class Collar_Tie(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Collar Tie'
-        self.desc = ''
+        self.desc = 'Grab ' + target.name + ' by the head or neck and place ' + ('him ' if target.fighter.male else 'her ') + 'in a head lock. '
         self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' in a collar tie, gaining control of ' + ('his ' if aggressor.fighter.male else 'her ') + 'head and preventing movement. '
+        self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' in a collar tie, gaining control of ' + ('his ' if target.fighter.male else 'her ') + 'head and preventing movement. '
         self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' in a collar tie, but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
 
@@ -580,10 +580,10 @@ class Limb_Capture(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Limb Capture'
-        self.desc = ''
+        self.desc = 'Grab one of ' + target.name + '\'s limbs and gain control of it. '
         self.skill = ['brawling','wrestling','martial_arts']
         self.succeed_desc = aggressor.name + ' grabs ' + target.name + '\'s' + loc_name + ', immobilizing it. ' 
-        self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + '\'s' + loc_name + ', but' + ('he ' if aggressor.fighter.male else 'she ') + 'fails. '
+        self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + '\'s' + loc_name + ', but' + ('he ' if target.fighter.male else 'she ') + 'fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         
         self.loc_idx = target.fighter.name_location(loc_name)
@@ -666,11 +666,11 @@ class Wind_Choke(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Wind Choke'
-        self.desc = ''
+        self.desc = 'Execute a wind choke, cutting off ' + target.name + '\'s air flow'
         self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' converts the collar tie on ' + target.name + ' to a wind choke, slowly suffocating ' + ('him.' if aggressor.fighter.male else 'her.')
-        self.fail_desc = aggressor.name + ' attempts to convert the collar tie on ' + target.name + ' to a wind choke in order to suffocate' + ('him ' if aggressor.fighter.male else 'her ') + ', but fails. '
+        self.succeed_desc = aggressor.name + ' converts the collar tie on ' + target.name + ' to a wind choke, slowly suffocating ' + ('him.' if target.fighter.male else 'her.')
+        self.fail_desc = aggressor.name + ' attempts to convert the collar tie on ' + target.name + ' to a wind choke in order to suffocate' + ('him ' if target.fighter.male else 'her ') + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
 
         skill_mod = aggressor.fighter.best_grappling_skill - target.fighter.best_grappling_skill
@@ -727,10 +727,10 @@ class Strangle_Hold(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Strangle Hold'
-        self.desc = ''
+        self.desc = 'Grab ' + target.name + '\'s neck with both hands and strangle ' + ('him' if target.fighter.male else 'her')
         self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' by the throat and begins to throttle ' + ('him.' if aggressor.fighter.male else 'her.')
+        self.succeed_desc = aggressor.name + ' grabs ' + target.name + ' by the throat and begins to throttle ' + ('him.' if target.fighter.male else 'her.')
         self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' by the throat, but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = 20 #Mod to initial roll
@@ -784,10 +784,10 @@ class Compression_Lock(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Compression Lock'
-        self.desc = ''
+        self.desc = 'Force ' + target.name + '\'s joint to painfully compress the muscles'
         self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' places ' + target.name + '\'s' + loc_name + 'in a compression lock, compressing ' + ('his ' if aggressor.fighter.male else 'her ') + 'muscles and causing intense pain.'
+        self.succeed_desc = aggressor.name + ' places ' + target.name + '\'s' + loc_name + 'in a compression lock, compressing ' + ('his ' if target.fighter.male else 'her ') + 'muscles and causing intense pain.'
         self.fail_desc = aggressor.name + ' attempts to place a compression lock on ' + target.name + '\'s' + loc_name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = -20 #Mod to initial roll
@@ -866,9 +866,9 @@ class Blood_Choke(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Blood Choke'
-        self.desc = ''
+        self.desc = 'Execute a blood choke, cutting off blood flow to ' + target.name + '\'s brain'
         self.skill = ['martial_arts']
-        self.succeed_desc = aggressor.name + ' places ' + target.name + ' in a blood choke, cutting off blood flow to ' + ('his ' if aggressor.fighter.male else 'her ') + 'head.'
+        self.succeed_desc = aggressor.name + ' places ' + target.name + ' in a blood choke, cutting off blood flow to ' + ('his ' if target.fighter.male else 'her ') + 'head.'
         self.fail_desc = aggressor.name + ' attempts to execute a blood choke on ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = -20 #Mod to initial roll
@@ -923,10 +923,10 @@ class Joint_Lock(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Joint Lock'
-        self.desc = ''
+        self.desc = 'Attempt to cause direct damage to ' +target.name + '\'s joint'
         self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' places ' + target.name + '\'s' + loc_name + 'in a joint lock, inflicting terrible damage to ' + ('him' if aggressor.fighter.male else 'her') + '.'
+        self.succeed_desc = aggressor.name + ' places ' + target.name + '\'s' + loc_name + 'in a joint lock, inflicting terrible damage to ' + ('him' if target.fighter.male else 'her') + '.'
         self.fail_desc = aggressor.name + ' attempts to place a joint lock on ' + target.name + '\'s' + loc_name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = -30 #Mod to initial roll
@@ -1005,10 +1005,10 @@ class Neck_Crank(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Neck Crank'
-        self.desc = ''
+        self.desc = 'Twist ' + target.name + '\'s neck, damaging ' + ('his' if target.fighter.male else 'her') + ' spine'
         self.skill = ['martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' begins violently twisting ' + target.name + '\'s' + loc_name + ', inflicting terrible damage to ' + ('his' if aggressor.fighter.male else 'her') + ' spine.'
+        self.succeed_desc = aggressor.name + ' begins violently twisting ' + target.name + '\'s' + loc_name + ', inflicting terrible damage to ' + ('his' if target.fighter.male else 'her') + ' spine.'
         self.fail_desc = aggressor.name + ' attempts to twist ' + target.name + '\'s' + loc_name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         skill_mod = aggressor.fighter.best_grappling_skill - target.fighter.best_grappling_skill
@@ -1065,7 +1065,7 @@ class Reap(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Reap'
-        self.desc = ''
+        self.desc = 'Trip ' + target.name + ' while simultaneously pushing ' + ('him' if target.fighter.male else 'her')
         self.skill = ['brawling','wrestling','martial_arts']
         self.succeed_desc = aggressor.name + ' trips ' + target.name + ' while pushing him forcefully. '
         self.fail_desc = aggressor.name + ' attempts to trip ' + target.name + ', but fails. '
@@ -1122,10 +1122,10 @@ class Sacrifice_Throw(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Sacrifice Throw'
-        self.desc = ''
+        self.desc = 'Lift and throw both yourself and ' + target.name + ', landing on top of ' + ('him' if target.fighter.male else 'her')
         self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if aggressor.fighter.male else 'her') + ', landing on top of '  + ('him.' if aggressor.fighter.male else 'her.')
+        self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if target.fighter.male else 'her') + ', landing on top of '  + ('him.' if target.fighter.male else 'her.')
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = aggressor.fighter.pwr - (target.fighter.weight/2) #Mod to initial roll
@@ -1182,10 +1182,10 @@ class Hip_Throw(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Hip Throw'
-        self.desc = ''
+        self.desc = 'Using your hip, throw ' + target.name + ' to the ground'
         self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if aggressor.fighter.male else 'her') + ', using '  + ('his ' if aggressor.fighter.male else 'her ') + 'hip as a fulcrum. '
+        self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if target.fighter.male else 'her') + ', using '  + ('his ' if target.fighter.male else 'her ') + 'hip as a fulcrum. '
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = aggressor.fighter.pwr - (target.fighter.weight/4) #Mod to initial roll
@@ -1242,10 +1242,10 @@ class Shoulder_Throw(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Shoulder Throw'
-        self.desc = ''
+        self.desc = 'Throw ' + target.name + ' over your shoulder'
         self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if aggressor.fighter.male else 'her') + ', using '  + ('his ' if aggressor.fighter.male else 'her ') + 'shoulder and back as a fulcrum. '
+        self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if target.fighter.male else 'her') + ', using '  + ('his ' if target.fighter.male else 'her ') + 'shoulder and back as a fulcrum. '
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = aggressor.fighter.pwr - (target.fighter.weight/3) #Mod to initial roll
@@ -1302,10 +1302,10 @@ class Single_Leg_Takedown(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Single Leg Takedown'
-        self.desc = ''
+        self.desc = 'Perform a single-leg takedown'
         self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' darts quickly in, grabbing ' + target.name + '\'s' + loc_name + ', and jerking it out from under ' + ('him.' if aggressor.fighter.male else 'her.') 
+        self.succeed_desc = aggressor.name + ' darts quickly in, grabbing ' + target.name + '\'s' + loc_name + ', and jerking it out from under ' + ('him.' if target.fighter.male else 'her.') 
         self.fail_desc = aggressor.name + ' attempts to take down ' + target.name + ', but fails, ending up in a kneeling position. '
         self.aggressor = aggressor #Used to indicate person controlling hold
 
@@ -1366,10 +1366,10 @@ class Double_Leg_Takedown(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Double Leg Takedown'
-        self.desc = ''
+        self.desc = 'Perform a double-leg takedown'
         self.skill = ['wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' darts quickly in, grabbing ' + target.name + '\'s legs, and jerking them out from under ' + ('him.' if aggressor.fighter.male else 'her.') 
+        self.succeed_desc = aggressor.name + ' darts quickly in, grabbing ' + target.name + '\'s legs, and jerking them out from under ' + ('him.' if target.fighter.male else 'her.') 
         self.fail_desc = aggressor.name + ' attempts to take down ' + target.name + ', but fails, ending up in a kneeling position. '
         self.aggressor = aggressor #Used to indicate person controlling hold
 

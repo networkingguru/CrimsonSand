@@ -2486,12 +2486,16 @@ def phase_maneuver(curr_actor, command, logs, combat_phase) -> (int, dict):
     messages = []
     log = logs[2]
     min_ap = curr_actor.get_min_ap()
+    maneuvers = valid_maneuvers(curr_actor, curr_actor.fighter.curr_target)
 
     curr_actor.fighter.action = ['Return']
 
     if curr_actor.fighter.curr_target is not None:
         if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap + min_ap + curr_actor.fighter.curr_target.get_min_ap():
             curr_actor.fighter.action.append('Leave opening and counter')
+        if len(maneuvers) > 0:
+            for m in maneuvers:
+                curr_actor.fighter.action.append(m.name)
 
 
     combat_menu_header = 'Choose your maneuver:'
