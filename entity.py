@@ -104,31 +104,12 @@ class Entity:
         self.fighter.guard_parry_mod = self.guard.parry_mod
         self.fighter.auto_block_locs = self.guard.auto_block
         
-
-    def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 0):
-        weapon = weapon
-        skill = weapon.skill
-        skill_rating = getattr(self.fighter, skill)
-        tot_er = self.fighter.er + weapon.length
-        b_psi = self.fighter.ep * attack.b_dam
-        s_psi = self.fighter.ep * attack.s_dam
-        t_psi = self.fighter.ep * attack.t_dam
-        p_psi = self.fighter.ep * attack.p_dam
-        to_hit = attack.attack_mod + skill_rating + self.fighter.guard_hit_mod
-        to_parry = attack.parry_mod + skill_rating
-        dodge_mod = self.fighter.stance_dodge
+    def determine_loc_mods(self, location) -> dict:
+        to_hit = 0
+        dodge_mod = 0
+        b_psi = 0
         parry_mod = 0
-        dam_mult = 1
-        weight_factor = (self.fighter.weight/100)**.4
-        
-        final_ap = int(attack.base_ap * (((100/skill_rating)**.2 + weight_factor)))
-        if final_ap > self.fighter.swift: final_ap = self.fighter.swift
-        parry_ap = int(weapon.parry_ap * (((100/skill_rating)**.2 + weight_factor)))  
 
-        if self.guard is not None:
-            to_hit += self.guard.hit_mod
-
-        #Loc mods
         if location == 0 or 10 < location < 13:
             to_hit -= 60
             dodge_mod += 10
@@ -179,6 +160,41 @@ class Entity:
             else:
                 dodge_mod += 30
                 parry_mod -= 30
+
+        loc_mod_dict = {'to_hit':to_hit, 'dodge_mod':dodge_mod, 'parry_mod': parry_mod, 'b_psi': b_psi}
+
+        return loc_mod_dict
+
+    def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 0) -> dict:
+        weapon = weapon
+        skill = weapon.skill
+        skill_rating = getattr(self.fighter, skill)
+        tot_er = self.fighter.er + weapon.length
+        b_psi = self.fighter.ep * attack.b_dam
+        s_psi = self.fighter.ep * attack.s_dam
+        t_psi = self.fighter.ep * attack.t_dam
+        p_psi = self.fighter.ep * attack.p_dam
+        to_hit = attack.attack_mod + skill_rating + self.fighter.guard_hit_mod
+        to_parry = attack.parry_mod + skill_rating
+        dodge_mod = self.fighter.stance_dodge
+        parry_mod = 0
+        dam_mult = 1
+        weight_factor = (self.fighter.weight/100)**.4
+        
+        final_ap = int(attack.base_ap * (((100/skill_rating)**.2 + weight_factor)))
+        if final_ap > self.fighter.swift: final_ap = self.fighter.swift
+        parry_ap = int(weapon.parry_ap * (((100/skill_rating)**.2 + weight_factor)))  
+
+        if self.guard is not None:
+            to_hit += self.guard.hit_mod
+
+        #Loc mods
+        loc_mod_dict = self.determine_loc_mods(location)
+        to_hit += loc_mod_dict.get('to_hit')
+        dodge_mod += loc_mod_dict.get('dodge_mod')
+        parry_mod += loc_mod_dict.get('parry_mod')
+        b_psi *= loc_mod_dict.get('b_psi')
+
         #Angle mods
         if angle_id == 0:
             dam_mult *= 1.2

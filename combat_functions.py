@@ -518,7 +518,7 @@ def calc_final_mods(attacker, defender) -> dict:
 
     return final_mods
 
-def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase) -> (list, int):
+def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase) -> (list, int, object, bool):
     effects = []
     messages = []
     attack = entity.fighter.combat_choices[1]  
@@ -615,6 +615,95 @@ def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase
     entity.fighter.mods = cs
 
     if combat_phase == CombatPhase.defend:
+        active_entity = curr_target
+
+    return messages, combat_phase, active_entity, missed
+
+def perform_maneuver(entity, entities, final_to_hit, curr_target, combat_phase, game_map) -> (list, int, object, bool):
+    effects = []
+    messages = []
+    mnvr = entity.fighter.combat_choices[0]  
+    #Find best skill
+    valid_skills = []
+    for s in mnvr.skill:
+        valid_skills.append(getattr(entity.fighter,s))
+    
+    skill = max(valid_skills)
+    final_ap = int(mnvr.base_ap * ((100/skill)**.2 ))
+    active_entity = entity
+    curr_actor = entity
+    enemy = curr_target
+    missed =  True
+    location = entity.fighter.combat_choices[1]
+    
+    
+
+    #Clear history if attacker changed
+    if curr_target.fighter.attacker is not entity:
+        curr_target.fighter.attacker = entity
+        curr_target.fighter.attacker_history.clear
+
+
+    roll = int(roll_dice(1, 100, True))
+    if roll < final_to_hit: 
+        missed = False
+        entity.fighter.atk_result = roll
+
+    
+    
+    #Subtract attack AP and stamina
+    #Subtract AP from enemy if this is a disengagement attack or an attack due to a wait
+
+    if curr_target in entity.fighter.entities_opportunity_attacked:
+        curr_target.fighter.mod_attribute('ap', -final_ap)
+    elif curr_target.fighter.wait or curr_target.fighter.feint:
+        curr_target.fighter.mod_attribute('ap', -final_ap)
+    else:
+        entity.fighter.mod_attribute('ap', -final_ap)
+
+    entity.fighter.mod_attribute('stamina', -(mnvr.stamina*entity.fighter.base_stam_cost))
+    
+
+    #No damage
+    if missed:
+        if not hasattr(entity.fighter, 'ai'):
+            messages.append('You missed. ')
+            #Show rolls
+            if options.show_rolls: 
+                rolls = 'You rolled a ' + str(roll) + ', missing. '
+                messages.insert(0, rolls)
+        else:
+            messages.append(entity.name + ' missed you. ')
+        
+        if enemy.fighter.disengage:       
+            combat_phase = CombatPhase.disengage
+            active_entity = enemy
+
+        else:
+            combat_phase = CombatPhase.action
+        
+    else:
+        #First, see if this is an attack from behind
+        if entity in curr_target.fighter.targets:
+            combat_phase = CombatPhase.grapple_defense
+        else:
+            effects = apply_maneuver(entity, enemy, mnvr, location, entities, game_map)
+    
+            if effects:
+                combat_phase = CombatPhase.action
+                curr_actor.fighter.action.clear()
+                for effect in effects:
+                    messages.append(effect)
+                if enemy.fighter is not None:
+                    if enemy.fighter.disengage:       
+                        combat_phase = CombatPhase.disengage
+                        active_entity = enemy
+                else:
+                    combat_phase = CombatPhase.action
+
+
+
+    if combat_phase == CombatPhase.grapple_defense:
         active_entity = curr_target
 
     return messages, combat_phase, active_entity, missed
@@ -2140,7 +2229,6 @@ def phase_defend(curr_actor, enemy, entities, command, logs, combat_phase) -> (i
     menu_dict = dict()
     messages = []
     log = logs[2]
-    cs = enemy.fighter.mods
     message = None
     effects = []
     can_dodge = False
@@ -2510,10 +2598,18 @@ def phase_maneuver(curr_actor, command, logs, combat_phase) -> (int, dict):
                     combat_phase = CombatPhase.action
                 elif choice == 'Leave opening and counter':
                     combat_phase = CombatPhase.feint
-
+                    
                     if not hasattr(curr_actor.fighter, 'ai'):
                         curr_actor.fighter.combat_choices.append(option)
                         messages.append('You decide to feint.')
+                else:
+                    for m in maneuvers:
+                        if choice == m.name:
+                            
+                            combat_phase = CombatPhase.grapple
+                            if not hasattr(curr_actor.fighter, 'ai'):
+                                curr_actor.fighter.combat_choices.append(m)
+                                messages.append('You decide to attempt a ' + m.name + '.')
 
     for message in messages:
         log.add_message(Message(message))
@@ -2667,4 +2763,336 @@ def phase_guard(curr_actor, command, logs, combat_phase) -> (int, dict):
         menu_dict = dict()
 
     return combat_phase, menu_dict   
+
+def phase_grapple(curr_actor, command, logs, combat_phase) -> (int, dict):
+    combat_menu_header = None
+    menu_dict = dict()
+    messages = []
+    log = logs[2]
+
+    #Choose the hit location
+    combat_menu_header = 'Where do you want to aim?'
+    curr_target = curr_actor.fighter.targets[0]
+    mnvr = curr_actor.fighter.combat_choices[0]
+    #Determine valid locations
+    valid_locs = list()
+    for l in mnvr.locs_allowed:
+        valid_locs.append(l)
+    #Prune list to only valid
+    locations = prune_list(curr_target.fighter.get_locations(), valid_locs, True, False)
+    curr_actor.fighter.action = locations
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+    
+    if len(command) != 0:    
+        for option in curr_actor.fighter.action:
+            if command.get(option):
+                choice = command.get(option)
+                if choice: 
+                    if not hasattr(curr_actor.fighter, 'ai'):
+                        curr_actor.fighter.combat_choices.append(curr_target.fighter.name_location(option))
+                        messages.append('You aim for ' + curr_target.name + '\'s ' + option)   
+
+                    menu_dict = dict()
+                    combat_phase = CombatPhase.grapple_confirm
+    
+    for message in messages:
+        log.add_message(Message(message))
+
+    if hasattr(curr_actor.fighter, 'ai'):
+        menu_dict = dict()
+        game_state = GameStates.default
+
+    return combat_phase, menu_dict
+
+def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_phase, game_map) -> (int, int, dict, object):
+    #Variable setup
+    combat_menu_header = None
+    menu_dict = dict()
+    messages = []
+    log = logs[2]
+    message = None
+    effects = []
+    mnvr = enemy.fighter.combat_choices[0]
+    can_dodge = False
+    can_reverse = mnvr.reversible
+    can_counter = mnvr.counterable
+    mnvr_name = enemy.fighter.combat_choices[0].name 
+    location = enemy.fighter.combat_choices[1]
+    loc_name = curr_actor.fighter.name_location(enemy.fighter.combat_choices[1])
+    game_state = GameStates.default
+    header_items = []
+    def_margin = None
+    atk_margin = None
+    rolls = None
+    hit = False
+    counter_mnvrs = []
+    counter_costs = []
+
+    #Find best skill for attack
+    valid_skills = []
+    for s in mnvr.skill:
+        valid_skills.append(getattr(enemy.fighter,s))
+    
+    attacker_skill = max(valid_skills)
+
+
+    #Calc loc mods
+    loc_mods = curr_actor.fighter.get_defense_modifiers(loc_name)
+    
+    final_to_hit = attacker_skill + mnvr.mnvr_mod + loc_mods.get('hit')
+    dodge_mod = loc_mods.get('dodge')
+
+    #Find best skill for counter/reverse
+    valid_skills = []
+    for s in mnvr.skill:
+        valid_skills.append(getattr(curr_actor.fighter,s))
+    
+    skill = max(valid_skills)
+
+    #Find valid manuevers to counter reverse with
+    valid_mnvrs = valid_maneuvers(curr_actor, enemy)
+
+    #Find chances and see if curr_actor can dodge/counter/reverse
+    dodge_mod += mnvr.dodge_mod
+    if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap: can_dodge = True
+    
+    if mnvr.reversible:
+        for m in valid_mnvrs:
+            if type(m) is type(mnvr):
+                can_reverse = True
+
+    if mnvr.counterable:
+        for m in valid_mnvrs:
+            for c in mnvr.counters:
+                if type(m) is c:                  
+                    c_skills = []
+                    for s in c.skills:
+                        c_skills.append(getattr(curr_actor.fighter,s))
+                    
+                    max_c_skill = max(c_skills)
+                    cost = int(m.base_ap * ((100/max_c_skill)**.2 ))
+                    if curr_actor.fighter.ap >= cost:
+                        can_counter = True
+                        break
+
+    reverse_ap = int(mnvr.base_ap * ((100/skill)**.2 ))
+
+    #Normalized (0-99) percentage scale of probabilities to p/d/b
+    dodge_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.dodge + dodge_mod))
+    reverse_chance = find_defense_probability(final_to_hit, (skill + mnvr.reversal_mod + mnvr.mnvr_mod))
+
+
+    #Choose how to defend '
+    header_items.append(enemy.name + ' is attempting to apply a ' + mnvr.name + ' maneuver to your ' + loc_name + '. \n' )
+    curr_actor.fighter.action = ['Allow the manuever']
+    if can_dodge:
+        header_items.append('You have a ' + str(dodge_chance) + ' percent chance to dodge the maneuver at a cost of ' + str(curr_actor.fighter.walk_ap) + ' ap. \n')
+        curr_actor.fighter.action.append('Dodge')
+    if can_reverse:
+        header_items.append('You have a ' + str(reverse_chance) + ' percent chance to reverse the maneuver at a cost of ' + str(reverse_ap) + ' ap. \n')
+        curr_actor.fighter.action.append('Reverse')
+
+    if can_counter:
+        for m in valid_mnvrs:
+            for c in mnvr.counters:
+                if type(m) is c:
+                    c_skills = []
+                    for s in c.skills:
+                        c_skills.append(getattr(curr_actor.fighter,s))
+                    
+                    max_c_skill = max(c_skills)
+
+                    counter_chance = find_defense_probability(final_to_hit, (max_c_skill + mnvr.counter_mod + m.mnvr_mod))
+
+                    counter_ap = int(m.base_ap * ((100/max_c_skill)**.2 ))
+
+                    if curr_actor.fighter.ap >= counter_ap:
+                        header_items.append('You have a ' + str(counter_chance) + ' percent chance to counter with a ' + c.name + ' at a cost of ' + str(counter_ap) + ' ap. \n')
+                        curr_actor.fighter.action.append('Counter with ' + m.name)
+
+       
+    if can_dodge or can_counter or can_reverse:
+        game_state = GameStates.menu
+        header_items.append('What would you like to do? ')
+        combat_menu_header = ''.join(header_items)
+        menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+        if len(command) != 0:
+            if command.get('Allow the manuever'):
+                hit = True
+                effects = apply_maneuver(enemy, curr_actor, type(mnvr), location, entities, game_map)
+                curr_actor = enemy
+            if command.get('Dodge'):
+                check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
+                #Remove ap and stam
+                curr_actor.fighter.mod_attribute('ap', -curr_actor.fighter.walk_ap)
+                curr_actor.fighter.mod_attribute('stamina', -curr_actor.fighter.base_stam_cost)
+                if check == 's':
+                    if not hasattr(curr_actor.fighter, 'ai'): message = ('You dodged the attack. ')
+                    else: message = (curr_actor.name + ' dodged the attack. ')
+                    curr_actor = enemy
+                else:
+                    hit = True
+                    effects = apply_maneuver(enemy, curr_actor, type(mnvr), location, entities, game_map)
+                    curr_actor = enemy
+
+            if command.get('Reverse'):
+                check, def_margin, atk_margin = save_roll_con(getattr(curr_actor.fighter,mnvr.skill), mnvr.reversal_mod, enemy.fighter.atk_result, final_to_hit)
+                #Remove ap and stam
+                curr_actor.fighter.mod_attribute('stamina', -(mnvr.stamina*curr_actor.fighter.base_stam_cost))
+                curr_actor.fighter.mod_attribute('ap', -reverse_ap)
+                if check == 's':
+                    if not hasattr(curr_actor.fighter, 'ai'): message = ('You reversed the maneuver. ')
+                    else: message = (curr_actor.name + ' reversed the maneuver. ')
+                    effects = apply_maneuver(curr_actor, enemy, type(mnvr), location, entities, game_map)
+                else:
+                    hit = True
+                    effects = apply_maneuver(enemy, curr_actor, type(mnvr), location, entities, game_map)
+                    curr_actor = enemy
+
+                
+    else:
+        for m in valid_mnvrs:
+            if command.get('Counter with ' + m.name):
+                c_skills = []
+                for s in m.skill:
+                    c_skills.append(getattr(curr_actor.fighter,s))
+                    
+                max_c_skill = max(c_skills)
+                counter_ap = int(m.base_ap * ((100/max_c_skill)**.2 ))
+                check, def_margin, atk_margin = save_roll_con(max_c_skill, mnvr.counter_mod + m.mnvr_mod, enemy.fighter.atk_result, final_to_hit)
+                if check == 's':
+                    if not hasattr(curr_actor.fighter, 'ai'): message = ('You countered the maneuver. ')
+                    else: message = (curr_actor.name + ' countered the maneuver. ')
+                    effects = apply_maneuver(curr_actor, enemy, type(mnvr), location, entities, game_map)
+                else:
+                    hit = True
+                    effects = apply_maneuver(enemy, curr_actor, type(mnvr), location, entities, game_map)
+                    curr_actor = enemy
+                break
+                    
+    
+    if message or effects:
+        combat_phase = CombatPhase.action
+        
+        if message:
+            messages.append(message)
+
+        if effects:
+            for effect in effects:
+                messages.append(effect)
+        if curr_actor.state == EntityState.conscious:
+            if curr_actor.fighter.disengage:       
+                combat_phase = CombatPhase.disengage
+                game_state = GameStates.default
+                menu_dict = dict()
+            elif curr_actor.fighter.feint and not hit:
+                curr_actor.fighter.counter_attack = enemy
+                enemy.fighter.combat_choices.clear()
+                combat_phase = CombatPhase.weapon
+            else:
+                curr_actor.fighter.action.clear()
+        #Show rolls
+        if options.show_rolls: 
+            if atk_margin is not None and def_margin is not None:
+                rolls = curr_actor.name + ' had a margin of success of ' + str(def_margin) + ', while ' + enemy.name + ' had a margin of ' + str(atk_margin) + '. '
+            elif atk_margin is not None:
+                rolls = enemy.name + ' had a margin of success of ' + str(atk_margin) + '. '
+            if rolls is not None: messages.insert(0, rolls)
+        
+        
+        
+        if curr_actor.player:
+            curr_actor.fighter.combat_choices.clear()
+
+
+
+    for message in messages:
+        log.add_message(Message(message))
+
+    if hasattr(curr_actor.fighter, 'ai'):
+        menu_dict = dict()
+        game_state = GameStates.default
+        
+
+    return combat_phase, game_state, menu_dict, curr_actor
+
+def phase_grapple_confirm(curr_actor, entities, command, logs, combat_phase, game_map) -> (int, dict, object):
+    #Verify choices and continue or restart
+
+    #Variable setup
+    active_entity = curr_actor
+    combat_menu_header = None
+    menu_dict = dict()
+    messages = []
+    missed = False
+    log = logs[2]
+    curr_target = curr_actor.fighter.curr_target
+    mnvr = curr_actor.fighter.combat_choices[0]
+    location = curr_actor.fighter.combat_choices[1]
+    loc_name = curr_actor.fighter.targets[0].fighter.name_location(location)
+
+    #Find best skill for attack
+    valid_skills = []
+    for s in mnvr.skill:
+        valid_skills.append(getattr(curr_actor.fighter,s))
+    
+    attacker_skill = max(valid_skills)
+
+    #Calc loc mods
+    loc_mods = curr_target.fighter.get_defense_modifiers(loc_name)
+    
+    final_to_hit = attacker_skill + mnvr.mnvr_mod + loc_mods.get('hit')
+    p_hit = final_to_hit
+
+    if p_hit > 99:
+        p_hit = 99
+
+    final_ap = int(mnvr.base_ap * ((100/attacker_skill)**.2 ))
+
+
+    combat_menu_header = ('You are performing a ' + mnvr.name + ' on ' + curr_target.name + '\'s ' 
+        + loc_name + '. ' 
+        + ' For this attack, you will have a: ' + str(p_hit) +  '% chance to succeed.' + ' Your opponent will get a ' + str(mnvr.dodge_mod) + '% modifier to dodge. \n' + 
+        'It will cost you ' + str(final_ap) + ' of your remaining ' + str(curr_actor.fighter.ap) + ' AP to attack. \n'
+        + ' Would you like to continue, or modify your choices?')
+
+    curr_actor.fighter.action = ['Accept', 'Restart']
+
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
+
+    if len(command) != 0:
+        if command.get('Accept'):
+            messages, combat_phase, active_entity, missed = perform_maneuver(curr_actor, entities, final_to_hit, curr_target, combat_phase, game_map)
+            curr_actor.fighter.last_atk_ap = final_ap
+            curr_actor.fighter.acted = True
+            curr_actor.fighter.action.clear()
+        if command.get('Restart'):
+            #Reset vars
+            curr_actor.fighter.combat_choices.clear()
+            combat_phase = CombatPhase.action
+        
+        menu_dict = dict()
+
+    if missed:
+        min_ap = curr_target.get_min_ap()
+        if curr_target.fighter.ap >= min_ap and (curr_actor.x, curr_actor.y) in curr_target.fighter.aoc:
+            curr_target.fighter.entities_opportunity_attacked.append(curr_actor)
+            curr_target.fighter.counter_attack.append(curr_actor)
+            if hasattr(curr_target.fighter, 'ai'):
+                messages.append('You missed, allowing ' + curr_target.name + ' to counter-attack.')
+            else:
+                messages.append(curr_target.name + ' missed, giving you a chance to counter-attack.')
+            active_entity = curr_target
+
+    for message in messages:
+        log.add_message(Message(message))
+
+    if hasattr(curr_actor.fighter, 'ai'):
+        menu_dict = dict()
+
+    return combat_phase, menu_dict, active_entity
+
+
+
+
 

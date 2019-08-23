@@ -128,9 +128,6 @@ if __name__ == "__main__":
             fill_status_panel(players[0], status_log)
             command = []
             if global_vars.debug: print('Phase: ' + str(combat_phase))
-            
-            
-
 
 
         if global_vars.debug_time: t1 = time.time()

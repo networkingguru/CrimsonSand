@@ -1,6 +1,7 @@
 
 from combat_functions import (strafe_control, move_actor, update_targets, detect_enemies, phase_init, phase_action, phase_weapon, phase_option, phase_location,  
-    phase_option2, phase_confirm, phase_repeat, phase_defend, phase_disengage, phase_move, phase_maneuver, phase_feint, phase_stance, phase_guard)
+    phase_option2, phase_confirm, phase_repeat, phase_defend, phase_disengage, phase_move, phase_maneuver, phase_feint, phase_stance, phase_guard, phase_grapple,
+    phase_grapple_confirm, phase_grapple_defense)
 from enums import CombatPhase, GameStates
 
 def combat_controller(game_map, active_entity, entities, players, command, logs, combat_phase, game_state, order) -> (dict, int, int, object, list):
@@ -60,6 +61,15 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
 
     elif combat_phase == CombatPhase.guard:
         combat_phase, menu_dict = phase_guard(active_entity, command, logs, combat_phase)
+
+    elif combat_phase == CombatPhase.grapple:
+        combat_phase, menu_dict = phase_grapple(active_entity, command, logs, combat_phase)
+    
+    elif combat_phase == CombatPhase.grapple_defense:
+        combat_phase, game_state, menu_dict, active_entity = phase_grapple_defense(active_entity.fighter.curr_target, active_entity, entities, command, logs, combat_phase, game_map)
+
+    elif combat_phase == CombatPhase.grapple_confirm:
+        combat_phase, menu_dict, active_entity = phase_grapple_confirm(active_entity, entities, command, logs, combat_phase, game_map)
 
     if combat_phase == CombatPhase.disengage:
         combat_phase, menu_dict, active_entity = phase_disengage(active_entity, entities, command, logs, combat_phase, game_map)

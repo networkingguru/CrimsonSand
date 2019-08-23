@@ -47,3 +47,6 @@ class CombatPhase(Enum):
     feint = auto()
     stance = auto()
     guard = auto()
+    grapple = auto()
+    grapple_defense = auto()
+    grapple_confirm = auto()
