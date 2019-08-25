@@ -275,23 +275,23 @@ def update_targets(entity, targets) -> None:
     if entity.fighter.curr_target == None and len(entity.fighter.targets) > 0: 
         entity.fighter.curr_target = entity.fighter.targets[0] 
 
-def get_percieved_mods(attacker, defender, location) -> dict:
-    idx = attacker.fighter.targets.index(defender)
-    p_hit = attacker.fighter.loc_hit_diff[idx].get(location)
-    p_dodge = attacker.fighter.loc_dodge_diff[idx].get(location)
-    p_parry = attacker.fighter.loc_parry_diff[idx].get(location)
+def get_percieved_mods(active_entity, target, location) -> dict:
+    idx = active_entity.fighter.targets.index(target)
+    p_hit = active_entity.fighter.loc_hit_diff[idx].get(location)
+    p_dodge = active_entity.fighter.loc_dodge_diff[idx].get(location)
+    p_parry = active_entity.fighter.loc_parry_diff[idx].get(location)
 
     p_mods = {'p_hit':p_hit, 'p_dodge':p_dodge, 'p_parry': p_parry}
 
     return p_mods
 
-def determine_valid_locs(attacker, defender, attack) -> list:
+def determine_valid_locs(active_entity, defender, attack) -> list:
     #Factors and counters:
     #Effective Reach: Distance and Height
     #Specific Limb
     #Relative positions
     
-    er = attacker.fighter.er * 1.3 #1.3 multiplier to account for the stretch from twisting
+    er = active_entity.fighter.er * 1.3 #1.3 multiplier to account for the stretch from twisting
     er += attack.length
 
     #Init location pool
@@ -306,11 +306,11 @@ def determine_valid_locs(attacker, defender, attack) -> list:
         i += 1
         
     #Determine relative positioning
-    #Start by determining defender facing relative to attacker
-    defender_angle = entity_angle(attacker, defender)
+    #Start by determining defender facing relative to active_entity
+    defender_angle = entity_angle(active_entity, defender)
 
-    #Now determine attacker angle to defender    
-    attacker_angle = entity_angle(defender, attacker)
+    #Now determine active_entity angle to defender    
+    active_entity_angle = entity_angle(defender, active_entity)
 
     #Lists for holding locations to prune
     loc_list = []
@@ -340,24 +340,24 @@ def determine_valid_locs(attacker, defender, attack) -> list:
         if not l in loc_list:
             loc_list.append(l)
 
-    #modify er based on attacker angle
-    if 45 < attacker_angle < 90:
-        er -= attacker.fighter.er/2
-    elif 270 < attacker_angle < 315:
-        er += attacker.fighter.er/2
-    #Remove all locations if defender flanks attacker
-    elif 90 < attacker_angle < 270:
+    #modify er based on active_entity angle
+    if 45 < active_entity_angle < 90:
+        er -= active_entity.fighter.er/2
+    elif 270 < active_entity_angle < 315:
+        er += active_entity.fighter.er/2
+    #Remove all locations if defender flanks active_entity
+    elif 90 < active_entity_angle < 270:
         locations = []
         return locations
 
-    #Find distance between attacker and defender. 
-    distance = sqrt((defender.x - attacker.x)**2 + (defender.y - attacker.y)**2)
+    #Find distance between active_entity and defender. 
+    distance = sqrt((defender.x - active_entity.x)**2 + (defender.y - active_entity.y)**2)
     #Convert squares into inches and round it off. 36" subtracted due to each combatant being in the middle of a square
     distance = int(round(distance*36))-36
     
     #Remove locations that are unreachable due to angle
     for location in locations:
-        can_reach = location_angle(attacker, defender, er, distance, attack, location)
+        can_reach = location_angle(active_entity, defender, er, distance, attack, location)
         if not can_reach:
             if not location in loc_list:
                 loc_list.append(location)
@@ -366,28 +366,28 @@ def determine_valid_locs(attacker, defender, attack) -> list:
 
     return locations
 
-def location_angle(attacker, defender, er, distance, attack, location) -> bool:
+def location_angle(active_entity, target, er, distance, attack, location) -> bool:
     can_reach = False
-    #Determine defender height based on stance
-    if defender.fighter.gen_stance == FighterStance.prone:
-        location_ht = defender.fighter.location_ht[25]
-    elif defender.fighter.gen_stance == FighterStance.kneeling or FighterStance.sitting:
-        location_ht = defender.fighter.location_ht[location] - defender.fighter.location_ht[23]
+    #Determine target height based on stance
+    if target.fighter.gen_stance == FighterStance.prone:
+        location_ht = target.fighter.location_ht[25]
+    elif target.fighter.gen_stance == FighterStance.kneeling or FighterStance.sitting:
+        location_ht = target.fighter.location_ht[location] - target.fighter.location_ht[23]
     else:
-        location_ht = defender.fighter.location_ht[location]
+        location_ht = target.fighter.location_ht[location]
 
-    #Determine pivot point based on attacker stance
-    if attacker.fighter.gen_stance == FighterStance.prone:
-        pivot = attacker.fighter.location_ht[25]
+    #Determine pivot point based on active_entity stance
+    if active_entity.fighter.gen_stance == FighterStance.prone:
+        pivot = active_entity.fighter.location_ht[25]
         if not attack.hand: er *= 1.2 #Legs average 1.2x longer than arms
     else:
         if attack.hand:
-            pivot = attacker.fighter.location_ht[3]
+            pivot = active_entity.fighter.location_ht[3]
         else:
-            pivot = attacker.fighter.location_ht[17]
+            pivot = active_entity.fighter.location_ht[17]
             er *= 1.2 #Legs average 1.2x longer than arms
-        if attacker.fighter.gen_stance == FighterStance.kneeling or FighterStance.sitting:
-            pivot -= attacker.fighter.location_ht[23]
+        if active_entity.fighter.gen_stance == FighterStance.kneeling or FighterStance.sitting:
+            pivot -= active_entity.fighter.location_ht[23]
 
     #Find length of hypotenuse(len of reach to hit location)
     reach_req = sqrt(distance**2 + abs(location_ht-pivot)**2)
@@ -476,17 +476,17 @@ def calc_history_modifier(entity, attack, loc, angle) -> int:
     mod += ((repeats-1) * 15) + ((element_repeat) * 3)
     return mod
 
-def calc_final_mods(attacker, defender) -> dict:
+def calc_final_mods(active_entity, target) -> dict:
     '''Goal is to bring together all the various hidden and percieved mods for both sides and create a single dict with all of them taken into account'''
-    weapon = attacker.fighter.combat_choices[0]
-    attack = attacker.fighter.combat_choices[1]
-    location = attacker.fighter.combat_choices[2]
-    angle = attacker.fighter.combat_choices[3]
-    loc_name = attacker.fighter.targets[0].fighter.name_location(location)
+    weapon = active_entity.fighter.combat_choices[0]
+    attack = active_entity.fighter.combat_choices[1]
+    location = active_entity.fighter.combat_choices[2]
+    angle = active_entity.fighter.combat_choices[3]
+    loc_name = active_entity.fighter.targets[0].fighter.name_location(location)
     
-    def_mods = defender.fighter.get_defense_modifiers(loc_name)
-    cs = attacker.determine_combat_stats(weapon, attack, location, angle)
-    p_mods = get_percieved_mods(attacker, defender, loc_name)
+    def_mods = target.fighter.get_defense_modifiers(loc_name)
+    cs = active_entity.determine_combat_stats(weapon, attack, location, angle)
+    p_mods = get_percieved_mods(active_entity, target, loc_name)
     final_to_hit = cs.get('to hit') + def_mods.get('hit')
     p_hit = p_mods.get('p_hit') + final_to_hit
     dodge_mod = cs.get('dodge mod') + def_mods.get('dodge')
@@ -497,8 +497,8 @@ def calc_final_mods(attacker, defender) -> dict:
 
     total_ep = sum([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
 
-    if len(defender.fighter.attacker_history) > 0:
-        history_mod = calc_history_modifier(defender, attack.name, location, angle)
+    if len(target.fighter.attacker_history) > 0:
+        history_mod = calc_history_modifier(target, attack.name, location, angle)
         dodge_mod += history_mod
         parry_mod += history_mod
         p_dodge_mod += history_mod
@@ -518,193 +518,187 @@ def calc_final_mods(attacker, defender) -> dict:
 
     return final_mods
 
-def perform_attack(entity, entities, final_to_hit, curr_target, cs, combat_phase) -> (list, int, object, bool):
+def perform_attack(active_entity, entities, final_to_hit, target, cs, combat_phase) -> (list, int, object, bool):
     effects = []
     messages = []
-    attack = entity.fighter.combat_choices[1]  
+    attack = active_entity.fighter.combat_choices[1]  
     final_ap = cs.get('final ap')
-    active_entity = entity
-    curr_actor = entity
-    enemy = curr_target
     missed =  False
-    location = entity.fighter.combat_choices[2]
-    dam_type = curr_actor.fighter.combat_choices[1].damage_type[0]
+    location = active_entity.fighter.combat_choices[2]
+    dam_type = active_entity.fighter.combat_choices[1].damage_type[0]
     
 
     #Clear history if attacker changed
-    if curr_target.fighter.attacker is not entity:
-        curr_target.fighter.attacker = entity
-        curr_target.fighter.attacker_history.clear
-        add_history(curr_target)
+    if target.fighter.attacker is not active_entity:
+        target.fighter.attacker = active_entity
+        target.fighter.attacker_history.clear
+        add_history(target)
     else:
-        add_history(curr_target)
+        add_history(target)
     
     atk_result = make_attack_roll(final_to_hit, 1, location)
-    entity.fighter.atk_result, entity.fighter.dam_result, entity.fighter.new_loc_result = atk_result[0], atk_result[1], atk_result[2]
-    dam_mult = curr_actor.fighter.dam_result
+    active_entity.fighter.atk_result, active_entity.fighter.dam_result, active_entity.fighter.new_loc_result = atk_result[0], atk_result[1], atk_result[2]
+    dam_mult = active_entity.fighter.dam_result
     
     
     #Subtract attack AP and stamina
-    #Subtract AP from enemy if this is a disengagement attack or an attack due to a wait
+    #Subtract AP from target if this is a disengagement attack or an attack due to a wait
 
-    if curr_target in entity.fighter.entities_opportunity_attacked:
-        curr_target.fighter.mod_attribute('ap', -final_ap)
-    elif curr_target.fighter.wait or curr_target.fighter.feint:
-        curr_target.fighter.mod_attribute('ap', -final_ap)
+    if target in active_entity.fighter.entities_opportunity_attacked:
+        target.fighter.mod_attribute('ap', -final_ap)
+    elif target.fighter.wait or target.fighter.feint:
+        target.fighter.mod_attribute('ap', -final_ap)
     else:
-        entity.fighter.mod_attribute('ap', -final_ap)
+        active_entity.fighter.mod_attribute('ap', -final_ap)
 
-    entity.fighter.mod_attribute('stamina', -(attack.stamina*entity.fighter.base_stam_cost))
+    active_entity.fighter.mod_attribute('stamina', -(attack.stamina*active_entity.fighter.base_stam_cost))
     
 
     #No damage
     if atk_result[1] == 0:
         missed = True
-        if not hasattr(entity.fighter, 'ai'):
+        if not hasattr(active_entity.fighter, 'ai'):
             messages.append('You missed. ')
             #Show rolls
             if options.show_rolls: 
-                rolls = 'You rolled a ' + str(entity.fighter.atk_result) + ', missing. '
+                rolls = 'You rolled a ' + str(active_entity.fighter.atk_result) + ', missing. '
                 messages.insert(0, rolls)
         else:
-            messages.append(entity.name + ' missed you. ')
+            messages.append(active_entity.name + ' missed you. ')
         
-        if enemy.fighter.disengage:       
+        if target.fighter.disengage:       
             combat_phase = CombatPhase.disengage
-            active_entity = enemy
+            active_entity = target
             game_state = GameStates.default
             menu_dict = dict()
         else:
-            if curr_actor.player:
-                #See if curr_actor has AP for repeat
-                if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
+            if active_entity.player:
+                #See if active_entity has AP for repeat
+                if active_entity.fighter.ap >= active_entity.fighter.last_atk_ap:           
                     combat_phase = CombatPhase.repeat
                     game_state = GameStates.menu
         
     else:
         #First, see if this is an attack from behind
-        if entity in curr_target.fighter.targets:
+        if active_entity in target.fighter.targets:
             combat_phase = CombatPhase.defend
         else:
-            effects = damage_controller(curr_target, curr_actor, location, dam_type, dam_mult, entity.fighter.atk_result, cs, entities)
+            effects = damage_controller(target, active_entity, location, dam_type, dam_mult, active_entity.fighter.atk_result, cs, entities)
     
             if effects:
                 combat_phase = CombatPhase.action
-                curr_actor.fighter.action.clear()
+                active_entity.fighter.action.clear()
                 for effect in effects:
                     messages.append(effect)
-                if enemy.fighter is not None:
-                    if enemy.fighter.disengage:       
+                if target.fighter is not None:
+                    if target.fighter.disengage:       
                         combat_phase = CombatPhase.disengage
-                        active_entity = enemy
+                        active_entity = target
                         game_state = GameStates.default
                         menu_dict = dict()
                 else:
-                    if curr_actor.player and len(curr_actor.fighter.targets) > 0:
-                        #See if curr_actor has AP for repeat
-                        if curr_actor.fighter.ap >= curr_actor.fighter.last_atk_ap:           
+                    if active_entity.player and len(active_entity.fighter.targets) > 0:
+                        #See if active_entity has AP for repeat
+                        if active_entity.fighter.ap >= active_entity.fighter.last_atk_ap:           
                             combat_phase = CombatPhase.repeat
                             game_state = GameStates.menu
 
-            if hasattr(curr_actor.fighter, 'ai'):
+            if hasattr(active_entity.fighter, 'ai'):
                 menu_dict = dict()
                 game_state = GameStates.default
 
     
 
-    entity.fighter.mods = cs
+    active_entity.fighter.mods = cs
 
     if combat_phase == CombatPhase.defend:
-        active_entity = curr_target
+        active_entity = target
 
     return messages, combat_phase, active_entity, missed
 
-def perform_maneuver(entity, entities, final_to_hit, curr_target, combat_phase, game_map) -> (list, int, object, bool):
+def perform_maneuver(active_entity, entities, final_to_hit, target, combat_phase, game_map) -> (list, int, object, bool):
     effects = []
     messages = []
-    mnvr = entity.fighter.combat_choices[0]  
+    mnvr = active_entity.fighter.combat_choices[0]  
     #Find best skill
     valid_skills = []
     for s in mnvr.skill:
-        valid_skills.append(getattr(entity.fighter,s))
+        valid_skills.append(getattr(active_entity.fighter,s))
     
     skill = max(valid_skills)
     final_ap = int(mnvr.base_ap * ((100/skill)**.2 ))
-    active_entity = entity
-    curr_actor = entity
-    enemy = curr_target
     missed =  True
-    location = entity.fighter.combat_choices[1]
+    location = active_entity.fighter.combat_choices[1]
     
     
 
     #Clear history if attacker changed
-    if curr_target.fighter.attacker is not entity:
-        curr_target.fighter.attacker = entity
-        curr_target.fighter.attacker_history.clear
+    if target.fighter.attacker is not active_entity:
+        target.fighter.attacker = active_entity
+        target.fighter.attacker_history.clear
 
 
     roll = int(roll_dice(1, 100, True))
     if roll < final_to_hit: 
         missed = False
-        entity.fighter.atk_result = roll
+        active_entity.fighter.atk_result = roll
 
     
     
     #Subtract attack AP and stamina
-    #Subtract AP from enemy if this is a disengagement attack or an attack due to a wait
+    #Subtract AP from target if this is a disengagement attack or an attack due to a wait
 
-    if curr_target in entity.fighter.entities_opportunity_attacked:
-        curr_target.fighter.mod_attribute('ap', -final_ap)
-    elif curr_target.fighter.wait or curr_target.fighter.feint:
-        curr_target.fighter.mod_attribute('ap', -final_ap)
+    if target in active_entity.fighter.entities_opportunity_attacked:
+        target.fighter.mod_attribute('ap', -final_ap)
+    elif target.fighter.wait or target.fighter.feint:
+        target.fighter.mod_attribute('ap', -final_ap)
     else:
-        entity.fighter.mod_attribute('ap', -final_ap)
+        active_entity.fighter.mod_attribute('ap', -final_ap)
 
-    entity.fighter.mod_attribute('stamina', -(mnvr.stamina*entity.fighter.base_stam_cost))
+    active_entity.fighter.mod_attribute('stamina', -(mnvr.stamina*active_entity.fighter.base_stam_cost))
     
 
     #No damage
     if missed:
-        if not hasattr(entity.fighter, 'ai'):
+        if not hasattr(active_entity.fighter, 'ai'):
             messages.append('You missed. ')
             #Show rolls
             if options.show_rolls: 
                 rolls = 'You rolled a ' + str(roll) + ', missing. '
                 messages.insert(0, rolls)
         else:
-            messages.append(entity.name + ' missed you. ')
+            messages.append(active_entity.name + ' missed you. ')
         
-        if enemy.fighter.disengage:       
+        if target.fighter.disengage:       
             combat_phase = CombatPhase.disengage
-            active_entity = enemy
+            active_entity = target
 
         else:
             combat_phase = CombatPhase.action
         
     else:
         #First, see if this is an attack from behind
-        if entity in curr_target.fighter.targets:
+        if active_entity in target.fighter.targets:
             combat_phase = CombatPhase.grapple_defense
         else:
-            effects = apply_maneuver(entity, enemy, mnvr, location, entities, game_map)
+            effects = apply_maneuver(active_entity, target, mnvr, location, entities, game_map)
     
             if effects:
                 combat_phase = CombatPhase.action
-                curr_actor.fighter.action.clear()
+                active_entity.fighter.action.clear()
                 for effect in effects:
                     messages.append(effect)
-                if enemy.fighter is not None:
-                    if enemy.fighter.disengage:       
+                if target.fighter is not None:
+                    if target.fighter.disengage:       
                         combat_phase = CombatPhase.disengage
-                        active_entity = enemy
+                        active_entity = target
                 else:
                     combat_phase = CombatPhase.action
 
 
 
     if combat_phase == CombatPhase.grapple_defense:
-        active_entity = curr_target
+        active_entity = target
 
     return messages, combat_phase, active_entity, missed
 
@@ -967,16 +961,16 @@ def find_next_location(location, atk_angle, entity_angle) -> int:
 
     return new_loc
 
-def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs, entities, maneuver = False) -> list:
+def damage_controller(target, active_entity, location, dam_type, dam_mult, roll, cs, entities, maneuver = False) -> list:
     '''Main damage function.'''
     if maneuver:
         atk_angle = 4
     else:
-        atk_angle = angle_id(attacker.fighter.combat_choices[3])
+        atk_angle = angle_id(active_entity.fighter.combat_choices[3])
     
-    rel_angle = entity_angle(defender, attacker)
+    rel_angle = entity_angle(target, active_entity)
 
-    deflect, soak = calc_damage_soak(dam_type, defender)
+    deflect, soak = calc_damage_soak(dam_type, target)
 
     messages = []
     
@@ -996,16 +990,16 @@ def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs
 
         if roll <= deflect[layer]: 
             l_names = ['skin','tissue','bone']
-            messages.append(attacker.name + ' hit ' + defender.name +', but the blow deflected harmlessly off of ' + defender.name + '\'s ' + l_names[layer])
+            messages.append(active_entity.name + ' hit ' + target.name +', but the blow deflected harmlessly off of ' + target.name + '\'s ' + l_names[layer])
             break
         
         #Store previous damage level to avoid repeating damage effects
-        prev_health = defender.fighter.locations[location][layer]
+        prev_health = target.fighter.locations[location][layer]
         
         #determine how much damage is done to loc/layer and if pass-through occurs
-        new_location, new_layer, new_damage = calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk_angle, rel_angle)  
+        new_location, new_layer, new_damage = calc_layer_damage(target, location, layer, dam_type, dam_amount, soak, atk_angle, rel_angle)  
 
-        messages.extend(get_injuries(defender, prev_health, location, layer, dam_type))
+        messages.extend(get_injuries(target, prev_health, location, layer, dam_type))
 
         if new_location != location or new_layer != layer:
             damage = new_damage
@@ -1015,16 +1009,16 @@ def damage_controller(defender, attacker, location, dam_type, dam_mult, roll, cs
             damage = 0
             location = None
 
-        handle_mobility_change(defender)
+        handle_mobility_change(target)
         
-    cleave_messages = cleave_checker(defender)
+    cleave_messages = cleave_checker(target)
     if len(cleave_messages) > 0:
         messages.extend(cleave_messages)
-        defender.state = EntityState.dead
+        target.state = EntityState.dead
     
     #Handle death and unconsciousness
-    if defender.state != EntityState.conscious:
-        handle_state_change(defender, entities, defender.state)
+    if target.state != EntityState.conscious:
+        handle_state_change(target, entities, target.state)
         
 
     return messages
@@ -1104,23 +1098,23 @@ def calc_damage_soak(dam_type, target) -> (list, list):
 
     return deflect, soak
 
-def calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk_angle, entity_angle) -> (int, int, int):
+def calc_layer_damage(target, location, layer, dam_type, dam_amount, soak, atk_angle, entity_angle) -> (int, int, int):
 
     atk_angle = angle_id(atk_angle)
 
     #Calc final damage
     damage = int(round((1-soak[layer])*dam_amount))
 
-    if defender.fighter.locations[location][layer] < damage:
-        damage -= defender.fighter.locations[location][layer]
-        defender.fighter.locations[location][layer] = 0
+    if target.fighter.locations[location][layer] < damage:
+        damage -= target.fighter.locations[location][layer]
+        target.fighter.locations[location][layer] = 0
         if layer < 2:
             layer += 1
         else:
             layer = 0
             location = find_next_location(location, atk_angle, entity_angle)
     else:
-        defender.fighter.locations[location][layer] -= damage
+        target.fighter.locations[location][layer] -= damage
         if layer == 2 and dam_type == 'p':
             location = find_next_location(location, atk_angle, entity_angle)
             layer = 0
@@ -1129,7 +1123,7 @@ def calc_layer_damage(defender, location, layer, dam_type, dam_amount, soak, atk
     
     return location, layer, damage
 
-def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
+def get_injuries(target, prev_health, location, layer, dam_type) -> list:
     '''Determines damage level and calls filter_injuries and apply_injuries to add injuries'''
     messages = set()
     inj_messages = set()
@@ -1138,11 +1132,11 @@ def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
     #Determine damage effect level
     #Find % damage
     dam_percent = 0
-    prev_percent = (prev_health/defender.fighter.max_locations[location][layer])
-    layer_health = defender.fighter.locations[location][layer]
+    prev_percent = (prev_health/target.fighter.max_locations[location][layer])
+    layer_health = target.fighter.locations[location][layer]
 
     if layer_health != 0: 
-        dam_percent = (defender.fighter.locations[location][layer]/defender.fighter.max_locations[location][layer])
+        dam_percent = (target.fighter.locations[location][layer]/target.fighter.max_locations[location][layer])
 
     dam_thresh = find_dam_threshold(dam_percent)
     prev_thresh = find_dam_threshold(prev_percent)
@@ -1151,10 +1145,10 @@ def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
 
     if new_thresh > 0:
         for i in range(new_thresh + 1):
-            valid_injuries = filter_injuries(Injury, location, dam_type, dam_thresh, layer, defender)
+            valid_injuries = filter_injuries(Injury, location, dam_type, dam_thresh, layer, target)
             #Max_sev used to clear all lower inujury effecxt messages and only use the max damage one
             if len(valid_injuries) > 0:
-                inj_messages, sev = apply_injuries(valid_injuries, location, defender, dam_type)
+                inj_messages, sev = apply_injuries(valid_injuries, location, target, dam_type)
                 if sev >= max_sev:
                     messages.clear()
                     messages.update(inj_messages)
@@ -1174,7 +1168,7 @@ def find_dam_threshold(percent) -> int:
 
     return dam_thresh
 
-def apply_injury_effects(recipient, injury, location, remove = False) -> list:
+def apply_injury_effects(target, injury, location, remove = False) -> list:
     '''Generic injury effect applier. remove bool reverses any reversible or non-temp effects'''
     messages = []
 
@@ -1183,119 +1177,119 @@ def apply_injury_effects(recipient, injury, location, remove = False) -> list:
         messages.append(injury.description)
 
     if injury.pain_check and not remove:
-        check = save_roll_un(recipient.fighter.will, 0)
+        check = save_roll_un(target.fighter.will, 0)
         if 'f' in check:
-            recipient.state = EntityState.stunned
-            messages.append(recipient.name + ' is overcome by the pain from the blow, and is stunned for a short while.')
+            target.state = EntityState.stunned
+            messages.append(target.name + ' is overcome by the pain from the blow, and is stunned for a short while.')
 
         elif 'cf' in check:
-            recipient.fighter.gen_stance = FighterStance.prone
-            recipient.state = EntityState.unconscious
-            messages.append(recipient.name + ' faints due to the intense pain of the wound.')
+            target.fighter.gen_stance = FighterStance.prone
+            target.state = EntityState.unconscious
+            messages.append(target.name + ' faints due to the intense pain of the wound.')
 
     if injury.shock_check and not remove:
-        check = save_roll_un(recipient.fighter.shock, 0)
+        check = save_roll_un(target.fighter.shock, 0)
         if 'f' in check:
-            recipient.state = EntityState.shock
-            messages.append(recipient.name + ' is experiencing the early effects of shock, and is disoriented and unstable.')
-            recipient.fighter.mod_attribute('clarity',-20)
+            target.state = EntityState.shock
+            messages.append(target.name + ' is experiencing the early effects of shock, and is disoriented and unstable.')
+            target.fighter.mod_attribute('clarity',-20)
 
         elif 'cf' in check:
-            recipient.fighter.gen_stance = FighterStance.prone
-            recipient.state = EntityState.unconscious
-            recipient.fighter.bleed.append([100,100])
-            messages.append(recipient.name + ' rapidly goes into shock and collapses.')
+            target.fighter.gen_stance = FighterStance.prone
+            target.state = EntityState.unconscious
+            target.fighter.bleed.append([100,100])
+            messages.append(target.name + ' rapidly goes into shock and collapses.')
 
     if injury.balance_check and not remove:
-        check = save_roll_un(recipient.fighter.shock, 0)
+        check = save_roll_un(target.fighter.shock, 0)
         if 'f' in check or 'cf' in check:
-            recipient.fighter.gen_stance = FighterStance.prone
-            messages.append(recipient.name + ' is toppled by the blow.')
+            target.fighter.gen_stance = FighterStance.prone
+            messages.append(target.name + ' is toppled by the blow.')
 
     if injury.clarity_reduction is not None:
         if remove:
-            recipient.fighter.mod_attribute('clarity',injury.clarity_reduction)
+            target.fighter.mod_attribute('clarity',injury.clarity_reduction)
         else:
-            recipient.fighter.mod_attribute('clarity',-injury.clarity_reduction)
+            target.fighter.mod_attribute('clarity',-injury.clarity_reduction)
 
     if injury.bleed_amount is not None and not remove:
-        recipient.fighter.bleed.append([injury.bleed_amount, injury.bleed_duration])
+        target.fighter.bleed.append([injury.bleed_amount, injury.bleed_duration])
 
     if injury.attr_name is not None:
         for a in injury.attr_name:
             idx = injury.attr_name.index(a)
             if remove:
-                recipient.fighter.mod_attribute(a, -injury.attr_amount[idx])
+                target.fighter.mod_attribute(a, -injury.attr_amount[idx])
             else:
-                recipient.fighter.mod_attribute(a, injury.attr_amount[idx])
+                target.fighter.mod_attribute(a, injury.attr_amount[idx])
 
     if injury.loc_reduction is not None and not remove:
-        recipient.fighter.locations[location][injury.layer] -= injury.loc_reduction
+        target.fighter.locations[location][injury.layer] -= injury.loc_reduction
 
     if injury.loc_max is not None and not remove:
-        recipient.fighter.max_locations[location][injury.layer] = recipient.fighter.max_locations[location][injury.layer]*injury.loc_max
+        target.fighter.max_locations[location][injury.layer] = target.fighter.max_locations[location][injury.layer]*injury.loc_max
     
     if injury.severed_locs is not None and not remove:
-        recipient.fighter.severed_locs.update(injury.severed_locs)
+        target.fighter.severed_locs.update(injury.severed_locs)
 
     if injury.paralyzed_locs is not None and not remove:
-        recipient.fighter.paralyzed_locs.update(injury.paralyzed_locs)
+        target.fighter.paralyzed_locs.update(injury.paralyzed_locs)
 
     if injury.temp_phys_mod is not None and not remove:
-        recipient.fighter.temp_physical_mod -= injury.temp_phys_mod
+        target.fighter.temp_physical_mod -= injury.temp_phys_mod
 
     if injury.suffocation is not None and not remove:
-        if recipient.fighter.suffocation is not None and recipient.fighter.suffocation > injury.suffocation:
-           recipient.fighter.suffocation = injury.suffocation
+        if target.fighter.suffocation is not None and target.fighter.suffocation > injury.suffocation:
+           target.fighter.suffocation = injury.suffocation
     
     if injury.stam_drain is not None:
         if remove:
-            recipient.fighter.mod_attribute('stam_drain',-injury.stam_drain)
+            target.fighter.mod_attribute('stam_drain',-injury.stam_drain)
         else:
-            recipient.fighter.mod_attribute('stam_drain',injury.stam_drain)
+            target.fighter.mod_attribute('stam_drain',injury.stam_drain)
     
     if injury.stam_regin is not None:
         if remove:
-            recipient.fighter.mod_attribute('stamr',recipient.fighter.max_stamr * injury.stam_regin)
+            target.fighter.mod_attribute('stamr',target.fighter.max_stamr * injury.stam_regin)
         else:
-            recipient.fighter.mod_attribute('stamr',-(recipient.fighter.max_stamr * injury.stam_regin))
+            target.fighter.mod_attribute('stamr',-(target.fighter.max_stamr * injury.stam_regin))
 
     if injury.pain_mv_mod is not None:
         if remove:
-            recipient.fighter.pain_mod_mov -= injury.pain_mv_mod
+            target.fighter.pain_mod_mov -= injury.pain_mv_mod
         else:
-            recipient.fighter.pain_mod_mov += injury.pain_mv_mod
+            target.fighter.pain_mod_mov += injury.pain_mv_mod
 
     if injury.diseases is not None and not remove:
-        recipient.fighter.diseases.update(injury.diseases)
+        target.fighter.diseases.update(injury.diseases)
 
     if injury.atk_mod_r is not None:
         if remove:
-            recipient.fighter.atk_mod_r += -injury.atk_mod_r
+            target.fighter.atk_mod_r += -injury.atk_mod_r
         else:
-            recipient.fighter.atk_mod_r += injury.atk_mod_r
+            target.fighter.atk_mod_r += injury.atk_mod_r
     
     if injury.atk_mod_l is not None:
         if remove:
-            recipient.fighter.atk_mod_l += -injury.atk_mod_l
+            target.fighter.atk_mod_l += -injury.atk_mod_l
         else:
-            recipient.fighter.atk_mod_l += injury.atk_mod_l
+            target.fighter.atk_mod_l += injury.atk_mod_l
     
     if injury.mv_mod:
         if remove:
-            recipient.fighter.mod_attribute('mv',recipient.fighter.max_mv * injury.mv_mod)
+            target.fighter.mod_attribute('mv',target.fighter.max_mv * injury.mv_mod)
         else:
-            recipient.fighter.mod_attribute('mv',-(recipient.fighter.max_mv * injury.mv_mod))
+            target.fighter.mod_attribute('mv',-(target.fighter.max_mv * injury.mv_mod))
 
     if injury.gen_stance is not None and not remove:
-        recipient.fighter.gen_stance = injury.gen_stance
-        if recipient.fighter.gen_stance == FighterStance.prone:
-            messages.append(recipient.name + ' is knocked prone. ')
-        elif recipient.fighter.gen_stance == FighterStance.kneeling:
-            messages.append(recipient.name + ' is forced to their knees. ')
+        target.fighter.gen_stance = injury.gen_stance
+        if target.fighter.gen_stance == FighterStance.prone:
+            messages.append(target.name + ' is knocked prone. ')
+        elif target.fighter.gen_stance == FighterStance.kneeling:
+            messages.append(target.name + ' is forced to their knees. ')
 
     if injury.state is not None and not remove:
-        recipient.fighter.state = injury.state
+        target.fighter.state = injury.state
 
     return messages
 
@@ -1361,30 +1355,22 @@ def calc_modifiers(weapon, location, angle_id) -> (int, int, int, int):
     
     return dam_mult, atk_mod, parry_mod, dodge_mod
 
-def valid_maneuvers(aggressor, target) -> set:
-    all_maneuvers = set()
+def valid_maneuvers(active_entity, target) -> list:
+    all_maneuvers = {}
     invalid_maneuvers = set()
-    dup_maneuvers = set()
     
-    
-    for w in aggressor.weapons:
-        all_maneuvers = all_maneuvers | set(w.maneuvers)
+    #Below complexity is due to objects being different, but being functional duplicates
+    for w in active_entity.weapons:
+        for mnvr in w.maneuvers:
+            if mnvr.name not in all_maneuvers:
+                all_maneuvers[mnvr.name] = mnvr
 
-    #Eliminate duplicates
-    for mnvr in all_maneuvers:
-        count = 0
-        for m in all_maneuvers:
-            if mnvr.name == m.name:
-                count += 1
-        if count > 1:
-            dup_maneuvers.add(mnvr)
+    mnvr_set = set(all_maneuvers.values())
 
-    all_maneuvers = all_maneuvers.difference(dup_maneuvers)
-
-    for mnvr in all_maneuvers:
+    for mnvr in mnvr_set:
 
         #Find valid locations based on angle/dist
-        reachable_locs = set(determine_valid_locs(aggressor, target, mnvr))
+        reachable_locs = set(determine_valid_locs(active_entity, target, mnvr))
         #Remove any maneuvers that cannot reach a valid target
         if reachable_locs.isdisjoint(mnvr.locs_allowed):
             invalid_maneuvers.add(mnvr)
@@ -1394,34 +1380,34 @@ def valid_maneuvers(aggressor, target) -> set:
         if len(mnvr.prereq) != 0:
             valid = False
             for p in mnvr.prereq:
-                for a in aggressor.fighter.maneuvers:
-                    if type(p) is type(a) and a.aggressor is aggressor:
+                for a in active_entity.fighter.maneuvers:
+                    if type(p) is type(a) and a.active_entity is active_entity:
                         valid = True
             if not valid: 
                 invalid_maneuvers.add(mnvr)
                 continue
 
-        #Check if aggressor has ap
+        #Check if active_entity has ap
         skill_ratings = []
         for s in mnvr.skill:
-            skill_ratings.append(getattr(aggressor.fighter, s))
+            skill_ratings.append(getattr(active_entity.fighter, s))
         skill_rating = max(skill_ratings)
         
         final_ap = int(mnvr.base_ap * ((100/skill_rating)**.2 ))
         
-        if aggressor.fighter.ap < final_ap:
+        if active_entity.fighter.ap < final_ap:
             invalid_maneuvers.add(mnvr)
             continue  
         
         #See if both hands are free if it's a two handed maneuver
         if mnvr.hand:
             if mnvr.hands == 2:
-                if mnvr not in aggressor.weapons[0].maneuvers and mnvr not in aggressor.weapons[1].maneuvers:
+                if mnvr not in active_entity.weapons[0].maneuvers and mnvr not in active_entity.weapons[1].maneuvers:
                     invalid_maneuvers.add(mnvr)
                     continue 
 
-        #See if aggressor stance is valid for the maneuver
-        if aggressor.fighter.gen_stance not in mnvr.agg_stance_pre:
+        #See if active_entity stance is valid for the maneuver
+        if active_entity.fighter.gen_stance not in mnvr.agg_stance_pre:
             invalid_maneuvers.add(mnvr)
             continue
 
@@ -1430,14 +1416,56 @@ def valid_maneuvers(aggressor, target) -> set:
             invalid_maneuvers.add(mnvr)
             continue
 
-    all_maneuvers = all_maneuvers.difference(invalid_maneuvers)
+    mnvr_set = mnvr_set.difference(invalid_maneuvers)
+
+    #Convert to list and sort the list of objects alphabetically using the name attribute     
+    mnvr_set = list(mnvr_set)
+    mnvr_set.sort(key=lambda x: x.name)
 
 
-    return all_maneuvers
+    return mnvr_set
 
-def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) -> list:
+def attack_filter(active_entity, weapon, attack) -> bool:
+    imm_locs = active_entity.fighter.immobilized_locs | active_entity.fighter.paralyzed_locs
+    cs = active_entity.determine_combat_stats(weapon, attack)
+    valid = True
+    if attack.hand:
+        if attack.hands == 2:
+            if attack not in active_entity.weapons[0].attacks and attack not in active_entity.weapons[1].attacks:
+                valid = False
+            if not global_vars.arm_locs.isdisjoint(imm_locs):
+                valid = False
+        elif attack in active_entity.weapons[0].attacks: #R Hand
+            if not global_vars.r_arm_locs.isdisjoint(imm_locs):
+                valid = False        
+        else: #L Hand
+            if not global_vars.l_arm_locs.isdisjoint(imm_locs):
+                valid = False
+    else:
+        if not global_vars.leg_locs.isdisjoint(imm_locs):
+            valid = False
+    
+    
+    if active_entity.fighter.ap < cs.get('final ap'):
+        if len(active_entity.fighter.entities_opportunity_attacked) == 0:
+            valid = False
+
+    return valid
+
+def num_valid_attacks(active_entity) -> int:  
+    num_valid = 0
+    valid = False
+    for weapon in active_entity.weapons:
+        for attack in weapon.attacks:
+            valid = attack_filter(active_entity, weapon, attack)
+            if valid: num_valid += 1
+    
+    return num_valid
+
+
+def apply_maneuver(active_entity, target, maneuver, location, entities, game_map) -> list:
     loc_name = target.fighter.name_location(location)
-    mnvr = maneuver(aggressor, target, loc_name)
+    mnvr = maneuver(active_entity, target, loc_name)
     dam_type = None
     messages = []
     check = []
@@ -1464,7 +1492,7 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
             elif i is mnvr.s_dam: dam_type = 's'
             elif i is mnvr.p_dam: dam_type = 'p'
             else: dam_type = 't'
-            damage_list.append(i * aggressor.fighter.ep)
+            damage_list.append(i * active_entity.fighter.ep)
             loc_list.append(location)
             dam_types_list.append(dam_type)
 
@@ -1488,25 +1516,25 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
     for d in damage_list:
         roll = roll = roll_dice(1,99) - 1
         cs = dict()
-        messages.extend(damage_controller(target, aggressor, loc_list[idx], dam_types_list[idx], d, roll, cs, entities, True))
+        messages.extend(damage_controller(target, active_entity, loc_list[idx], dam_types_list[idx], d, roll, cs, entities, True))
         idx += 1
 
     #Remove the prereq if one exists
     if len(mnvr.prereq) > 0:
         for p in mnvr.prereq:
                 for a in target.fighter.maneuvers:
-                    if type(p) is type(a) and a.aggressor is aggressor and a.loc_idx == location:
-                        remove_maneuver(target, aggressor, a)
-                for a in aggressor.fighter.maneuvers:
-                    if type(p) is type(a) and a.aggressor is aggressor and a.loc_idx == location:
-                        aggressor.fighter.maneuvers.remove(a)
+                    if type(p) is type(a) and a.active_entity is active_entity and a.loc_idx == location:
+                        remove_maneuver(target, active_entity, a)
+                for a in active_entity.fighter.maneuvers:
+                    if type(p) is type(a) and a.active_entity is active_entity and a.loc_idx == location:
+                        active_entity.fighter.maneuvers.remove(a)
                         continue
     
     #Immobilize locations
     for l in mnvr.immobilized_locs:
         target.fighter.immobilized_locs.add(l)
     for l in mnvr.agg_immob_locs: 
-        aggressor.fighter.immobilized_locs.add(l)
+        active_entity.fighter.immobilized_locs.add(l)
 
     #Perform pain check and immobilize for round if failed
     if mnvr.pain_check:
@@ -1558,9 +1586,9 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
     if mnvr.state is not None:
         target.fighter.state = mnvr.state
 
-    #Apply aggressor stance (succeed)
+    #Apply active_entity stance (succeed)
     if mnvr.agg_suc_stance is not None:
-        aggressor.fighter.stance = mnvr.agg_suc_stance
+        active_entity.fighter.stance = mnvr.agg_suc_stance
 
     #Apply movement mods
     if mnvr.mv_scalar is not 1 or mnvr.can_move is False:
@@ -1581,14 +1609,14 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
             if direction > 7:
                 direction -= 8  
 
-        mobility_changed = relo_actor(game_map, target, aggressor, entities, direction, 2)    
+        mobility_changed = relo_actor(game_map, target, active_entity, entities, direction, 2)    
 
     if not mobility_changed:
         handle_mobility_change(target)
     
     return messages  
 
-def remove_maneuver(target, aggressor, maneuver):
+def remove_maneuver(target, active_entity, maneuver):
     mnvr = maneuver
     
     #Apply any clarity reductions before making balance checks
@@ -1606,11 +1634,11 @@ def remove_maneuver(target, aggressor, maneuver):
                     target.fighter.immobilized_locs.add(l)
         
     for l in mnvr.agg_immob_locs: 
-        aggressor.fighter.immobilized_locs.remove(l)
-        for m in aggressor.fighter.maneuvers:
+        active_entity.fighter.immobilized_locs.remove(l)
+        for m in active_entity.fighter.maneuvers:
             if m is not mnvr:
                 if l in m:
-                    aggressor.fighter.immobilized_locs.add(l)
+                    active_entity.fighter.immobilized_locs.add(l)
 
     #Remove any temp phys mod
     if mnvr.temp_phys_mod is not None:
@@ -1717,7 +1745,7 @@ def handle_state_change(entity, entities, state) -> None:
                     if target is entity:
                         del item.fighter.targets[item.fighter.targets.index(target)]
 
-def init_combat(curr_actor, order, command) -> (dict, int, int, list):
+def init_combat(active_entity, order, command) -> (dict, int, int, list):
     game_state = GameStates.menu
     combat_phase = CombatPhase.action
     messages = []
@@ -1725,88 +1753,82 @@ def init_combat(curr_actor, order, command) -> (dict, int, int, list):
 
     try:
         if command.get('Wait'):
-            if curr_actor.player:
+            if active_entity.player:
                 messages.append('You decide to wait for your opponents to act')
             else:
-                messages.append(curr_actor.name + ' waits for you to act')
-            curr_actor.fighter.wait = True
+                messages.append(active_entity.name + ' waits for you to act')
+            active_entity.fighter.wait = True
             combat_phase = CombatPhase.action
             game_state = GameStates.default
         elif command.get('Maneuver'):
-            if curr_actor.player:
+            if active_entity.player:
                 messages.append('You decide to attempt a special maneuver')
             combat_phase = CombatPhase.maneuver
         elif command.get('Change Stance'):
-            if curr_actor.player:
+            if active_entity.player:
                 messages.append('You decide to change your stance')
             combat_phase = CombatPhase.stance
         elif command.get('Change Guard'):
-            if curr_actor.player:
+            if active_entity.player:
                 messages.append('You decide to change your guard')
             combat_phase = CombatPhase.guard                     
         elif command.get('Attack'):
-            if curr_actor.player:
+            if active_entity.player:
                 messages.append('You decide to attack')
             combat_phase = CombatPhase.weapon
         elif command.get('Move'):
-            if curr_actor.player:
+            if active_entity.player:
                 messages.append('You decide to move.')
             else:
-                messages.append(curr_actor.name + ' moves. ')
+                messages.append(active_entity.name + ' moves. ')
             combat_phase = CombatPhase.move
         elif command.get('End Turn'):
-            if curr_actor.player:
+            if active_entity.player:
                 messages.append('You decide to end your turn')
             else:
-                if curr_actor.fighter.male: pro = 'his'
+                if active_entity.fighter.male: pro = 'his'
                 else: pro = 'her'
-                messages.append(curr_actor.name + ' ends ' + pro + ' turn')
-            curr_actor.fighter.end_turn = True
-            curr_actor.fighter.action.clear()
+                messages.append(active_entity.name + ' ends ' + pro + ' turn')
+            active_entity.fighter.end_turn = True
+            active_entity.fighter.action.clear()
             combat_phase = CombatPhase.action
             game_state = GameStates.default 
     except:
-        if curr_actor.fighter.can_act:
-            #CHeck to see if entity can afford to attack
-            wpn_ap = []
-            curr_actor.fighter.acted = False
-            for wpn in curr_actor.weapons:
-                for atk in wpn.attacks:
-                    cs = curr_actor.determine_combat_stats(wpn, atk)
-                    wpn_ap.append(cs.get('final ap'))
-            min_ap = min(wpn_ap)
-            curr_actor.fighter.action.clear()
-            if len(curr_actor.fighter.entities_opportunity_attacked) != 0:
-                curr_actor.fighter.action.append('Attack')
-            elif curr_actor.fighter.ap >= min_ap:
-                curr_actor.fighter.action.append('Attack')
-            if curr_actor.fighter.ap >= curr_actor.fighter.walk_ap and curr_actor.fighter.can_walk:
-                curr_actor.fighter.action.append('Move')
-            if len(order) > 1 and len(curr_actor.fighter.action) >= 1: 
-                curr_actor.fighter.action.append('Wait')
-                curr_actor.fighter.action.append('Maneuver')
-                curr_actor.fighter.action.append('Change Stance')
-                curr_actor.fighter.action.append('Change Guard')
-            if len(curr_actor.fighter.action) >= 1:
-                curr_actor.fighter.action.append('End Turn')
+        if active_entity.fighter.can_act:
+            #CHeck to see if entity can attack
+            valid_attacks = num_valid_attacks(active_entity)
+            valid_mnvrs = valid_maneuvers(active_entity, active_entity.fighter.curr_target)
+            active_entity.fighter.action.clear()
+            if valid_attacks > 0:
+                active_entity.fighter.action.append('Attack')
+            if active_entity.fighter.ap >= active_entity.fighter.walk_ap and active_entity.fighter.can_walk:
+                active_entity.fighter.action.append('Move')
+            if len(valid_mnvrs) > 0:
+                active_entity.fighter.action.append('Maneuver')
+            if len(order) > 1 and len(active_entity.fighter.action) >= 1: 
+                active_entity.fighter.action.append('Wait')
+                active_entity.fighter.action.append('Change Stance')
+                active_entity.fighter.action.append('Change Guard')
+            if len(active_entity.fighter.action) >= 1:
+                active_entity.fighter.action.append('End Turn')
                 game_state = GameStates.menu
             else:
-                curr_actor.fighter.end_turn = True
+                active_entity.fighter.end_turn = True
                 combat_phase = CombatPhase.action
                 game_state = GameStates.default
                 return menu_dict, combat_phase, game_state, order, messages
 
             combat_menu_header = 'What do you wish to do?'
 
-            menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}                       
+            menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}                       
 
-    if hasattr(curr_actor.fighter, 'ai'):
+    if hasattr(active_entity.fighter, 'ai'):
         game_state = GameStates.default
 
 
     return menu_dict, combat_phase, game_state, order, messages
 
-def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) -> (int, int, list, object):
+def change_actor(order, entities, active_entity, combat_phase, game_state, logs) -> (int, int, list, object):
     messages = []
     log = logs[2]
     round_end = False
@@ -1815,7 +1837,7 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
 
     #Exit without making changes if in defend phase
     if combat_phase in [CombatPhase.defend, CombatPhase.grapple_defense]:
-        return combat_phase, game_state, order, curr_actor
+        return combat_phase, game_state, order, active_entity
 
     if len(order) == 0:
         round_end = True
@@ -1834,13 +1856,13 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
         if remaining_fighters == 1:
             targets = 0
             for entity in entities:
-                if entity.fighter is not None and entity is not curr_actor:
+                if entity.fighter is not None and entity is not active_entity:
                     targets += 1
             if targets == 0:
                 #Below exits combat when all enemies are dispatched
                 combat_phase = CombatPhase.explore
                 game_state = GameStates.default
-                return combat_phase, game_state, order, curr_actor
+                return combat_phase, game_state, order, active_entity
 
         if global_vars.debug and len(order) != len(global_vars.turn_order) : print('order length: ' + str(len(order)) + ', global order length: ' + str(len(global_vars.turn_order)))
         
@@ -1851,15 +1873,15 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
             if len(order) > 1:
                 if order[0].fighter.wait: 
                     if not order[0].fighter.curr_target.fighter.acted: 
-                        curr_actor = order[0].fighter.curr_target
+                        active_entity = order[0].fighter.curr_target
                     else: 
                         order[0].fighter.wait = False
                         order[0].fighter.curr_target.fighter.acted = False
-                elif order[0] in curr_actor.fighter.entities_opportunity_attacked:
+                elif order[0] in active_entity.fighter.entities_opportunity_attacked:
                     pass
                 elif order[0].fighter.feint:
                     if not order[0].fighter.curr_target.fighter.acted: 
-                        curr_actor = order[0].fighter.curr_target
+                        active_entity = order[0].fighter.curr_target
                     else:
                         order[0].fighter.feint = False
                         order[0].fighter.curr_target.fighter.acted = False
@@ -1875,9 +1897,9 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
                         order[0].fighter.combat_choices.clear()
 
                 elif combat_phase != CombatPhase.defend:
-                    curr_actor = order[0]
+                    active_entity = order[0]
             else:
-                curr_actor = order[0]
+                active_entity = order[0]
 
     if round_end:
         log.add_message(Message('The round has ended. '))
@@ -1892,7 +1914,7 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
         log.add_message(Message(message))
         
             
-    return combat_phase, game_state, order, curr_actor
+    return combat_phase, game_state, order, active_entity
 
 def phase_init(entities) -> (int, list):
     active_fighters = 0
@@ -1967,6 +1989,7 @@ def phase_weapon(curr_actor, command, logs, combat_phase) -> (int, dict):
     menu_dict = dict()
     messages = []
     log = logs[2]
+    valid = False
     
 
     #Choose your weapon
@@ -1974,8 +1997,8 @@ def phase_weapon(curr_actor, command, logs, combat_phase) -> (int, dict):
     curr_actor.fighter.action.clear()
     for wpn in curr_actor.weapons:
         for atk in wpn.attacks:
-            cs = curr_actor.determine_combat_stats(wpn, atk)
-            if curr_actor.fighter.ap >= cs.get('final ap'):
+            valid = attack_filter(curr_actor, wpn, atk)
+            if valid:              
                 if wpn.name not in curr_actor.fighter.action:
                     curr_actor.fighter.action.append(wpn.name)
 
@@ -2009,15 +2032,26 @@ def phase_option(curr_actor, command, logs, combat_phase) -> (int, dict):
     menu_dict = dict()
     messages = []
     log = logs[2]
+    valid = False
 
     #Choose the base attack type (stab, slash, etc)
     combat_menu_header = 'How would you like to attack your target?'
     curr_actor.fighter.action.clear()
-    #Determine AP needs
-    for atk in curr_actor.fighter.combat_choices[0].attacks:
-        cs = curr_actor.determine_combat_stats(curr_actor.fighter.combat_choices[0], atk)
-        atk_final_ap = cs.get('final ap')
-        if len(curr_actor.fighter.entities_opportunity_attacked) != 0 or curr_actor.fighter.ap >= atk_final_ap:
+    #Create a set of possible attacks for all weapons that match the weapon name
+    possible_attacks = set()
+    for wpn in curr_actor.weapons:
+        if wpn.name == curr_actor.fighter.combat_choices[0].name:
+            possible_attacks.update(wpn.attacks)
+
+    #Convert to list and sort the list of objects alphabetically using the name attribute     
+    possible_attacks = list(possible_attacks)
+    possible_attacks.sort(key=lambda x: x.name)
+
+
+    #Determine if attack is valid and enter it as an option if so
+    for atk in possible_attacks:
+        valid = attack_filter(curr_actor, curr_actor.fighter.combat_choices[0], atk)
+        if valid:
             curr_actor.fighter.action.append(atk.name)
 
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': curr_actor.fighter.action, 'mode': False}
@@ -2915,7 +2949,7 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
             if command.get('Allow the manuever'):
                 hit = True
                 effects = apply_maneuver(enemy, curr_actor, type(mnvr), location, entities, game_map)
-                curr_actor = enemy
+                
             if command.get('Dodge'):
                 check, def_margin, atk_margin = save_roll_con(curr_actor.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
@@ -2924,11 +2958,11 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
                 if check == 's':
                     if not hasattr(curr_actor.fighter, 'ai'): message = ('You dodged the attack. ')
                     else: message = (curr_actor.name + ' dodged the attack. ')
-                    curr_actor = enemy
+                    
                 else:
                     hit = True
                     effects = apply_maneuver(enemy, curr_actor, type(mnvr), location, entities, game_map)
-                    curr_actor = enemy
+                    
 
             if command.get('Reverse'):
                 check, def_margin, atk_margin = save_roll_con(getattr(curr_actor.fighter,mnvr.skill), mnvr.reversal_mod, enemy.fighter.atk_result, final_to_hit)
@@ -2942,7 +2976,7 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
                 else:
                     hit = True
                     effects = apply_maneuver(enemy, curr_actor, type(mnvr), location, entities, game_map)
-                    curr_actor = enemy
+                    
 
                 
     else:
@@ -2962,7 +2996,7 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
                 else:
                     hit = True
                     effects = apply_maneuver(enemy, curr_actor, type(mnvr), location, entities, game_map)
-                    curr_actor = enemy
+                    
                 break
                     
     
@@ -2979,7 +3013,7 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
             if curr_actor.fighter.disengage:       
                 combat_phase = CombatPhase.disengage
                 game_state = GameStates.default
-                menu_dict = dict()
+                
             elif curr_actor.fighter.feint and not hit:
                 curr_actor.fighter.counter_attack = enemy
                 enemy.fighter.combat_choices.clear()
@@ -3000,6 +3034,7 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
         if curr_actor.player:
             curr_actor.fighter.combat_choices.clear()
 
+        menu_dict = dict()
 
 
     for message in messages:

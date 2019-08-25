@@ -16,7 +16,11 @@ add_weapons(entities, weapons)
 aggressor = entities[0]
 target = entities[1]
 
-fall, locs = combat_functions.calc_falling_damage(aggressor, 240)
+list1 = [0,1,2]
+set1 = set([3,5,3,8,9])
+set2 = set([1])
+list2 = [12]
+combo = set1 | set2 | set(list2)
+lset = set(list1)
 
-print(str(fall) + ' psi to ' + str(locs) + ' locations')
-
+if not lset.isdisjoint(combo): print('True')
