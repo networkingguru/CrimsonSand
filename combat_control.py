@@ -66,7 +66,7 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
         combat_phase, menu_dict = phase_grapple(active_entity, command, logs, combat_phase)
     
     elif combat_phase == CombatPhase.grapple_defense:
-        combat_phase, game_state, menu_dict, active_entity = phase_grapple_defense(active_entity.fighter.curr_target, active_entity, entities, command, logs, combat_phase, game_map)
+        combat_phase, game_state, menu_dict, active_entity = phase_grapple_defense(active_entity, active_entity.fighter.curr_target, entities, command, logs, combat_phase, game_map)
 
     elif combat_phase == CombatPhase.grapple_confirm:
         combat_phase, menu_dict, active_entity = phase_grapple_confirm(active_entity, entities, command, logs, combat_phase, game_map)

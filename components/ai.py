@@ -63,7 +63,7 @@ class CombatAI:
             cs = entity.determine_combat_stats(entity.weapons[0], entity.weapons[0].attacks[0])
             command = avoid_attack(self.host.attacker, entity, cs)
         elif combat_phase == CombatPhase.grapple_defense and order[0].fighter is not self.host:
-            command = 'Allow the manuever'
+            command = {'Allow the manuever':'Allow the manuever'}
 
         return command
 

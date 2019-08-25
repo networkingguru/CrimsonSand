@@ -1153,10 +1153,11 @@ def get_injuries(defender, prev_health, location, layer, dam_type) -> list:
         for i in range(new_thresh + 1):
             valid_injuries = filter_injuries(Injury, location, dam_type, dam_thresh, layer, defender)
             #Max_sev used to clear all lower inujury effecxt messages and only use the max damage one
-            inj_messages, sev = apply_injuries(valid_injuries, location, defender, dam_type)
-            if sev >= max_sev:
-                messages.clear()
-                messages.update(inj_messages)
+            if len(valid_injuries) > 0:
+                inj_messages, sev = apply_injuries(valid_injuries, location, defender, dam_type)
+                if sev >= max_sev:
+                    messages.clear()
+                    messages.update(inj_messages)
             i += 1
 
     return messages
@@ -1435,7 +1436,8 @@ def valid_maneuvers(aggressor, target) -> set:
     return all_maneuvers
 
 def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) -> list:
-    mnvr = maneuver(aggressor, target, location)
+    loc_name = target.fighter.name_location(location)
+    mnvr = maneuver(aggressor, target, loc_name)
     dam_type = None
     messages = []
     check = []
@@ -1448,7 +1450,7 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
     offset_dict = {6:(-1,0),5:(-1,1),7:(-1,-1),1:(1,-1),3:(1,1),2:(1,0),4:(0,1),0:(0,-1)}
     
     #Apply any clarity reductions before making balance checks
-    if mnvr.clarity_reduction > 0:
+    if mnvr.clarity_reduction is not None:
         target.fighter.mod_attribute('clarity', -1 * mnvr.clarity_reduction)
 
     #Apply any direct damage
@@ -1484,10 +1486,10 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
     #Pass each damage instgance to the damage controller for application
     idx = 0
     for d in damage_list:
-        idx += 1
         roll = roll = roll_dice(1,99) - 1
         cs = dict()
         messages.extend(damage_controller(target, aggressor, loc_list[idx], dam_types_list[idx], d, roll, cs, entities, True))
+        idx += 1
 
     #Remove the prereq if one exists
     if len(mnvr.prereq) > 0:
@@ -1500,21 +1502,11 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
                         aggressor.fighter.maneuvers.remove(a)
                         continue
     
-    #Subtract the AP
-    skill_ratings = []
-    for s in mnvr.skill:
-        skill_ratings.append(getattr(aggressor.fighter, s))
-    skill_rating = max(skill_ratings)
-        
-    final_ap = int(mnvr.base_ap * ((100/skill_rating)**.2 ))
-
-    aggressor.fighter.mod_attribute('ap', final_ap)
-
     #Immobilize locations
     for l in mnvr.immobilized_locs:
-        target.fighter.immobilize_locs.add(l)
+        target.fighter.immobilized_locs.add(l)
     for l in mnvr.agg_immob_locs: 
-        aggressor.fighter.immobilize_locs.add(l)
+        aggressor.fighter.immobilized_locs.add(l)
 
     #Perform pain check and immobilize for round if failed
     if mnvr.pain_check:
@@ -1556,7 +1548,7 @@ def apply_maneuver(aggressor, target, maneuver, location, entities, game_map) ->
         target.fighter.atk_mod_l += mnvr.atk_mod_l
     
     #Apply target stance and state
-    if mnvr.gen_stance is not None:
+    if mnvr.stance is not None:
         target.fighter.gen_stance = mnvr.gen_stance
         if target.fighter.gen_stance == FighterStance.prone:
             messages.append(target.name + ' is knocked prone. ')
@@ -1606,19 +1598,19 @@ def remove_maneuver(target, aggressor, maneuver):
     #Mobilize locations
     for l in mnvr.immobilized_locs:
         #Remove loc from list
-        target.fighter.immobilize_locs.remove(l)
+        target.fighter.immobilized_locs.remove(l)
         for m in target.fighter.maneuvers:
             if m is not mnvr:
                 if l in m:
                     #Re-add loc if included in another maneuver
-                    target.fighter.immobilize_locs.add(l)
+                    target.fighter.immobilized_locs.add(l)
         
     for l in mnvr.agg_immob_locs: 
-        aggressor.fighter.immobilize_locs.remove(l)
+        aggressor.fighter.immobilized_locs.remove(l)
         for m in aggressor.fighter.maneuvers:
             if m is not mnvr:
                 if l in m:
-                    aggressor.fighter.immobilize_locs.add(l)
+                    aggressor.fighter.immobilized_locs.add(l)
 
     #Remove any temp phys mod
     if mnvr.temp_phys_mod is not None:
@@ -1822,7 +1814,7 @@ def change_actor(order, entities, curr_actor, combat_phase, game_state, logs) ->
     
 
     #Exit without making changes if in defend phase
-    if combat_phase == CombatPhase.defend:
+    if combat_phase in [CombatPhase.defend, CombatPhase.grapple_defense]:
         return combat_phase, game_state, order, curr_actor
 
     if len(order) == 0:
@@ -2849,6 +2841,8 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
     
     skill = max(valid_skills)
 
+    reverse_ap = int(mnvr.base_ap * ((100/skill)**.2 ))
+
     #Find valid manuevers to counter reverse with
     valid_mnvrs = valid_maneuvers(curr_actor, enemy)
 
@@ -2859,7 +2853,8 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
     if mnvr.reversible:
         for m in valid_mnvrs:
             if type(m) is type(mnvr):
-                can_reverse = True
+                if curr_actor.fighter.ap >= reverse_ap:
+                    can_reverse = True
 
     if mnvr.counterable:
         for m in valid_mnvrs:
@@ -2875,7 +2870,7 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
                         can_counter = True
                         break
 
-    reverse_ap = int(mnvr.base_ap * ((100/skill)**.2 ))
+    
 
     #Normalized (0-99) percentage scale of probabilities to p/d/b
     dodge_chance = find_defense_probability(final_to_hit, (curr_actor.fighter.dodge + dodge_mod))
@@ -2991,6 +2986,7 @@ def phase_grapple_defense(curr_actor, enemy, entities, command, logs, combat_pha
                 combat_phase = CombatPhase.weapon
             else:
                 curr_actor.fighter.action.clear()
+                curr_actor = enemy
         #Show rolls
         if options.show_rolls: 
             if atk_margin is not None and def_margin is not None:
