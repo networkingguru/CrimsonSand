@@ -23,4 +23,10 @@ list2 = [12]
 combo = set1 | set2 | set(list2)
 lset = set(list1)
 
-if not lset.isdisjoint(combo): print('True')
+locs_allowed = set(range(23,29)) #Locs maneuver can target
+restricted_locs = list(set(range(29)).difference(locs_allowed)) #Added because reachable_locs needs it 
+
+
+
+for i in restricted_locs:
+    print(i)

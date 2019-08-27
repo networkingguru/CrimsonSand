@@ -414,7 +414,7 @@ class Trip(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 0
-        self.locs_allowed = set(range(23-29)) #Locs maneuver can target
+        self.locs_allowed = set(range(23,29)) #Locs maneuver can target
         self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10
@@ -1084,7 +1084,7 @@ class Reap(Maneuver):
         self.p_dam = 0
         self.t_dam = 0
         self.hands = 0
-        self.locs_allowed = set(range(23-29)) #Locs maneuver can target
+        self.locs_allowed = set(range(23,29)) #Locs maneuver can target
         self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
         self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
         self.base_ap = 10

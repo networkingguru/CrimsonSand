@@ -58,8 +58,8 @@ class Entity:
 
 
                 for a in base_wpn.base_attacks:
-                    if (loc <=1 and not a.hand) or (loc > 1 and a.hand): #loc variable defines the 'location' the attack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
-                        continue
+                    #if (loc <=1 and not a.hand) or (loc > 1 and a.hand): #loc variable defines the 'location' the attack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
+                   #     continue
                     atk = deepcopy(a)
                     base_wpn.attacks.append(atk)
                     if loc == 0 or loc == 2:
@@ -107,7 +107,7 @@ class Entity:
     def determine_loc_mods(self, location) -> dict:
         to_hit = 0
         dodge_mod = 0
-        b_psi = 0
+        b_psi = 1
         parry_mod = 0
 
         if location == 0 or 10 < location < 13:
