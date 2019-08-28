@@ -1496,6 +1496,15 @@ def apply_maneuver(active_entity, target, maneuver, location, entities, game_map
     #Dict containing x,y offset based on facing direction  
     offset_dict = {6:(-1,0),5:(-1,1),7:(-1,-1),1:(1,-1),3:(1,1),2:(1,0),4:(0,1),0:(0,-1)}
     
+
+    #If continuous, apply to list in fighter
+    if mnvr.continuous:
+        mnvr.aggressor = active_entity
+        mnvr.target = target
+        active_entity.fighter.maneuvers.append(mnvr)
+        target.fighter.maneuvers.append(mnvr)
+
+
     #Apply any clarity reductions before making balance checks
     if mnvr.clarity_reduction is not None:
         target.fighter.mod_attribute('clarity', -1 * mnvr.clarity_reduction)
@@ -1639,7 +1648,7 @@ def remove_maneuver(target, active_entity, maneuver):
     mnvr = maneuver
     
     #Apply any clarity reductions before making balance checks
-    if mnvr.clarity_reduction > 0:
+    if mnvr.clarity_reduction is not None:
         target.fighter.mod_attribute('clarity', mnvr.clarity_reduction)
 
     #Mobilize locations
@@ -1723,6 +1732,10 @@ def remove_maneuver(target, active_entity, maneuver):
                 mv_mod -= (1-i.mv_mod) * target.fighter.max_mv
 
         target.fighter.mod_attribute('mv',mv_mod)
+    
+    #Remove maneuver
+    active_entity.fighter.maneuvers.remove(mnvr)
+    target.fighter.maneuvers.remove(mnvr)
 
 def calc_falling_damage(target, distance, add_force = 0, surface_hardness = .8) -> (int, int):
     weight = target.fighter.weight
@@ -2628,6 +2641,9 @@ def phase_maneuver(active_entity, command, logs, combat_phase) -> (int, dict):
         if len(maneuvers) > 0:
             for m in maneuvers:
                 active_entity.fighter.action.append(m.name)
+        for m in active_entity.fighter.maneuvers:
+            if m.aggressor is active_entity:
+                active_entity.fighter.action.append('Release ' + m.name)
 
 
     combat_menu_header = 'Choose your maneuver:'
@@ -2648,12 +2664,20 @@ def phase_maneuver(active_entity, command, logs, combat_phase) -> (int, dict):
                         messages.append('You decide to feint.')
                 else:
                     for m in maneuvers:
-                        if choice == m.name:
-                            
+                        if choice == m.name: 
                             combat_phase = CombatPhase.grapple
                             if not hasattr(active_entity.fighter, 'ai'):
                                 active_entity.fighter.combat_choices.append(m)
                                 messages.append('You decide to attempt a ' + m.name + '.')
+                    for m in active_entity.fighter.maneuvers:
+                        if choice == 'Release ' + m.name:
+                            combat_phase = CombatPhase.action
+                            if not hasattr(active_entity.fighter, 'ai'):
+                                messages.append('You release the ' + m.name + ' on ' + m.target.name + '.')
+                            else:
+                                messages.append(m.aggressor.name + ' releases the ' + m.name + ' on ' + m.target.name + '.')
+                            remove_maneuver(m.target, active_entity, m)
+
 
     for message in messages:
         log.add_message(Message(message))

@@ -64,6 +64,7 @@ class Maneuver():
         self.succeed_desc = ''
         self.fail_desc = ''
         self.aggressor = None #Used to indicate person controlling hold
+        self.target = None 
         self.mnvr_mod = 0 #Mod to initial roll
         self.counter_mod = 0 #Mod to counter
         self.dodge_mod = 0
