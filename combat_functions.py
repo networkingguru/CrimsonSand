@@ -395,7 +395,7 @@ def location_angle(active_entity, target, er, distance, attack, location) -> boo
 
     #Find length of hypotenuse(len of reach to hit location)
     reach_req = sqrt(distance**2 + abs(location_ht-pivot)**2)
-    if reach_req <= er: can_reach = True
+    if (er*.3) <= reach_req <= er: can_reach = True
     
     return can_reach
 
@@ -1362,7 +1362,12 @@ def calc_modifiers(weapon, location, angle_id) -> (int, int, int, int):
 def valid_maneuvers(active_entity, target) -> list:
     all_maneuvers = {}
     invalid_maneuvers = set()
-    
+
+    #Find distance between active_entity and defender. 
+    distance = sqrt((target.x - active_entity.x)**2 + (target.y - active_entity.y)**2)
+    #Convert squares into inches and round it off. 36" subtracted due to each combatant being in the middle of a square
+    distance = int(round(distance*36))-36
+        
     #Below complexity is due to objects being different, but being functional duplicates
     for w in active_entity.weapons:
         for mnvr in w.maneuvers:
@@ -1420,6 +1425,14 @@ def valid_maneuvers(active_entity, target) -> list:
             invalid_maneuvers.add(mnvr)
             continue
 
+        if distance > active_entity.fighter.er * mnvr.max_dist:
+            invalid_maneuvers.add(mnvr)
+            continue
+
+        if distance < active_entity.fighter.er * mnvr.min_dist:
+            invalid_maneuvers.add(mnvr)
+            continue
+
     mnvr_set = mnvr_set.difference(invalid_maneuvers)
 
     #Convert to list and sort the list of objects alphabetically using the name attribute     
@@ -1429,7 +1442,7 @@ def valid_maneuvers(active_entity, target) -> list:
 
     return mnvr_set
 
-def attack_filter(active_entity, weapon, attack) -> bool:
+def attack_filter(active_entity, target, weapon, attack) -> bool:
     imm_locs = active_entity.fighter.immobilized_locs | active_entity.fighter.paralyzed_locs
     cs = active_entity.determine_combat_stats(weapon, attack)
     valid = True
@@ -1449,6 +1462,9 @@ def attack_filter(active_entity, weapon, attack) -> bool:
         if not global_vars.leg_locs.isdisjoint(imm_locs):
             valid = False
     
+    valid_locs = determine_valid_locs(active_entity, target, attack)
+    if len(valid_locs) == 0:
+        valid = False
     
     if active_entity.fighter.ap < cs.get('final ap'):
         if len(active_entity.fighter.entities_opportunity_attacked) == 0:
@@ -1461,7 +1477,7 @@ def num_valid_attacks(active_entity) -> int:
     valid = False
     for weapon in active_entity.weapons:
         for attack in weapon.attacks:
-            valid = attack_filter(active_entity, weapon, attack)
+            valid = attack_filter(active_entity, active_entity.fighter.curr_target, weapon, attack)
             if valid: num_valid += 1
     
     return num_valid
@@ -2000,7 +2016,7 @@ def phase_weapon(active_entity, command, logs, combat_phase) -> (int, dict):
     active_entity.fighter.action.clear()
     for wpn in active_entity.weapons:
         for atk in wpn.attacks:
-            valid = attack_filter(active_entity, wpn, atk)
+            valid = attack_filter(active_entity, active_entity.fighter.curr_target, wpn, atk)
             if valid:              
                 if wpn.name not in active_entity.fighter.action:
                     active_entity.fighter.action.append(wpn.name)
@@ -2048,7 +2064,7 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
 
     #Determine if attack is valid and enter it as an option if so
     for atk in possible_attacks:
-        valid = attack_filter(active_entity, active_entity.fighter.combat_choices[0], atk)
+        valid = attack_filter(active_entity, active_entity.fighter.curr_target, active_entity.fighter.combat_choices[0], atk)
         if valid and not atk.name in active_entity.fighter.action:
             active_entity.fighter.action.append(atk.name)
     
@@ -2088,7 +2104,7 @@ def phase_location(active_entity, command, logs, combat_phase) -> (int, dict):
 
     #Choose the hit location
     combat_menu_header = 'Where do you want to aim?'
-    curr_target = active_entity.fighter.targets[0]
+    curr_target = active_entity.fighter.curr_target
     attack = active_entity.fighter.combat_choices[1]
     #Determine valid locations
     valid_locs = determine_valid_locs(active_entity, curr_target, attack)

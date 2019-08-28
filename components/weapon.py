@@ -115,7 +115,10 @@ class Maneuver():
         self.throw_force = 0 #Additional force (beyond gravity) imparted as damage in a throw
         self.agg_stance_pre = [FighterStance.standing, FighterStance.sitting, FighterStance.kneeling, FighterStance.prone] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing, FighterStance.sitting, FighterStance.kneeling, FighterStance.prone] #An 'or' list of stances necessary for the target of the maneuver
-        
+        self.max_dist = 1 #Max distance maneuver can be performed from. Scalar
+        self.min_dist = 0 #Min distance maneuver can be performed from. Scalar
+
+
 class Unarmed(Weapon):
     def __init__(self):
         super()
@@ -332,6 +335,8 @@ class Tackle(Maneuver):
         self.agg_fail_stance = FighterStance.prone #Stance the aggressor is in if the maneuver fails
         self.agg_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
+        self.max_dist = 1 #Max distance maneuver can be performed from. Scalar
+        self.min_dist = .5 #Min distance maneuver can be performed from. Scalar
 
 class Push(Maneuver):
     def __init__(self, aggressor, target, loc_name):
@@ -447,6 +452,8 @@ class Trip(Maneuver):
         self.inv_move_back = True #If inv moved, is defender thrown back? Forward if false.
         self.agg_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
+        self.max_dist = .5 #Max distance maneuver can be performed from. Scalar
+        self.min_dist = 0 #Min distance maneuver can be performed from. Scalar
 
 class Bearhug(Maneuver):
     def __init__(self, aggressor, target, loc_name):
@@ -515,6 +522,8 @@ class Bearhug(Maneuver):
         self.can_move = False #Used to block movement
         self.inv_move = False #Used to trigger an involuntary move (such as in a push or throw)
         self.inv_move_back = False #If inv moved, is defender thrown back? Forward if false.
+        self.max_dist = .5 #Max distance maneuver can be performed from. Scalar
+        self.min_dist = 0 #Min distance maneuver can be performed from. Scalar
 
 class Collar_Tie(Maneuver):
     def __init__(self, aggressor, target, loc_name):
@@ -575,6 +584,8 @@ class Collar_Tie(Maneuver):
         self.can_move = False #Used to block movement
         self.inv_move = False #Used to trigger an involuntary move (such as in a push or throw)
         self.inv_move_back = True #If inv moved, is defender thrown back? Forward if false.
+        self.max_dist = .5 #Max distance maneuver can be performed from. Scalar
+        self.min_dist = 0 #Min distance maneuver can be performed from. Scalar
 
 class Limb_Capture(Maneuver):
     def __init__(self, aggressor, target, loc_name):
@@ -1117,6 +1128,8 @@ class Reap(Maneuver):
         self.inv_move_back = True #If inv moved, is defender thrown back? Forward if false.
         self.agg_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
+        self.max_dist = .5 #Max distance maneuver can be performed from. Scalar
+        self.min_dist = 0 #Min distance maneuver can be performed from. Scalar
 
 class Sacrifice_Throw(Maneuver):
     def __init__(self, aggressor, target, loc_name):
@@ -1361,6 +1374,8 @@ class Single_Leg_Takedown(Maneuver):
         self.throw_force = 0 #Additional force (beyond gravity) imparted as damage in a throw
         self.agg_stance_pre = [FighterStance.standing, FighterStance.kneeling] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
+        self.max_dist = 1 #Max distance maneuver can be performed from. Scalar
+        self.min_dist = .5 #Min distance maneuver can be performed from. Scalar
 
 class Double_Leg_Takedown(Maneuver):
     def __init__(self, aggressor, target, loc_name):
@@ -1425,4 +1440,5 @@ class Double_Leg_Takedown(Maneuver):
         self.throw_force = 0 #Additional force (beyond gravity) imparted as damage in a throw
         self.agg_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
-
+        self.max_dist = 1 #Max distance maneuver can be performed from. Scalar
+        self.min_dist = .5 #Min distance maneuver can be performed from. Scalar
