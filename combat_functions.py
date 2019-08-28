@@ -2046,16 +2046,15 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
         if wpn.name == active_entity.fighter.combat_choices[0].name:
             possible_attacks.update(wpn.attacks)
 
-    #Convert to list and sort the list of objects alphabetically using the name attribute     
-    possible_attacks = list(possible_attacks)
-    possible_attacks.sort(key=lambda x: x.name)
-
-
     #Determine if attack is valid and enter it as an option if so
     for atk in possible_attacks:
         valid = attack_filter(active_entity, active_entity.fighter.combat_choices[0], atk)
-        if valid:
+        if valid and not atk.name in active_entity.fighter.action:
             active_entity.fighter.action.append(atk.name)
+    
+    
+    #Sort the list of objects alphabetically using the name attribute     
+    active_entity.fighter.action.sort()
 
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
     
