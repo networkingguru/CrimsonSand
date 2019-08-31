@@ -1,7 +1,8 @@
 
-from combat_functions import (strafe_control, move_actor, update_targets, detect_enemies, phase_init, phase_action, phase_weapon, phase_option, phase_location,  
+from combat_phases import (phase_init, phase_action, phase_weapon, phase_option, phase_location,  
     phase_option2, phase_confirm, phase_repeat, phase_defend, phase_disengage, phase_move, phase_maneuver, phase_feint, phase_stance, phase_guard, phase_grapple,
     phase_grapple_confirm, phase_grapple_defense)
+from combat_functions import strafe_control, move_actor, update_targets, detect_enemies
 from enums import CombatPhase, GameStates
 
 def combat_controller(game_map, active_entity, entities, players, command, logs, combat_phase, game_state, order) -> (dict, int, int, object, list):
