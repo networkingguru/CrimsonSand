@@ -174,14 +174,14 @@ class Entity:
         s_psi = self.fighter.ep * attack.s_dam
         t_psi = self.fighter.ep * attack.t_dam
         p_psi = self.fighter.ep * attack.p_dam
-        to_hit = attack.attack_mod + skill_rating + self.fighter.guard_hit_mod
-        to_parry = attack.parry_mod + skill_rating
+        to_hit = attack.attack_mod + weapon.attack_mod + skill_rating + self.fighter.guard_hit_mod
+        to_parry = attack.parry_mod + weapon.parry_mod + skill_rating
         dodge_mod = self.fighter.stance_dodge
         parry_mod = 0
         dam_mult = 1
         weight_factor = (self.fighter.weight/100)**.4
         
-        final_ap = int(attack.base_ap * (((100/skill_rating)**.2 + weight_factor)))
+        final_ap = int((attack.base_ap + weapon.base_ap) * (((100/skill_rating)**.2 + weight_factor)))
         if final_ap > self.fighter.swift: final_ap = self.fighter.swift
         parry_ap = int(weapon.parry_ap * (((100/skill_rating)**.2 + weight_factor)))  
 
