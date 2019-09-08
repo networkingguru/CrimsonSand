@@ -4,6 +4,7 @@ from components.fighter import Fighter
 from components import weapon
 from utilities import clamp, inch_conv, itersubclasses
 
+
 weapon_master_list = list(itersubclasses(weapon.Weapon))
 
 class Entity:
@@ -43,7 +44,7 @@ class Entity:
         if self.weapons is None: self.weapons=[]
         for w in weapon_master_list:
             new_wpn = w()
-            if wpn == new_wpn.name:
+            if wpn == type(new_wpn).__name__:
                 #Add a new weapon if it doesn't exist, else, retreive existing weapon
                 if len(self.weapons)<1:
                     self.weapons.append(new_wpn)
@@ -58,8 +59,7 @@ class Entity:
 
 
                 for a in base_wpn.base_attacks:
-                    #if (loc <=1 and not a.hand) or (loc > 1 and a.hand): #loc variable defines the 'location' the attack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
-                   #     continue
+
                     atk = deepcopy(a)
                     base_wpn.attacks.append(atk)
                     if loc == 0 or loc == 2:
@@ -70,18 +70,12 @@ class Entity:
                         if loc == 0 or loc == 2:
                             continue
                         else:
-                            atk.b_dam *= scalar
-                            atk.p_dam *= scalar
-                            atk.s_dam *= scalar
-                            atk.t_dam *= scalar
+                            atk.force_scalar *= scalar
                             atk.attack_mod -= 20
                             atk.parry_mod -= 20
                     elif self.fighter.dom_hand == 'L':
                         if loc == 0 or loc == 2:
-                            atk.b_dam *= scalar
-                            atk.p_dam *= scalar
-                            atk.s_dam *= scalar
-                            atk.t_dam *= scalar
+                            atk.force_scalar *= scalar
                             atk.attack_mod -= 20
                             atk.parry_mod -= 20
                 

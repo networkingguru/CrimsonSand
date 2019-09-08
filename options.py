@@ -56,7 +56,7 @@ low_init = [130,130,130,130,130,130,30,130,150,150,130,130,130,30,130,130,130,13
 #Fighter specs
 player_attr = tank
 player_fighter = ['Player', player_attr, 4]
-player_r_weapon = 'Steel Long Sword'
+player_r_weapon = 'De_Medium_Sword'
 player_l_weapon = 'Unarmed'
 player_rf_weapon = 'Unarmed'
 player_lf_weapon = 'Unarmed'
