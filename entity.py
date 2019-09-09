@@ -1,5 +1,6 @@
 import math
-from copy import deepcopy
+import time
+from copy import deepcopy, copy
 from components.fighter import Fighter
 from components import weapon
 from utilities import clamp, inch_conv, itersubclasses
@@ -61,23 +62,25 @@ class Entity:
                 for a in base_wpn.base_attacks:
 
                     atk = deepcopy(a)
+
                     base_wpn.attacks.append(atk)
-                    if loc == 0 or loc == 2:
-                        atk.name += '(R)'
-                    else:
-                        atk.name += '(L)'
-                    if self.fighter.dom_hand == 'R':
+                    if atk.hands != 2:
                         if loc == 0 or loc == 2:
-                            continue
+                            atk.name += '(R)'
                         else:
-                            atk.force_scalar *= scalar
-                            atk.attack_mod -= 20
-                            atk.parry_mod -= 20
-                    elif self.fighter.dom_hand == 'L':
-                        if loc == 0 or loc == 2:
-                            atk.force_scalar *= scalar
-                            atk.attack_mod -= 20
-                            atk.parry_mod -= 20
+                            atk.name += '(L)'
+                        if self.fighter.dom_hand == 'R':
+                            if loc == 0 or loc == 2:
+                                continue
+                            else:
+                                atk.force_scalar *= scalar
+                                atk.attack_mod -= 20
+                                atk.parry_mod -= 20
+                        elif self.fighter.dom_hand == 'L':
+                            if loc == 0 or loc == 2:
+                                atk.force_scalar *= scalar
+                                atk.attack_mod -= 20
+                                atk.parry_mod -= 20
                 
                 for m in base_wpn.base_maneuvers:
                     mnvr = m(self,self,'Scalp')
@@ -161,21 +164,55 @@ class Entity:
 
     def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 0) -> dict:
         weapon = weapon
-        skill = weapon.skill
+        if len(attack.skill) > 1:
+            skills = []
+            for s in attack.skill:
+                skills.append(getattr(self.fighter, s))
+            max_s = max(skills)
+            idx = skills.index(max_s)
+            skill = attack.skill[idx]
+        else:
+            skill = attack.skill[0]
         skill_rating = getattr(self.fighter, skill)
         tot_er = self.fighter.er + weapon.length
-        b_psi = self.fighter.ep * attack.b_dam
-        s_psi = self.fighter.ep * attack.s_dam
-        t_psi = self.fighter.ep * attack.t_dam
-        p_psi = self.fighter.ep * attack.p_dam
-        to_hit = attack.attack_mod + weapon.attack_mod + skill_rating + self.fighter.guard_hit_mod
-        to_parry = attack.parry_mod + weapon.parry_mod + skill_rating
+        b_psi = 0
+        s_psi = 0
+        t_psi = 0
+        p_psi = 0
+        fist_mass = .0065 * self.fighter.weight 
+        if attack.hands == 2:
+            velocity = (self.fighter.pwr * 4.5) / attack.added_mass
+        else:
+            velocity =  (self.fighter.pwr * 3) / attack.added_mass
+
+        
+
+        #Damage calc = ((((added_mass + fist mass) * velocity) / main_area) * mech_adv) * sharpness or hardness or pointedness
+
+        
+
+        ep = ((((attack.added_mass + fist_mass) * velocity) * attack.force_scalar) / attack.main_area) * attack.mech_adv
+
+        if attack.damage_type == 's':
+            modifier = attack.sharpness
+            s_psi = ep*modifier
+        elif attack.damage_type == 'p':
+            modifier = attack.pointedness
+            p_psi = ep*modifier
+        elif attack.damage_type == 'b':
+            modifier = attack.solidness
+            b_psi = ep*modifier
+        else:
+            t_psi = ep
+
+        to_hit = attack.attack_mod + skill_rating + self.fighter.guard_hit_mod
+        to_parry = attack.parry_mod + skill_rating
         dodge_mod = self.fighter.stance_dodge
         parry_mod = 0
         dam_mult = 1
         weight_factor = (self.fighter.weight/100)**.4
         
-        final_ap = int((attack.base_ap + weapon.base_ap) * (((100/skill_rating)**.2 + weight_factor)))
+        final_ap = attack.base_ap * (((100/skill_rating)**.2 + weight_factor))
         if final_ap > self.fighter.swift: final_ap = self.fighter.swift
         parry_ap = int(weapon.parry_ap * (((100/skill_rating)**.2 + weight_factor)))  
 

@@ -128,6 +128,7 @@ class Fighter:
         self.brawling = int(round(self.agi*0.4 + self.str*0.4 + ((self.men+self.wis)/2)*0.2))
         self.wrestling = int(round(self.agi*0.5 + self.str*0.25 + ((self.men+self.wis)/2)*0.25))
         self.martial_arts = int(round(self.men*0.4 + ((self.mem+self.wis)/2)*0.4 + self.agi*0.2))
+        self.boxing = int(round(self.agi*0.5 + ((self.mem+self.wis)/2)*0.2 + self.men*0.3))
         self.long_sword = int(round(self.agi*0.6 + ((self.men + self.pwr)/2)*0.3 + self.wis*0.1))
         self.dodge = int(round(self.swift*.6 + ((self.ped + self.bal)/2)*.2 + ((self.men + self.wis)/2)*.2))
         self.deflect = int(round(((self.men + self.wis)/2)*.5 + self.swift*.3 + self.agi*.2))
