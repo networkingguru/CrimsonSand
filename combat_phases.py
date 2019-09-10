@@ -151,11 +151,13 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
         if len(command) != 0 and len(active_entity.fighter.combat_choices) < 2:
             if command.get(option):
                 if not hasattr(active_entity.fighter, 'ai'):
-                    for atk in active_entity.fighter.combat_choices[0].attacks:
-                        if atk.name == option:
-                            active_entity.fighter.combat_choices.append(atk)
-                            messages.append('You decide to ' + option)
-                            break
+                    for w in active_entity.weapons:
+                        if w.name == active_entity.fighter.combat_choices[0].name:
+                            for atk in w.attacks:
+                                if atk.name == option:
+                                    active_entity.fighter.combat_choices.append(atk)
+                                    messages.append('You decide to ' + option)
+                                    break
                 menu_dict = dict()
                 combat_phase = CombatPhase.location
     

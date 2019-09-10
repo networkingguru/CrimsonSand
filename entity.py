@@ -40,8 +40,8 @@ class Entity:
         self.fighter = Fighter(attributes, facing, ai)
 
     def add_weapon_component(self, wpn, loc) -> None:
-        '''Assign attacks to fighter component by copying them from base_attacks and then modifying as necessary'''
-        scalar = .8 #Adjust this to reduce damage from off hand
+        '''Assign attacks to fighter component creating instances from base_attacks and then modifying as necessary'''
+        scalar = .8 #Adjust this to adjust damage from off hand
         if self.weapons is None: self.weapons=[]
         for w in weapon_master_list:
             new_wpn = w()
@@ -56,31 +56,44 @@ class Entity:
                         idx = self.weapons.index(new_wpn)
                     else:
                         idx = self.weapons.index(wp)
+                
                 base_wpn = self.weapons[idx]
 
 
                 for a in base_wpn.base_attacks:
 
-                    atk = deepcopy(a)
+                    atk = a(base_wpn)
 
+                    #Set right/l and add
+                      
                     base_wpn.attacks.append(atk)
-                    if atk.hands != 2:
-                        if loc == 0 or loc == 2:
+
+                    if atk.hand:
+                        if loc in [0,1]:
+                            if atk.hands != 2:
+                                if loc == 0:
+                                    atk.name += '(R)'
+                                else:
+                                    atk.name += '(L)'
+                                if self.fighter.dom_hand == 'R':
+                                    if loc == 0:
+                                        continue
+                                    else:
+                                        atk.force_scalar *= scalar
+                                        atk.attack_mod -= 20
+                                        atk.parry_mod -= 20
+                                elif self.fighter.dom_hand == 'L':
+                                    if loc == 0:
+                                        atk.force_scalar *= scalar
+                                        atk.attack_mod -= 20
+                                        atk.parry_mod -= 20
+                    else:
+                        if loc == 2:
                             atk.name += '(R)'
                         else:
                             atk.name += '(L)'
-                        if self.fighter.dom_hand == 'R':
-                            if loc == 0 or loc == 2:
-                                continue
-                            else:
-                                atk.force_scalar *= scalar
-                                atk.attack_mod -= 20
-                                atk.parry_mod -= 20
-                        elif self.fighter.dom_hand == 'L':
-                            if loc == 0 or loc == 2:
-                                atk.force_scalar *= scalar
-                                atk.attack_mod -= 20
-                                atk.parry_mod -= 20
+
+
                 
                 for m in base_wpn.base_maneuvers:
                     mnvr = m(self,self,'Scalp')
@@ -93,7 +106,30 @@ class Entity:
         base_wpn.attacks.sort(key=lambda x: x.name)
         base_wpn.maneuvers.sort(key=lambda x: x.name)
 
-    
+    def validate_attacks(self) -> None:
+
+        for w in self.weapons:
+            w_id = self.weapons.index(w)
+            remove_list = []
+            for a in w.attacks:
+                if a.hand:
+                    #Remove if it's a foot attack on a hand
+                    if w_id in [2,3]:
+                        remove_list.append(a)
+                    #Remove if it's a two-h attack and both hands not free
+                    elif a.hands == 2:
+                        if w_id == 0:
+                            if self.weapons[1].name not in ['Unarmed', w.name]:
+                                remove_list.append(a)
+                        else: 
+                            if self.weapons[0].name not in ['Unarmed', w.name]:
+                                remove_list.append(a)
+                else:
+                    #Remove is hand attack on foot
+                    if w_id in [0,1]:
+                        remove_list.append(a)
+            for i in remove_list:
+                w.attacks.remove(i)
 
     def set_guard_def_mods(self) -> None:
         self.fighter.loc_hit_mod = self.guard.loc_hit_mods
@@ -174,24 +210,45 @@ class Entity:
         else:
             skill = attack.skill[0]
         skill_rating = getattr(self.fighter, skill)
-        tot_er = self.fighter.er + weapon.length
+        tot_er = self.fighter.er + attack.length
         b_psi = 0
         s_psi = 0
         t_psi = 0
         p_psi = 0
         fist_mass = .0065 * self.fighter.weight 
-        if attack.hands == 2:
-            velocity = (self.fighter.pwr * 4.5) / attack.added_mass
-        else:
-            velocity =  (self.fighter.pwr * 3) / attack.added_mass
 
-        
+        arm_length = self.fighter.er
+        wpn_length = attack.length
+        reach = arm_length + wpn_length
+        if angle_id != 0: #Find distance for semi-circular paths (swings)
+            circ = 2 * math.pi * reach #Find circumference
+            distance = ((1/8)*circ*math.pi)/12 #Distance traveled for 45 deg angle
+        else:
+            distance = arm_length
+        #Determine max velocity based on pwr stat and mass distribution of attack
+        if attack.hands == 2:
+            max_vel = math.sqrt(self.fighter.pwr)*(4.5-(attack.added_mass/2))
+        else:
+            max_vel = math.sqrt(self.fighter.pwr)*(3-(attack.added_mass/2))
+        #Determine how long attack will take
+        if angle_id == 0:
+            time = (arm_length/12)/max_vel
+        else:
+            time = (((1/8)*(2*math.pi*arm_length)*math.pi)/12)/max_vel
+        #Find final velocity using full distance travelled by weapon
+        velocity = (1/time) * (distance/12)
+
+        force = (fist_mass + attack.added_mass) * velocity
+
+        psi = force*12 #Convert to inches
+      
 
         #Damage calc = ((((added_mass + fist mass) * velocity) / main_area) * mech_adv) * sharpness or hardness or pointedness
 
-        
+        if attack.damage_type is 'b':
+            attack.main_area *= (velocity/40) #scale main area size based on velocity; hack to represent deformation
 
-        ep = ((((attack.added_mass + fist_mass) * velocity) * attack.force_scalar) / attack.main_area) * attack.mech_adv
+        ep = ((psi * attack.force_scalar) / attack.main_area) * attack.mech_adv
 
         if attack.damage_type == 's':
             modifier = attack.sharpness
@@ -348,6 +405,8 @@ def add_weapons(entities, weapon_dict) -> None:
             entity.add_weapon_component(wpns.get('l_wpn'), 1)
             entity.add_weapon_component(wpns.get('rf_wpn'), 2)
             entity.add_weapon_component(wpns.get('lf_wpn'), 3)
+            #Remove attacks
+            entity.validate_attacks()
             #Set reach for all weapons
             entity.set_reach()
 

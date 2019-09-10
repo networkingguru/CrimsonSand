@@ -114,7 +114,7 @@ class Weapon:
             self.base_name = self.bname_variants[n_idx]
 
         #Name weapon using quality and material, if applicable
-        if self.main_material is not m_tissue:
+        if self.main_material not in [m_tissue, m_bone]:
             if self.quality != 'Average':
                 self.name = self.quality + ' ' + self.main_material.name + ' ' + self.base_name
             else:
@@ -146,15 +146,14 @@ class Weapon:
         self.min_pwr_1h = ((self.added_mass + .86) * 40)/1 #1 pwr = 1 ft/lb/s; accelleration = 40 f/s2; weight of average hand = .86 lb
         self.min_pwr_2h = ((self.added_mass + 1.72) * 40)/1.5 #1 pwr = 1.5 ft/lb/s; accelleration = 40 f/s2; weight of average hand = .86 lb
 
-        if self.main_material.elasticity < 1: self.solidness = self.main_material.elasticity
+        self.solidness = sqrt(self.main_material.elasticity * self.main_material.hardness)
         if self.main_material.hardness < 1: 
             self.sharpness = self.main_material.hardness
             self.pointedness = self.main_material.hardness
         else:
-            self.sharpness = sqrt(self.main_material.hardness)
-            self.pointedness = self.main_material.hardness
+            self.sharpness = sqrt((self.main_material.hardness/m_iron.hardness)*quality_dict.get(self.quality))
+            self.pointedness = sqrt(self.main_material.hardness/m_iron.hardness)
 
-        #Damage calc = ((((added_mass + fist mass) * velocity) / main_area) * mech_adv) * sharpness or hardness or pointedness
   
         main_materials_cost = self.main_material.cost * self.main_weight
         shaft_materials_cost = self.shaft_material.cost * self.shaft_weight
@@ -172,54 +171,60 @@ class Weapon:
         
         self.normality = self.main_material.normality * self.shaft_material.normality * self.grip_material.normality * self.accent_material.normality
         
-
-
 class Attack():
-    def __init__(self, name, **kwargs):
-        self.name = name
+    def __init__(self, weapon, **kwargs):
+        self.name = ''
+        self.weapon = weapon
         self.skill = []
         self.attack_mod = 0
         self.parry_mod = 0 #Modifier to OPPONENT'S parry chance
         self.stamina = 0
-        self.main_shape = None
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 'b'
         self.base_ap = 0
         self.hand = True
-        self.added_mass = 0
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
         self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
         self.allowed_angles_r = [] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
         self.allowed_angles_l = [] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
-        self.main_area = 0
-        self.mech_adv = 0
         self.force_scalar = 1 #Used to adjust force/damage for the attack
-        self.shape = ''
-        self.main_length = 0
-        self.avg_main_width = 0
-        self.main_depth = 0
-        self.avg_main_width = 0
-        self.main_width = 0
-        self.main_material = None
-        self.shaft_material = None
-        self.shaft_length = 0
-        self.accent_material = None
-        self.weight = 0
-        self.axis_vs_com = 0
-        self.com_perc = 0
-        self.main_num = 1
-        self.solidness = 1 #Used in damage calc
-        self.sharpness = 1 
-        self.pointedness = 1
-
+        self.added_mass = 0 #Dynamicly assigned
+        self.main_area = 0 #Dynamicly assigned
+        self.mech_adv = 1 #Dynamicly assigned
+        self.shape = '' #Dynamicly assigned
+        self.main_shape = self.weapon.main_shape
+        self.main_length = self.weapon.main_length
+        self.avg_main_width = self.weapon.avg_main_width
+        self.main_depth = self.weapon.main_depth
+        self.avg_main_width = self.weapon.avg_main_width
+        self.main_width = self.weapon.main_width
+        self.main_material = self.weapon.main_material
+        self.shaft_material = self.weapon.shaft_material
+        self.shaft_length = self.weapon.shaft_length
+        self.accent_material = self.weapon.accent_material
+        self.weight = self.weapon.weight
+        self.axis_vs_com = self.weapon.axis_vs_com
+        self.com_perc = self.weapon.com_perc
+        self.main_num = self.weapon.main_num
+        self.solidness = self.weapon.solidness #Used in damage calc
+        self.sharpness = self.weapon.sharpness 
+        self.pointedness = self.weapon.pointedness
 
         self.__dict__.update(kwargs)
 
         self.set_dynamic_attributes()
 
     def set_dynamic_attributes(self):
+        #Set length
+        if self.striker == 'main':
+            self.length = self.main_length
+        elif self.striker == 'shaft':
+            self.length = self.shaft_length
+        else:
+            self.length = 0
+
 
         for t in self.damage_type:
             if t == 'b':
@@ -227,12 +232,13 @@ class Attack():
                     shape = self.main_shape
                 else:
                     shape = 'round'
+                    
                 if shape == 'wedge':
                     self.main_area = self.main_length * self.avg_main_width
                     self.mech_adv =  self.main_depth / self.main_width
                 elif shape == 'round':
-                    #Using Hertz's result, but using fixed f value built off of added_mass + fist mass (.86) and v of 40 f/s2 and fixed p_ratio for target
-                    #Equation: https://www.quora.com/Is-the-area-of-contact-between-a-cylinder-and-a-flat-surface-infinitely-small-Is-it-a-point
+                    #Basic hack, treating cylinders and spheres the same and basically making them truncated rectangles
+                    #Tried to use Hertz's formula, but got wacky results
                     if self.striker == 'main':
                         material = self.main_material
                         width = self.main_width
@@ -243,9 +249,9 @@ class Attack():
                         length = self.shaft_length
                     else:
                         material = self.accent_material
-                        width = length = 1
-                    e_calc = ((1-(material.p_ratio * material.p_ratio))/(material.elasticity*10))+((1-(.4*.4))/5)
-                    self.main_area = sqrt((4*((.86 + self.added_mass)*40)*width)/(3.514*(e_calc)*min(length, 8)))
+                        width = length = 2
+                    self.solidness = (material.elasticity / 2) ** (1. / 3)
+                    self.main_area = (min(length,8)*width)/8
                 elif self.main_shape == 'flat':
                     self.main_area = min(self.main_length,8) * min(self.main_width,8)
 
@@ -293,8 +299,8 @@ class Attack():
 
         if self.damage_type in ['s','b']:
             self.stamina += self.weight + int(self.weight*self.axis_vs_com)
-            self.base_ap += min(self.weight/10, (self.weight * 10)/self.axis_vs_com)
-            self.added_mass = self.weight / self.com_perc
+            self.base_ap += min(self.weight*10, (self.weight * 10)*self.axis_vs_com)
+            self.added_mass = self.weight * self.com_perc
             self.attack_mod += (20 - ((self.weight*10) * self.com_perc))    
             self.parry_mod -= ((self.weight*10) * self.com_perc) 
             
@@ -312,9 +318,6 @@ class Attack():
             else:
                 self.attack_mod += -5 + (self.main_num * 5)
                 self.parry_mod -= self.main_num * 20
-        
-
-
 
 class Guard():
     def __init__(self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = [], rh_default = False, lh_default = False):
@@ -326,7 +329,398 @@ class Guard():
         self.req_locs = req_locs #A list of locs required to be funtional to use the guard
         self.auto_block = auto_block #A list of locations autoblocked
         self.rh_default = rh_default
-        self.lh_default = lh_default
+        self.lh_default = lh_default  
+
+class Jab(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Jab/Cross"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts', 'boxing']
+        self.attack_mod = 0
+        self.parry_mod = 0 #Modifier to OPPONENT'S parry chance
+        self.stamina = 1
+        self.force_scalar = .8 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 1
+        self.damage_type = 'b'
+        self.base_ap = 10
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [0] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Haymaker(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Haymaker"
+        self.weapon = weapon
+        self.skill = ['brawling', 'boxing']
+        self.attack_mod = -20
+        self.parry_mod = 20 #Modifier to OPPONENT'S parry chance
+        self.stamina = 3
+        self.force_scalar = 1.5 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 1
+        self.damage_type = 'b'
+        self.base_ap = 25
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [2,3,4] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+        
+class Hook(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Hook"
+        self.weapon = weapon
+        self.skill = ['martial_arts', 'boxing']
+        self.attack_mod = -10
+        self.parry_mod = 10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 2
+        self.force_scalar = 1.3 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 1
+        self.damage_type = 'b'
+        self.base_ap = 20
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [2,3,4] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Uppercut(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Uppercut"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts', 'boxing']
+        self.attack_mod = -20
+        self.parry_mod = 0 #Modifier to OPPONENT'S parry chance
+        self.stamina = 2
+        self.force_scalar = 1.2 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 1
+        self.damage_type = 'b'
+        self.base_ap = 20
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [0,2,3,4,7,8,11,12,15,16,19,20,21,22,23,24,25,26,27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [3,4] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [5,4] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Hammerfist(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Hammer Fist"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts', 'boxing']
+        self.attack_mod = 0
+        self.parry_mod = -20 #Modifier to OPPONENT'S parry chance
+        self.stamina = 1
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 1
+        self.damage_type = 'b'
+        self.base_ap = 10
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [2,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [7,0,1] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [7,0,1] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Elbow_Strike(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Elbow Strike"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts']
+        self.attack_mod = -20
+        self.parry_mod = -20 #Modifier to OPPONENT'S parry chance
+        self.stamina = 1
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'accent'
+        self.hands = 1
+        self.damage_type = 'b'
+        self.base_ap = 10
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [0,1,2,3] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [0,7,6,5] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Front_Kick(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Front Kick"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts']
+        self.attack_mod = -10
+        self.parry_mod = 10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 2
+        self.force_scalar = 1.2 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 0
+        self.damage_type = 'b'
+        self.base_ap = 15
+        self.hand = False
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [0,27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [3,4,5,8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [3,4,5,8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Roundhouse_Kick(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Roundhouse Kick"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts']
+        self.attack_mod = 10
+        self.parry_mod = 20 #Modifier to OPPONENT'S parry chance
+        self.stamina = 5
+        self.force_scalar = 1.8 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 0
+        self.damage_type = 'b'
+        self.base_ap = 30
+        self.hand = False
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [0,27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [2,3] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [5,6] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Side_Kick(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Side Kick"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts']
+        self.attack_mod = -20
+        self.parry_mod = 10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 3
+        self.force_scalar = 1.6 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 0
+        self.damage_type = 'b'
+        self.base_ap = 20
+        self.hand = False
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [0,27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [8,4] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [8,4] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Stomp(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Stomp"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts']
+        self.attack_mod = 20
+        self.parry_mod = 0 #Modifier to OPPONENT'S parry chance
+        self.stamina = 1
+        self.force_scalar = 1.5 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 0
+        self.damage_type = 'b'
+        self.base_ap = 10
+        self.hand = False
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [7,1,2] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [7,1,2] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Knee_Strike(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Knee Strike"
+        self.weapon = weapon
+        self.skill = ['brawling', 'martial_arts']
+        self.attack_mod = -30
+        self.parry_mod = -10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 1
+        self.force_scalar = 1.2 #Used to adjust force/damage for the attack
+        self.striker = 'accent'
+        self.hands = 0
+        self.damage_type = 'b'
+        self.base_ap = 15
+        self.hand = False
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [0,2,27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [3,4] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [4,5] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Slash(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Slash"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = -20
+        self.parry_mod = 20 #Modifier to OPPONENT'S parry chance
+        self.stamina = 6
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 1
+        self.damage_type = 's'
+        self.base_ap = 10
+        self.hand = True
+        self.length = weapon.main_length #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Slash_2H(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Two-Handed Slash"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = -10
+        self.parry_mod = 10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 8
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 2
+        self.damage_type = 's'
+        self.base_ap = 15
+        self.hand = True
+        self.length = weapon.main_length #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Stab(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Stab"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = -10
+        self.parry_mod = -10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 3
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 1
+        self.damage_type = 'p'
+        self.base_ap = 5
+        self.hand = True
+        self.length = weapon.main_length #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [0] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Pommel_Strike(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Pommel Strike"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = 0
+        self.parry_mod = -10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 3
+        self.force_scalar = .5 #Used to adjust force/damage for the attack
+        self.striker = 'accent'
+        self.hands = 1
+        self.damage_type = 'b'
+        self.base_ap = 0
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [0,8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [0,8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
 
 class Unarmed(Weapon):
 
@@ -334,10 +728,10 @@ class Unarmed(Weapon):
         Weapon.__init__(self)
         self.shafted = False #Used to determine if wpn has a shaft
         self.allowed_main_materials = [m_tissue] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
-        self.main_material = m_tissue #Damage component (blade, head, etc) material
-        self.shaft_material = m_tissue
-        self.grip_material = m_tissue
-        self.accent_material = m_tissue
+        self.main_material = m_bone #Damage component (blade, head, etc) material
+        self.shaft_material = m_bone
+        self.grip_material = m_bone
+        self.accent_material = m_bone
         self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
         self.s_striker = 'main'
         self.p_striker = 'main'
@@ -347,12 +741,12 @@ class Unarmed(Weapon):
         self.base_name = 'Unarmed'
         self.skill = 'brawling' #This is the default skill used for the weapon. String
         self.length = 3
-        self.avg_main_width = 4 #1.25 average longsword
-        self.main_width = 4 #Absolute width at widest point
+        self.avg_main_width = 2 #1.25 average longsword
+        self.main_width = 2 #Absolute width at widest point
         self.avg_main_depth = 2 #.14 is average for a sword blade
         self.main_depth = 2 #Absolute depth at deepest point
         self.main_shape = 'flat' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
-        self.accent_cuin = 5 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.accent_cuin = 4 #Cubic inches of accent material, such as the crossguard and pommel on a sword
         self.main_com = .5 #Center of mass for the main weapon component
         self.main_loc = 0 #Location along the total length for the main weapon component
         self.grip_loc = 0 #location along the total length for the grip
@@ -370,40 +764,8 @@ class Unarmed(Weapon):
         self.set_dynamic_attributes()
 
         #Attacks below
-        self.jab = Attack("Jab/Cross", skill = ['brawling', 'martial_arts', 'boxing'], attack_mod = 0, parry_mod = 0, stamina = 1, force_scalar = .5, base_ap = 10, restricted_locs = [0], allowed_angles_l = [8], allowed_angles_r = [8], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.haymaker = Attack("Haymaker", skill = ['brawling', 'boxing'], attack_mod = -20, parry_mod = +20, stamina = 3, force_scalar = .7, base_ap = 25, restricted_locs = [27,28], allowed_angles_r = [2,3,4], allowed_angles_l = [5,6,7], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.hook = Attack("Hook", skill = ['martial_arts', 'boxing'], attack_mod = -10, parry_mod = +10, stamina = 2, force_scalar = .6, base_ap = 20, restricted_locs = [27,28], allowed_angles_r =[2,3,4], allowed_angles_l =[5,6,7], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.uppercut = Attack("Uppercut", skill = ['brawling', 'martial_arts', 'boxing'], attack_mod = -20, parry_mod = 0, stamina = 2, force_scalar = .6, base_ap = 20, restricted_locs = [2,3,4,7,8,11,12,15,16,19,20,21,22,23,24,25,26,27,28], allowed_angles_r =[3,4], allowed_angles_l =[5,4], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.hammerfist = Attack("Hammer Fist", skill = ['brawling', 'martial_arts', 'boxing'], attack_mod = 0, parry_mod = -20, stamina = 1, force_scalar = .4, base_ap = 10, restricted_locs = [2,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28], allowed_angles_r =[7,0,1], allowed_angles_l =[7,0,1], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.elbow = Attack("Elbow Strike", skill = ['brawling', 'martial_arts'], attack_mod = -20, parry_mod = -20, stamina = 1, force_scalar = .6, base_ap = 10, restricted_locs = [], allowed_angles_r =[0,1,2,3], allowed_angles_l =[0,7,6,5], striker = 'accent',
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.frontkick = Attack("Front Kick", skill = ['brawling', 'martial_arts'], attack_mod = -10, parry_mod = +10, stamina = 2, force_scalar = .6, base_ap = 15, restricted_locs = [0,27,28], allowed_angles_r =[8], allowed_angles_l =[8], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.roundhousekick = Attack("Roundhouse Kick", skill = ['brawling', 'martial_arts'], attack_mod = +10, parry_mod = +20, stamina = 5, force_scalar = .8, base_ap = 30, restricted_locs = [0,27,28], allowed_angles_r =[2,3], allowed_angles_l =[5,6], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.sidekick = Attack("Side Kick", skill = ['brawling', 'martial_arts'], attack_mod = -20, parry_mod = +10, stamina = 3, force_scalar = .7, base_ap = 20, restricted_locs = [0,27,28], allowed_angles_r =[8], allowed_angles_l =[8], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.stomp = Attack("Stomp", skill = ['brawling', 'martial_arts'], attack_mod = +20, parry_mod = 0, stamina = 1, force_scalar = .4, base_ap = 10, restricted_locs = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26], allowed_angles_r =[0], allowed_angles_l =[0], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.knee = Attack("Knee Strike", skill = ['brawling', 'martial_arts'], attack_mod = -30, parry_mod = -10, stamina = 1, force_scalar = .4, base_ap = 15, restricted_locs = [0,2,27,28], allowed_angles_r =[3,4], allowed_angles_l =[4,5], striker = 'accent',
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.base_attacks = [self.jab, self.haymaker, self.hook, self.uppercut, self.hammerfist, self.elbow, self.frontkick, self.roundhousekick, self.sidekick, self.stomp, self.knee]
+        
+        self.base_attacks = [Jab,Hammerfist,Haymaker,Hook,Uppercut,Elbow_Strike,Front_Kick,Roundhouse_Kick,Side_Kick,Knee_Strike,Stomp]
         self.attacks = []
         #Guards below
         #self, name, loc_hit_mods, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
@@ -484,21 +846,8 @@ class De_Medium_Sword(Weapon):
         self.set_dynamic_attributes()
 
         #Attacks below
-        #self, name, attack_mod, parry_mod, stamina, hands, damage_type, base_ap, 
-        #hand = True, length = 0, side_restrict = True, restricted_locs = [], allowed_angles_r = [], allowed_angles_l = []
-        self.slash = Attack("Slash", skill = [self.skill], attack_mod = -20, parry_mod = 20, stamina = 6, force_scalar = 1, hands = 1, damage_type = 's', length = self.main_length, side_restrict = False, restricted_locs = [], allowed_angles_r = [0,1,2,3,4,5,6,7], allowed_angles_l = [0,1,2,3,4,5,6,7], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.slash_2h = Attack("2H Slash", skill = [self.skill], attack_mod = -10, parry_mod = 10, stamina = 8, force_scalar = 1.2, hands = 2, damage_type = 's', base_ap = 10, length = self.main_length, side_restrict = False, restricted_locs = [], allowed_angles_r = [0,1,2,3,4,5,6,7], allowed_angles_l = [0,1,2,3,4,5,6,7], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.stab = Attack("Stab", skill = [self.skill], attack_mod = -10, parry_mod = -10, stamina = 3, force_scalar = 1, hands = 1, damage_type = 'p', length = self.main_length, side_restrict = False, restricted_locs = [0], allowed_angles_r = [8], allowed_angles_l = [8], 
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.pommel = Attack("Pommel Strike", skill = [self.skill], attack_mod = 0, parry_mod = -10, stamina = 3, force_scalar = .3, hands = 1, damage_type = 'b', base_ap = -10, restricted_locs =  [], allowed_angles_r = [0,8], allowed_angles_l = [0,8], striker = 'accent',
-                            main_shape = self.main_shape, main_length  = self.main_length, main_depth = self.main_depth, avg_main_width = self.avg_main_width, main_width = self.main_width, main_material = self.main_material, 
-                            shaft_material = self.shaft_material, shaft_length = self.shaft_length, accent_material = self.accent_material, weight = self.weight, axis_vs_com = self.axis_vs_com, com_perc = self.com_perc, main_num = self.main_num, solidness = self.solidness, sharpness = self.sharpness, pointedness = self.pointedness)
-        self.base_attacks = [self.slash, self.stab, self.slash_2h, self.pommel]
+
+        self.base_attacks = [Slash, Slash_2H, Stab, Pommel_Strike]
         self.attacks = []
         #Guards below
         #self, name, loc_hit_mods, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
