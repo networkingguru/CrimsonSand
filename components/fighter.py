@@ -54,6 +54,8 @@ class Fighter:
         #Attributes
         self.male = True
         self.dom_hand = 'R' #'R', 'L', or 'A'
+        self.attr_dict = dict()
+        self.parent_attr_dict = dict()
         self.attributes = attributes
         self.max_attributes = deepcopy(self.attributes)
         #log, mem, wis, comp, comm, cre, men, will, ss, pwr, man, ped, bal, swift, flex, sta, derm, 
@@ -482,6 +484,31 @@ class Fighter:
         self.guard_hit_mod = guard.hit_mod
         self.loc_hit_mod = guard.loc_hit_mods
 
+    def get_attribute(self, attr, value = 'val') -> int:
+        a = self.attr_dict.get(attr)
+        result = getattr(a, value)
+        return result
 
-
-
+class Attribute():
+    def __init__(self, name, abr, max_val, **kwargs):
+        self.name = name
+        self.abr = abr
+        self.max_val = max_val
+        self.val = self.max_val
+        self.parent_attr = None
+        
+        self.__dict__.update(kwargs)
+        self.set_parent()
+    def set_parent(self):
+        if self.abr in ['log', 'mem', 'wis', 'comp', 'comm', 'cre', 'men', 'will']:
+            self.parent_attr = 'int'
+        elif self.abr in ['ss','pwr']:
+            self.parent_attr = 'str'
+        elif self.abr in ['man','ped','bal','swift','flex']:
+            self.parent_attr = 'agi'
+        elif self.abr in ['sta','derm','bone','immune','shock','toxic']:
+            self.parent_attr = 'con'
+        elif self.abr in ['sit','hear','ts','touch']:
+            self.parent_attr = 'sens'
+        else:
+            self.parent_attr = 'appear'

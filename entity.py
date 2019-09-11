@@ -1,7 +1,8 @@
 import math
 import time
+from statistics import mean
 from copy import deepcopy, copy
-from components.fighter import Fighter
+from components.fighter import Fighter, Attribute
 from components import weapon
 from utilities import clamp, inch_conv, itersubclasses
 
@@ -38,6 +39,26 @@ class Entity:
         attributes, facing = fighter_attrs[0], fighter_attrs[1]
         if len(fighter_attrs) > 2: ai = fighter_attrs[2]
         self.fighter = Fighter(attributes, facing, ai)
+        self.fighter.attr_dict = self.add_attributes(attributes)
+        #Calc and add parent attributes
+        parent_list = ['int','str','agi','con','sens','appear']
+        parent_name_list = ['Intellect', 'Strength', 'Agility', 'Constitution', 'Senses', 'Appearance']
+        for p in parent_list:
+            children = []
+            idx = parent_list.index(p)
+            for key in self.fighter.attr_dict:
+                a = self.fighter.attr_dict[key]
+                if a.parent_attr == p:
+                    children.append(a.val)
+            if parent_name_list[idx] == 'Appearance': #Higher fat = lower appearance
+                children[-2] = 100 - children[-2]
+            p_val = int(round(mean(children)))
+            p_attr = Attribute(parent_name_list[idx], p, p_val)
+            self.fighter.parent_attr_dict[p] = p_attr
+        print('Done')
+
+
+
 
     def add_weapon_component(self, wpn, loc) -> None:
         '''Assign attacks to fighter component creating instances from base_attacks and then modifying as necessary'''
@@ -372,6 +393,19 @@ class Entity:
                 self.fighter.reach_oh = self.fighter.reach
                 
         self.fighter.reach_leg = clamp(inch_conv((self.fighter.height*self.fighter.location_ratios[17]) + self.weapons[0].length, 1), 2)
+
+    def add_attributes(self, attr_list) -> dict:
+        attr_dict = dict()
+        name_list = ['Logic', 'Memory', 'Wisdom', 'Comprehension', 'Communication', 'Creativity', 'Mental Celerity', 'Willpower', 'Steady State', 'Power', 'Manual Dexterity', 'Pedal Dexterity', 'Balance', 'Swiftness', 'Flexibility', 'Stamina', 'Dermatology', 'Bone', 'Immune', 'Shock', 'Toxic', 'Sight', 'Hearing', 'Taste/Smell', 'Touch', 'Facial Features', 'Height', 'Body Fat', 'Shapliness']
+        abr_list = ['log','mem','wis','comp','comm','cre','men','will','ss','pwr','man','ped','bal','swift','flex','sta','derm','bone','immune','shock','toxic','sit','hear','ts','touch','fac','ht','fat','shape']
+        idx = 0
+        for a in attr_list:
+            atr = Attribute(name_list[idx], abr_list[idx], a)
+            attr_dict[abr_list[idx]] = atr
+            idx += 1
+        return attr_dict
+
+
 
 
 def create_entity_list(entity_list) -> list:
