@@ -315,7 +315,7 @@ def random_hunt(curr_actor, entities, game_map) -> list or str:
     closest_dist = None
     path = None
     command = {'End Turn':'End Turn'}
-    fov_area = fov_calc(int(round(curr_actor.fighter.sit/3)), curr_actor.x, curr_actor.y, 100, 0)
+    fov_area = fov_calc(int(round(curr_actor.fighter.get_attribute('sit')/3)), curr_actor.x, curr_actor.y, 100, 0)
     fov_explored = True
     for (x,y) in fov_area:
         if not (x,y) in curr_actor.fighter.fov_explored: 

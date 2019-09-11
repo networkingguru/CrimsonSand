@@ -5,7 +5,7 @@ from enums import FighterStance
 from chargen_functions import height_curve
 
 class Fighter:
-    def __init__(self, attributes, facing, ai = None, l_blocker = None, r_blocker = None):
+    def __init__(self, facing, ai = None, l_blocker = None, r_blocker = None):
         #Transitory combat variables
         self.end_turn = False
         if ai is not None:
@@ -56,185 +56,58 @@ class Fighter:
         self.dom_hand = 'R' #'R', 'L', or 'A'
         self.attr_dict = dict()
         self.parent_attr_dict = dict()
-        self.attributes = attributes
-        self.max_attributes = deepcopy(self.attributes)
-        #log, mem, wis, comp, comm, cre, men, will, ss, pwr, man, ped, bal, swift, flex, sta, derm, 
-        #bone, immune, shock, toxic, sit, hear, ts, touch, fac, ht, fat, shape
-        self.log = attributes[0]
-        self.mem = attributes[1]
-        self.wis = attributes[2]
-        self.comp = attributes[3]
-        self.comm = attributes[4]
-        self.cre = attributes[5]
-        self.men = attributes[6]
-        self.will = attributes[7]
-        self.ss = attributes[8]
-        self.pwr = attributes[9]
-        self.man = attributes[10]
-        self.ped = attributes[11]
-        self.bal = attributes[12]
-        self.swift = attributes[13]
-        self.flex = attributes[14]
-        self.sta = attributes[15]
-        self.derm = attributes[16]
-        self.bone = attributes[17]
-        self.immune = attributes[18]
-        self.shock = attributes[19]
-        self.toxic = attributes[20]
-        self.sit = attributes[21]
-        self.hear = attributes[22]
-        self.ts = attributes[23]
-        self.touch = attributes[24]
-        self.fac = attributes[25]
-        self.ht = attributes[26]
-        self.fat = attributes[27]
-        self.shape = attributes[28]
-        #Max Attributes
-        self.max_log = self.max_attributes[0]
-        self.max_mem = self.max_attributes[1]
-        self.max_wis = self.max_attributes[2]
-        self.max_comp = self.max_attributes[3]
-        self.max_comm = self.max_attributes[4]
-        self.max_cre = self.max_attributes[5]
-        self.max_men = self.max_attributes[6]
-        self.max_will = self.max_attributes[7]
-        self.max_ss = self.max_attributes[8]
-        self.max_pwr = self.max_attributes[9]
-        self.max_man = self.max_attributes[10]
-        self.max_ped = self.max_attributes[11]
-        self.max_bal = self.max_attributes[12]
-        self.max_swift = self.max_attributes[13]
-        self.max_flex = self.max_attributes[14]
-        self.max_sta = self.max_attributes[15]
-        self.max_derm = self.max_attributes[16]
-        self.max_bone = self.max_attributes[17]
-        self.max_immune = self.max_attributes[18]
-        self.max_shock = self.max_attributes[19]
-        self.max_toxic = self.max_attributes[20]
-        self.max_sit = self.max_attributes[21]
-        self.max_hear = self.max_attributes[22]
-        self.max_ts = self.max_attributes[23]
-        self.max_touch = self.max_attributes[24]
-        self.max_fac = self.max_attributes[25]
-        self.max_ht = self.max_attributes[26]
-        self.max_fat = self.max_attributes[27]
-        self.max_shape = self.max_attributes[28]
-        #Super-Attributes
-        self.int = int(round((mean([self.log, self.mem, self.comm, self.comp, self.cre, self.men, self.will, self.wis])),0))
-        self.str = int(round((mean([self.ss, self.pwr])),0))
-        self.agi = int(round((mean([self.man, self.ped, self.bal, self.swift, self.flex])),0))
-        self.con = int(round((mean([self.sta, self.derm, self.bone, self.immune, self.shock, self.toxic])),0))
-        self.sens = int(round((mean([self.sit, self.hear, self.ts, self.touch])),0))
-        self.appear = int(round((mean([self.fac, self.ht, self.shape, (100-self.fat)])),0))
+        
         #Skills
-        self.brawling = int(round(self.agi*0.4 + self.str*0.4 + ((self.men+self.wis)/2)*0.2))
-        self.wrestling = int(round(self.agi*0.5 + self.str*0.25 + ((self.men+self.wis)/2)*0.25))
-        self.martial_arts = int(round(self.men*0.4 + ((self.mem+self.wis)/2)*0.4 + self.agi*0.2))
-        self.boxing = int(round(self.agi*0.5 + ((self.mem+self.wis)/2)*0.2 + self.men*0.3))
-        self.long_sword = int(round(self.agi*0.6 + ((self.men + self.pwr)/2)*0.3 + self.wis*0.1))
-        self.dodge = int(round(self.swift*.6 + ((self.ped + self.bal)/2)*.2 + ((self.men + self.wis)/2)*.2))
-        self.deflect = int(round(((self.men + self.wis)/2)*.5 + self.swift*.3 + self.agi*.2))
+        self.brawling = 0
+        self.wrestling = 0
+        self.martial_arts = 0
+        self.boxing = 0
+        self.long_sword = 0
+        self.dodge = 0
+        self.deflect = 0
         #Derived Attributes
-        self.height = int(round((height_curve(self.ht)))) #Height in inches
-        self.er = self.height/2 #Eff reach, 1/2 ht in inches
+        self.height =0 #Height in inches
+        self.er = 0 #Eff reach, 1/2 ht in inches
         #Local var to handle secondary calc for weight
-        wt_mod = ((((self.bone-100)/20)+((self.fat-100)/4)+((self.str-100)/8))/100)+1
-        self.weight = int(round((self.ht*1.6)*wt_mod))
-        self.stamina = int(round((self.sta * 2) + self.shock + self.ss))
-        self.max_stamina = deepcopy(self.stamina)
+        wt_mod = 0
+        self.weight = 0
+        self.stamina = 0
+        self.max_stamina = 0
         #Local var to handle secondary calc for stamr
-        sr_mod = (self.stamina + ((self.immune / 5) + (self.toxic/20) + (self.shock/10)))/100
-        self.stamr = int(round((self.stamina/100)*sr_mod))
-        self.max_stamr = deepcopy(self.stamr)
-        self.vitae = int(round(self.weight/0.03))
-        self.max_vitae = deepcopy(self.vitae)
-        self.vitr = int((((self.immune/100)*self.weight)/60))
-        self.max_mv = int(round(((self.ht/2) * 7.5) * (((self.ht * 2.5) / self.weight) * (self.swift / 100) * (self.flex / 100))))
+        sr_mod = 0
+        self.stamr = 0
+        self.max_stamr = 0
+        self.vitae = 0
+        self.max_vitae = 0
+        self.vitr = 0
+        self.max_mv = 0
         self.mv = self.max_mv
-        self.max_ap = self.swift
+        self.max_ap = 0
         self.ap = self.max_ap
-        self.walk_ap = round(self.ap / inch_conv(self.mv, 1))
-        self.jog_ap = round(self.ap / inch_conv(self.mv*1.5, 1))
-        self.run_ap = round(self.ap / inch_conv(self.mv*2, 1))
-        self.init = (self.men + self.swift)/4 + (self.sens + self.brawling)/4
-        self.max_init = deepcopy(self.init)
-        self.clarity = self.will #For dizziness/unconsciousness
-        self.clar_recovery = self.will/4
-        self.stability_mods = self.stance_stability + self.atk_instability + self.paralysis_instability + (100 - self.clarity)
+        self.walk_ap = 0
+        self.jog_ap = 0
+        self.run_ap = 0
+        self.init = 0
+        self.max_init = 0
+        self.clarity = 0 #For dizziness/unconsciousness
+        self.clar_recovery = 0
+        self.stability_mods = 0
         self.stability = self.stability_mods
         
-        #Effective Power
-        self.ep = int(round(self.stance_power * (((self.pwr * 2) + self.weight + (self.bone * 0.1)) * ((self.brawling + (self.bal/2))/200))))
         #Reach
         self.reach = None #Main hand reach. All reach vars set by entity.set_reach
         self.reach_oh = None #Off hand reach
         self.reach_leg = None #Leg reach
         #Base stamina cost for actions; clamped so all actions require at least some stamina over regin
-        self.base_stam_cost = clamp(int(round(((self.fat/self.str)*(self.weight/100)*10))),self.max_stamr+1) 
-
-
+        self.base_stam_cost = 0
 
         #Hit Locations
-        self.locations = []
-        self.locations.append([(self.derm + self.fat/2),(self.ss/6 + self.pwr/3),(self.bone * 10)])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/5 + self.pwr/2),(self.bone * 8)])
-        self.locations.append([(self.derm + self.fat/2),(self.ss/3 + self.pwr),self.bone*6])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/2 + self.pwr*2),self.bone*6])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/2 + self.pwr*2),self.bone*6])
-        self.locations.append([(self.derm + self.fat/2),(self.ss/2 + self.pwr*2),self.bone*6])
-        self.locations.append([(self.derm + self.fat/2),(self.ss/2 + self.pwr*2),self.bone*6])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/3 + self.pwr),(self.bone*4)])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/3 + self.pwr),(self.bone*4)])
-        self.locations.append([(self.derm + self.fat/2),(self.ss/5 + self.pwr/2),(self.bone*4)])
-        self.locations.append([(self.derm + self.fat/2),(self.ss/5 + self.pwr/2),(self.bone*4)])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/10 + self.pwr/4),(self.bone*4)])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/10 + self.pwr/4),(self.bone*4)])
-        self.locations.append([(self.derm/4 + self.fat*2),(100 + self.ss/2 + self.pwr),self.bone*6])
-        self.locations.append([(self.derm/4 + self.fat*2),(100 + self.ss/2 + self.pwr),self.bone*6])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/5 + self.pwr/2),self.bone*2])
-        self.locations.append([(self.derm/2 + self.fat/4),(self.ss/5 + self.pwr/2),self.bone*2])
-        self.locations.append([(self.derm/4 + self.fat*2),(self.ss/2 + self.pwr*2),self.bone*8])
-        self.locations.append([(self.derm/4 + self.fat*2),(self.ss/2 + self.pwr*2),self.bone*8])
-        self.locations.append([(self.derm),(self.ss/10 + self.pwr/4),self.bone])
-        self.locations.append([(self.derm),(self.ss/10 + self.pwr/4),self.bone])
-        self.locations.append([(self.derm + self.fat),(self.ss + self.pwr*4),self.bone*10])
-        self.locations.append([(self.derm + self.fat),(self.ss + self.pwr*4),self.bone*10])
-        self.locations.append([(self.derm/2 + self.fat/2),(self.ss/5 + self.pwr/2),self.bone*6])
-        self.locations.append([(self.derm/2 + self.fat/2),(self.ss/5 + self.pwr/2),self.bone*6])
-        self.locations.append([(self.derm/2 + self.fat/2),(self.ss/3 + self.pwr),self.bone*8])
-        self.locations.append([(self.derm/2 + self.fat/2),(self.ss/3 + self.pwr),self.bone*8])
-        self.locations.append([(self.derm*1.5),(self.ss/6 + self.pwr/3),(self.bone * 2)])
-        self.locations.append([(self.derm*1.5),(self.ss/6 + self.pwr/3),(self.bone * 2)])
-        #Code to fill locations list
-        for location in self.locations:
-            i = 0
-            for amount in location:
-                amount = int(round(amount))
-                location[i] = amount
-                i += 1
-            
-
-        self.max_locations = deepcopy(self.locations)
-
-
-        for l in self.get_locations():
-            #Fill dodge and parry mod dicts with 0's
-            self.loc_dodge_mod[l] = 0
-            self.loc_parry_mod[l] = 0
-
+        self.locations = []         
+        self.max_locations = []
+        
         self.location_ht = []
         self.location_ratios = (1, .9, .87, .82, .82, .8, .8, .7, .7, .72, .72, .63, .63, .6, .6, .55, .55, .53, .53, .49, .49, .4, .4, .29, .29, .2, .2, .04, .04) #Used for location ht calc
-        #Fill location heights
-        i = 0
-        for x in self.locations:
-            if not any(x):
-                i += 1
-                continue
-            else:
-                self.location_ht.append(self.height * self.location_ratios[i])
-                i += 1
-
-        
+               
         #Injury list
         self.injuries = []
         #Static injury effects
@@ -266,15 +139,8 @@ class Fighter:
         #Persistent derived combat attrubites
         self.l_blocker = l_blocker
         self.r_blocker = r_blocker
-        #If no blocker defined, use bone in forearms
-        if self.l_blocker == None:
-            self.l_blocker = self.locations[16][2]
-        if self.r_blocker == None:
-            self.r_blocker = self.locations[15][2]
-        #Best skills
-        self.best_combat_skill = max([self.brawling, self.long_sword, self.martial_arts, self.wrestling]) 
-        self.best_unarmed_skill = max([self.brawling, self.martial_arts, self.wrestling]) 
-        self.best_grappling_skill = max([self.martial_arts, self.wrestling]) 
+
+
 
     def update_aoc_facing(self) -> None:
         #Hack to handle incongruity between aoc facing and fov facing
@@ -289,14 +155,23 @@ class Fighter:
         if self.locations[location_index][layer_index] > self.max_locations[location_index][layer_index]:
             self.locations[location_index][layer_index] = self.max_locations[location_index][layer_index]
 
-    def mod_attribute(self, attribute, amount) -> None:
+    def mod_attribute(self, attribute, amount, max_val = False) -> None:
+        
         #Setter for attributes
-        value = int(getattr(self, attribute))
-        if value + amount <= 0: setattr(self, attribute, 0)
-        else: 
-            value += int(amount)
+        value = self.get_attribute(attribute)
+        if value + amount <= 0: value = 0
+        else: value += int(amount)
+        
+        #Normal Data types
+        if hasattr(self, attribute):
             setattr(self, attribute, value)
 
+        #Primary attributes (Object in a dict data type)
+        else:
+            if max_val: prop = 'max_val'
+            else: prop = 'val'
+
+            self.set_attribute(attribute, prop, value)
     
     def name_location(self, location) -> int or str:
         #Method to convert loc names to numbers and vice versa
@@ -485,9 +360,135 @@ class Fighter:
         self.loc_hit_mod = guard.loc_hit_mods
 
     def get_attribute(self, attr, value = 'val') -> int:
-        a = self.attr_dict.get(attr)
-        result = getattr(a, value)
+        if hasattr(self, attr):
+            a = self
+            attribute = attr
+        elif attr in ['int','str','agi','con','sens','appear']:
+            a = self.parent_attr_dict.get(attr)
+            attribute = value
+        else:
+            a = self.attr_dict.get(attr)
+            attribute = value
+        result = getattr(a, attribute)
         return result
+
+    def set_attribute(self, attr, prop = 'val', value = 0) -> None:
+        if attr in ['int','str','agi','con','sens','appear']:
+            a = self.parent_attr_dict.get(attr)
+        else:
+            a = self.attr_dict.get(attr)
+        setattr(a, prop, value)
+
+    def set_dynamic_attributes(self):
+        #Skills
+        self.brawling = int(round(self.get_attribute('agi')*0.4 + self.get_attribute('str')*0.4 + ((self.get_attribute('men')+self.get_attribute('wis'))/2)*0.2))
+        self.wrestling = int(round(self.get_attribute('agi')*0.5 + self.get_attribute('str')*0.25 + ((self.get_attribute('men')+self.get_attribute('wis'))/2)*0.25))
+        self.martial_arts = int(round(self.get_attribute('men')*0.4 + ((self.get_attribute('mem')+self.get_attribute('wis'))/2)*0.4 + self.get_attribute('agi')*0.2))
+        self.boxing = int(round(self.get_attribute('agi')*0.5 + ((self.get_attribute('mem')+self.get_attribute('wis'))/2)*0.2 + self.get_attribute('men')*0.3))
+        self.long_sword = int(round(self.get_attribute('agi')*0.6 + ((self.get_attribute('men') + self.get_attribute('pwr'))/2)*0.3 + self.get_attribute('wis')*0.1))
+        self.dodge = int(round(self.get_attribute('swift')*.6 + ((self.get_attribute('ped') + self.get_attribute('bal'))/2)*.2 + ((self.get_attribute('men') + self.get_attribute('wis'))/2)*.2))
+        self.deflect = int(round(((self.get_attribute('men') + self.get_attribute('wis'))/2)*.5 + self.get_attribute('swift')*.3 + self.get_attribute('agi')*.2))
+        #Derived Attributes
+        self.height = int(round((height_curve(self.get_attribute('ht'))))) #Height in inches
+        self.er = self.height/2 #Eff reach, 1/2 ht in inches
+        #Local var to handle secondary calc for weight
+        wt_mod = ((((self.get_attribute('bone')-100)/20)+((self.get_attribute('fat')-100)/4)+((self.get_attribute('str')-100)/8))/100)+1
+        self.weight = int(round((self.get_attribute('ht')*1.6)*wt_mod))
+        self.stamina = int(round((self.get_attribute('sta') * 2) + self.get_attribute('shock') + self.get_attribute('ss')))
+        self.max_stamina = deepcopy(self.stamina)
+        #Local var to handle secondary calc for stamr
+        sr_mod = (self.stamina + ((self.get_attribute('immune') / 5) + (self.get_attribute('toxic')/20) + (self.get_attribute('shock')/10)))/100
+        self.stamr = int(round((self.stamina/100)*sr_mod))
+        self.max_stamr = deepcopy(self.stamr)
+        self.vitae = int(round(self.weight/0.03))
+        self.max_vitae = deepcopy(self.vitae)
+        self.vitr = int((((self.get_attribute('immune')/100)*self.weight)/60))
+        self.max_mv = int(round(((self.get_attribute('ht')/2) * 7.5) * (((self.get_attribute('ht') * 2.5) / self.weight) * (self.get_attribute('swift') / 100) * (self.get_attribute('flex') / 100))))
+        self.mv = self.max_mv
+        self.max_ap = self.get_attribute('swift')
+        self.ap = self.max_ap
+        self.walk_ap = round(self.ap / inch_conv(self.mv, 1))
+        self.jog_ap = round(self.ap / inch_conv(self.mv*1.5, 1))
+        self.run_ap = round(self.ap / inch_conv(self.mv*2, 1))
+        self.init = (self.get_attribute('men') + self.get_attribute('swift'))/4 + (self.get_attribute('sens') + self.brawling)/4
+        self.max_init = deepcopy(self.init)
+        self.clarity = self.get_attribute('will') #For dizziness/unconsciousness
+        self.clar_recovery = self.get_attribute('will')/4
+        self.stability_mods = self.stance_stability + self.atk_instability + self.paralysis_instability + (100 - self.clarity)
+        self.stability = self.stability_mods
+
+        #Base stamina cost for actions; clamped so all actions require at least some stamina over regin
+        self.base_stam_cost = clamp(int(round(((self.get_attribute('fat')/self.get_attribute('str'))*(self.weight/100)*10))),self.max_stamr+1) 
+
+        #Hit Locations
+        self.locations = []
+        self.locations.append([(self.get_attribute('derm') + self.get_attribute('fat')/2),(self.get_attribute('ss')/6 + self.get_attribute('pwr')/3),(self.get_attribute('bone') * 10)])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/5 + self.get_attribute('pwr')/2),(self.get_attribute('bone') * 8)])
+        self.locations.append([(self.get_attribute('derm') + self.get_attribute('fat')/2),(self.get_attribute('ss')/3 + self.get_attribute('pwr')),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/2 + self.get_attribute('pwr')*2),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/2 + self.get_attribute('pwr')*2),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm') + self.get_attribute('fat')/2),(self.get_attribute('ss')/2 + self.get_attribute('pwr')*2),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm') + self.get_attribute('fat')/2),(self.get_attribute('ss')/2 + self.get_attribute('pwr')*2),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/3 + self.get_attribute('pwr')),(self.get_attribute('bone')*4)])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/3 + self.get_attribute('pwr')),(self.get_attribute('bone')*4)])
+        self.locations.append([(self.get_attribute('derm') + self.get_attribute('fat')/2),(self.get_attribute('ss')/5 + self.get_attribute('pwr')/2),(self.get_attribute('bone')*4)])
+        self.locations.append([(self.get_attribute('derm') + self.get_attribute('fat')/2),(self.get_attribute('ss')/5 + self.get_attribute('pwr')/2),(self.get_attribute('bone')*4)])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/10 + self.get_attribute('pwr')/4),(self.get_attribute('bone')*4)])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/10 + self.get_attribute('pwr')/4),(self.get_attribute('bone')*4)])
+        self.locations.append([(self.get_attribute('derm')/4 + self.get_attribute('fat')*2),(100 + self.get_attribute('ss')/2 + self.get_attribute('pwr')),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm')/4 + self.get_attribute('fat')*2),(100 + self.get_attribute('ss')/2 + self.get_attribute('pwr')),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/5 + self.get_attribute('pwr')/2),self.get_attribute('bone')*2])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/4),(self.get_attribute('ss')/5 + self.get_attribute('pwr')/2),self.get_attribute('bone')*2])
+        self.locations.append([(self.get_attribute('derm')/4 + self.get_attribute('fat')*2),(self.get_attribute('ss')/2 + self.get_attribute('pwr')*2),self.get_attribute('bone')*8])
+        self.locations.append([(self.get_attribute('derm')/4 + self.get_attribute('fat')*2),(self.get_attribute('ss')/2 + self.get_attribute('pwr')*2),self.get_attribute('bone')*8])
+        self.locations.append([(self.get_attribute('derm')),(self.get_attribute('ss')/10 + self.get_attribute('pwr')/4),self.get_attribute('bone')])
+        self.locations.append([(self.get_attribute('derm')),(self.get_attribute('ss')/10 + self.get_attribute('pwr')/4),self.get_attribute('bone')])
+        self.locations.append([(self.get_attribute('derm') + self.get_attribute('fat')),(self.get_attribute('ss') + self.get_attribute('pwr')*4),self.get_attribute('bone')*10])
+        self.locations.append([(self.get_attribute('derm') + self.get_attribute('fat')),(self.get_attribute('ss') + self.get_attribute('pwr')*4),self.get_attribute('bone')*10])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/2),(self.get_attribute('ss')/5 + self.get_attribute('pwr')/2),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/2),(self.get_attribute('ss')/5 + self.get_attribute('pwr')/2),self.get_attribute('bone')*6])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/2),(self.get_attribute('ss')/3 + self.get_attribute('pwr')),self.get_attribute('bone')*8])
+        self.locations.append([(self.get_attribute('derm')/2 + self.get_attribute('fat')/2),(self.get_attribute('ss')/3 + self.get_attribute('pwr')),self.get_attribute('bone')*8])
+        self.locations.append([(self.get_attribute('derm')*1.5),(self.get_attribute('ss')/6 + self.get_attribute('pwr')/3),(self.get_attribute('bone') * 2)])
+        self.locations.append([(self.get_attribute('derm')*1.5),(self.get_attribute('ss')/6 + self.get_attribute('pwr')/3),(self.get_attribute('bone') * 2)])
+        #Code to fill locations list
+        for location in self.locations:
+            i = 0
+            for amount in location:
+                amount = int(round(amount))
+                location[i] = amount
+                i += 1
+            
+
+        self.max_locations = deepcopy(self.locations)
+
+
+        for l in self.get_locations():
+            #Fill dodge and parry mod dicts with 0's
+            self.loc_dodge_mod[l] = 0
+            self.loc_parry_mod[l] = 0
+
+        #Fill location heights
+        i = 0
+        for x in self.locations:
+            if not any(x):
+                i += 1
+                continue
+            else:
+                self.location_ht.append(self.height * self.location_ratios[i])
+                i += 1
+
+        
+        #If no blocker defined, use bone in forearms
+        if self.l_blocker == None:
+            self.l_blocker = self.locations[16][2]
+        if self.r_blocker == None:
+            self.r_blocker = self.locations[15][2]
+        #Best skills
+        self.best_combat_skill = max([self.brawling, self.long_sword, self.martial_arts, self.wrestling]) 
+        self.best_unarmed_skill = max([self.brawling, self.martial_arts, self.wrestling]) 
+        self.best_grappling_skill = max([self.martial_arts, self.wrestling]) 
+
 
 class Attribute():
     def __init__(self, name, abr, max_val, **kwargs):

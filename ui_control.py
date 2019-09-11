@@ -13,12 +13,12 @@ from utilities import inch_conv
 def gen_status_panel(player) -> list:
     entries = []
     
-    entries.append(str('INTELLECT: \t' + str(round(player.fighter.int))))
-    entries.append(str('STRENGTH: \t' + str(round(player.fighter.str))))
-    entries.append(str('AGILITY: \t' + str(round(player.fighter.agi))))
-    entries.append(str('CONSTITUTION: \t' + str(round(player.fighter.con))))
-    entries.append(str('SENSES: \t' + str(round(player.fighter.sens))))
-    entries.append(str('APPEARANCE: \t' + str(round(player.fighter.appear))))
+    entries.append(str('INTELLECT: \t' + str(round(player.fighter.get_attribute('int')))))
+    entries.append(str('STRENGTH: \t' + str(round(player.fighter.get_attribute('str')))))
+    entries.append(str('AGILITY: \t' + str(round(player.fighter.get_attribute('agi')))))
+    entries.append(str('CONSTITUTION: \t' + str(round(player.fighter.get_attribute('con')))))
+    entries.append(str('SENSES: \t' + str(round(player.fighter.get_attribute('sens')))))
+    entries.append(str('APPEARANCE: \t' + str(round(player.fighter.get_attribute('appear')))))
     entries.append(str('Height: \t' + inch_conv(player.fighter.height)))
     entries.append(str('Weight: \t' + str(round(player.fighter.weight)) + ' lbs'))
     entries.append(str('Reach: \t\t' + str(round(player.fighter.er)) + '"'))
@@ -29,7 +29,6 @@ def gen_status_panel(player) -> list:
     entries.append(str('Move (walk): \t' + str(inch_conv(player.fighter.mv, 1)) + ' sq/rd'))
     entries.append(str('Move (jog): \t' + str(inch_conv(player.fighter.mv*1.5, 1)) + ' sq/rd'))
     entries.append(str('Move (run): \t' + str(inch_conv(player.fighter.mv*2, 1)) + ' sq/rd'))
-    entries.append(str('Eff. Power: \t' + str(round(player.fighter.ep)) + ' PSI'))
     entries.append(str('Brawling: \t' + str(player.fighter.brawling) + '%'))
     entries.append(str('Dodge: \t\t' + str(player.fighter.dodge) + '%'))    
     entries.append(str('Deflect: \t' + str(player.fighter.deflect) + '%'))

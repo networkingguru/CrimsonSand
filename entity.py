@@ -38,7 +38,7 @@ class Entity:
         ai = None
         attributes, facing = fighter_attrs[0], fighter_attrs[1]
         if len(fighter_attrs) > 2: ai = fighter_attrs[2]
-        self.fighter = Fighter(attributes, facing, ai)
+        self.fighter = Fighter(facing, ai)
         self.fighter.attr_dict = self.add_attributes(attributes)
         #Calc and add parent attributes
         parent_list = ['int','str','agi','con','sens','appear']
@@ -55,7 +55,8 @@ class Entity:
             p_val = int(round(mean(children)))
             p_attr = Attribute(parent_name_list[idx], p, p_val)
             self.fighter.parent_attr_dict[p] = p_attr
-        print('Done')
+
+        self.fighter.set_dynamic_attributes()
 
 
 
@@ -248,9 +249,9 @@ class Entity:
             distance = arm_length
         #Determine max velocity based on pwr stat and mass distribution of attack
         if attack.hands == 2:
-            max_vel = math.sqrt(self.fighter.pwr)*(4.5-(attack.added_mass/2))
+            max_vel = math.sqrt(self.fighter.get_attribute('pwr'))*(4.5-(attack.added_mass/2))
         else:
-            max_vel = math.sqrt(self.fighter.pwr)*(3-(attack.added_mass/2))
+            max_vel = math.sqrt(self.fighter.get_attribute('pwr'))*(3-(attack.added_mass/2))
         #Determine how long attack will take
         if angle_id == 0:
             time = (arm_length/12)/max_vel
@@ -291,7 +292,7 @@ class Entity:
         weight_factor = (self.fighter.weight/100)**.4
         
         final_ap = attack.base_ap * (((100/skill_rating)**.2 + weight_factor))
-        if final_ap > self.fighter.swift: final_ap = self.fighter.swift
+        if final_ap > self.fighter.get_attribute('swift'): final_ap = self.fighter.get_attribute('swift')
         parry_ap = int(weapon.parry_ap * (((100/skill_rating)**.2 + weight_factor)))  
 
         if self.guard is not None:

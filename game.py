@@ -81,7 +81,7 @@ if __name__ == "__main__":
     for entity in entities:
         entity.fighter.update_aoc_facing()
         entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
-        fov_radius = int(round(entity.fighter.sit/5))
+        fov_radius = int(round(entity.fighter.get_attribute('sit')/5))
         game_map.compute_fov(entity.x, entity.y, fov_radius, True)
         modify_fov(entity, game_map)
 

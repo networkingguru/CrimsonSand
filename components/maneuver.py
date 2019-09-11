@@ -208,7 +208,7 @@ class Push(Maneuver):
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
         self.immobilized_locs = set()
         self.agg_immob_locs = set() #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
-        self.stability_mod = ((10-self.loc_idx)*-10) - (aggressor.fighter.pwr - 100)
+        self.stability_mod = ((10-self.loc_idx)*-10) - (aggressor.fighter.get_attribute('pwr') - 100)
         self.pain_check = False 
         self.balance_check = True
         self.clarity_reduction = None 
@@ -313,7 +313,7 @@ class Bearhug(Maneuver):
         self.continuous = True
         self.stamina = 6
         
-        damage_scalar = .2 * (aggressor.fighter.ss/target.fighter.ss)
+        damage_scalar = .2 * (aggressor.fighter.get_attribute('ss')/target.fighter.get_attribute('ss'))
 
         self.b_dam = clamp(damage_scalar, 0, 1)
         self.s_dam = 0
@@ -351,7 +351,7 @@ class Bearhug(Maneuver):
         self.state = None #EntityState
         self.escape_uses_skill = False
         self.escape_skill = None #Skill used to escape/reverse.
-        self.escape_attr = target.fighter.pwr #Attr used to escape (i.e. Bear hug) 
+        self.escape_attr = target.fighter.get_attribute('pwr') #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
         self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
@@ -435,7 +435,7 @@ class Limb_Capture(Maneuver):
         self.aggressor = aggressor #Used to indicate person controlling hold
         
         self.loc_idx = target.fighter.name_location(loc_name)
-        pwr_mod = aggressor.fighter.pwr - target.fighter.pwr
+        pwr_mod = aggressor.fighter.get_attribute('pwr') - target.fighter.get_attribute('pwr')
         self.immobilized_locs = set()
         self.agg_immob_locs = set()
         if self.loc_idx in global_vars.leg_locs:
@@ -554,7 +554,7 @@ class Wind_Choke(Maneuver):
         self.clarity_reduction = None 
         self.temp_phys_mod = None
         self.paralyzed_locs = None #set
-        self.suffocation = (target.fighter.sta/10)*6 #In rounds till death
+        self.suffocation = (target.fighter.get_attribute('sta')/10)*6 #In rounds till death
         self.stam_drain = 55 #Amount per round
         self.stam_regin = 0 #Scalar
         self.atk_mod_r = None
@@ -611,7 +611,7 @@ class Strangle_Hold(Maneuver):
         self.clarity_reduction = None 
         self.temp_phys_mod = None
         self.paralyzed_locs = None #set
-        self.suffocation = (target.fighter.sta/10)*15 #In rounds till death
+        self.suffocation = (target.fighter.get_attribute('sta')/10)*15 #In rounds till death
         self.stam_drain = 30 #Amount per round
         self.stam_regin = None #Scalar
         self.atk_mod_r = None
@@ -691,7 +691,7 @@ class Compression_Lock(Maneuver):
         self.pain_check = True 
         self.balance_check = False
         self.clarity_reduction = None 
-        self.temp_phys_mod = (aggressor.fighter.best_grappling_skill - target.fighter.will)*-1
+        self.temp_phys_mod = (aggressor.fighter.best_grappling_skill - target.fighter.get_attribute('will'))*-1
         self.paralyzed_locs = None #set
         self.suffocation = None #In rounds till death
         self.stam_drain = None #Amount per round
@@ -750,7 +750,7 @@ class Blood_Choke(Maneuver):
         self.clarity_reduction = None 
         self.temp_phys_mod = None
         self.paralyzed_locs = None #set
-        self.suffocation = (target.fighter.sta/10)*5 #In rounds till death
+        self.suffocation = (target.fighter.get_attribute('sta')/10)*5 #In rounds till death
         self.stam_drain = 55 #Amount per round
         self.stam_regin = 0 #Scalar
         self.atk_mod_r = None
@@ -830,7 +830,7 @@ class Joint_Lock(Maneuver):
         self.pain_check = True 
         self.balance_check = False
         self.clarity_reduction = None 
-        self.temp_phys_mod = (aggressor.fighter.best_grappling_skill - target.fighter.will)*-1
+        self.temp_phys_mod = (aggressor.fighter.best_grappling_skill - target.fighter.get_attribute('will'))*-1
         self.paralyzed_locs = None #set
         self.suffocation = None #In rounds till death
         self.stam_drain = None #Amount per round
@@ -941,7 +941,7 @@ class Reap(Maneuver):
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
         self.immobilized_locs = set()
         self.agg_immob_locs = set() #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
-        self.stability_mod = -60 - (aggressor.fighter.pwr/5)
+        self.stability_mod = -60 - (aggressor.fighter.get_attribute('pwr')/5)
         self.pain_check = False 
         self.balance_check = True
         self.clarity_reduction = None 
@@ -978,7 +978,7 @@ class Sacrifice_Throw(Maneuver):
         self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if target.fighter.male else 'her') + ', landing on top of '  + ('him.' if target.fighter.male else 'her.')
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
-        self.mnvr_mod = aggressor.fighter.pwr - (target.fighter.weight/2) #Mod to initial roll
+        self.mnvr_mod = aggressor.fighter.get_attribute('pwr') - (target.fighter.weight/2) #Mod to initial roll
         self.counter_mod = -20 #Mod to counter
         self.dodge_mod = 0
         self.escape_mod = 0 
@@ -1024,7 +1024,7 @@ class Sacrifice_Throw(Maneuver):
         self.can_move = True #Used to block movement
         self.inv_move = True #Used to trigger an involuntary move (such as in a push or throw)
         self.inv_move_back = False #If inv moved, is defender thrown back? Forward if false.
-        self.throw_force = (aggressor.fighter.ep*.1) + aggressor.fighter.weight #Additional force (beyond gravity) imparted as damage in a throw
+        self.throw_force = (target.fighter.get_attribute('pwr')*1) + aggressor.fighter.weight #Additional force (beyond gravity) imparted as damage in a throw
         self.agg_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
 
@@ -1038,7 +1038,7 @@ class Hip_Throw(Maneuver):
         self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if target.fighter.male else 'her') + ', using '  + ('his ' if target.fighter.male else 'her ') + 'hip as a fulcrum. '
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
-        self.mnvr_mod = aggressor.fighter.pwr - (target.fighter.weight/4) #Mod to initial roll
+        self.mnvr_mod = aggressor.fighter.get_attribute('pwr') - (target.fighter.weight/4) #Mod to initial roll
         self.counter_mod = -20 #Mod to counter
         self.dodge_mod = 0
         self.escape_mod = 0 
@@ -1084,7 +1084,7 @@ class Hip_Throw(Maneuver):
         self.can_move = True #Used to block movement
         self.inv_move = True #Used to trigger an involuntary move (such as in a push or throw)
         self.inv_move_back = False #If inv moved, is defender thrown back? Forward if false.
-        self.throw_force = aggressor.fighter.ep*.2  #Additional force (beyond gravity) imparted as damage in a throw
+        self.throw_force = target.fighter.get_attribute('pwr')*2  #Additional force (beyond gravity) imparted as damage in a throw
         self.agg_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
 
@@ -1098,7 +1098,7 @@ class Shoulder_Throw(Maneuver):
         self.succeed_desc = aggressor.name + ' lifts ' + target.name + ' off the ground and bodily throws ' + ('him' if target.fighter.male else 'her') + ', using '  + ('his ' if target.fighter.male else 'her ') + 'shoulder and back as a fulcrum. '
         self.fail_desc = aggressor.name + ' attempts to throw ' + target.name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
-        self.mnvr_mod = aggressor.fighter.pwr - (target.fighter.weight/3) #Mod to initial roll
+        self.mnvr_mod = aggressor.fighter.get_attribute('pwr') - (target.fighter.weight/3) #Mod to initial roll
         self.counter_mod = -20 #Mod to counter
         self.dodge_mod = 0
         self.escape_mod = 0 
@@ -1144,7 +1144,7 @@ class Shoulder_Throw(Maneuver):
         self.can_move = True #Used to block movement
         self.inv_move = True #Used to trigger an involuntary move (such as in a push or throw)
         self.inv_move_back = False #If inv moved, is defender thrown back? Forward if false.
-        self.throw_force = aggressor.fighter.ep*.3  #Additional force (beyond gravity) imparted as damage in a throw
+        self.throw_force = target.fighter.get_attribute('pwr')*3  #Additional force (beyond gravity) imparted as damage in a throw
         self.agg_stance_pre = [FighterStance.standing, FighterStance.kneeling, FighterStance.sitting] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
 

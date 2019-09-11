@@ -134,7 +134,7 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
         if global_vars.debug_time: t0 = time.time()
         for e in entities:
             if e.fighter is not None:
-                fov_radius = int(round(e.fighter.sit/5))
+                fov_radius = int(round(e.fighter.get_attribute('sit')/5))
                 game_map.compute_fov(e.x, e.y, fov_radius, True, libtcodpy.FOV_SHADOW)
                 modify_fov(e, game_map)
         #Added to handle prone stance changes        
@@ -194,7 +194,7 @@ def relo_actor(game_map, target, aggressor, entities, direction, distance) -> bo
         if global_vars.debug_time: t0 = time.time()
         for e in entities:
             if e.fighter is not None:
-                fov_radius = int(round(e.fighter.sit/5))
+                fov_radius = int(round(e.fighter.get_attribute('sit')/5))
                 game_map.compute_fov(e.x, e.y, fov_radius, True, libtcodpy.FOV_SHADOW)
                 modify_fov(e, game_map)
 
@@ -725,7 +725,7 @@ def add_history(entity) -> None:
     attacker = entity.fighter.attacker
     atk_tuple = (attacker.fighter.combat_choices[1].name, attacker.fighter.combat_choices[2], attacker.fighter.combat_choices[3])
     history.append(atk_tuple)
-    if len(history) > entity.fighter.mem/10:
+    if len(history) > entity.fighter.get_attribute('mem')/10:
         del history[0]
 
 def make_attack_roll(hit_chance, damage, location) -> (int, int, int):

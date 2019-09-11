@@ -635,35 +635,35 @@ class Heavy_Muscle_Damage(Injury):
 
         if location in [3,4,5,6,7,8]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1] #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1] #Amount to modify attribute
             if location % 2 == 0:
                 self.paralyzed_locs = {7,11,15,19} #set
             else:
                 self.paralyzed_locs = {8,12,16,20} #set
         elif location in [15,16]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1] #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1] #Amount to modify attribute
             if location == 15:
                 self.paralyzed_locs = {15,19} #set
             else:
                 self.paralyzed_locs = {16,20} #set
         elif location in [17,18,21,22]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25] #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25] #Amount to modify attribute
             if location == 21:
                 self.paralyzed_locs = {21,25,27} #set
             else:
                 self.paralyzed_locs = {22,26,28} #set
         elif location in [25,26]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25]  #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25]  #Amount to modify attribute
             if location == 25:
                 self.paralyzed_locs = {25,27} #set
             else:
                 self.paralyzed_locs = {26,28} #set
         else:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25]  #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25]  #Amount to modify attribute
             self.diseases = None
         if dam_type in ['s','p','t']:
             self.bleed_amount = 40 #Amount of blood loss
@@ -735,7 +735,7 @@ class Paralysis(Injury):
 
         if location in [7,8]:
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-30,-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1] #Amount to modify attribute
+            self.attr_amount = [-30,-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1] #Amount to modify attribute
             if location == 7:
                 self.paralyzed_locs = {7,11,15,19} #set
             else:
@@ -749,14 +749,14 @@ class Paralysis(Injury):
                 self.paralyzed_locs = {16,20} #set
         elif location in [21,22]:
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-30,-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25] #Amount to modify attribute
+            self.attr_amount = [-30,-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25] #Amount to modify attribute
             if location == 21:
                 self.paralyzed_locs = {21,25,27} #set
             else:
                 self.paralyzed_locs = {22,26,28} #set
         elif location in [25,26]:
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-30,-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25] #Amount to modify attribute
+            self.attr_amount = [-30,-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25] #Amount to modify attribute
             if location == 25:
                 self.paralyzed_locs = {25,27} #set
             else:
@@ -894,7 +894,7 @@ class Destroyed_Windpipe(Injury):
         self.severity = 6
         self.locations = set([2])
         self.diseases = {'Mute'} #set of objects
-        self.suffocation = (recipient.fighter.sta/10)*12 #In rounds till death
+        self.suffocation = (recipient.fighter.get_attribute('sta')/10)*12 #In rounds till death
         if dam_type in ['s','p','t']:
             self.healable = False
             vitae_dam = max(80, recipient.fighter.vitae*.1)
@@ -1105,7 +1105,7 @@ class Spleen_Damage(Injury):
         self.severity = 5
         self.locations = set([10])
         self.attr_name = ['immune'] #Names of the attribute to modify. List
-        self.attr_amount = [(recipient.fighter.immune*.05)*-1] #Amounts to modify attribute. List
+        self.attr_amount = [(recipient.fighter.get_attribute('immune')*.05)*-1] #Amounts to modify attribute. List
 
 class Spleen_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
@@ -1136,7 +1136,7 @@ class Spleen_Destroyed(Injury):
         self.severity = 6
         self.locations = set([10])
         self.attr_name = ['immune'] #Names of the attribute to modify. List
-        self.attr_amount = [(recipient.fighter.immune*.05)*-1] #Amounts to modify attribute. List
+        self.attr_amount = [(recipient.fighter.get_attribute('immune')*.05)*-1] #Amounts to modify attribute. List
 
 class Stomach_Damage(Injury):
     def __init__(self, location, recipient, dam_type):
@@ -1333,7 +1333,7 @@ class Bladder_Damage(Injury):
         self.locations = set([17,18])
         self.pain_mv_mod = 40
         self.attr_name = ['immune'] #Names of the attribute to modify. List
-        self.attr_amount = [(recipient.fighter.immune*.1)*-1] #Amounts to modify attribute. List
+        self.attr_amount = [(recipient.fighter.get_attribute('immune')*.1)*-1] #Amounts to modify attribute. List
 
 class Bladder_Destroyed(Injury):
     def __init__(self, location, recipient, dam_type):
@@ -1364,7 +1364,7 @@ class Bladder_Destroyed(Injury):
         self.locations = set([17,18])
         self.pain_mv_mod = 60
         self.attr_name = ['immune'] #Names of the attribute to modify. List
-        self.attr_amount = [(recipient.fighter.immune*.3)*-1] #Amounts to modify attribute. List
+        self.attr_amount = [(recipient.fighter.get_attribute('immune')*.3)*-1] #Amounts to modify attribute. List
         self.diseases = ['Cystectomy']
 
 class Light_Tendon_Damage(Injury):
@@ -1454,7 +1454,7 @@ class Heavy_Tendon_Damage(Injury):
 
         if location in [11,12]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1] #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1] #Amount to modify attribute
             if location == 11:
                 self.paralyzed_locs = {11,15,19} #set
             else:
@@ -1466,7 +1466,7 @@ class Heavy_Tendon_Damage(Injury):
                 self.paralyzed_locs = {20} #set
         else:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25] #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25] #Amount to modify attribute
             self.pain_mv_mod = 40
             if location == 27:
                 self.paralyzed_locs = {27} #set
@@ -1755,7 +1755,7 @@ class Foot_Destroyed(Injury):
         self.balance_check = True
         self.pain_check = True
         self.attr_name = ['bal'] #Names of the attribute to modify. List
-        self.attr_amount = [(recipient.fighter.bal*.6)*-1] #Amounts to modify attribute. List
+        self.attr_amount = [(recipient.fighter.get_attribute('bal')*.6)*-1] #Amounts to modify attribute. List
 
         if dam_type in ['s','p']:
             self.bleed_amount = 15 #Amount of blood loss
@@ -1876,19 +1876,19 @@ class Brain_Damage(Injury):
             self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.attr_name = ['sit'] #Names of the attribute to modify. List
-            self.attr_amount = [-recipient.fighter.max_sit] #Amounts to modify attribute. List
+            self.attr_amount = [-recipient.fighter.get_attribute('sit','max_val')] #Amounts to modify attribute. List
             self.diseases = ['Blind']
         elif roll <= 80:
             self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.attr_name = ['hear'] #Names of the attribute to modify. List
-            self.attr_amount = [-recipient.fighter.max_hear] #Amounts to modify attribute. List
+            self.attr_amount = [-recipient.fighter.get_attribute('hear','max_val')] #Amounts to modify attribute. List
             self.diseases = ['Deaf']
         elif roll <= 90:
             self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
                 ('he ' if recipient.fighter.male else 'she ') + 'will be permanently debilitated in some way. ')
             self.attr_name = ['ts'] #Names of the attribute to modify. List
-            self.attr_amount = [-recipient.fighter.max_ts] #Amounts to modify attribute. List
+            self.attr_amount = [-recipient.fighter.get_attribute('ts','max_val')] #Amounts to modify attribute. List
             self.diseases = ['Ageusia']
         elif roll <= 95:
             self.description + str('If ' + ('he ' if recipient.fighter.male else 'she ') + 'survives, ' +
@@ -1901,20 +1901,20 @@ class Brain_Damage(Injury):
             if loc_roll == 1: 
                 self.paralyzed_locs = set([7, 11, 15, 19])
                 self.attr_name = ['ss','pwr'] #Names of the attribute to modify. List
-                self.attr_amount = [-recipient.fighter.max_ss*.1,-recipient.fighter.max_pwr*.1] #Amounts to modify attribute. List
+                self.attr_amount = [-recipient.fighter.get_attribute('ss','max_val')*.1,-recipient.fighter.get_attribute('pwr','max_val')*.1] #Amounts to modify attribute. List
             if loc_roll == 2: 
                 self.paralyzed_locs = set([8, 12, 16, 20])
                 self.attr_name = ['ss','pwr'] #Names of the attribute to modify. List
-                self.attr_amount = [recipient.fighter.ss*.1,recipient.fighter.pwr*.1] #Amounts to modify attribute. List
+                self.attr_amount = [recipient.fighter.get_attribute('ss')*.1,recipient.fighter.get_attribute('pwr')*.1] #Amounts to modify attribute. List
             if loc_roll == 3: 
                 self.paralyzed_locs = set([21, 23, 25, 27])
                 self.attr_name = ['ss','pwr'] #Names of the attribute to modify. List
-                self.attr_amount = [-recipient.fighter.max_ss*.25,-recipient.fighter.max_pwr*.25] #Amounts to modify attribute. List
+                self.attr_amount = [-recipient.fighter.get_attribute('ss','max_val')*.25,-recipient.fighter.get_attribute('pwr','max_val')*.25] #Amounts to modify attribute. List
                 self.mv_mod = .4
             if loc_roll == 4: 
                 self.paralyzed_locs = set([22, 24, 26, 28])
                 self.attr_name = ['ss','pwr'] #Names of the attribute to modify. List
-                self.attr_amount = [-recipient.fighter.max_ss*.25,-recipient.fighter.max_pwr*.25] #Amounts to modify attribute. List
+                self.attr_amount = [-recipient.fighter.get_attribute('ss','max_val')*.25,-recipient.fighter.get_attribute('pwr','max_val')*.25] #Amounts to modify attribute. List
                 self.mv_mod = .4
         elif roll == 98:
             #Below randomly paralizes 2 limbs
@@ -1942,7 +1942,7 @@ class Brain_Damage(Injury):
                 mult += .1
 
             self.attr_name = ['ss','pwr'] #Names of the attribute to modify. List
-            self.attr_amount = [-recipient.fighter.max_ss*mult,-recipient.fighter.max_pwr*mult] #Amounts to modify attribute. List
+            self.attr_amount = [-recipient.fighter.get_attribute('ss','max_val')*mult,-recipient.fighter.get_attribute('pwr','max_val')*mult] #Amounts to modify attribute. List
             if m_mod < 1: self.mv_mod = m_mod
 
         elif roll == 99:
@@ -1977,14 +1977,14 @@ class Spinal_Paralysis(Injury):
         if location == 2:
             self.description = '{0}\'s spine has been {3} at the neck, leading to complete paralysis. '
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_touch,-recipient.fighter.max_pwr,-recipient.fighter.max_ss] #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('touch','max_val'),-recipient.fighter.get_attribute('pwr','max_val'),-recipient.fighter.get_attribute('ss','max_val')] #Amount to modify attribute
             self.paralyzed_locs = {range(3,29)} #set
             self.diseases = ['Quadriplegic']
             self.mv_mod = 0
         elif location in [5,6]:
             self.description = '{0}\'s spine has been {3} at the chest, leading to paralysis from the chest down. '
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_touch*.6,-recipient.fighter.max_pwr*.8,-recipient.fighter.max_ss*.8] #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('touch','max_val')*.6,-recipient.fighter.get_attribute('pwr','max_val')*.8,-recipient.fighter.get_attribute('ss','max_val')*.8] #Amount to modify attribute
             l=[]
             l.extend(range(21,29))
             l.extend([9,10,13,14,17,18])
@@ -1993,7 +1993,7 @@ class Spinal_Paralysis(Injury):
         else:
             self.description = '{0}\'s spine has been {3}, leading to paralysis from the {2} down. '
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_touch*.4,-recipient.fighter.max_pwr*.6,-recipient.fighter.max_ss*.6] #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('touch','max_val')*.4,-recipient.fighter.get_attribute('pwr','max_val')*.6,-recipient.fighter.get_attribute('ss','max_val')*.6] #Amount to modify attribute
             l=[]
             l.extend(range(21,29))
             if location <13:
@@ -2053,7 +2053,7 @@ class Damaged_Eye_Socket(Injury):
         self.locations = set([1])
         self.pain_check = True
         self.attr_name = ['sit','fac']
-        self.attr_amount = [-recipient.fighter.max_sit*.2,-10]
+        self.attr_amount = [-recipient.fighter.get_attribute('sit','max_val')*.2,-10]
         self.bleed_amount = 10 #Amount of blood loss
         self.bleed_duration = 5 #Duration of blood loss
 
@@ -2077,7 +2077,7 @@ class Damaged_Cheekbone(Injury):
         self.locations = set([1])
         self.pain_check = True
         self.attr_name = ['sit','fac']
-        self.attr_amount = [-recipient.fighter.max_sit*.1,-20]
+        self.attr_amount = [-recipient.fighter.get_attribute('sit','max_val')*.1,-20]
 
 class Damaged_Jawbone(Injury):
     def __init__(self, location, recipient, dam_type):
@@ -2135,7 +2135,7 @@ class Severed(Injury):
             self.bleed_duration = 1000 #Duration of blood loss
             if location in [7,8]:
                 self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-                self.attr_amount = [-30,-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1] #Amount to modify attribute
+                self.attr_amount = [-30,-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1] #Amount to modify attribute
                 if location == 7:
                     self.paralyzed_locs = {7,11,15,19} #set
                     self.severed_locs = {7,11,15,19} #set
@@ -2145,7 +2145,7 @@ class Severed(Injury):
             elif location in [25,26]:
                 self.balance_check = True
                 self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-                self.attr_amount = [-30,-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25] #Amount to modify attribute
+                self.attr_amount = [-30,-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25] #Amount to modify attribute
                 if location == 25:
                     self.paralyzed_locs = {25,27} #set
                     self.severed_locs = {25,27} #set
@@ -2154,7 +2154,7 @@ class Severed(Injury):
                     self.severed_locs = {26,28} #set
             else:
                 self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-                self.attr_amount = [-30,-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1] #Amount to modify attribute
+                self.attr_amount = [-30,-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1] #Amount to modify attribute
                 if location == 11:
                     self.paralyzed_locs = {11,15,19} #set
                     self.severed_locs = {11,15,19} #set
@@ -2173,7 +2173,7 @@ class Severed(Injury):
         else:
             self.balance_check = True
             self.attr_name = ['touch','pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-30,-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25] #Amount to modify attribute
+            self.attr_amount = [-30,-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25] #Amount to modify attribute
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
             if location == 21:
@@ -2330,7 +2330,7 @@ class Bone_Heavily_Damaged(Injury):
         
         if location in [3,4,7,8]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1]  #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1]  #Amount to modify attribute
             self.description + str('Jagged chunks of bone pierce the skin, causing intense pain, and rendering {1} arm unsusable until healed. ')
             self.bleed_amount = 20 #Amount of blood loss
             self.bleed_duration = 10 #Duration of blood loss
@@ -2340,7 +2340,7 @@ class Bone_Heavily_Damaged(Injury):
                 self.paralyzed_locs = {3,7,11,15,19}
         elif location in [11,12,15,16]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1]  #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1]  #Amount to modify attribute
             self.description + str('Jagged chunks of bone peirce the skin, causing intense pain, and rendering {1} arm unsusable until healed. ')
             self.bleed_amount = 10 #Amount of blood loss
             self.bleed_duration = 10 #Duration of blood loss
@@ -2355,7 +2355,7 @@ class Bone_Heavily_Damaged(Injury):
             self.mv_mod = .4
             self.balance_check = True
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25]  #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25]  #Amount to modify attribute
             if location % 2 == 0:
                 self.paralyzed_locs = {18,22,24,26,28}
             else:
@@ -2390,14 +2390,14 @@ class Bone_Destroyed(Injury):
             self.bleed_amount = 20 #Amount of blood loss
             self.bleed_duration = 100 #Duration of blood loss
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1]  #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1]  #Amount to modify attribute
             if location % 2 == 0:
                 self.paralyzed_locs = {4,8,12,16,20}
             else:
                 self.paralyzed_locs = {3,7,11,15,19}
         elif location in [11,12,15,16]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.1,-recipient.fighter.max_ss*.1]  #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1]  #Amount to modify attribute
             self.bleed_amount = 10 #Amount of blood loss
             self.bleed_duration = 50 #Duration of blood loss
             if location % 2 == 0:
@@ -2406,7 +2406,7 @@ class Bone_Destroyed(Injury):
                 self.paralyzed_locs = {11,15,19}
         else:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-            self.attr_amount = [-recipient.fighter.max_pwr*.25,-recipient.fighter.max_ss*.25]  #Amount to modify attribute
+            self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.25,-recipient.fighter.get_attribute('ss','max_val')*.25]  #Amount to modify attribute
             self.bleed_amount = 30 #Amount of blood loss
             self.bleed_duration = 200 #Duration of blood loss
             self.mv_mod = .4
@@ -2547,6 +2547,6 @@ class Pelvis_Heavily_Damaged(Injury):
         self.paralyzed_locs = set([21,22,23,24,25,26])
         self.diseases = ['Shattered Pelvis']
         self.attr_name = ['pwr','ss'] #Name of the attribute to modify
-        self.attr_amount = [-recipient.fighter.max_pwr*.6,-recipient.fighter.max_ss*.6]  #Amount to modify attribute
+        self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.6,-recipient.fighter.get_attribute('ss','max_val')*.6]  #Amount to modify attribute
 
         self.description = self.description_filler(recipient, self.loc_name, descriptor)
