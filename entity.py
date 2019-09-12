@@ -170,18 +170,18 @@ class Entity:
             dodge_mod += 10
             #B Soak due to location flexibility
             if 10 < location <13:
-                b_psi *= 50/self.fighter.flex
+                b_psi *= 50/self.fighter.get_attribute('flex')
                 dodge_mod += 20
         elif location == 1 or 18 < location < 21 or 22 < location < 25:
             to_hit -= 40
             if location == 1:
                 dodge_mod += 20
                 parry_mod -= 10
-                b_psi *= 100/((self.fighter.flex + self.fighter.brawling)/2)
+                b_psi *= 100/((self.fighter.get_attribute('flex') + self.fighter.brawling)/2)
             if 18 < location < 21:
                 dodge_mod += 40
                 parry_mod += 30
-                b_psi *= 25/self.fighter.flex
+                b_psi *= 25/self.fighter.get_attribute('flex')
         elif location == 2:
             to_hit -= 30
             dodge_mod -= 20
@@ -195,7 +195,7 @@ class Entity:
             if 6 < location < 9:
                 dodge_mod -= 10
                 parry_mod -= 10
-                b_psi *= 100/self.fighter.flex
+                b_psi *= 100/self.fighter.get_attribute('flex')
             else:
                 dodge_mod += 10
                 parry_mod -= 20
@@ -211,7 +211,7 @@ class Entity:
             if 14 < location < 17:
                 dodge_mod += 30
                 parry_mod += 20
-                b_psi *= 40/self.fighter.flex
+                b_psi *= 40/self.fighter.get_attribute('flex')
             else:
                 dodge_mod += 30
                 parry_mod -= 30

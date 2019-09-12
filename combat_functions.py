@@ -601,12 +601,14 @@ def perform_attack(active_entity, entities, final_to_hit, target, cs, combat_pha
                         active_entity = target
                         game_state = GameStates.default
                         menu_dict = dict()
-                else:
-                    if active_entity.player and len(active_entity.fighter.targets) > 0:
-                        #See if active_entity has AP for repeat
-                        if active_entity.fighter.ap >= active_entity.fighter.last_atk_ap:           
-                            combat_phase = CombatPhase.repeat
-                            game_state = GameStates.menu
+                    else:
+                        if active_entity.player and len(active_entity.fighter.targets) > 0:
+                            #See if active_entity has AP for repeat
+                            if active_entity.fighter.ap >= active_entity.fighter.last_atk_ap:           
+                                combat_phase = CombatPhase.repeat
+                                game_state = GameStates.menu
+                            else:
+                                active_entity.fighter.combat_choices.clear()
 
             if hasattr(active_entity.fighter, 'ai'):
                 menu_dict = dict()
@@ -1079,9 +1081,9 @@ def cleave_checker(entity) -> list:
 def calc_damage_soak(dam_type, target) -> (list, list):
     if dam_type == 'b':
         deflect = [15, 25, 0]        
-        soak =  [.8 + ((((target.fighter.derm)*.75) + ((target.fighter.fat)*.25))/100 *.08),
-                 .75 + ((((target.fighter.fat)*.6) + ((target.fighter.str)*.4))/100 *.08), 
-                 .4 + (sqrt(target.fighter.flex)/100)]
+        soak =  [.8 + ((((target.fighter.get_attribute('derm'))*.75) + ((target.fighter.get_attribute('fat'))*.25))/100 *.08),
+                 .75 + ((((target.fighter.get_attribute('fat'))*.6) + ((target.fighter.get_attribute('str'))*.4))/100 *.08), 
+                 .4 + (sqrt(target.fighter.get_attribute('flex'))/100)]
         for i in soak:
             if i > .95: i = .95
 
@@ -1096,8 +1098,8 @@ def calc_damage_soak(dam_type, target) -> (list, list):
 
     elif dam_type == 't':
         deflect = [0, 0, 100]
-        soak =  [.5 + (sqrt(target.fighter.derm)/50), 
-                .5 + (sqrt(target.fighter.fat)/50), 
+        soak =  [.5 + (sqrt(target.fighter.get_attribute('derm'))/50), 
+                .5 + (sqrt(target.fighter.get_attribute('fat'))/50), 
                 0]
 
 
@@ -1182,7 +1184,7 @@ def apply_injury_effects(target, injury, location, remove = False) -> list:
         messages.append(injury.description)
 
     if injury.pain_check and not remove:
-        check = save_roll_un(target.fighter.will, 0)
+        check = save_roll_un(target.fighter.get_attribute('will'), 0)
         if 'f' in check:
             target.state = EntityState.stunned
             messages.append(target.name + ' is overcome by the pain from the blow, and is stunned for a short while.')
@@ -1193,7 +1195,7 @@ def apply_injury_effects(target, injury, location, remove = False) -> list:
             messages.append(target.name + ' faints due to the intense pain of the wound.')
 
     if injury.shock_check and not remove:
-        check = save_roll_un(target.fighter.shock, 0)
+        check = save_roll_un(target.fighter.get_attribute('shock'), 0)
         if 'f' in check:
             target.state = EntityState.shock
             messages.append(target.name + ' is experiencing the early effects of shock, and is disoriented and unstable.')
@@ -1206,7 +1208,7 @@ def apply_injury_effects(target, injury, location, remove = False) -> list:
             messages.append(target.name + ' rapidly goes into shock and collapses.')
 
     if injury.balance_check and not remove:
-        check = save_roll_un(target.fighter.shock, 0)
+        check = save_roll_un(target.fighter.get_attribute('shock'), 0)
         if 'f' in check or 'cf' in check:
             target.fighter.gen_stance = FighterStance.prone
             messages.append(target.name + ' is toppled by the blow.')
@@ -1567,7 +1569,7 @@ def apply_maneuver(active_entity, target, maneuver, location, entities, game_map
 
     #Perform pain check and immobilize for round if failed
     if mnvr.pain_check:
-        check = save_roll_un(target.fighter.will, 0)
+        check = save_roll_un(target.fighter.get_attribute('will'), 0)
         if 'f' in check:
             target.state = EntityState.stunned
             messages.append(target.name + ' is overcome by the pain from the blow, and is stunned for a short while.')

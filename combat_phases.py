@@ -160,6 +160,8 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
                                     break
                 menu_dict = dict()
                 combat_phase = CombatPhase.location
+        elif len(command) != 0:
+            if global_vars.debug: print('Too many combat choices')
     
     for message in messages:
         log.add_message(Message(message))
@@ -266,6 +268,8 @@ def phase_confirm(active_entity, entities, command, logs, combat_phase) -> (int,
     p_parry_mod = cs.get('p_parry')
     total_ep = cs.get('total ep')
 
+    #Normalize hit chance if over 100%
+    if p_hit >= 100: p_hit = 99
 
     combat_menu_header = ('You are attacking with ' + wpn_title + ', aiming at ' + curr_target.name + '\'s ' 
         + loc_name + ' from a ' + angle_name + ' angle. ' 
@@ -281,8 +285,8 @@ def phase_confirm(active_entity, entities, command, logs, combat_phase) -> (int,
 
     if len(command) != 0:
         if command.get('Accept'):
-            messages, combat_phase, active_entity, missed = perform_attack(active_entity, entities, final_to_hit, curr_target, cs, combat_phase)
             active_entity.fighter.last_atk_ap = final_ap
+            messages, combat_phase, active_entity, missed = perform_attack(active_entity, entities, final_to_hit, curr_target, cs, combat_phase)
             active_entity.fighter.acted = True
             active_entity.fighter.action.clear()
         if command.get('Restart'):
