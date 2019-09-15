@@ -85,13 +85,14 @@ class Entity:
                 for a in base_wpn.base_attacks:
 
                     atk = a(base_wpn)
-
+ 
                     #Set right/l and add
                       
-                    base_wpn.attacks.append(atk)
+                    
 
                     if atk.hand:
                         if loc in [0,1]:
+                            base_wpn.attacks.append(atk)
                             if atk.hands != 2:
                                 if loc == 0:
                                     atk.name += '(R)'
@@ -110,10 +111,12 @@ class Entity:
                                         atk.attack_mod -= 20
                                         atk.parry_mod -= 20
                     else:
-                        if loc == 2:
-                            atk.name += '(R)'
-                        else:
-                            atk.name += '(L)'
+                        if loc in [2,3]:
+                            base_wpn.attacks.append(atk)
+                            if loc == 2:
+                                atk.name += '(R)'
+                            else:
+                                atk.name += '(L)'
 
 
                 
@@ -264,6 +267,7 @@ class Entity:
 
         psi = force*12 #Convert to inches
       
+        if 'Elbow Strike' in attack.name: breakpoint()
 
         #Damage calc = ((((added_mass + fist mass) * velocity) / main_area) * mech_adv) * sharpness or hardness or pointedness
 

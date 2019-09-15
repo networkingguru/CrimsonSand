@@ -480,7 +480,7 @@ class Elbow_Strike(Attack):
         self.hand = True
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
-        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.restricted_locs = [27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
         self.allowed_angles_r = [0,1,2,3] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
         self.allowed_angles_l = [0,7,6,5] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
         

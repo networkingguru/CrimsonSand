@@ -148,20 +148,21 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
     
     for option in active_entity.fighter.action:
-        if len(command) != 0 and len(active_entity.fighter.combat_choices) < 2:
-            if command.get(option):
-                if not hasattr(active_entity.fighter, 'ai'):
-                    for w in active_entity.weapons:
-                        if w.name == active_entity.fighter.combat_choices[0].name:
-                            for atk in w.attacks:
-                                if atk.name == option:
-                                    active_entity.fighter.combat_choices.append(atk)
-                                    messages.append('You decide to ' + option)
-                                    break
-                menu_dict = dict()
-                combat_phase = CombatPhase.location
-        elif len(command) != 0:
-            if global_vars.debug: print('Too many combat choices')
+        if len(command) != 0:
+            if hasattr(active_entity.fighter,'ai') or len(active_entity.fighter.combat_choices) < 2:
+                if command.get(option):
+                    if not hasattr(active_entity.fighter, 'ai'):
+                        for w in active_entity.weapons:
+                            if w.name == active_entity.fighter.combat_choices[0].name:
+                                for atk in w.attacks:
+                                    if atk.name == option:
+                                        active_entity.fighter.combat_choices.append(atk)
+                                        messages.append('You decide to ' + option)
+                                        break
+                    menu_dict = dict()
+                    combat_phase = CombatPhase.location
+            elif len(command) != 0: #Bug catcher
+                if global_vars.debug: print('Too many combat choices')
     
     for message in messages:
         log.add_message(Message(message))
