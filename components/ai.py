@@ -1,6 +1,6 @@
 import tcod.path as pathfind
 from random import randint
-from combat_functions import determine_valid_angles, angle_id, calc_history_modifier, init_combat, determine_valid_locs
+from combat_functions import determine_valid_angles, angle_id, calc_history_modifier, init_combat, determine_valid_locs, attack_filter
 from enums import CombatPhase, EntityState
 from components.fighter import Fighter
 from fov_aoc import aoc_check, fov_calc
@@ -93,18 +93,19 @@ def determine_attack(entity) -> None:
     target_dodge_diff = entity.fighter.loc_dodge_diff[target_idx]
     target_parry_diff = entity.fighter.loc_parry_diff[target_idx]
     best_score = -100
-    best_atk = []          
-    
+    best_atk = []      
+    valid = False    
     
 
     #Locations to be scored higher because they kill the foe
     critical_locs = {0,1,2,6}
+
     #Attack logic begins
     for wpn in entity.weapons:
         for atk in wpn.attacks:
-            cs = entity.determine_combat_stats(wpn, atk)
-            final_ap = cs.get('final ap')
-            if final_ap <= entity.fighter.ap:
+            valid = attack_filter(entity, entity.fighter.curr_target, wpn, atk)
+            if valid:  
+               
                 locs = curr_target.fighter.get_locations()
                 #Determine valid locations
                 valid_locs = determine_valid_locs(entity, curr_target, atk)
@@ -138,7 +139,7 @@ def determine_attack(entity) -> None:
                             to_hit += target_hit_diff.get(l)
                             parry_mod += target_parry_diff.get(l)
                             
-                            dam = (b_psi + s_psi + p_psi + t_psi)
+                            dam = max([b_psi,s_psi,p_psi,t_psi])
                             #Attks/rd
                             atks_rd = entity.fighter.ap / final_ap
                             #Dam/rd
