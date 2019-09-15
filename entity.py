@@ -267,7 +267,7 @@ class Entity:
 
         psi = force*12 #Convert to inches
       
-        if 'Elbow Strike' in attack.name: breakpoint()
+        
 
         #Damage calc = ((((added_mass + fist mass) * velocity) / main_area) * mech_adv) * sharpness or hardness or pointedness
 
@@ -360,6 +360,8 @@ class Entity:
         #convert items to int
         for key in combat_dict:
             combat_dict[key] = int(combat_dict[key])
+
+        #if 'Elbow Strike' in attack.name and hasattr(self.fighter, 'ai'): breakpoint()
 
         return combat_dict
 

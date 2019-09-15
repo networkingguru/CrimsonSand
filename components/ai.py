@@ -105,7 +105,7 @@ def determine_attack(entity) -> None:
         for atk in wpn.attacks:
             valid = attack_filter(entity, entity.fighter.curr_target, wpn, atk)
             if valid:  
-               
+                if 'Elbow Strike' in atk.name: breakpoint()
                 locs = curr_target.fighter.get_locations()
                 #Determine valid locations
                 valid_locs = determine_valid_locs(entity, curr_target, atk)
