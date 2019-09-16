@@ -532,9 +532,20 @@ class Skill():
         self.rating = 0
 
         self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
 
-    def set_level(self):
-        pass
+    def set_level(self) -> int:
+        xp = self.experience
+        level = 0
+        while xp > 0:
+            if xp >= self.cost * level:
+                xp -= self.cost * level
+                level += 1
+            else:
+                xp = 0
+        
+        return level
 
     def set_rating(self) -> int:
         prim_list = []
