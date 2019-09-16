@@ -518,6 +518,8 @@ class Attribute():
 class Skill():
     def __init__(self, entity, experience = 0, **kwargs):
         self.name = ''
+        self.abbr = ''
+        self.category = ''
         self.entity = entity
         self.level = 0
         self.prim_base = [] #Primary base attribute(s). If multiple, are averaged
@@ -532,8 +534,7 @@ class Skill():
         self.rating = 0
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+
 
     def set_level(self) -> int:
         xp = self.experience
@@ -580,3 +581,164 @@ class Skill():
             rating = (base_rating*2)/(self.level+1)*self.level
 
         return int(round(rating))
+
+class Deflect(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Deflect'
+        self.abbr = 'deflect'
+        self.category = 'Unarmed'
+        self.level = 0
+        self.prim_base = ['men','wis'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .5 #Percentage the PB contributes to total score
+        self.sec_base = ['swift']
+        self.sec_amount = .3
+        self.ter_base = ['agi']
+        self.ter_amount = .2
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 8 #Determines difficulty in improving skill
+        self.rating = 0
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Dodge(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Dodge'
+        self.abbr = 'dodge'
+        self.category = 'Unarmed'
+        self.level = 0
+        self.prim_base = ['swift'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .6 #Percentage the PB contributes to total score
+        self.sec_base = ['ped','bal']
+        self.sec_amount = .2
+        self.ter_base = ['men','wis']
+        self.ter_amount = .2
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 6 #Determines difficulty in improving skill
+        self.rating = 0
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Martial_Arts(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Martial Arts'
+        self.abbr = 'martial_arts'
+        self.category = 'Unarmed'
+        self.level = 0
+        self.prim_base = ['men'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .4 #Percentage the PB contributes to total score
+        self.sec_base = ['mem','wis']
+        self.sec_amount = .4
+        self.ter_base = ['agi']
+        self.ter_amount = .2
+        
+        self.autodidact = False #Defines if skill can be used untrained
+        self.cost = 16 #Determines difficulty in improving skill
+        self.rating = 0
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Boxing(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Boxing'
+        self.abbr = 'boxing'
+        self.category = 'Unarmed'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .5 #Percentage the PB contributes to total score
+        self.sec_base = ['men']
+        self.sec_amount = .3
+        self.ter_base = ['mem','wis']
+        self.ter_amount = .2
+        
+        self.autodidact = False #Defines if skill can be used untrained
+        self.cost = 10 #Determines difficulty in improving skill
+        self.rating = 0
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Brawling(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Brawling'
+        self.abbr = 'brawling'
+        self.category = 'Unarmed'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .4 #Percentage the PB contributes to total score
+        self.sec_base = ['str']
+        self.sec_amount = .4
+        self.ter_base = ['men','wis']
+        self.ter_amount = .2
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 8 #Determines difficulty in improving skill
+        self.rating = 0
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Wrestling(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Wrestling'
+        self.abbr = 'wrestling'
+        self.category = 'Unarmed'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .5 #Percentage the PB contributes to total score
+        self.sec_base = ['str']
+        self.sec_amount = .25
+        self.ter_base = ['men','wis']
+        self.ter_amount = .25
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 12 #Determines difficulty in improving skill
+        self.rating = 0
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Long_Sword(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Long Sword'
+        self.abbr = 'long_sword'
+        self.category = 'Bladed'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .6 #Percentage the PB contributes to total score
+        self.sec_base = ['men','pwr']
+        self.sec_amount = .3
+        self.ter_base = ['wis']
+        self.ter_amount = .1
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 10 #Determines difficulty in improving skill
+        self.rating = 0
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
