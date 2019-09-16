@@ -559,7 +559,7 @@ class Skill():
         sec_avg = mean(sec_list)
         ter_avg = mean(ter_list)
 
-        base_rating = (prim_avg*self.prim_amount) + (sec_list*self.sec_amount) + (ter_list*self.ter_amount)
+        base_rating = (prim_avg*self.prim_amount) + (sec_avg*self.sec_amount) + (ter_avg*self.ter_amount)
 
         if self.level == 0:
             rating = base_rating/2
