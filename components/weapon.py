@@ -478,7 +478,7 @@ class Elbow_Strike(Attack):
         self.damage_type = 'b'
         self.base_ap = 10
         self.hand = True
-        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.length = -10 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
         self.restricted_locs = [27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
         self.allowed_angles_r = [0,1,2,3] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
@@ -607,7 +607,7 @@ class Knee_Strike(Attack):
         self.damage_type = 'b'
         self.base_ap = 15
         self.hand = False
-        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.length = -15 #Used to add or subtract from base weapon length for added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
         self.restricted_locs = [0,2,27,28] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
         self.allowed_angles_r = [3,4] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
