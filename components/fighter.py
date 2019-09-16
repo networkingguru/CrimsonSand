@@ -536,7 +536,7 @@ class Skill():
     def set_level(self):
         pass
 
-    def set_rating(self):
+    def set_rating(self) -> int:
         prim_list = []
         sec_list = []
         ter_list = []
@@ -567,3 +567,5 @@ class Skill():
             rating = base_rating
         else:
             rating = (base_rating*2)/(self.level+1)*self.level
+
+        return int(round(rating))
