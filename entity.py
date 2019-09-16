@@ -240,6 +240,7 @@ class Entity:
         s_psi = 0
         t_psi = 0
         p_psi = 0
+        eff_area = 0
         fist_mass = .0065 * self.fighter.weight 
 
         arm_length = self.fighter.er
@@ -272,7 +273,7 @@ class Entity:
         #Damage calc = ((((added_mass + fist mass) * velocity) / main_area) * mech_adv) * sharpness or hardness or pointedness
 
         if attack.damage_type is 'b':
-            attack.main_area *= (velocity/40) #scale main area size based on velocity; hack to represent deformation
+            eff_area =  attack.main_area * (velocity/40) #scale main area size based on velocity; hack to represent deformation
 
         ep = ((psi * attack.force_scalar) / attack.main_area) * attack.mech_adv
 
