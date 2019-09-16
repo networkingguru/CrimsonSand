@@ -243,14 +243,27 @@ class Entity:
         eff_area = 0
         fist_mass = .0065 * self.fighter.weight 
 
-        arm_length = self.fighter.er
+        if attack.hand:
+            if self.fighter.dom_hand == 'R':
+                if weapon is self.weapons[0]:
+                    limb_length = self.fighter.reach
+                else:
+                    limb_length = self.fighter.reach_oh
+            else:
+                if weapon is self.weapons[1]:
+                    limb_length = self.fighter.reach
+                else:
+                    limb_length = self.fighter.reach_oh
+        else:
+            limb_length = self.fighter.reach_leg
+            
         wpn_length = attack.length
-        reach = arm_length + wpn_length
+        reach = limb_length + wpn_length
         if angle_id != 0: #Find distance for semi-circular paths (swings)
             circ = 2 * math.pi * reach #Find circumference
             distance = ((1/8)*circ*math.pi)/12 #Distance traveled for 45 deg angle
         else:
-            distance = arm_length
+            distance = limb_length
         #Determine max velocity based on pwr stat and mass distribution of attack
         if attack.hands == 2:
             max_vel = math.sqrt(self.fighter.get_attribute('pwr'))*(4.5-(attack.added_mass/2))
@@ -258,9 +271,9 @@ class Entity:
             max_vel = math.sqrt(self.fighter.get_attribute('pwr'))*(3-(attack.added_mass/2))
         #Determine how long attack will take
         if angle_id == 0:
-            time = (arm_length/12)/max_vel
+            time = (limb_length/12)/max_vel
         else:
-            time = (((1/8)*(2*math.pi*arm_length)*math.pi)/12)/max_vel
+            time = (((1/8)*(2*math.pi*limb_length)*math.pi)/12)/max_vel
         #Find final velocity using full distance travelled by weapon
         velocity = (1/time) * (distance/12)
 
@@ -274,8 +287,10 @@ class Entity:
 
         if attack.damage_type is 'b':
             eff_area =  attack.main_area * (velocity/40) #scale main area size based on velocity; hack to represent deformation
+        else:
+            eff_area = attack.main_area 
 
-        ep = ((psi * attack.force_scalar) / attack.main_area) * attack.mech_adv
+        ep = ((psi * attack.force_scalar) / eff_area) * attack.mech_adv
 
         if attack.damage_type == 's':
             modifier = attack.sharpness
@@ -362,7 +377,6 @@ class Entity:
         for key in combat_dict:
             combat_dict[key] = int(combat_dict[key])
 
-        #if 'Elbow Strike' in attack.name and hasattr(self.fighter, 'ai'): breakpoint()
 
         return combat_dict
 
