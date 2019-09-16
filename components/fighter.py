@@ -513,3 +513,57 @@ class Attribute():
             self.parent_attr = 'sens'
         else:
             self.parent_attr = 'appear'
+
+
+class Skill():
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.name = ''
+        self.entity = entity
+        self.level = 0
+        self.prim_base = [] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = 0 #Percentage the PB contributes to total score
+        self.sec_base = []
+        self.sec_amount = 0
+        self.ter_base = []
+        self.ter_amount = 0
+        self.experience = experience #The experience aquired in the skill
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 0 #Determines difficulty in improving skill
+        self.rating = 0
+
+        self.__dict__.update(kwargs)
+
+    def set_level(self):
+        pass
+
+    def set_rating(self):
+        prim_list = []
+        sec_list = []
+        ter_list = []
+        prim_avg = 0
+        sec_avg = 0
+        ter_avg = 0
+        base_rating = 0
+        rating = 0
+
+        for attr in self.prim_base:
+            prim_list.append(self.entity.get_attribute(attr))
+
+        for attr in self.sec_base:
+            sec_list.append(self.entity.get_attribute(attr))
+        
+        for attr in self.ter_base:
+            ter_list.append(self.entity.get_attribute(attr))
+
+        prim_avg = mean(prim_list)
+        sec_avg = mean(sec_list)
+        ter_avg = mean(ter_list)
+
+        base_rating = (prim_avg*self.prim_amount) + (sec_list*self.sec_amount) + (ter_list*self.ter_amount)
+
+        if self.level == 0:
+            rating = base_rating/2
+        elif self.level == 1:
+            rating = base_rating
+        else:
+            rating = (base_rating*2)/(self.level+1)*self.level
