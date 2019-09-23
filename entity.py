@@ -2,7 +2,7 @@ import math
 import time
 from statistics import mean
 from copy import deepcopy, copy
-from components.fighter import Fighter, Attribute
+from components.fighter import Fighter, Attribute, Skill
 from components import weapon
 from utilities import clamp, inch_conv, itersubclasses
 
@@ -36,8 +36,8 @@ class Entity:
 
     def add_fighter_component(self, fighter_attrs) -> None:
         ai = None
-        attributes, facing = fighter_attrs[0], fighter_attrs[1]
-        if len(fighter_attrs) > 2: ai = fighter_attrs[2]
+        attributes, skills, facing = fighter_attrs[0], fighter_attrs[1], fighter_attrs[2]
+        if len(fighter_attrs) > 3: ai = fighter_attrs[3]
         self.fighter = Fighter(facing, ai)
         self.fighter.attr_dict = self.add_attributes(attributes)
         #Calc and add parent attributes
@@ -55,6 +55,20 @@ class Entity:
             p_val = int(round(mean(children)))
             p_attr = Attribute(parent_name_list[idx], p, p_val)
             self.fighter.parent_attr_dict[p] = p_attr
+
+        for key in skills:
+            for cls in itersubclasses(Skill):
+                c = cls(self)
+                if c.abbr == key:
+                    xp = skills.get(key)
+                    s = cls(self, xp)
+            self.fighter.skill_dict[key] = s
+
+        for cls in itersubclasses(Skill):
+            c = cls(self)
+            if c.abbr not in self.fighter.skill_dict:
+                self.fighter.skill_dict[c.abbr] = c
+
 
         self.fighter.set_dynamic_attributes()
 

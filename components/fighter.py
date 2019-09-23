@@ -58,6 +58,7 @@ class Fighter:
         self.parent_attr_dict = dict()
         
         #Skills
+        self.skill_dict = dict()
         self.brawling = 0
         self.wrestling = 0
         self.martial_arts = 0
@@ -360,16 +361,19 @@ class Fighter:
         self.loc_hit_mod = guard.loc_hit_mods
 
     def get_attribute(self, attr, value = 'val') -> int:
+        dicts = [self.parent_attr_dict, self.attr_dict, self.skill_dict]
         if hasattr(self, attr):
             a = self
             attribute = attr
-        elif attr in ['int','str','agi','con','sens','appear']:
-            a = self.parent_attr_dict.get(attr)
-            attribute = value
+            result = getattr(a, attribute)
         else:
-            a = self.attr_dict.get(attr)
-            attribute = value
-        result = getattr(a, attribute)
+            for d in dicts:
+                for key in d:
+                    if key == attr:
+                        a = d.get(attr)
+                        result = getattr(a, value)
+                        break
+        
         return result
 
     def set_attribute(self, attr, prop = 'val', value = 0) -> None:
@@ -540,7 +544,7 @@ class Skill():
         xp = self.experience
         level = 0
         while xp > 0:
-            if xp >= self.cost * level:
+            if xp > self.cost * level:
                 xp -= self.cost * level
                 level += 1
             else:
@@ -559,13 +563,13 @@ class Skill():
         rating = 0
 
         for attr in self.prim_base:
-            prim_list.append(self.entity.get_attribute(attr))
+            prim_list.append(self.entity.fighter.get_attribute(attr))
 
         for attr in self.sec_base:
-            sec_list.append(self.entity.get_attribute(attr))
+            sec_list.append(self.entity.fighter.get_attribute(attr))
         
         for attr in self.ter_base:
-            ter_list.append(self.entity.get_attribute(attr))
+            ter_list.append(self.entity.fighter.get_attribute(attr))
 
         prim_avg = mean(prim_list)
         sec_avg = mean(sec_list)
