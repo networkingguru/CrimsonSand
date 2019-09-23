@@ -373,7 +373,7 @@ class Collar_Tie(Maneuver):
         self.fail_desc = aggressor.name + ' attempts to grab ' + target.name + ' in a collar tie, but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
 
-        skill_mod = aggressor.fighter.best_unarmed_skill - target.fighter.best_unarmed_skill
+        skill_mod = aggressor.fighter.best_unarmed_skill.rating - target.fighter.best_unarmed_skill.rating
 
         self.mnvr_mod = 20 + skill_mod #Mod to initial roll
         self.counter_mod = 0 #Mod to counter
@@ -412,7 +412,7 @@ class Collar_Tie(Maneuver):
         self.atk_mod_l = None
         self.state = None #EntityState
         self.escape_uses_skill = True
-        self.escape_skill = target.fighter.best_unarmed_skill #Skill used to escape/reverse.
+        self.escape_skill = target.fighter.best_unarmed_skill.rating #Skill used to escape/reverse.
         self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
@@ -500,7 +500,7 @@ class Limb_Capture(Maneuver):
         self.stam_regin = None #Scalar
         self.state = None #EntityState
         self.escape_uses_skill = True
-        self.escape_skill = target.fighter.best_grappling_skill #Skill used to escape/reverse.
+        self.escape_skill = target.fighter.best_grappling_skill.rating #Skill used to escape/reverse.
         self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
@@ -521,7 +521,7 @@ class Wind_Choke(Maneuver):
         self.fail_desc = aggressor.name + ' attempts to convert the collar tie on ' + target.name + ' to a wind choke in order to suffocate' + ('him ' if target.fighter.male else 'her ') + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
 
-        skill_mod = aggressor.fighter.best_grappling_skill - target.fighter.best_grappling_skill
+        skill_mod = aggressor.fighter.best_grappling_skill.rating - target.fighter.best_grappling_skill.rating
 
         self.mnvr_mod = skill_mod #Mod to initial roll
         self.counter_mod = 0 #Mod to counter
@@ -561,7 +561,7 @@ class Wind_Choke(Maneuver):
         self.atk_mod_l = None
         self.state = None #EntityState
         self.escape_uses_skill = True
-        self.escape_skill = target.fighter.best_unarmed_skill #Skill used to escape/reverse.
+        self.escape_skill = target.fighter.best_unarmed_skill.rating #Skill used to escape/reverse.
         self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
@@ -618,7 +618,7 @@ class Strangle_Hold(Maneuver):
         self.atk_mod_l = None
         self.state = None #EntityState
         self.escape_uses_skill = True
-        self.escape_skill = target.fighter.best_unarmed_skill #Skill used to escape/reverse.
+        self.escape_skill = target.fighter.best_unarmed_skill.rating #Skill used to escape/reverse.
         self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
@@ -691,7 +691,7 @@ class Compression_Lock(Maneuver):
         self.pain_check = True 
         self.balance_check = False
         self.clarity_reduction = None 
-        self.temp_phys_mod = (aggressor.fighter.best_grappling_skill - target.fighter.get_attribute('will'))*-1
+        self.temp_phys_mod = (aggressor.fighter.best_grappling_skill.rating - target.fighter.get_attribute('will'))*-1
         self.paralyzed_locs = None #set
         self.suffocation = None #In rounds till death
         self.stam_drain = None #Amount per round
@@ -700,7 +700,7 @@ class Compression_Lock(Maneuver):
         self.atk_mod_l = None
         self.state = None #EntityState
         self.escape_uses_skill = True
-        self.escape_skill = target.fighter.best_grappling_skill #Skill used to escape/reverse.
+        self.escape_skill = target.fighter.best_grappling_skill.rating #Skill used to escape/reverse.
         self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
@@ -757,7 +757,7 @@ class Blood_Choke(Maneuver):
         self.atk_mod_l = None
         self.state = None #EntityState
         self.escape_uses_skill = True
-        self.escape_skill = target.fighter.best_grappling_skill #Skill used to escape/reverse.
+        self.escape_skill = target.fighter.best_grappling_skill.rating #Skill used to escape/reverse.
         self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
@@ -830,7 +830,7 @@ class Joint_Lock(Maneuver):
         self.pain_check = True 
         self.balance_check = False
         self.clarity_reduction = None 
-        self.temp_phys_mod = (aggressor.fighter.best_grappling_skill - target.fighter.get_attribute('will'))*-1
+        self.temp_phys_mod = (aggressor.fighter.best_grappling_skill.rating - target.fighter.get_attribute('will'))*-1
         self.paralyzed_locs = None #set
         self.suffocation = None #In rounds till death
         self.stam_drain = None #Amount per round
@@ -839,7 +839,7 @@ class Joint_Lock(Maneuver):
         self.atk_mod_l = None
         self.state = None #EntityState
         self.escape_uses_skill = True
-        self.escape_skill = target.fighter.best_grappling_skill #Skill used to escape/reverse.
+        self.escape_skill = target.fighter.best_grappling_skill.rating #Skill used to escape/reverse.
         self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
@@ -859,7 +859,7 @@ class Neck_Crank(Maneuver):
         self.succeed_desc = aggressor.name + ' begins violently twisting ' + target.name + '\'s' + loc_name + ', inflicting terrible damage to ' + ('his' if target.fighter.male else 'her') + ' spine.'
         self.fail_desc = aggressor.name + ' attempts to twist ' + target.name + '\'s' + loc_name + ', but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
-        skill_mod = aggressor.fighter.best_grappling_skill - target.fighter.best_grappling_skill
+        skill_mod = aggressor.fighter.best_grappling_skill.rating - target.fighter.best_grappling_skill.rating
 
         self.mnvr_mod = -20 + skill_mod #Mod to initial roll
         self.counter_mod = 0 + (-1*skill_mod) #Mod to counter
@@ -899,7 +899,7 @@ class Neck_Crank(Maneuver):
         self.atk_mod_l = None
         self.state = None #EntityState
         self.escape_uses_skill = True
-        self.escape_skill = target.fighter.best_unarmed_skill #Skill used to escape/reverse.
+        self.escape_skill = target.fighter.best_unarmed_skill.rating #Skill used to escape/reverse.
         self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
         self.stance = None #Stance the defender is in if the manuever succeeds
         self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
@@ -1159,7 +1159,7 @@ class Single_Leg_Takedown(Maneuver):
         self.fail_desc = aggressor.name + ' attempts to take down ' + target.name + ', but fails, ending up in a kneeling position. '
         self.aggressor = aggressor #Used to indicate person controlling hold
 
-        skill_mod = aggressor.fighter.best_grappling_skill - target.fighter.best_grappling_skill
+        skill_mod = aggressor.fighter.best_grappling_skill.rating - target.fighter.best_grappling_skill.rating
 
         self.mnvr_mod = skill_mod/2 #Mod to initial roll
         self.counter_mod = -30 #Mod to counter
@@ -1225,7 +1225,7 @@ class Double_Leg_Takedown(Maneuver):
         self.fail_desc = aggressor.name + ' attempts to take down ' + target.name + ', but fails, ending up in a kneeling position. '
         self.aggressor = aggressor #Used to indicate person controlling hold
 
-        skill_mod = aggressor.fighter.best_grappling_skill - target.fighter.best_grappling_skill
+        skill_mod = aggressor.fighter.best_grappling_skill.rating - target.fighter.best_grappling_skill.rating
 
         self.mnvr_mod = -20 - skill_mod/4 #Mod to initial roll
         self.counter_mod = -1*(skill_mod/2) #Mod to counter

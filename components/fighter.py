@@ -59,13 +59,6 @@ class Fighter:
         
         #Skills
         self.skill_dict = dict()
-        self.brawling = 0
-        self.wrestling = 0
-        self.martial_arts = 0
-        self.boxing = 0
-        self.long_sword = 0
-        self.dodge = 0
-        self.deflect = 0
         #Derived Attributes
         self.height =0 #Height in inches
         self.er = 0 #Eff reach, 1/2 ht in inches
@@ -371,6 +364,8 @@ class Fighter:
                 for key in d:
                     if key == attr:
                         a = d.get(attr)
+                        if d == self.skill_dict:
+                            if value == 'val': value = 'rating'
                         result = getattr(a, value)
                         break
         
@@ -414,7 +409,6 @@ class Fighter:
         self.walk_ap = round(self.ap / inch_conv(self.mv, 1))
         self.jog_ap = round(self.ap / inch_conv(self.mv*1.5, 1))
         self.run_ap = round(self.ap / inch_conv(self.mv*2, 1))
-        self.init = (self.get_attribute('men') + self.get_attribute('swift'))/4 + (self.get_attribute('sens') + self.brawling)/4
         self.max_init = deepcopy(self.init)
         self.clarity = self.get_attribute('will') #For dizziness/unconsciousness
         self.clar_recovery = self.get_attribute('will')/4
@@ -489,9 +483,30 @@ class Fighter:
         if self.r_blocker == None:
             self.r_blocker = self.locations[15][2]
         #Best skills
-        self.best_combat_skill = max([self.brawling, self.long_sword, self.martial_arts, self.wrestling]) 
-        self.best_unarmed_skill = max([self.brawling, self.martial_arts, self.wrestling]) 
-        self.best_grappling_skill = max([self.martial_arts, self.wrestling]) 
+        self.best_combat_skill = None
+        self.best_unarmed_skill = None
+        self.best_grappling_skill = None
+
+        for key in self.skill_dict:
+            skill = self.skill_dict.get(key)
+            if skill.offensive:
+                if self.best_combat_skill == None or self.best_combat_skill.rating < skill.rating:
+                    self.best_combat_skill = skill
+        
+        for key in self.skill_dict:
+            skill = self.skill_dict.get(key)
+            if skill.offensive and skill.unarmed:
+                if self.best_unarmed_skill == None or self.best_unarmed_skill.rating < skill.rating:
+                    self.best_unarmed_skill = skill
+
+        for key in self.skill_dict:
+            skill = self.skill_dict.get(key)
+            if skill.grappling:
+                if self.best_grappling_skill == None or self.best_grappling_skill.rating < skill.rating:
+                    self.best_grappling_skill = skill
+
+
+        self.init = (self.get_attribute('men') + self.get_attribute('swift'))/4 + (self.get_attribute('sens') + self.get_attribute(self.best_combat_skill.abbr))/4
 
 
 class Attribute():
@@ -536,6 +551,9 @@ class Skill():
         self.autodidact = True #Defines if skill can be used untrained
         self.cost = 0 #Determines difficulty in improving skill
         self.rating = 0
+        self.offensive = True
+        self.unarmed = False
+        self.grappling = False
 
         self.__dict__.update(kwargs)
 
@@ -604,6 +622,9 @@ class Deflect(Skill):
         self.autodidact = True #Defines if skill can be used untrained
         self.cost = 8 #Determines difficulty in improving skill
         self.rating = 0
+        self.offensive = False
+        self.unarmed = True
+        self.grappling = False
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -627,6 +648,9 @@ class Dodge(Skill):
         self.autodidact = True #Defines if skill can be used untrained
         self.cost = 6 #Determines difficulty in improving skill
         self.rating = 0
+        self.offensive = False
+        self.unarmed = True
+        self.grappling = False
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -650,6 +674,9 @@ class Martial_Arts(Skill):
         self.autodidact = False #Defines if skill can be used untrained
         self.cost = 16 #Determines difficulty in improving skill
         self.rating = 0
+        self.offensive = True
+        self.unarmed = True
+        self.grappling = True
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -673,6 +700,9 @@ class Boxing(Skill):
         self.autodidact = False #Defines if skill can be used untrained
         self.cost = 10 #Determines difficulty in improving skill
         self.rating = 0
+        self.offensive = True
+        self.unarmed = True
+        self.grappling = False
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -696,6 +726,9 @@ class Brawling(Skill):
         self.autodidact = True #Defines if skill can be used untrained
         self.cost = 8 #Determines difficulty in improving skill
         self.rating = 0
+        self.offensive = True
+        self.unarmed = True
+        self.grappling = False
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -719,6 +752,9 @@ class Wrestling(Skill):
         self.autodidact = True #Defines if skill can be used untrained
         self.cost = 12 #Determines difficulty in improving skill
         self.rating = 0
+        self.offensive = True
+        self.unarmed = True
+        self.grappling = True
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -742,6 +778,9 @@ class Long_Sword(Skill):
         self.autodidact = True #Defines if skill can be used untrained
         self.cost = 10 #Determines difficulty in improving skill
         self.rating = 0
+        self.offensive = True
+        self.unarmed = False
+        self.grappling = False
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()

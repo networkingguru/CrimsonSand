@@ -1923,8 +1923,8 @@ def change_actor(order, entities, active_entity, combat_phase, game_state, logs)
                         #Remove fient dodge/parry mods
                         idx = len(order[0].fighter.combat_choices)
                         option = order[0].fighter.combat_choices[(idx - 1)]
-                        order[0].fighter.loc_dodge_mod[option] -= order[0].fighter.best_combat_skill/3
-                        order[0].fighter.loc_parry_mod[option] -= order[0].fighter.best_combat_skill/3
+                        order[0].fighter.loc_dodge_mod[option] -= order[0].fighter.best_combat_skill.rating/3
+                        order[0].fighter.loc_parry_mod[option] -= order[0].fighter.best_combat_skill.rating/3
                         for t in order[0].fighter.targets:
                             if order[0] in t.fighter.targets:
                                 #Adjust perceived hit location modifiers

@@ -152,7 +152,7 @@ def determine_attack(entity) -> None:
                                 if layer > 0:
                                     dam_score += dam_base / layer
                             #Award points based on ability to hit
-                            best_avoid = max(dodge_mod+curr_target.fighter.dodge, parry_mod+curr_target.fighter.deflect)
+                            best_avoid = max(dodge_mod+curr_target.fighter.get_attribute('dodge'), parry_mod+curr_target.fighter.get_attribute('deflect'))
                             if to_hit == best_avoid:
                                 hit_score = 1
                             else:    
@@ -195,10 +195,10 @@ def avoid_attack(attacker, defender, cs) -> str:
             history_mod = calc_history_modifier(defender, atk_name, attacker.fighter.combat_choices[2], attacker.fighter.combat_choices[3])
             dodge_mod += history_mod
             parry_mod += history_mod
-        parry_chance = defender.fighter.deflect + parry_mod
-        dodge_chance = defender.fighter.dodge + dodge_mod
+        parry_chance = defender.fighter.get_attribute('deflect') + parry_mod
+        dodge_chance = defender.fighter.get_attribute('dodge') + dodge_mod
         if can_block:
-            block_chance = defender.fighter.best_combat_skill + parry_mod
+            block_chance = defender.fighter.best_combat_skill.rating + parry_mod
         else:
             block_chance = 0
 

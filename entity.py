@@ -194,7 +194,7 @@ class Entity:
             if location == 1:
                 dodge_mod += 20
                 parry_mod -= 10
-                b_psi *= 100/((self.fighter.get_attribute('flex') + self.fighter.brawling)/2)
+                b_psi *= 100/((self.fighter.get_attribute('flex') + self.fighter.best_combat_skill.rating)/2)
             if 18 < location < 21:
                 dodge_mod += 40
                 parry_mod += 30
@@ -242,13 +242,13 @@ class Entity:
         if len(attack.skill) > 1:
             skills = []
             for s in attack.skill:
-                skills.append(getattr(self.fighter, s))
+                skills.append(self.fighter.get_attribute(s))
             max_s = max(skills)
             idx = skills.index(max_s)
             skill = attack.skill[idx]
         else:
             skill = attack.skill[0]
-        skill_rating = getattr(self.fighter, skill)
+        skill_rating = self.fighter.get_attribute(skill)
         tot_er = self.fighter.er + attack.length
         b_psi = 0
         s_psi = 0

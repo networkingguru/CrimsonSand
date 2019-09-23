@@ -393,9 +393,9 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
 
 
     #Normalized (0-99) percentage scale of probabilities to p/d/b
-    parry_chance = find_defense_probability(final_to_hit, (active_entity.fighter.deflect + parry_mod))
-    dodge_chance = find_defense_probability(final_to_hit, (active_entity.fighter.dodge + dodge_mod))
-    block_chance = find_defense_probability(final_to_hit, (active_entity.fighter.best_combat_skill + parry_mod))
+    parry_chance = find_defense_probability(final_to_hit, (active_entity.fighter.get_attribute('deflect') + parry_mod))
+    dodge_chance = find_defense_probability(final_to_hit, (active_entity.fighter.get_attribute('dodge') + dodge_mod))
+    block_chance = find_defense_probability(final_to_hit, (active_entity.fighter.best_combat_skill.rating + parry_mod))
 
 
     #Choose how to defend '
@@ -439,7 +439,7 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
                 hit = True
                 effects = damage_controller(active_entity, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs, entities)
             if command.get('Dodge'):
-                check, def_margin, atk_margin = save_roll_con(active_entity.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
+                check, def_margin, atk_margin = save_roll_con(active_entity.fighter.get_attribute('dodge'), dodge_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 active_entity.fighter.mod_attribute('ap', -active_entity.fighter.walk_ap)
                 active_entity.fighter.mod_attribute('stamina', -active_entity.fighter.base_stam_cost)
@@ -451,7 +451,7 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
                     effects = damage_controller(active_entity, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs, entities)
                 else: auto_block = True
             if command.get('Parry'):
-                check, def_margin, atk_margin = save_roll_con(active_entity.fighter.deflect, parry_mod, enemy.fighter.atk_result, final_to_hit)
+                check, def_margin, atk_margin = save_roll_con(active_entity.fighter.get_attribute('deflect'), parry_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 active_entity.fighter.mod_attribute('stamina', -(active_entity.weapons[0].stamina*active_entity.fighter.base_stam_cost))
                 active_entity.fighter.mod_attribute('ap', -parry_ap)
@@ -463,7 +463,7 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
                     effects = damage_controller(active_entity, enemy, location, enemy.fighter.combat_choices[1].damage_type[0], enemy.fighter.dam_result, enemy.fighter.atk_result, cs, entities)
                 else: auto_block = True
             if command.get('Block'):
-                check, def_margin, atk_margin = save_roll_con(active_entity.fighter.best_combat_skill, parry_mod, enemy.fighter.atk_result, final_to_hit)
+                check, def_margin, atk_margin = save_roll_con(active_entity.fighter.best_combat_skill.rating, parry_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 if location not in active_entity.fighter.auto_block_locs:
                     active_entity.fighter.mod_attribute('stamina', -(active_entity.weapons[0].stamina*active_entity.fighter.base_stam_cost))
@@ -783,13 +783,13 @@ def phase_feint(active_entity, command, logs, combat_phase) -> (int, dict, objec
                         if not hasattr(active_entity.fighter, 'ai'):
                             messages.append('You expose your ' + option + ' to ' + curr_target.name + ', hoping to tempt an attack. ')
                         active_entity.fighter.feint = True
-                        active_entity.fighter.loc_dodge_mod[option] += active_entity.fighter.best_combat_skill/3
-                        active_entity.fighter.loc_parry_mod[option] += active_entity.fighter.best_combat_skill/3
+                        active_entity.fighter.loc_dodge_mod[option] += active_entity.fighter.best_combat_skill.rating/3
+                        active_entity.fighter.loc_parry_mod[option] += active_entity.fighter.best_combat_skill.rating/3
                         #See target is fooled
                         for t in active_entity.fighter.targets:
                             if active_entity in t.fighter.targets:
                                 roll = roll_dice(1,100)
-                                result,_,_ = save_roll_con(active_entity.fighter.best_combat_skill, 0, roll, t.fighter.best_combat_skill)
+                                result,_,_ = save_roll_con(active_entity.fighter.best_combat_skill.rating, 0, roll, t.fighter.best_combat_skill)
                                 if result is 's':
                                     #Adjust perceived hit location modifiers
                                     t.fighter.adjust_loc_diffs(active_entity, option, 50)
@@ -1016,7 +1016,7 @@ def phase_grapple_defense(active_entity, enemy, entities, command, logs, combat_
     
 
     #Normalized (0-99) percentage scale of probabilities to p/d/b
-    dodge_chance = find_defense_probability(final_to_hit, (active_entity.fighter.dodge + dodge_mod))
+    dodge_chance = find_defense_probability(final_to_hit, (active_entity.fighter.get_attribute('dodge') + dodge_mod))
     reverse_chance = find_defense_probability(final_to_hit, (skill + mnvr.reversal_mod + mnvr.mnvr_mod))
 
 
@@ -1060,7 +1060,7 @@ def phase_grapple_defense(active_entity, enemy, entities, command, logs, combat_
                 effects = apply_maneuver(enemy, active_entity, type(mnvr), location, entities, game_map)
                 
             if command.get('Dodge'):
-                check, def_margin, atk_margin = save_roll_con(active_entity.fighter.dodge, dodge_mod, enemy.fighter.atk_result, final_to_hit)
+                check, def_margin, atk_margin = save_roll_con(active_entity.fighter.get_attribute('dodge'), dodge_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 active_entity.fighter.mod_attribute('ap', -active_entity.fighter.walk_ap)
                 active_entity.fighter.mod_attribute('stamina', -active_entity.fighter.base_stam_cost)
