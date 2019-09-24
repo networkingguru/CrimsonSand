@@ -1619,7 +1619,7 @@ def apply_maneuver(active_entity, target, maneuver, location, entities, game_map
 
     #Apply active_entity stance (succeed)
     if mnvr.agg_suc_stance is not None:
-        active_entity.fighter.stance = mnvr.agg_suc_stance
+        active_entity.fighter.gen_stance = mnvr.agg_suc_stance
 
     #Apply movement mods
     if mnvr.mv_scalar is not 1 or mnvr.can_move is False:
