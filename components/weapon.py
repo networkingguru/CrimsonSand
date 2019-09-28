@@ -139,7 +139,7 @@ class Weapon:
         self.com_perc = self.com / self.length #com as a percentage
         self.axis_vs_com = self.com_perc - self.grip_loc #Shows COM relative to grip location (axis for swings). Used to determine AP/stamina costs.
 
-        self.main_hits = (self.main_material.elasticity * 1450000) * (self.main_weight/(self.main_material.density*.03)) * self.main_material.toughness
+        self.main_hits = (self.main_material.elasticity * 1450000) * (self.main_weight/(self.main_material.density*.03)) * self.main_material.toughness * sqrt(self.main_material.hardness)
 
         self.parry_ap += (self.weight * 10)/self.axis_vs_com
 
