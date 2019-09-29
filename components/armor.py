@@ -10,6 +10,7 @@ class Armor_Construction:
     def __init__(self, **kwargs):
         self.name = ''
         self.base_name = ''
+        self.desc = ''
         self.allowed_main_materials = [] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_steel #Primary material
         self.rigidity = 'rigid' #rigid, semi, or flexible
@@ -30,6 +31,7 @@ class Armor_Construction:
 class Armor_Component:
     def __init__(self, **kwargs):
         self.base_name = ''
+        self.desc = ''
         self.ht_range = () #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = () #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [] #List of Armor_Constructions that may be used
@@ -136,19 +138,19 @@ class Armor_Component:
             self.s_deflect = .5
             self.p_deflect = .8
             self.t_deflect = 1
-            self.physical_mod = self.weight / 2
+            self.physical_mod = (self.weight / 2) * self.construction.balance
         elif self.rigidity == 'semi':
             self.b_deflect = .1
             self.s_deflect = .35
             self.p_deflect = .5
             self.t_deflect = .5
-            self.physical_mod = self.weight
+            self.physical_mod = self.weight * self.construction.balance
         else:
             self.b_deflect = .05
             self.s_deflect = .1
             self.p_deflect = .1
             self.t_deflect = .3
-            self.physical_mod = self.weight * 2
+            self.physical_mod = (self.weight * 2) * self.construction.balance
 
         for i in [self.b_deflect, self.s_deflect, self.p_deflect, self.t_deflect]:
             i *= quality_dict.get(self.quality)
@@ -177,12 +179,181 @@ class Armor_Component:
 
         self.name = qual + self.construction.name + ' ' + self.base_name
 
+#Constructions
 
+class Hide(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = ''
+        self.desc = 'Minimally processed animal hide'
+        self.allowed_main_materials = [m_hide, m_xthide] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hide #Primary material
+        self.rigidity = 'flexible' #rigid, semi, or flexible
+        self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = 1
+        self.t_resist = 1
+        self.construction_diff = .1 #Scalar for difficulty of construction
+
+class Leather(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = ''
+        self.desc = 'Treated animal hide'
+        self.allowed_main_materials = [m_leather, m_bleather] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_leather #Primary material
+        self.rigidity = 'flexible' #rigid, semi, or flexible
+        self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = 1
+        self.t_resist = 1
+        self.construction_diff = .3 #Scalar for difficulty of construction
+
+class Padded(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = ''
+        self.desc = 'Padded textiles'
+        self.allowed_main_materials = [m_cloth, m_canvas] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_cloth #Primary material
+        self.rigidity = 'flexible' #rigid, semi, or flexible
+        self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = 1
+        self.t_resist = 1
+        self.construction_diff = .2 #Scalar for difficulty of construction        
+
+class Chain(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = 'Chainmail'
+        self.desc = 'Small, densely packed interlocking rings'
+        self.allowed_main_materials = [m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hiron #Primary material
+        self.rigidity = 'flexible' #rigid, semi, or flexible
+        self.density = .5 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1.2 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = .7
+        self.t_resist = 1
+        self.construction_diff = 1 #Scalar for difficulty of construction
+
+class Ring(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = 'Ringmail'
+        self.desc = 'Large rings sewn onto a leather surface'
+        self.allowed_main_materials = [m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hiron #Primary material
+        self.rigidity = 'flexible' #rigid, semi, or flexible
+        self.density = .3 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = .3
+        self.t_resist = .3
+        self.construction_diff = .5 #Scalar for difficulty of construction
         
+class Splint(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = 'Splintmail'
+        self.desc = 'Large long segments attached to a cloth backing'
+        self.allowed_main_materials = [m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hiron #Primary material
+        self.rigidity = 'semi' #rigid, semi, or flexible
+        self.density = .9 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1.1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = .8
+        self.t_resist = 1
+        self.construction_diff = .8 #Scalar for difficulty of construction
 
+class Scale(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = 'Scalemail'
+        self.desc = 'Small scales arranged in rows and attached to each other and a cloth backing'
+        self.allowed_main_materials = [m_leather, m_bleather, m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hiron #Primary material
+        self.rigidity = 'semi' #rigid, semi, or flexible
+        self.density = 1.1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1.1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = 1.2
+        self.t_resist = 1
+        self.construction_diff = 2 #Scalar for difficulty of construction
 
+class Lamellar(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = 'Lamellar'
+        self.desc = 'Small plates arranged in rows and attached to each other with a high amount of overlap'
+        self.allowed_main_materials = [m_leather, m_bleather, m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hiron #Primary material
+        self.rigidity = 'semi' #rigid, semi, or flexible
+        self.density = 1.1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1.2 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = 1.4
+        self.t_resist = 1
+        self.construction_diff = 2 #Scalar for difficulty of construction
 
+class Brigandine(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = 'Brigandine'
+        self.desc = 'Irregular plates arranged to suit anatomy sandwitched between layers of dense cloth'
+        self.allowed_main_materials = [m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hiron #Primary material
+        self.rigidity = 'semi' #rigid, semi, or flexible
+        self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = 1.4
+        self.t_resist = 1
+        self.construction_diff = 2.2 #Scalar for difficulty of construction
 
-        
+class Plate(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = 'Plate'
+        self.desc = 'Interlocking and overlapping plates of material configured to conform to anatomy with minimal gaps'
+        self.allowed_main_materials = [m_bleather, m_wood, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hiron #Primary material
+        self.rigidity = 'rigid' #rigid, semi, or flexible
+        self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = .8 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = 1
+        self.t_resist = 1
+        self.construction_diff = 3 #Scalar for difficulty of construction
 
+class Double_Plate(Armor_Construction):
+    def __init__(self, **kwargs):
+        Armor_Construction.__init__(self)
+        self.base_name = 'Double-walled Plate'
+        self.desc = 'Interlocking and overlapping plates of material that include an inner and outer wall with an airgap in between'
+        self.allowed_main_materials = [m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.main_material = m_hsteel #Primary material
+        self.rigidity = 'rigid' #rigid, semi, or flexible
+        self.density = 1.1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.balance = .9 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
+        self.b_resist = 1.1 #Scalar to modify damage resistance
+        self.s_resist = 1
+        self.p_resist = 1.3
+        self.t_resist = 1
+        self.construction_diff = 8 #Scalar for difficulty of construction
 
