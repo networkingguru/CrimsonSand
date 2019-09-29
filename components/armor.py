@@ -9,6 +9,7 @@ quality_dict = {'Junk': -.5, 'Very Poor': -.3, 'Poor': -.2, 'Below Average': -.1
 class Armor_Construction:
     def __init__(self, **kwargs):
         self.name = ''
+        self.base_name = ''
         self.allowed_main_materials = [] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_steel #Primary material
         self.rigidity = 'rigid' #rigid, semi, or flexible
@@ -21,12 +22,16 @@ class Armor_Construction:
         self.construction_diff = 1 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.set_name()
+
+    def set_name(self):
+        self.name = self.main_material.name + ' ' + self.base_name
 
 class Armor_Component:
     def __init__(self, **kwargs):
         self.base_name = ''
-        self.ht_range = () #Tuple containing min and max ht supported by the armor
-        self.str_fat_range = () #Tuple containing min and max str/fat combination supported by the armor
+        self.ht_range = () #Tuple containing min and max ht supported by the armor 
+        self.str_fat_range = () #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [] #List of Armor_Constructions that may be used
         self.construction = None
         self.thickness = .1 #Thickness in inches
@@ -57,6 +62,10 @@ class Armor_Component:
         self.breach_hits = 0 #Hits required to breach armor
         self.b_soak = 0 #Amount of force absorbed by padding. Percentage/Scalar
         self.physical_mod = 0 #Modifier to all physical actions due to armor. Reducable with armor skill
+
+        self.__dict__.update(kwargs)
+        self.set_dynamic_attributes()
+
 
     def set_dynamic_attributes(self):
         #Location circ calcs
@@ -127,19 +136,27 @@ class Armor_Component:
             self.s_deflect = .5
             self.p_deflect = .8
             self.t_deflect = 1
+            self.physical_mod = self.weight / 2
         elif self.rigidity == 'semi':
             self.b_deflect = .1
             self.s_deflect = .35
             self.p_deflect = .5
             self.t_deflect = .5
+            self.physical_mod = self.weight
         else:
             self.b_deflect = .05
             self.s_deflect = .1
             self.p_deflect = .1
             self.t_deflect = .3
+            self.physical_mod = self.weight * 2
 
         for i in [self.b_deflect, self.s_deflect, self.p_deflect, self.t_deflect]:
-            i *= self.quality
+            i *= quality_dict.get(self.quality)
+
+        self.b_deflect *= self.construction.b_resist
+        self.p_deflect *= self.construction.p_resist
+        self.s_deflect *= self.construction.s_resist
+        self.t_deflect *= self.construction.t_resist
         
         self.hits = (self.construction.main_material.elasticity * 1450000) * (construction_wt/(self.construction.main_material.density*.03)) * self.construction.main_material.toughness * sqrt(self.construction.main_material.hardness)
         self.breach_hits = self.hits/10 * self.thickness * self.construction.main_material.toughness
@@ -152,6 +169,13 @@ class Armor_Component:
         self.t_deflect_max = deflect_max * 25
 
         self.b_soak = .045/self.construction.main_material.hardness * self.thickness
+
+        qual = ''
+
+        if self.quality != 'Average':
+            qual = self.quality + ' '
+
+        self.name = qual + self.construction.name + ' ' + self.base_name
 
 
         
