@@ -1,6 +1,6 @@
 import global_vars
 from math import sqrt
-from random import randrange
+from random import uniform
 from utilities import itersubclasses, clamp, roll_dice
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
@@ -38,18 +38,29 @@ def gen_armor(armor_component, **kwargs):
 
         if random:
             if construction == None:
-                construction = a.allowed_constructions[(roll_dice(1,len(a.allowed_constructions)))-1]
+                if len(a.allowed_constructions) > 1:
+                    construction = a.allowed_constructions[(roll_dice(1,len(a.allowed_constructions)))-1]
+                else:
+                    construction = a.allowed_constructions[0]
 
             #Create dummy construction
-            c = Armor_Construction()
+            c = construction()
             if main_material == None:
-                main_material = c.allowed_main_materials[(roll_dice(1,len(c.allowed_main_materials)))-1]
-            if binder == None:
-                binder = c.allowed_binder_materials[(roll_dice(1,len(c.allowed_binder_materials)))-1]
-            const_obj = Armor_Construction(main_material = main_material, binder_material = binder)
+                if len(c.allowed_main_materials) > 1:
+                    main_material = c.allowed_main_materials[(roll_dice(1,len(c.allowed_main_materials)))-1]
+                else:
+                    main_material = c.allowed_main_materials[0]
+                
+            if binder == None: 
+                if len(c.allowed_binder_materials) > 1:
+                    binder = c.allowed_binder_materials[(roll_dice(1,len(c.allowed_binder_materials)))-1]
+                else:
+                    binder = c.allowed_binder_materials[0]
+            
+            const_obj = construction(main_material = main_material, binder_material = binder)
             
             if thickness == None:
-                thickness = randrange(const_obj.min_thickness, const_obj.max_thickness, .01)
+                thickness = round(uniform(const_obj.min_thickness, const_obj.max_thickness), 2)
 
             if ht_range == None:
                 ht_min = roll_dice(1,60) + 30
@@ -62,16 +73,29 @@ def gen_armor(armor_component, **kwargs):
                 str_fat_range = (sf_min,sf_max)
 
             if accent_amount == None:
-                accent_amount = randrange(.01,.1,.01)
+                accent_amount = round(uniform(.01,.1),2)
 
         c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material}
+        del_keys = []
 
-        for key, value in c_kwargs:
+        for key, value in c_kwargs.items():
             if value == None:
-                del c_kwargs[key]
+                del_keys.append(key)
+
+        for key in del_keys:
+            del c_kwargs[key]
         
-        component = Armor_Component(**c_kwargs)
+        component = armor_component(**c_kwargs)
         components.append(component)
+        #Reset vars
+        main_material = kwargs.get('main_material')
+        binder = kwargs.get('binder')
+        construction = kwargs.get('construction')
+        thickness = kwargs.get('thickness')
+        ht_range = kwargs.get('ht_range')
+        str_fat_range = kwargs.get('str_fat_range')
+        accent_material = kwargs.get('accent_material')
+        accent_amount = kwargs.get('accent_amount')
         i += 1
 
     return components
@@ -141,7 +165,8 @@ class Armor_Component:
         self.p_deflect = 0 #% to deflect
         self.t_deflect = 0 #% to deflect
         self.hits = 0 #Overall structural hits
-        self.breach_hits = 0 #Hits required to breach armor
+        self.max_hits = 0
+        self.hits_sq_in = 0 #Hits required to breach one sq inch
         self.b_soak = 0 #Amount of force absorbed by padding. Percentage/Scalar
         self.physical_mod = 0 #Modifier to all physical actions due to armor. Reducable with armor skill
 
@@ -248,10 +273,12 @@ class Armor_Component:
         self.s_deflect *= self.construction.s_resist
         self.t_deflect *= self.construction.t_resist
         
-        self.hits = (self.construction.main_material.elasticity * 1450000) * (construction_wt/(self.construction.main_material.density*.03)) * self.construction.main_material.toughness * sqrt(self.construction.main_material.hardness)
-        self.breach_hits = self.hits/10 * self.thickness * self.construction.main_material.toughness
+        #Hits calc is attempting to model shear stress
+        self.hits = (self.construction.main_material.hardness * 1500) * self.thickness * construction_vol * (1+(self.construction.main_material.toughness/10)) * (1+(sqrt(self.construction.main_material.elasticity)/10)) 
+        self.max_hits = self.hits
+        self.hits_sq_in = self.hits / self.main_area
 
-        deflect_max = (sqrt(self.construction.main_material.hardness))/8 * self.breach_hits
+        deflect_max = (sqrt(self.construction.main_material.hardness))/8 * self.hits_sq_in
 
         self.b_deflect_max = deflect_max * 5
         self.s_deflect_max = deflect_max
@@ -273,7 +300,7 @@ class Hide(Armor_Construction):
     def __init__(self, **kwargs):
         Armor_Construction.__init__(self)
         self.base_name = ''        
-        self.allowed_binder_materials = [] #List of allowed materials for binder components
+        self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = 0 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.min_thickness = .05
@@ -290,13 +317,14 @@ class Hide(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = .1 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 class Leather(Armor_Construction):
     def __init__(self, **kwargs):
         Armor_Construction.__init__(self)
         self.base_name = ''
-        self.allowed_binder_materials = [] #List of allowed materials for binder components
+        self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = 0 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.min_thickness = .1
@@ -313,13 +341,14 @@ class Leather(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = .3 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 class Padded(Armor_Construction):
     def __init__(self, **kwargs):
         Armor_Construction.__init__(self)
         self.base_name = ''
-        self.allowed_binder_materials = [] #List of allowed materials for binder components
+        self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = 0 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.min_thickness = .05
@@ -336,13 +365,14 @@ class Padded(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = .2 #Scalar for difficulty of construction     
 
+        self.__dict__.update(kwargs)
         self.set_name()   
 
 class Chain(Armor_Construction):
     def __init__(self, **kwargs):
         Armor_Construction.__init__(self)
         self.base_name = 'Chainmail'
-        self.allowed_binder_materials = [] #List of allowed materials for binder components
+        self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = 0 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.min_thickness = .15
@@ -359,6 +389,7 @@ class Chain(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = 1 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 class Ring(Armor_Construction):
@@ -382,6 +413,7 @@ class Ring(Armor_Construction):
         self.t_resist = .3
         self.construction_diff = .5 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
         
 class Splint(Armor_Construction):
@@ -405,6 +437,7 @@ class Splint(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = .8 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 class Scale(Armor_Construction):
@@ -428,13 +461,14 @@ class Scale(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = 2 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 class Lamellar(Armor_Construction):
     def __init__(self, **kwargs):
         Armor_Construction.__init__(self)
         self.base_name = 'Lamellar'
-        self.allowed_binder_materials = [] #List of allowed materials for binder components
+        self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = 0 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.min_thickness = .03
@@ -452,6 +486,7 @@ class Lamellar(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = 2 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 class Brigandine(Armor_Construction):
@@ -476,6 +511,7 @@ class Brigandine(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = 2.2 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 class Plate(Armor_Construction):
@@ -499,6 +535,7 @@ class Plate(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = 3 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 class Double_Plate(Armor_Construction):
@@ -522,6 +559,7 @@ class Double_Plate(Armor_Construction):
         self.t_resist = 1
         self.construction_diff = 8 #Scalar for difficulty of construction
 
+        self.__dict__.update(kwargs)
         self.set_name()
 
 #Components
@@ -542,6 +580,7 @@ class Coif(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Helm(Armor_Component):
@@ -561,6 +600,7 @@ class Helm(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Closed_Helm(Armor_Component):
@@ -580,6 +620,7 @@ class Closed_Helm(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Bevor(Armor_Component):
@@ -599,6 +640,7 @@ class Bevor(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Gorget(Armor_Component):
@@ -618,6 +660,7 @@ class Gorget(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Hauberk(Armor_Component):
@@ -637,6 +680,7 @@ class Hauberk(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Curiass(Armor_Component):
@@ -656,6 +700,7 @@ class Curiass(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Pixane(Armor_Component):
@@ -675,6 +720,7 @@ class Pixane(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Culet(Armor_Component):
@@ -694,6 +740,7 @@ class Culet(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Couter(Armor_Component):
@@ -712,6 +759,7 @@ class Couter(Armor_Component):
         self.desc = 'A covering of ' + self.construction.name.lower() + ' armor that protects the elbows'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Spaulder(Armor_Component):
@@ -730,6 +778,7 @@ class Spaulder(Armor_Component):
         self.desc = 'A section of ' + self.construction.name.lower() + ' armor that protects the shoulders'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Pauldron(Armor_Component):
@@ -748,6 +797,7 @@ class Pauldron(Armor_Component):
         self.desc = 'A complex section of ' + self.construction.name.lower() + ' armor that protects the shoulders, chest, and upper arms'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Brassart(Armor_Component):
@@ -766,6 +816,7 @@ class Brassart(Armor_Component):
         self.desc = 'A simple cylinder of ' + self.construction.name.lower() + ' armor that protects the upper arm'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Vambrace(Armor_Component):
@@ -784,6 +835,7 @@ class Vambrace(Armor_Component):
         self.desc = 'A simple cylinder of ' + self.construction.name.lower() + ' armor that protects the lower arm'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Gauntlet(Armor_Component):
@@ -802,6 +854,7 @@ class Gauntlet(Armor_Component):
         self.desc = 'A complex construction using ' + self.construction.name.lower() + ' armor to protect the hand and fingers'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Chauses(Armor_Component):
@@ -821,6 +874,7 @@ class Chauses(Armor_Component):
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Polyen(Armor_Component):
@@ -839,6 +893,7 @@ class Polyen(Armor_Component):
         self.desc = 'A complex construction using ' + self.construction.name.lower() + ' armor to protect the knees'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Greave(Armor_Component):
@@ -857,6 +912,7 @@ class Greave(Armor_Component):
         self.desc = 'A half-cylinder of ' + self.construction.name.lower() + ' armor to protect lower legs'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Cuisse(Armor_Component):
@@ -875,6 +931,7 @@ class Cuisse(Armor_Component):
         self.desc = 'An articulated cylinder of ' + self.construction.name.lower() + ' armor to protect upper legs'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Sabaton(Armor_Component):
@@ -893,6 +950,7 @@ class Sabaton(Armor_Component):
         self.desc = self.construction.name + ' armor in a complex arangement to cover the top of the foot'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Boot(Armor_Component):
@@ -911,6 +969,7 @@ class Boot(Armor_Component):
         self.desc = 'A sturdy boot reinforced for combat'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Jerkin(Armor_Component):
@@ -929,6 +988,7 @@ class Jerkin(Armor_Component):
         self.desc = 'A vest made of ' + self.construction.main_material.name.lower() + ' to protect the torso'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 class Breeches(Armor_Component):
@@ -947,6 +1007,7 @@ class Breeches(Armor_Component):
         self.desc = 'Pants made of ' + self.construction.main_material.name.lower() + ' to protect the lower body'
         self.quality = 'Average'
 
+        self.__dict__.update(kwargs)
         self.set_dynamic_attributes()
 
 

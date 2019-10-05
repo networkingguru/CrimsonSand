@@ -18,8 +18,10 @@ add_weapons(entities, weapons)
 
 aggressor = entities[0]
 target = entities[1] """
+amount = 10
 
-armors = armor.gen_armor(armor.Hauberk, amount = 10)
+armors = armor.gen_armor(armor.Hauberk, amount = amount)
 
-for a in armors:
-    print(a.name)
+if len(armors) == amount:
+    for a in armors:
+        print(a.name)
