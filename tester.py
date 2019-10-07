@@ -20,8 +20,12 @@ aggressor = entities[0]
 target = entities[1] """
 amount = 10
 
-armors = armor.gen_armor(armor.Hauberk, amount = amount)
+armors = armor.gen_armor(armor.Jerkin, random = False, comparison = True, thickness = 1)
 
-if len(armors) == amount:
+if len(armors) >= amount:
     for a in armors:
         print(a.name)
+        print(a.weight)
+        print(a.hits_sq_in)
+
+print('Done')

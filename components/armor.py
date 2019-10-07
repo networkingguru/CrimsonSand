@@ -21,11 +21,14 @@ def gen_armor(armor_component, **kwargs):
     accent_material = kwargs.get('accent_material')
     accent_amount = kwargs.get('accent_amount')
     const_obj = kwargs.get('const_obj')
+    comparison = kwargs.get('comparison')
 
     if amount == None:
         amount = 1
     if random == None:
         random = True
+    if comparison == None:
+        comparison = False
 
     #List of components
     components = []
@@ -33,10 +36,25 @@ def gen_armor(armor_component, **kwargs):
     #Create dummy component
     a = armor_component()
 
-    i=0
-    while i < amount:
+    if comparison:
+        if thickness == None:
+            thickness = .1
+        for construction in a.allowed_constructions:
+            #Create dummy construction
+            c = construction()
+            for material in c.allowed_main_materials:
+                if binder == None:
+                    binder = c.allowed_binder_materials[0]
+                
+                const_obj = construction(main_material = material, binder_material = binder)
 
-        if random:
+                component = armor_component(thickness = thickness, construction = const_obj)
+                components.append(component)
+                
+
+    elif random:
+        i=0
+        while i < amount:
             if construction == None:
                 if len(a.allowed_constructions) > 1:
                     construction = a.allowed_constructions[(roll_dice(1,len(a.allowed_constructions)))-1]
@@ -274,7 +292,7 @@ class Armor_Component:
         self.t_deflect *= self.construction.t_resist
         
         #Hits calc is attempting to model shear stress
-        self.hits = (self.construction.main_material.hardness * 1500) * self.thickness * construction_vol * (1+(self.construction.main_material.toughness/10)) * (1+(sqrt(self.construction.main_material.elasticity)/10)) 
+        self.hits = (self.construction.main_material.hardness * 15000) * self.thickness * self.construction.density * construction_vol * (1+(sqrt(self.construction.main_material.toughness)/10)) * (1+(sqrt(self.construction.main_material.elasticity)/10)) 
         self.max_hits = self.hits
         self.hits_sq_in = self.hits / self.main_area
 
@@ -355,7 +373,6 @@ class Padded(Armor_Construction):
         self.max_thickness = .2
         self.allowed_main_materials = [m_cloth, m_canvas] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_cloth #Primary material
-        self.desc = 'Padded ' + self.main_material.name.lower()
         self.rigidity = 'flexible' #rigid, semi, or flexible
         self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
@@ -366,6 +383,8 @@ class Padded(Armor_Construction):
         self.construction_diff = .2 #Scalar for difficulty of construction     
 
         self.__dict__.update(kwargs)
+        self.desc = 'Padded ' + self.main_material.name.lower()
+
         self.set_name()   
 
 class Chain(Armor_Construction):
@@ -379,9 +398,8 @@ class Chain(Armor_Construction):
         self.max_thickness = .5
         self.allowed_main_materials = [m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
-        self.desc = 'Small, densely packed interlocking ' + self.main_material.name.lower() + ' rings'
         self.rigidity = 'flexible' #rigid, semi, or flexible
-        self.density = .5 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = 1.2 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -390,6 +408,7 @@ class Chain(Armor_Construction):
         self.construction_diff = 1 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.desc = 'Small, densely packed interlocking ' + self.main_material.name.lower() + ' rings'
         self.set_name()
 
 class Ring(Armor_Construction):
@@ -403,9 +422,8 @@ class Ring(Armor_Construction):
         self.max_thickness = .25
         self.allowed_main_materials = [m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
-        self.desc = 'Large ' + self.main_material.name.lower() + ' rings sewn onto a ' + self.binder_material.name.lower() + ' surface'
         self.rigidity = 'flexible' #rigid, semi, or flexible
-        self.density = .3 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .05 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -414,6 +432,7 @@ class Ring(Armor_Construction):
         self.construction_diff = .5 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.desc = 'Large ' + self.main_material.name.lower() + ' rings sewn onto a ' + self.binder_material.name.lower() + ' surface'
         self.set_name()
         
 class Splint(Armor_Construction):
@@ -427,9 +446,8 @@ class Splint(Armor_Construction):
         self.max_thickness = .25
         self.allowed_main_materials = [m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
-        self.desc = 'Large, long ' + self.main_material.name.lower() + ' segments sewn onto a ' + self.binder_material.name.lower() + ' backing'
         self.rigidity = 'semi' #rigid, semi, or flexible
-        self.density = .9 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1.1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -438,6 +456,7 @@ class Splint(Armor_Construction):
         self.construction_diff = .8 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.desc = 'Large, long ' + self.main_material.name.lower() + ' segments sewn onto a ' + self.binder_material.name.lower() + ' backing'
         self.set_name()
 
 class Scale(Armor_Construction):
@@ -451,9 +470,8 @@ class Scale(Armor_Construction):
         self.max_thickness = .2
         self.allowed_main_materials = [m_leather, m_bleather, m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
-        self.desc = 'Small ' + self.main_material.name.lower() + ' scales arranged in rows and attached to each other and a ' + self.binder_material.name.lower() + ' backing'
         self.rigidity = 'semi' #rigid, semi, or flexible
-        self.density = 1.1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .2 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = 1.1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -462,6 +480,7 @@ class Scale(Armor_Construction):
         self.construction_diff = 2 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.desc = 'Small ' + self.main_material.name.lower() + ' scales arranged in rows and attached to each other and a ' + self.binder_material.name.lower() + ' backing'
         self.set_name()
 
 class Lamellar(Armor_Construction):
@@ -476,9 +495,8 @@ class Lamellar(Armor_Construction):
         self.desc = 'Small plates arranged in rows and attached to each other with a high amount of overlap'
         self.allowed_main_materials = [m_leather, m_bleather, m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
-        self.desc = 'Small ' + self.main_material.name.lower() + ' plates arranged in rows and attached to each other with a high amount of overlap'
         self.rigidity = 'semi' #rigid, semi, or flexible
-        self.density = 1.1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .2 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = 1.2 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -487,6 +505,7 @@ class Lamellar(Armor_Construction):
         self.construction_diff = 2 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.desc = 'Small ' + self.main_material.name.lower() + ' plates arranged in rows and attached to each other with a high amount of overlap'
         self.set_name()
 
 class Brigandine(Armor_Construction):
@@ -501,9 +520,8 @@ class Brigandine(Armor_Construction):
         self.desc = 'Irregular plates arranged to suit anatomy sandwitched between layers of dense cloth'
         self.allowed_main_materials = [m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
-        self.desc = 'Irregular ' + self.main_material.name.lower() + ' plates arranged to suit anatomy sandwitched between layers of  ' + self.binder_material.name.lower() 
         self.rigidity = 'semi' #rigid, semi, or flexible
-        self.density = .8 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -512,6 +530,7 @@ class Brigandine(Armor_Construction):
         self.construction_diff = 2.2 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.desc = 'Irregular ' + self.main_material.name.lower() + ' plates arranged to suit anatomy sandwitched between layers of  ' + self.binder_material.name.lower() 
         self.set_name()
 
 class Plate(Armor_Construction):
@@ -523,11 +542,10 @@ class Plate(Armor_Construction):
         self.binder_amount = .3 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.min_thickness = .05
         self.max_thickness = .15
-        self.allowed_main_materials = [m_bleather, m_wood, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.allowed_main_materials = [m_bleather, m_wood, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hssteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
-        self.desc = 'Interlocking and overlapping ' + self.main_material.name.lower() + ' plates configured to conform to anatomy with minimal gaps'
         self.rigidity = 'rigid' #rigid, semi, or flexible
-        self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .6 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = .8 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -536,6 +554,7 @@ class Plate(Armor_Construction):
         self.construction_diff = 3 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.desc = 'Interlocking and overlapping ' + self.main_material.name.lower() + ' plates configured to conform to anatomy with minimal gaps'
         self.set_name()
 
 class Double_Plate(Armor_Construction):
@@ -547,11 +566,10 @@ class Double_Plate(Armor_Construction):
         self.binder_amount = .4 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.min_thickness = .07
         self.max_thickness = .3
-        self.allowed_main_materials = [m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        self.allowed_main_materials = [m_steel, m_hsteel, m_ssteel, m_hssteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hsteel #Primary material
-        self.desc = 'Interlocking and overlapping ' + self.main_material.name.lower() + ' plates that include an inner and outer wall with an airgap in between'
         self.rigidity = 'rigid' #rigid, semi, or flexible
-        self.density = 1.4 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .8 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = .9 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1.1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -560,6 +578,7 @@ class Double_Plate(Armor_Construction):
         self.construction_diff = 8 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
+        self.desc = 'Interlocking and overlapping ' + self.main_material.name.lower() + ' plates that include an inner and outer wall with an airgap in between'
         self.set_name()
 
 #Components
@@ -570,17 +589,17 @@ class Coif(Armor_Component):
         self.ht_range = (36,84) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (0,600) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Chain,Ring,Hide,Leather,Padded] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .8 #Scalar for base construction time
         self.covered_locs = [0,2] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'Armor hood made from ' + self.construction.main_material.name.lower() + ' that covers the top of the head and the neck'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'Armor hood made from ' + self.construction.main_material.name.lower() + ' that covers the top of the head and the neck'
         self.set_dynamic_attributes()
 
 class Helm(Armor_Component):
@@ -590,17 +609,17 @@ class Helm(Armor_Component):
         self.ht_range = (36,84) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (150,500) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Hide,Leather,Padded,Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .5 #Scalar for base construction time
         self.covered_locs = [0] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'An open helmet made from ' + self.construction.main_material.name.lower() + ' that covers the top of the head'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'An open helmet made from ' + self.construction.main_material.name.lower() + ' that covers the top of the head'
         self.set_dynamic_attributes()
 
 class Closed_Helm(Armor_Component):
@@ -610,17 +629,17 @@ class Closed_Helm(Armor_Component):
         self.ht_range = (48,84) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (200,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1 #Scalar for base construction time
         self.covered_locs = [0,1] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A closed helmet made from ' + self.construction.main_material.name.lower() + ' that covers the top of the head and face'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'A closed helmet made from ' + self.construction.main_material.name.lower() + ' that covers the top of the head and face'
         self.set_dynamic_attributes()
 
 class Bevor(Armor_Component):
@@ -630,17 +649,17 @@ class Bevor(Armor_Component):
         self.ht_range = (54,78) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (200,400) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1 #Scalar for base construction time
         self.covered_locs = [1,2] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A heavy ' + self.construction.main_material.name.lower() + ' covering for the neck and lower face'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'A heavy ' + self.construction.main_material.name.lower() + ' covering for the neck and lower face'
         self.set_dynamic_attributes()
 
 class Gorget(Armor_Component):
@@ -650,17 +669,17 @@ class Gorget(Armor_Component):
         self.ht_range = (40,84) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (150,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Leather,Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .5 #Scalar for base construction time
         self.covered_locs = [2] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A simple ' + self.construction.main_material.name.lower() + ' covering for the neck'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'A simple ' + self.construction.main_material.name.lower() + ' covering for the neck'
         self.set_dynamic_attributes()
 
 class Hauberk(Armor_Component):
@@ -676,11 +695,11 @@ class Hauberk(Armor_Component):
         self.assembly_diff = 2.5 #Scalar for base construction time
         self.covered_locs = range(3,17) #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A coat of ' + self.construction.name.lower() + ' armor that protects most of the upper body'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'A coat of ' + self.construction.name.lower() + ' armor that protects most of the upper body'
         self.set_dynamic_attributes()
 
 class Curiass(Armor_Component):
@@ -690,17 +709,17 @@ class Curiass(Armor_Component):
         self.ht_range = (60,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (200,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Leather,Scale,Splint,Lamellar,Brigandine,Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .5 #Scalar for base construction time
         self.covered_locs = [3,4,5,6,9,10,13,14] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A sleeveless breastplate of ' + self.construction.name.lower() + ' armor that protects the upper body'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'A sleeveless breastplate of ' + self.construction.name.lower() + ' armor that protects the upper body'
         self.set_dynamic_attributes()
 
 class Pixane(Armor_Component):
@@ -710,17 +729,17 @@ class Pixane(Armor_Component):
         self.ht_range = (40,84) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (150,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Leather,Padded,Chain] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .5 #Scalar for base construction time
         self.covered_locs = [3,4,5,6] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A long segment of ' + self.construction.name.lower() + ' armor that protects the neck and upper chest'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'A long segment of ' + self.construction.name.lower() + ' armor that protects the neck and upper chest'
         self.set_dynamic_attributes()
 
 class Culet(Armor_Component):
@@ -730,17 +749,17 @@ class Culet(Armor_Component):
         self.ht_range = (50,78) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,400) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Hide,Leather,Chain,Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1 #Scalar for base construction time
         self.covered_locs = [17,18] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A covering of ' + self.construction.name.lower() + ' armor that protects the hips'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = 'A covering of ' + self.construction.name.lower() + ' armor that protects the hips'
         self.set_dynamic_attributes()
 
 class Couter(Armor_Component):
@@ -750,16 +769,16 @@ class Couter(Armor_Component):
         self.ht_range = (36,84) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (150,500) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1 #Scalar for base construction time
         self.covered_locs = [11,12] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A covering of ' + self.construction.name.lower() + ' armor that protects the elbows'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A covering of ' + self.construction.name.lower() + ' armor that protects the elbows'
         self.set_dynamic_attributes()
 
 class Spaulder(Armor_Component):
@@ -769,16 +788,16 @@ class Spaulder(Armor_Component):
         self.ht_range = (50,78) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (200,350) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1 #Scalar for base construction time
         self.covered_locs = [3,4] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A section of ' + self.construction.name.lower() + ' armor that protects the shoulders'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A section of ' + self.construction.name.lower() + ' armor that protects the shoulders'
         self.set_dynamic_attributes()
 
 class Pauldron(Armor_Component):
@@ -788,16 +807,16 @@ class Pauldron(Armor_Component):
         self.ht_range = (66,78) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (200,300) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1.5 #Scalar for base construction time
         self.covered_locs = range(3-9) #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A complex section of ' + self.construction.name.lower() + ' armor that protects the shoulders, chest, and upper arms'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A complex section of ' + self.construction.name.lower() + ' armor that protects the shoulders, chest, and upper arms'
         self.set_dynamic_attributes()
 
 class Brassart(Armor_Component):
@@ -807,16 +826,16 @@ class Brassart(Armor_Component):
         self.ht_range = (66,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (200,300) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .3 #Scalar for base construction time
         self.covered_locs = [7,8] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A simple cylinder of ' + self.construction.name.lower() + ' armor that protects the upper arm'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A simple cylinder of ' + self.construction.name.lower() + ' armor that protects the upper arm'
         self.set_dynamic_attributes()
 
 class Vambrace(Armor_Component):
@@ -826,16 +845,16 @@ class Vambrace(Armor_Component):
         self.ht_range = (66,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (200,300) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Leather,Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .3 #Scalar for base construction time
         self.covered_locs = [15,16] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A simple cylinder of ' + self.construction.name.lower() + ' armor that protects the lower arm'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A simple cylinder of ' + self.construction.name.lower() + ' armor that protects the lower arm'
         self.set_dynamic_attributes()
 
 class Gauntlet(Armor_Component):
@@ -845,16 +864,16 @@ class Gauntlet(Armor_Component):
         self.ht_range = (66,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (150,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Leather,Scale,Brigandine,Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 3 #Scalar for base construction time
         self.covered_locs = [19,20] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A complex construction using ' + self.construction.name.lower() + ' armor to protect the hand and fingers'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A complex construction using ' + self.construction.name.lower() + ' armor to protect the hand and fingers'
         self.set_dynamic_attributes()
 
 class Chauses(Armor_Component):
@@ -864,17 +883,17 @@ class Chauses(Armor_Component):
         self.ht_range = (60,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,400) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Padded,Leather,Chain,Scale,Lamellar,Brigandine] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1.5 #Scalar for base construction time
         self.covered_locs = range(21-27) #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = self.construction.name + ' armor to protect the legs'
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
 
         self.__dict__.update(kwargs)
+        self.desc = self.construction.name + ' armor to protect the legs'
         self.set_dynamic_attributes()
 
 class Polyen(Armor_Component):
@@ -884,16 +903,16 @@ class Polyen(Armor_Component):
         self.ht_range = (66,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,350) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1.5 #Scalar for base construction time
         self.covered_locs = [23,24] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A complex construction using ' + self.construction.name.lower() + ' armor to protect the knees'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A complex construction using ' + self.construction.name.lower() + ' armor to protect the knees'
         self.set_dynamic_attributes()
 
 class Greave(Armor_Component):
@@ -903,16 +922,16 @@ class Greave(Armor_Component):
         self.ht_range = (60,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .3 #Scalar for base construction time
         self.covered_locs = [25,26] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A half-cylinder of ' + self.construction.name.lower() + ' armor to protect lower legs'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A half-cylinder of ' + self.construction.name.lower() + ' armor to protect lower legs'
         self.set_dynamic_attributes()
 
 class Cuisse(Armor_Component):
@@ -922,16 +941,16 @@ class Cuisse(Armor_Component):
         self.ht_range = (60,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,350) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Plate,Double_Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .7 #Scalar for base construction time
         self.covered_locs = [21,22] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'An articulated cylinder of ' + self.construction.name.lower() + ' armor to protect upper legs'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'An articulated cylinder of ' + self.construction.name.lower() + ' armor to protect upper legs'
         self.set_dynamic_attributes()
 
 class Sabaton(Armor_Component):
@@ -941,16 +960,16 @@ class Sabaton(Armor_Component):
         self.ht_range = (66,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Chain,Plate] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1.5 #Scalar for base construction time
         self.covered_locs = [27,28] #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = self.construction.name + ' armor in a complex arangement to cover the top of the foot'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = self.construction.name + ' armor in a complex arangement to cover the top of the foot'
         self.set_dynamic_attributes()
 
 class Boot(Armor_Component):
@@ -960,7 +979,7 @@ class Boot(Armor_Component):
         self.ht_range = (66,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Leather] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1 #Scalar for base construction time
@@ -979,16 +998,16 @@ class Jerkin(Armor_Component):
         self.ht_range = (54,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,450) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Padded,Leather] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1 #Scalar for base construction time
         self.covered_locs = [3,4,5,6,9,10,13,14] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'A vest made of ' + self.construction.main_material.name.lower() + ' to protect the torso'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'A vest made of ' + self.construction.main_material.name.lower() + ' to protect the torso'
         self.set_dynamic_attributes()
 
 class Breeches(Armor_Component):
@@ -998,16 +1017,16 @@ class Breeches(Armor_Component):
         self.ht_range = (60,72) #Tuple containing min and max ht supported by the armor 
         self.str_fat_range = (250,350) #Tuple containing min and max str/fat combination supported by the armor (girth)
         self.allowed_constructions = [Padded,Leather] #List of Armor_Constructions that may be used
-        self.construction = self.allowed_constructions[0]
+        self.construction = self.allowed_constructions[0]()
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = .5 #Scalar for base construction time
         self.covered_locs = [17,18,21,22,23,24,25,26] #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
-        self.desc = 'Pants made of ' + self.construction.main_material.name.lower() + ' to protect the lower body'
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
+        self.desc = 'Pants made of ' + self.construction.main_material.name.lower() + ' to protect the lower body'
         self.set_dynamic_attributes()
 
 
