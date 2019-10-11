@@ -9,6 +9,12 @@ quality_dict = {'Junk': -.5, 'Very Poor': -.3, 'Poor': -.2, 'Below Average': -.1
 
 #Generator Functions
 def gen_armor(armor_component, **kwargs):
+    #Modes: 
+    #1. Entity: Given an entity and (optional) kwargs, generate armor components to fit entity
+    #2. Comparision: Set comparison kwarg to True, and given (optional) kwargs, will generate identical armors with every combination of main_material and contruction for comparison
+    #3. Random: If the other modes are not set, generate x completely random armors. Will use kwargs if given to fix certain attributes.
+
+
     #Set vars for kwargs
     amount = kwargs.get('amount')
     random = kwargs.get('random')
@@ -22,6 +28,7 @@ def gen_armor(armor_component, **kwargs):
     accent_amount = kwargs.get('accent_amount')
     const_obj = kwargs.get('const_obj')
     comparison = kwargs.get('comparison')
+    entity = kwargs.get('entity')
 
     if amount == None:
         amount = 1
@@ -36,7 +43,54 @@ def gen_armor(armor_component, **kwargs):
     #Create dummy component
     a = armor_component()
 
-    if comparison:
+    if entity is not None:
+        ht_min = entity.fighter.height
+        ht_max = ht_min + a.ht_range[1] - a.ht_range[0]
+        sf_min  = entity.fighter.get_attribute('str') + entity.fighter.get_attribute('fat')
+        sf_max = sf_min + a.str_fat_range[1] - a.str_fat_range[0]
+        ht_range = (ht_min, ht_max)
+        str_fat_range = (sf_min,sf_max)
+
+        if thickness == None:
+            thickness = .1
+        if construction == None:
+            for construct in a.allowed_constructions:
+                c = construct()
+                if binder not in c.allowed_binder_materials or binder == None:
+                    binder = c.allowed_binder_materials[0]
+                if main_material not in c.allowed_main_materials:
+                    if construct != a.allowed_constructions[-1]:
+                        continue
+                    else:
+                        main_material = c.allowed_main_materials[0]                    
+                elif main_material == None:
+                    main_material = c.allowed_main_materials[0]
+                construction = construct
+        else:
+            c = construction()
+            if binder not in c.allowed_binder_materials or binder == None:
+                binder = c.allowed_binder_materials[0]
+            if main_material not in c.allowed_main_materials or main_material == None:
+                main_material = c.allowed_main_materials[0]
+
+        const_obj = construction(main_material = main_material, binder_material = binder)
+
+        c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material}
+        del_keys = []
+
+        for key, value in c_kwargs.items():
+            if value == None:
+                del_keys.append(key)
+
+        for key in del_keys:
+            del c_kwargs[key]
+        
+        component = armor_component(**c_kwargs)
+        components.append(component)
+
+    
+    
+    elif comparison:
         if thickness == None:
             thickness = .1
         for construction in a.allowed_constructions:
@@ -50,6 +104,7 @@ def gen_armor(armor_component, **kwargs):
 
                 component = armor_component(thickness = thickness, construction = const_obj)
                 components.append(component)
+
                 
 
     elif random:
@@ -187,6 +242,7 @@ class Armor_Component:
         self.hits_sq_in = 0 #Hits required to breach one sq inch
         self.b_soak = 0 #Amount of force absorbed by padding. Percentage/Scalar
         self.physical_mod = 0 #Modifier to all physical actions due to armor. Reducable with armor skill
+        self.stam_drain = 0 #Amount of stamina drained per round when wearing the armor
 
         self.__dict__.update(kwargs)
         
@@ -293,7 +349,6 @@ class Armor_Component:
         
         #Hits calc is attempting to model shear stress
         self.hits = (self.construction.main_material.hardness * 15000) * self.thickness * self.construction.density * construction_vol * (1+(sqrt(self.construction.main_material.toughness)/10)) * (1+(sqrt(self.construction.main_material.elasticity)/10)) 
-        self.max_hits = self.hits
         self.hits_sq_in = self.hits / self.main_area
 
         deflect_max = (sqrt(self.construction.main_material.hardness))/8 * self.hits_sq_in
@@ -311,6 +366,10 @@ class Armor_Component:
             qual = self.quality + ' '
 
         self.name = qual + self.construction.name + ' ' + self.base_name
+
+        self.stam_drain = self.weight * (self.physical_mod / self.weight) 
+
+        self.max_hits = self.hits
 
 #Constructions
 
