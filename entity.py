@@ -23,6 +23,7 @@ class Entity:
         self.state = state
         self.weapons = weapons
         self.guard = None
+        self.worn_armor = {} #Dict of dicts in the following format: {'Curiass':{'construction':'Plate','main_material' : 'Hardened Steel','thickness':.05}}
 
         if self.fighter:
             self.fighter.owner = self

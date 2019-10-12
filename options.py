@@ -2,6 +2,7 @@
 import enums
 from components.ai import CombatAI
 
+
 #UI Vars
 screen_width = 180
 screen_height = 90
@@ -62,6 +63,7 @@ player_l_weapon = 'Unarmed'
 player_rf_weapon = 'Unarmed'
 player_lf_weapon = 'Unarmed'
 player_weapons = {'r_wpn': player_r_weapon, 'l_wpn': player_l_weapon, 'rf_wpn': player_rf_weapon, 'lf_wpn': player_lf_weapon}
+player_armor = {'Curiass':{'construction':'Plate','main_material' : 'Hardened Steel','thickness':.05}}
 
 #Enemy specs
 enemy_attr = low_init

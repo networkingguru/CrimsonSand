@@ -3,11 +3,11 @@ from math import sqrt
 from random import uniform
 from utilities import itersubclasses, clamp, roll_dice
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
-    m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
+    m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide, material_dict)
 
 quality_dict = {'Junk': -.5, 'Very Poor': -.3, 'Poor': -.2, 'Below Average': -.1, 'Average': 1, 'Above Average': 1.15, 'Fine': 1.3, 'Exceptional': 1.4, 'Masterwork': 1.5}
 
-#Generator Functions
+#Generator Function
 def gen_armor(armor_component, **kwargs):
     #Modes: 
     #1. Entity: Given an entity and (optional) kwargs, generate armor components to fit entity
@@ -173,7 +173,25 @@ def gen_armor(armor_component, **kwargs):
 
     return components
 
-    
+#Application Function
+def apply_armor(entity):
+    worn_armor = entity.worn_armor
+    armor_objects = []
+    components = itersubclasses(Armor_Component)
+    constructions = itersubclasses(Armor_Construction)
+
+    for key, value in worn_armor.items():
+        for component in components:
+            if key == component.__name__:
+                construction = value.get('construction')
+                for const in constructions:
+                    if construction == const.__name__:
+                        value['construction'] = const
+                        value['armor_component'] = component
+                        value['main_material'] = material_dict.get(value.get('main_material'))
+                        value['entity'] = entity
+                        armor_objects.extend(gen_armor(**value))
+                        print(armor_objects[0].name)    
 
 
 
@@ -186,7 +204,7 @@ class Armor_Construction:
         self.base_name = ''
         self.allowed_main_materials = [] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_steel #Primary material
-        self.min_thickness = .01
+        self.min_thickness = .001
         self.max_thickness = 1
         self.allowed_binder_materials = [] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
@@ -429,7 +447,7 @@ class Padded(Armor_Construction):
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = 0 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.min_thickness = .05
-        self.max_thickness = .2
+        self.max_thickness = 1
         self.allowed_main_materials = [m_cloth, m_canvas] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_cloth #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
@@ -599,12 +617,12 @@ class Plate(Armor_Construction):
         self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = .3 #Scalar. 1 = 1:1 ratio of binder to main volume
-        self.min_thickness = .05
+        self.min_thickness = .03
         self.max_thickness = .15
         self.allowed_main_materials = [m_bleather, m_wood, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hssteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
         self.rigidity = 'rigid' #rigid, semi, or flexible
-        self.density = .6 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = .8 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -623,12 +641,12 @@ class Double_Plate(Armor_Construction):
         self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = .4 #Scalar. 1 = 1:1 ratio of binder to main volume
-        self.min_thickness = .07
-        self.max_thickness = .3
+        self.min_thickness = .04
+        self.max_thickness = .2
         self.allowed_main_materials = [m_steel, m_hsteel, m_ssteel, m_hssteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hsteel #Primary material
         self.rigidity = 'rigid' #rigid, semi, or flexible
-        self.density = .8 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .15 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
         self.balance = .9 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1.1 #Scalar to modify damage resistance
         self.s_resist = 1

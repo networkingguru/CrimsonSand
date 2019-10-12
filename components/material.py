@@ -18,10 +18,8 @@ class Material():
         self.craft_diff = 1 #Scalar. Difficulty of crafting. 1 = 1 day of crafting per lb of finished material. Cost of 1 day of a craftsman = 5 
         # For metals, hardness modifies it. Hardened Steel takes 5 days to craft 1 pound of weaponry. 
         self.density = 1 #Scalar. Relative density per cubic inch. 1 = Wood, .03 lb/in3. Copper = .32, Silver = .38, Gold = .7, Iron = .28, Bronze = .3, Steel = .28
-        for key in self.__dict__:
-            for k in kwargs:
-                if k == key:
-                    self.__dict__.update(kwargs)
+
+        self.__dict__.update(kwargs)
         self.set_dynamic_attr()
     
     def set_dynamic_attr(self):                   
@@ -51,10 +49,14 @@ m_mithril = Material(name='Mithril', hardness=100, elasticity=18, toughness=.8, 
 m_adam = Material(name='Adamantine', hardness=150, elasticity=22, toughness=1, normality=.001, cost=160, density=10, p_ratio = .15, craft_diff = 0) #Ultra materials are always hardened
 m_gold = Material(name='Gold', hardness=10, elasticity=8, toughness=10, normality=.001, cost=82000, density=23, p_ratio = .42, craft_diff = 0) 
 m_hgold = Material(name='Half-Gold', hardness=11, elasticity=9, toughness=8, normality=.01, cost=40000, density=16, p_ratio = .44, craft_diff = 0) #Roughly 14K gold
-m_silver = Material(name='Silver', hardness=10, elasticity=8, toughness=10, normality=.07, cost=1000, density=13, p_ratio = .4, craft_diff = 0) 
+m_silver = Material(name='Silver', hardness=10, elasticity=8, toughness=10, normality=.07, cost=1000, density=13, p_ratio = .4, craft_dif = 0) 
 m_granite = Material(name='Granite', hardness=7, elasticity=5, toughness=.1, normality=3, cost=1, density=3, p_ratio = .2, craft_diff = 0) 
 m_obsidian = Material(name='Obsidian', hardness=30, elasticity=25, toughness=.01, normality=.5, cost=15, density=2, p_ratio = .3, craft_diff = 0) 
 
 
 
 master_material_list = Material._allMaterials
+material_dict = {}
+
+for m in master_material_list:
+    material_dict[m.name] = m

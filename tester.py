@@ -3,11 +3,11 @@ from math import sqrt, pi
 import time
 import global_vars
 from utilities import itersubclasses
-from components import maneuver, material, armor
-#from components import fighter, injuries, weapon
+from components import armor
+from components.material import Material, material_dict
+from components.armor import Armor_Component, Armor_Construction, gen_armor
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from utilities import itersubclasses
-# import combat_functions
 import options
 
 entity_list = options.entities
@@ -17,16 +17,9 @@ add_fighters(entities, fighters)
 weapons = options.weapons
 add_weapons(entities, weapons)
 
+
 aggressor = entities[0]
 target = entities[1]
-amount = 1
+aggressor.worn_armor = options.player_armor
 
-armors = armor.gen_armor(armor.Curiass, amount = amount, entity = aggressor, construction = armor.Plate, main_material = material.m_hsteel)
-
-if len(armors) >= amount:
-    for a in armors:
-        print(a.name)
-        print(a.weight)
-        print(a.hits_sq_in)
-
-print('Done')
+armor.apply_armor(aggressor)
