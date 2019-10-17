@@ -23,3 +23,4 @@ target = entities[1]
 aggressor.worn_armor = options.player_armor
 
 armor.apply_armor(aggressor)
+print('done')

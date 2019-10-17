@@ -5,6 +5,7 @@ from utilities import itersubclasses, clamp, roll_dice
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide, material_dict)
 
+
 quality_dict = {'Junk': -.5, 'Very Poor': -.3, 'Poor': -.2, 'Below Average': -.1, 'Average': 1, 'Above Average': 1.15, 'Fine': 1.3, 'Exceptional': 1.4, 'Masterwork': 1.5}
 
 #Generator Function
@@ -175,25 +176,122 @@ def gen_armor(armor_component, **kwargs):
 
 #Application Function
 def apply_armor(entity):
+    #Used to automatically apply a list of armors generated from a definition string in an entity
     worn_armor = entity.worn_armor
     armor_objects = []
-    components = itersubclasses(Armor_Component)
-    constructions = itersubclasses(Armor_Construction)
+    error_msg = ''
 
-    for key, value in worn_armor.items():
+    for num in worn_armor:
+        components = itersubclasses(Armor_Component)
         for component in components:
-            if key == component.__name__:
-                construction = value.get('construction')
+            if num.get('component') == component.__name__:
+                construction = num.get('construction')
+                constructions = itersubclasses(Armor_Construction)
                 for const in constructions:
                     if construction == const.__name__:
-                        value['construction'] = const
-                        value['armor_component'] = component
-                        value['main_material'] = material_dict.get(value.get('main_material'))
-                        value['entity'] = entity
-                        armor_objects.extend(gen_armor(**value))
-                        print(armor_objects[0].name)    
+                        num['construction'] = const
+                        num['armor_component'] = component
+                        num['main_material'] = material_dict.get(num.get('main_material'))
+                        num['entity'] = entity
+                        armor_objects.extend(gen_armor(**num))
+                        
+    
+    
+    t_armors = []
+    l_armors = []
+    h_armors = []
+    a_armors = []
+    o_armors = []
+    ao_lists = [t_armors,l_armors,h_armors,a_armors,o_armors]
+    
+    for ao in armor_objects:
+        ao_type = armor_classifier(ao)
+        if ao_type == 't':
+            t_armors.append(ao)
+        elif ao_type == 'l':
+            l_armors.append(ao)
+        elif ao_type == 'h':
+            h_armors.append(ao)
+        elif ao_type == 'a':
+            a_armors.append(ao)
+        else:
+            o_armors.append(ao)
 
 
+    for ao_list in ao_lists:
+        #Sort by rigidity
+        flex_ao = []
+        semi_ao = []
+        rigid_ao = []
+        for ao in ao_list:
+            if ao.rigidity == 'flexible':
+                flex_ao.append(ao)
+            elif ao.rigidity == 'semi':
+                semi_ao.append(ao)
+            else:
+                rigid_ao.append(ao)
+    
+        for l in [flex_ao, semi_ao, rigid_ao]:
+            #Sort by weight
+            l.sort(key=lambda ao: ao.weight)
+            for ao in l:
+                #Check if valid to place
+                error_msg = determine_validity(ao, entity)
+                if error_msg != '':
+                    print (error_msg)
+                else:
+                    for loc in ao.covered_locs:
+                        entity.loc_armor[loc].append(ao)
+
+def armor_classifier(armor_component):
+    #Sort by general type based on location
+    torso_locs = [3,4,5,6,9,10,13,14]
+    leg_locs = [17,18,21,22,23,24,25,26]
+    head_locs = [0,1,2]
+    arm_locs = [7,8,11,12,15,16]
+    other_locs = [19,20,17,18]
+
+    for loc in torso_locs:
+        if loc in armor_component.covered_locs:
+            return 't'
+    for loc in leg_locs:
+        if loc in armor_component.covered_locs:
+            return 'l'
+    for loc in head_locs:
+        if loc in armor_component.covered_locs:
+            return 'h'
+    for loc in arm_locs:
+        if loc in armor_component.covered_locs:
+            return 'a'
+    for loc in other_locs:
+        if loc in armor_component.covered_locs:
+            return 'o'
+
+
+def determine_validity(armor_component, entity):
+    error_message = ''
+
+    for loc in armor_component.covered_locs:
+        if len(entity.loc_armor[loc]) >= 1:
+            top_layer = entity.loc_armor[loc][-1]
+        else:
+            top_layer = None
+        thickness = 0
+
+        if top_layer == None:
+            continue
+        elif armor_component.rigidity == 'rigid' and top_layer.rigidity == 'rigid' or armor_component.rigidity == 'semi' and top_layer.rigidity in ['rigid','semi']:
+            error_message = 'Cannot apply ' + armor_component.name + '. ' + top_layer.name + ' is already applied. '
+        
+        for layer in entity.loc_armor[loc]:
+            thickness += layer.thickness
+
+        if thickness + armor_component.thickness > 1:
+            error_message += 'Cannot apply ' + armor_component.name + '. Total armor thickness at ' + entity.fighter.name_location(loc) + ' exceeds 1 inch. '
+
+        if error_message != '': break
+    
+    return error_message
 
 
 

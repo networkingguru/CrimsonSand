@@ -23,7 +23,10 @@ class Entity:
         self.state = state
         self.weapons = weapons
         self.guard = None
-        self.worn_armor = {} #Dict of dicts in the following format: {'Curiass':{'construction':'Plate','main_material' : 'Hardened Steel','thickness':.05}}
+        self.worn_armor = {} #Dict of dicts in the following format: 1:{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.05}
+        self.loc_armor = [] #List of lists, populated by apply_armor
+        while len(self.loc_armor)<29:
+            self.loc_armor.append([])
 
         if self.fighter:
             self.fighter.owner = self
