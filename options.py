@@ -63,7 +63,7 @@ player_l_weapon = 'Unarmed'
 player_rf_weapon = 'Unarmed'
 player_lf_weapon = 'Unarmed'
 player_weapons = {'r_wpn': player_r_weapon, 'l_wpn': player_l_weapon, 'rf_wpn': player_rf_weapon, 'lf_wpn': player_lf_weapon}
-player_armor = [{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.05},{'component':'Hauberk','construction':'Leather','main_material' : 'leather','thickness':.2}, {'component':'Hauberk','construction':'Chain','main_material' : 'Hardened Steel','thickness':.1}, {'component':'Jerkin','construction':'Padded','main_material' : 'Cloth','thickness':.05}, {'component':'Coif','construction':'Chain','main_material' : 'Hardened Steel','thickness':.05}, {'component':'Coif','construction':'Padded','main_material' : 'Cloth','thickness':.1}]
+player_armor = [{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.1},{'component':'Hauberk','construction':'Leather','main_material' : 'leather','thickness':.2}, {'component':'Hauberk','construction':'Chain','main_material' : 'Hardened Steel','thickness':.5}, {'component':'Jerkin','construction':'Padded','main_material' : 'Cloth','thickness':.05}, {'component':'Coif','construction':'Chain','main_material' : 'Hardened Steel','thickness':.3}, {'component':'Coif','construction':'Padded','main_material' : 'Cloth','thickness':.3}]
 
 #Enemy specs
 enemy_attr = low_init

@@ -24,7 +24,7 @@ class Entity:
         self.weapons = weapons
         self.guard = None
         self.worn_armor = {} #Dict of dicts in the following format: 1:{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.05}
-        self.loc_armor = [] #List of lists, populated by apply_armor
+        self.loc_armor = [] #List of lists, populated by apply_armor, in order from inner to outer
         while len(self.loc_armor)<29:
             self.loc_armor.append([])
 
