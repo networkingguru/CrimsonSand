@@ -547,8 +547,11 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
         if active_entity.player:
             #See if active_entity has AP for repeat
             if active_entity.fighter.ap >= active_entity.fighter.last_atk_ap:           
-                combat_phase = CombatPhase.repeat
-                game_state = GameStates.menu
+                locs = determine_valid_locs(active_entity, enemy, active_entity.fighter.combat_choices[1])
+                #Make sure location is still valid
+                if active_entity.fighter.combat_choices[2] in locs:           
+                    combat_phase = CombatPhase.repeat
+                    game_state = GameStates.menu
             else:
                 active_entity.fighter.combat_choices.clear()
 

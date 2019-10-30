@@ -23,6 +23,8 @@ aggressor = entities[0]
 target = entities[1]
 attack = aggressor.weapons[0].attacks[0]
 
+
+
 def armor_control(target, location, attack, dam_type, dam_amount) -> (list, list, list):
     locations = [location]
     dam_amt_list = [dam_amount]

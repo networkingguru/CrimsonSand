@@ -257,10 +257,10 @@ class Attack():
 
             elif t == 's':
                 if self.main_shape == 'blade':
-                    self.main_area = min(self.main_length, 8) * self.avg_main_width
+                    self.main_area = min(self.main_length, 12) * self.avg_main_width
                     self.mech_adv =  self.main_depth / self.main_width
                 elif self.main_shape == 'de blade':
-                    self.main_area = min(self.main_length, 8) * self.avg_main_width
+                    self.main_area = min(self.main_length, 12) * self.avg_main_width
                     self.mech_adv =  (self.main_depth/2) / self.main_width
             
             elif t == 'p':
@@ -272,7 +272,7 @@ class Attack():
                 else:
                     shape = 'point'
                     if self.striker == 'shaft':
-                        length = min(self.shaft_length, 8)
+                        length = min(self.shaft_length, 12)
                         depth = width = 1
                     else:
                         length = depth = width = 1

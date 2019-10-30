@@ -46,7 +46,7 @@ fps = 30
 fat = [130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,400,130]
 tank = [130,130,130,130,130,130,130,130,250,250,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,180,200,130]
 fw = [130,130,130,130,130,130,130,130,150,150,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,50,50,130]
-hw = [130,130,130,130,130,130,130,130,250,250,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,180,80,130]
+hw = [130,130,130,130,130,130,130,130,250,250,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,150,80,130]
 hopeless_fat = [40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,130,480,40]
 hopeless = [40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40,40]
 midget = [130,130,130,130,130,130,130,130,250,250,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,130,30,80,130]
@@ -55,7 +55,7 @@ hi_init = [130,130,130,130,130,130,430,130,250,250,130,130,130,430,130,130,130,1
 low_init = [130,130,130,130,130,130,30,130,150,150,130,130,130,30,130,130,130,130,130,130,130,130,130,130,130,130,50,50,130]
 
 #Fighter specs
-player_attr = tank
+player_attr = hw
 player_s_dict = {'brawling': 8, 'deflect': 8, 'dodge': 6, 'wrestling': 12, 'long_sword': 8}
 player_fighter = ['Player', player_attr, player_s_dict, 4]
 player_r_weapon = 'De_Medium_Sword'
@@ -63,7 +63,7 @@ player_l_weapon = 'Unarmed'
 player_rf_weapon = 'Unarmed'
 player_lf_weapon = 'Unarmed'
 player_weapons = {'r_wpn': player_r_weapon, 'l_wpn': player_l_weapon, 'rf_wpn': player_rf_weapon, 'lf_wpn': player_lf_weapon}
-player_armor = [{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.1},{'component':'Hauberk','construction':'Leather','main_material' : 'leather','thickness':.2}, {'component':'Hauberk','construction':'Chain','main_material' : 'Hardened Steel','thickness':.5}, {'component':'Jerkin','construction':'Padded','main_material' : 'Cloth','thickness':.05}, {'component':'Coif','construction':'Chain','main_material' : 'Hardened Steel','thickness':.3}, {'component':'Coif','construction':'Padded','main_material' : 'Cloth','thickness':.3}]
+player_armor = [{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.1},{'component':'Hauberk','construction':'Leather','main_material' : 'leather','thickness':.2}, {'component':'Hauberk','construction':'Chain','main_material' : 'Hardened Steel','thickness':.2}, {'component':'Jerkin','construction':'Padded','main_material' : 'Cloth','thickness':.05}, {'component':'Coif','construction':'Chain','main_material' : 'Hardened Steel','thickness':.3}, {'component':'Coif','construction':'Padded','main_material' : 'Cloth','thickness':.3}]
 
 #Enemy specs
 enemy_attr = low_init

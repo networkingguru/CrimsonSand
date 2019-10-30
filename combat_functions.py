@@ -300,15 +300,10 @@ def determine_valid_locs(active_entity, defender, attack) -> list:
     i = 0
     for location in defender.fighter.locations:
         #Skip if no psi left
-        for l in location:
-            empty = True
-            if l != 0:
-                empty = False
-                break
-        if not empty:
+        if sum(location) > 0:
             locations.append(i)
-            i += 1
-
+        
+        i += 1
         
     #Determine relative positioning
     #Start by determining defender facing relative to active_entity
@@ -367,6 +362,9 @@ def determine_valid_locs(active_entity, defender, attack) -> list:
             if not location in loc_list:
                 loc_list.append(location)
     locations = prune_list(locations, loc_list)
+
+    #Remove locations losted as severed
+    locations = prune_list(locations, defender.fighter.severed_locs)
 
 
     return locations
@@ -604,9 +602,13 @@ def perform_attack(active_entity, entities, final_to_hit, target, cs, combat_pha
                     else:
                         if active_entity.player and len(active_entity.fighter.targets) > 0:
                             #See if active_entity has AP for repeat
-                            if active_entity.fighter.ap >= active_entity.fighter.last_atk_ap:           
-                                combat_phase = CombatPhase.repeat
-                                game_state = GameStates.menu
+                            #CC order: Weapon, Attack, Location idx, angle idx
+                            if active_entity.fighter.ap >= active_entity.fighter.last_atk_ap:
+                                locs = determine_valid_locs(active_entity, target, active_entity.fighter.combat_choices[1])
+                                #Make sure location is still valid
+                                if active_entity.fighter.combat_choices[2] in locs:           
+                                    combat_phase = CombatPhase.repeat
+                                    game_state = GameStates.menu
                             else:
                                 active_entity.fighter.combat_choices.clear()
 
@@ -1066,11 +1068,7 @@ def armor_control(target, location, attack, dam_type, dam_amount) -> (list, list
         ao_idx += 1
 
     return locations, dam_amt_list, dam_type_list
-
-
-        
-
-        
+             
 def armor_displace(target, location, attack, ao_idx, dam_type, dam_amount) -> (list, list, list):
     idx = len(target.loc_armor[location]) - ao_idx 
     ao = target.loc_armor[location][idx]
@@ -1145,8 +1143,6 @@ def armor_displace(target, location, attack, ao_idx, dam_type, dam_amount) -> (l
         dam_amount = 0 
 
     return locs, dam_amt_list, dam_type_list
-
-            
 
 def armor_protect(target, location, attack, ao_idx, dam_type, dam_amount) -> (int, int):
        
@@ -1226,9 +1222,6 @@ def armor_protect(target, location, attack, ao_idx, dam_type, dam_amount) -> (in
 
     return dam_amount, dam_type
 
-        
-
-
 def cleave_checker(entity) -> list:
     '''Purpose is to identify when body has been cut in two'''
     messages = []
@@ -1305,7 +1298,7 @@ def calc_damage_soak(dam_type, target) -> (list, list):
     return deflect, soak
 
 def calc_layer_damage(target, location, layer, dam_type, dam_amount, soak, atk_angle, entity_angle) -> (int, int, int):
-
+    loc_hits = 0
     atk_angle = angle_id(atk_angle)
 
     #Calc final damage
@@ -1327,6 +1320,14 @@ def calc_layer_damage(target, location, layer, dam_type, dam_amount, soak, atk_a
         else:
             damage = 0
     
+    #Handle severed locs
+    if location is not None: 
+        loc_hits = sum(target.fighter.locations[location])
+
+    if loc_hits == 0:
+        location = None
+
+
     return location, layer, damage
 
 def get_injuries(target, prev_health, location, layer, dam_type) -> list:
@@ -1352,12 +1353,13 @@ def get_injuries(target, prev_health, location, layer, dam_type) -> list:
     if new_thresh > 0:
         for i in range(new_thresh + 1):
             valid_injuries = filter_injuries(Injury, location, dam_type, dam_thresh, layer, target)
-            #Max_sev used to clear all lower inujury effecxt messages and only use the max damage one
+            #Max_sev used to clear all lower injury effect messages and only use the max damage one
             if len(valid_injuries) > 0:
                 inj_messages, sev = apply_injuries(valid_injuries, location, target, dam_type)
                 if sev >= max_sev:
                     messages.clear()
                     messages.update(inj_messages)
+                    max_sev = sev
             i += 1
 
     return messages

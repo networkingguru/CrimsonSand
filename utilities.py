@@ -77,7 +77,8 @@ def prune_list(source_list, to_remove, inverse = False, index = True) -> list: #
                     if not i in source_list:
                         source_list.remove(i)
                 else:
-                    source_list.remove(i)
+                    if i in source_list:
+                        source_list.remove(i)
     else:
         contents = []
         if inverse:

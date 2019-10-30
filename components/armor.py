@@ -243,6 +243,7 @@ def apply_armor(entity):
                     for loc in ao.covered_locs:
                         entity.loc_armor[loc].append(ao)
 
+#Utility function for apply_armor
 def armor_classifier(armor_component):
     #Sort by general type based on location
     torso_locs = [3,4,5,6,9,10,13,14]
@@ -267,7 +268,7 @@ def armor_classifier(armor_component):
         if loc in armor_component.covered_locs:
             return 'o'
 
-
+#Determine if armor can be applied to layer
 def determine_validity(armor_component, entity):
     error_message = ''
 
@@ -309,7 +310,8 @@ class Armor_Construction:
         self.binder_amount = 1 #Scalar. 1 = 1:1 ratio of binder to main volume
         self.desc = ''
         self.rigidity = 'rigid' #rigid, semi, or flexible
-        self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = 1 #Scalar to represent main material density, in terms of how much material vs binder/air is in the armor per inch of thickness. For example, steel chainmail is mostly holes, so it is much less dense than steel plate. Even plate is not 1, though, because the thickness is not uniform
+        self.coverage = 1 #Scalar to represent how much area is covered by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -421,7 +423,7 @@ class Armor_Component:
 
         self.main_area = circ * height
 
-        construction_vol = self.thickness * self.main_area
+        construction_vol = self.thickness * self.main_area * self.construction.coverage
         construction_wt = construction_vol * (self.construction.density * (self.construction.main_material.density * .03))
         binder_wt = (self.construction.binder_amount * construction_vol) * (self.construction.binder_material.density * .03)
         accent_wt = (self.accent_amount * construction_vol) * (self.accent_material.density * .03)
@@ -464,7 +466,7 @@ class Armor_Component:
         self.t_deflect *= self.construction.t_resist
         
         #Hits calc is attempting to model shear stress
-        self.hits = (self.construction.main_material.hardness * 15000) * self.thickness * self.construction.density * construction_vol * (1+(sqrt(self.construction.main_material.toughness)/10)) * (1+(sqrt(self.construction.main_material.elasticity)/10)) 
+        self.hits = (self.construction.main_material.hardness * 15000) * self.thickness * self.construction.density * self.construction.coverage * construction_vol * self.construction.main_material.toughness * ((self.construction.main_material.elasticity)/2) 
         self.hits_sq_in = self.hits / self.main_area
 
         deflect_max = (sqrt(self.construction.main_material.hardness))/8 * self.hits_sq_in
@@ -503,6 +505,7 @@ class Hide(Armor_Construction):
         self.main_material = m_hide #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
         self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = 1 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -527,6 +530,7 @@ class Leather(Armor_Construction):
         self.main_material = m_leather #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
         self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = 1 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -550,6 +554,7 @@ class Padded(Armor_Construction):
         self.main_material = m_cloth #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
         self.density = 1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = 1 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -569,12 +574,13 @@ class Chain(Armor_Construction):
         self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = 0 #Scalar. 1 = 1:1 ratio of binder to main volume
-        self.min_thickness = .15
-        self.max_thickness = .5
+        self.min_thickness = .1
+        self.max_thickness = .25
         self.allowed_main_materials = [m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
-        self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .2 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = .33 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1.2 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -599,6 +605,7 @@ class Ring(Armor_Construction):
         self.main_material = m_hiron #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
         self.density = .05 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = .1 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -622,7 +629,8 @@ class Splint(Armor_Construction):
         self.allowed_main_materials = [m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
         self.rigidity = 'semi' #rigid, semi, or flexible
-        self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .4 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = .4 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1.1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -646,7 +654,8 @@ class Scale(Armor_Construction):
         self.allowed_main_materials = [m_leather, m_bleather, m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
         self.rigidity = 'semi' #rigid, semi, or flexible
-        self.density = .2 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .3 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = .7 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1.1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -671,7 +680,8 @@ class Lamellar(Armor_Construction):
         self.allowed_main_materials = [m_leather, m_bleather, m_copper, m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam, m_wood, m_bone] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
         self.rigidity = 'semi' #rigid, semi, or flexible
-        self.density = .2 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = .8 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1.2 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -696,7 +706,8 @@ class Brigandine(Armor_Construction):
         self.allowed_main_materials = [m_bronze, m_iron, m_hiron, m_steel, m_hsteel, m_ssteel, m_hsteel, m_mithril, m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_hiron #Primary material
         self.rigidity = 'semi' #rigid, semi, or flexible
-        self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.density = .05 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = .9 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -721,6 +732,7 @@ class Plate(Armor_Construction):
         self.main_material = m_hiron #Primary material
         self.rigidity = 'rigid' #rigid, semi, or flexible
         self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = 1 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = .8 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -745,6 +757,7 @@ class Double_Plate(Armor_Construction):
         self.main_material = m_hsteel #Primary material
         self.rigidity = 'rigid' #rigid, semi, or flexible
         self.density = .15 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = 1 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = .9 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1.1 #Scalar to modify damage resistance
         self.s_resist = 1

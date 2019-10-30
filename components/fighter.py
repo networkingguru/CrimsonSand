@@ -590,8 +590,8 @@ class Skill():
             ter_list.append(self.entity.fighter.get_attribute(attr))
 
         prim_avg = mean(prim_list)
-        sec_avg = mean(sec_list)
-        ter_avg = mean(ter_list)
+        if len(sec_list) > 0: sec_avg = mean(sec_list)
+        if len(ter_list) > 0: ter_avg = mean(ter_list)
 
         base_rating = (prim_avg*self.prim_amount) + (sec_avg*self.sec_amount) + (ter_avg*self.ter_amount)
 
@@ -1124,8 +1124,109 @@ class Polearm(Skill):
         self.level = self.set_level()
         self.rating = self.set_rating()
 
+class Light_Armor(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Light Armor'
+        self.abbr = 'l_armor'
+        self.category = 'Armor Familiarity'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .8 #Percentage the PB contributes to total score
+        self.sec_base = ['ss']
+        self.sec_amount = .2
+        self.ter_base = []
+        self.ter_amount = 0
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 4 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
 
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
 
+class Medium_Armor(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Medium Armor'
+        self.abbr = 'm_armor'
+        self.category = 'Armor Familiarity'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .7 #Percentage the PB contributes to total score
+        self.sec_base = ['ss']
+        self.sec_amount = .3
+        self.ter_base = []
+        self.ter_amount = 0
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 4 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Heavy_Armor(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Heavy Armor'
+        self.abbr = 'h_armor'
+        self.category = 'Armor Familiarity'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .5 #Percentage the PB contributes to total score
+        self.sec_base = ['ss']
+        self.sec_amount = .5
+        self.ter_base = []
+        self.ter_amount = 0
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 4 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Shield(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Shield'
+        self.abbr = 'shield'
+        self.category = 'Armor Familiarity'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .4 #Percentage the PB contributes to total score
+        self.sec_base = ['men']
+        self.sec_amount = .4
+        self.ter_base = ['wis']
+        self.ter_amount = .2
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 4 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
 
 
 

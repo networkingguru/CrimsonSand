@@ -107,7 +107,7 @@ if __name__ == "__main__":
             command = event
         elif curr_actor.player:
             #Below complexity is due to modal nature. if targets exist, block for input. 
-            #Otherwise, see if a menu is present. If so, unless block for input, if not, refresh and get menu
+            #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
             if len(curr_actor.fighter.targets) == 0:
                 command = blt_handle_keys(game_state, menu_dict)
                 if command[0] == 'exit': leave = True
