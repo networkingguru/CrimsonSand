@@ -1020,6 +1020,19 @@ def damage_controller(target, active_entity, location, dam_type, dam_mult, roll,
 
         handle_mobility_change(target)
         
+    #Handle weapon removal for severed limbs
+    hands_feet = (19,20,27,28)
+    hf_severed_locs = target.fighter.severed_locs.intersection(hands_feet)
+    if hf_severed_locs != 0:
+        for loc in hf_severed_locs:
+            if loc in target.fighter.equip_loc:
+                wpn = target.fighter.equip_loc.get(loc)
+                if wpn.name != 'Unarmed':
+                    del target.fighter.equip_loc[loc]
+                    target.weapons.remove(wpn)
+
+
+    #Handle chopping folk in two
     cleave_messages = cleave_checker(target)
     if len(cleave_messages) > 0:
         messages.extend(cleave_messages)
@@ -1647,7 +1660,7 @@ def valid_maneuvers(active_entity, target) -> list:
     return mnvr_set
 
 def attack_filter(active_entity, target, weapon, attack) -> bool:
-    imm_locs = active_entity.fighter.immobilized_locs | active_entity.fighter.paralyzed_locs
+    imm_locs = active_entity.fighter.immobilized_locs | active_entity.fighter.paralyzed_locs | active_entity.fighter.severed_locs
     cs = active_entity.determine_combat_stats(weapon, attack)
     valid = True
     if attack.hand:

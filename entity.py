@@ -89,8 +89,15 @@ class Entity:
                 #Add a new weapon if it doesn't exist, else, retreive existing weapon
                 if len(self.weapons)<1:
                     self.weapons.append(new_wpn)
+                    self.fighter.equip_loc[19] = new_wpn
                     idx = self.weapons.index(new_wpn)
                 for wp in self.weapons:
+                    if loc == 1:
+                        self.fighter.equip_loc[20] = new_wpn
+                    elif loc == 2: 
+                        self.fighter.equip_loc[27] = new_wpn
+                    else:
+                        self.fighter.equip_loc[28] = new_wpn
                     if wp.name != new_wpn.name: 
                         self.weapons.append(new_wpn)
                         idx = self.weapons.index(new_wpn)
@@ -287,6 +294,8 @@ class Entity:
             max_vel = math.sqrt(self.fighter.get_attribute('pwr'))*(4.5-(attack.added_mass/2))
         else:
             max_vel = math.sqrt(self.fighter.get_attribute('pwr'))*(3-(attack.added_mass/2))
+
+
         #Determine how long attack will take
         if angle_id == 0:
             time = (limb_length/12)/max_vel
@@ -298,6 +307,7 @@ class Entity:
         force = (fist_mass + attack.added_mass) * velocity
 
         psi = force*12 #Convert to inches
+
       
         
 

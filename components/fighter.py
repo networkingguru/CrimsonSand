@@ -29,6 +29,7 @@ class Fighter:
         self.loc_parry_mod = dict() #A dict in 'location name':mod format with mods to parry chance based on location(used in feints)
         self.loc_hit_mod = dict() #A dict in 'location name':mod format with mods to hit chance based on location(guard mods)
         self.auto_block_locs = [] #A list of locations autoblocked by the guard (ints)
+        self.equip_loc = dict() #A dict in the format of Loc_idx:object to contain the equiped location of items (weapons) 
         self.guard = None
         self.guard_dodge_mod = 0
         self.guard_parry_mod = 0
