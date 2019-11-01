@@ -20,6 +20,14 @@ class CombatAI:
 
     def ai_command(self, entity, entities, combat_phase, game_map, order) -> str:
         command = []
+        weapons = []
+        for loc in [19,20,27,28]:
+            if entity.fighter.equip_loc.get(loc) is None: continue  
+            w = entity.fighter.equip_loc.get(loc)
+
+            if w.weapon:
+                weapons.append(w)
+
         if combat_phase == CombatPhase.explore:
             if self.host.can_act and self.host.can_walk:
                 command = hunt_target(entity, entities, game_map)
@@ -60,7 +68,7 @@ class CombatAI:
         if combat_phase == CombatPhase.confirm:
             command = {'Accept':'Accept'}
         elif combat_phase == CombatPhase.defend and order[0].fighter is not self.host:
-            cs = entity.determine_combat_stats(entity.weapons[0], entity.weapons[0].attacks[0])
+            cs = entity.determine_combat_stats(weapons[0], weapons[0].attacks[0])
             command = avoid_attack(self.host.attacker, entity, cs)
         elif combat_phase == CombatPhase.grapple_defense and order[0].fighter is not self.host:
             command = {'Allow the manuever':'Allow the manuever'}
@@ -95,13 +103,17 @@ def determine_attack(entity) -> None:
     best_score = -100
     best_atk = []      
     valid = False    
-    
+    weapons = []
+    for loc in [19,20,27,28]:
+        w = entity.fighter.equip_loc.get(loc)
+        if w.weapon:
+            weapons.append(w)
 
     #Locations to be scored higher because they kill the foe
     critical_locs = {0,1,2,6}
 
     #Attack logic begins
-    for wpn in entity.weapons:
+    for wpn in weapons:
         for atk in wpn.attacks:
             valid = attack_filter(entity, entity.fighter.curr_target, wpn, atk)
             if valid:  
@@ -179,6 +191,12 @@ def avoid_attack(attacker, defender, cs) -> str:
     attack = attacker.fighter.combat_choices[1]
     atk_name = attack.name 
     command = []
+    weapons = []
+    for loc in [19,20,27,28]:
+        w = defender.fighter.equip_loc.get(loc)
+        if w.weapon:
+            weapons.append(w)
+
 
     if len(defender.fighter.action) > 1:
         if 'Dodge' in defender.fighter.action: can_dodge = True
@@ -188,7 +206,7 @@ def avoid_attack(attacker, defender, cs) -> str:
         dodge_mod = cs.get('dodge mod')
         parry_mod = cs.get('parry mod')
         final_to_hit = cs.get('to hit')                       
-        cs_d = defender.determine_combat_stats(defender.weapons[0],defender.weapons[0].attacks[0])
+        cs_d = defender.determine_combat_stats(weapons[0],weapons[0].attacks[0])
         parry_ap = cs_d.get('parry ap')
 
         if len(defender.fighter.attacker_history) > 0:

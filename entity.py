@@ -21,7 +21,6 @@ class Entity:
         self.blocks = blocks
         self.fighter = fighter
         self.state = state
-        self.weapons = weapons
         self.guard = None
         self.worn_armor = {} #Dict of dicts in the following format: 1:{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.05}
         self.loc_armor = [] #List of lists, populated by apply_armor, in order from inner to outer
@@ -82,42 +81,28 @@ class Entity:
     def add_weapon_component(self, wpn, loc) -> None:
         '''Assign attacks to fighter component creating instances from base_attacks and then modifying as necessary'''
         scalar = .8 #Adjust this to adjust damage from off hand
-        if self.weapons is None: self.weapons=[]
+
         for w in weapon_master_list:
             new_wpn = w()
             if wpn == type(new_wpn).__name__:
-                #Add a new weapon if it doesn't exist, else, retreive existing weapon
-                if len(self.weapons)<1:
-                    self.weapons.append(new_wpn)
+                if loc == 0:
                     self.fighter.equip_loc[19] = new_wpn
-                    idx = self.weapons.index(new_wpn)
-                for wp in self.weapons:
-                    if loc == 1:
-                        self.fighter.equip_loc[20] = new_wpn
-                    elif loc == 2: 
-                        self.fighter.equip_loc[27] = new_wpn
-                    else:
-                        self.fighter.equip_loc[28] = new_wpn
-                    if wp.name != new_wpn.name: 
-                        self.weapons.append(new_wpn)
-                        idx = self.weapons.index(new_wpn)
-                    else:
-                        idx = self.weapons.index(wp)
+                elif loc == 1:
+                    self.fighter.equip_loc[20] = new_wpn
+                elif loc == 2: 
+                    self.fighter.equip_loc[27] = new_wpn
+                else:
+                    self.fighter.equip_loc[28] = new_wpn
                 
-                base_wpn = self.weapons[idx]
+                for a in new_wpn.base_attacks:
 
-
-                for a in base_wpn.base_attacks:
-
-                    atk = a(base_wpn)
+                    atk = a(new_wpn)
  
                     #Set right/l and add
-                      
-                    
 
                     if atk.hand:
                         if loc in [0,1]:
-                            base_wpn.attacks.append(atk)
+                            new_wpn.attacks.append(atk)
                             if atk.hands != 2:
                                 if loc == 0:
                                     atk.name += '(R)'
@@ -137,7 +122,7 @@ class Entity:
                                         atk.parry_mod -= 20
                     else:
                         if loc in [2,3]:
-                            base_wpn.attacks.append(atk)
+                            new_wpn.attacks.append(atk)
                             if loc == 2:
                                 atk.name += '(R)'
                             else:
@@ -145,38 +130,40 @@ class Entity:
 
 
                 
-                for m in base_wpn.base_maneuvers:
+                for m in new_wpn.base_maneuvers:
                     mnvr = m(self,self,'Scalp')
                     if (loc <=1 and not mnvr.hand) or (loc > 1 and mnvr.hand): #loc variable defines the 'location' the attack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
                         continue
-                    base_wpn.maneuvers.append(mnvr)
+                    new_wpn.maneuvers.append(mnvr)
                     
 
         #Sort the lists of objects alphabetically using the name attribute            
-        base_wpn.attacks.sort(key=lambda x: x.name)
-        base_wpn.maneuvers.sort(key=lambda x: x.name)
+        new_wpn.attacks.sort(key=lambda x: x.name)
+        new_wpn.maneuvers.sort(key=lambda x: x.name)
 
     def validate_attacks(self) -> None:
 
-        for w in self.weapons:
-            w_id = self.weapons.index(w)
+        for loc in [19,20,27,28]:
+            w = self.fighter.equip_loc.get(loc)
+            if not w.weapon: continue
+            
             remove_list = []
             for a in w.attacks:
                 if a.hand:
                     #Remove if it's a foot attack on a hand
-                    if w_id in [2,3]:
+                    if loc in [27,28]:
                         remove_list.append(a)
                     #Remove if it's a two-h attack and both hands not free
                     elif a.hands == 2:
-                        if w_id == 0:
-                            if self.weapons[1].name not in ['Unarmed', w.name]:
+                        if loc == 19:
+                            if self.fighter.equip_loc.get(20).name not in ['Unarmed', w.name]:
                                 remove_list.append(a)
                         else: 
-                            if self.weapons[0].name not in ['Unarmed', w.name]:
+                            if self.fighter.equip_loc.get(19).name not in ['Unarmed', w.name]:
                                 remove_list.append(a)
                 else:
                     #Remove is hand attack on foot
-                    if w_id in [0,1]:
+                    if loc in [19,20]:
                         remove_list.append(a)
             for i in remove_list:
                 w.attacks.remove(i)
@@ -249,7 +236,7 @@ class Entity:
         return loc_mod_dict
 
     def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 0) -> dict:
-        weapon = weapon
+        
         if len(attack.skill) > 1:
             skills = []
             for s in attack.skill:
@@ -270,12 +257,12 @@ class Entity:
 
         if attack.hand:
             if self.fighter.dom_hand == 'R':
-                if weapon is self.weapons[0]:
+                if weapon is self.fighter.equip_loc.get(19):
                     limb_length = self.fighter.reach
                 else:
                     limb_length = self.fighter.reach_oh
             else:
-                if weapon is self.weapons[1]:
+                if weapon is self.fighter.equip_loc.get(20):
                     limb_length = self.fighter.reach
                 else:
                     limb_length = self.fighter.reach_oh
@@ -412,7 +399,13 @@ class Entity:
         wpn_ap = []
         min_wpn_ap =[]
 
-        for wpn in self.weapons:
+        weapons = []
+        for loc in [19,20,27,28]:
+            w = self.fighter.equip_loc.get(loc)
+            if w.weapon:
+                weapons.append(w)
+
+        for wpn in weapons:
             for atk in wpn.attacks:
                 cs = self.determine_combat_stats(wpn, atk)
                 wpn_ap.append(cs.get('final ap'))
@@ -421,7 +414,13 @@ class Entity:
         return min_ap
     
     def set_default_guard(self):
-        for wpn in self.weapons:
+        weapons = []
+        for loc in [19,20,27,28]:
+            w = self.fighter.equip_loc.get(loc)
+            if w.weapon:
+                weapons.append(w)
+
+        for wpn in weapons:
             for guard in wpn.guards:
                 if self.fighter.dom_hand == 'R' or 'A':
                     if guard.rh_default: self.fighter.change_guard(guard)
@@ -429,20 +428,29 @@ class Entity:
                     if guard.lh_default: self.fighter.change_guard(guard)
 
     def set_reach(self) -> None:
+        weapons = []
+        for loc in [19,20,27,28]:
+            w = self.fighter.equip_loc.get(loc)
+            if w.weapon:
+                weapons.append(w)
+
+        r_w = self.fighter.equip_loc.get(19)
+        l_w = self.fighter.equip_loc.get(20)
+
         if self.fighter.dom_hand == 'R':
-            self.fighter.reach = clamp(inch_conv(self.fighter.er + self.weapons[0].length, 1), 2)
-            if len(self.weapons) > 1: 
-                self.fighter.reach_oh = clamp(inch_conv(self.fighter.er + self.weapons[1].length, 1), 2)
+            self.fighter.reach = clamp(inch_conv(self.fighter.er + r_w.length, 1), 2)
+            if len(weapons) > 1: 
+                self.fighter.reach_oh = clamp(inch_conv(self.fighter.er + l_w.length, 1), 2)
             else:
                 self.fighter.reach_oh = self.fighter.reach
         else:
-            self.fighter.reach = clamp(inch_conv(self.fighter.er + self.weapons[1].length, 1), 2)
-            if len(self.weapons) > 1: 
-                self.fighter.reach_oh = clamp(inch_conv(self.fighter.er + self.weapons[0].length, 1), 2)
+            self.fighter.reach = clamp(inch_conv(self.fighter.er + l_w.length, 1), 2)
+            if len(weapons) > 1: 
+                self.fighter.reach_oh = clamp(inch_conv(self.fighter.er + r_w.length, 1), 2)
             else:
                 self.fighter.reach_oh = self.fighter.reach
                 
-        self.fighter.reach_leg = clamp(inch_conv((self.fighter.height*self.fighter.location_ratios[17]) + self.weapons[0].length, 1), 2)
+        self.fighter.reach_leg = clamp(inch_conv((self.fighter.height*self.fighter.location_ratios[17]) + self.fighter.equip_loc.get(27).length, 1), 2)
 
     def add_attributes(self, attr_list) -> dict:
         attr_dict = dict()

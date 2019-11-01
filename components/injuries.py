@@ -637,9 +637,9 @@ class Heavy_Muscle_Damage(Injury):
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1] #Amount to modify attribute
             if location % 2 == 0:
-                self.paralyzed_locs = {7,11,15,19} #set
-            else:
                 self.paralyzed_locs = {8,12,16,20} #set
+            else:
+                self.paralyzed_locs = {7,11,15,19} #set
         elif location in [15,16]:
             self.attr_name = ['pwr','ss'] #Name of the attribute to modify
             self.attr_amount = [-recipient.fighter.get_attribute('pwr','max_val')*.1,-recipient.fighter.get_attribute('ss','max_val')*.1] #Amount to modify attribute

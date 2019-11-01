@@ -87,7 +87,13 @@ def phase_weapon(active_entity, command, logs, combat_phase) -> (int, dict):
     #Choose your weapon
     combat_menu_header = 'Choose your weapon'
     active_entity.fighter.action.clear()
-    for wpn in active_entity.weapons:
+    weapons = set()
+    for loc in [19,20,27,28]:
+        w = active_entity.fighter.equip_loc.get(loc)
+        if w.weapon:
+            weapons.add(w)
+
+    for wpn in weapons:
         for atk in wpn.attacks:
             valid = attack_filter(active_entity, active_entity.fighter.curr_target, wpn, atk)
             if valid:              
@@ -101,7 +107,7 @@ def phase_weapon(active_entity, command, logs, combat_phase) -> (int, dict):
             if command.get(option):
                 if not hasattr(active_entity.fighter, 'ai'):
                     messages.append('You decide to use ' + option)
-                for wpn in active_entity.weapons:
+                for wpn in weapons:
                     if option == wpn.name:
                         if len(active_entity.fighter.combat_choices) == 0:   
                             active_entity.fighter.combat_choices.append(wpn)
@@ -126,12 +132,18 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
     log = logs[2]
     valid = False
 
+    weapons = set()
+    for loc in [19,20,27,28]:
+        w = active_entity.fighter.equip_loc.get(loc)
+        if w.weapon:
+            weapons.add(w)
+
     #Choose the base attack type (stab, slash, etc)
     combat_menu_header = 'How would you like to attack your target?'
     active_entity.fighter.action.clear()
     #Create a set of possible attacks for all weapons that match the weapon name
     possible_attacks = set()
-    for wpn in active_entity.weapons:
+    for wpn in weapons:
         if wpn.name == active_entity.fighter.combat_choices[0].name:
             possible_attacks.update(wpn.attacks)
 
@@ -152,11 +164,12 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
             if hasattr(active_entity.fighter,'ai') or len(active_entity.fighter.combat_choices) < 2:
                 if command.get(option):
                     if not hasattr(active_entity.fighter, 'ai'):
-                        for w in active_entity.weapons:
+                        for w in weapons:
                             if w.name == active_entity.fighter.combat_choices[0].name:
                                 for atk in w.attacks:
                                     if atk.name == option:
                                         active_entity.fighter.combat_choices.append(atk)
+                                        active_entity.fighter.combat_choices[0] = w #Used to make sure correct unarmed 'weapon' is used
                                         messages.append('You decide to ' + option)
                                         break
                     menu_dict = dict()
@@ -376,12 +389,14 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
     dodge_mod = cs.get('dodge mod')
     parry_mod = cs.get('parry mod')
 
-
+    for loc in [19,20,27,28]:
+        if active_entity.fighter.equip_loc.get(loc).weapon:
+            block_w = active_entity.fighter.equip_loc.get(loc)
     
 
 
     #Find chances and see if active_entity can parry/dodge
-    cs_p = active_entity.determine_combat_stats(active_entity.weapons[0],active_entity.weapons[0].attacks[0])
+    cs_p = active_entity.determine_combat_stats(block_w,block_w.attacks[0])
     parry_ap = cs_p.get('parry ap')
     if active_entity.fighter.ap >= active_entity.fighter.walk_ap: can_dodge = True
     if active_entity.fighter.ap >= parry_ap: can_parry = True
@@ -453,7 +468,7 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
             if command.get('Parry'):
                 check, def_margin, atk_margin = save_roll_con(active_entity.fighter.get_attribute('deflect'), parry_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
-                active_entity.fighter.mod_attribute('stamina', -(active_entity.weapons[0].stamina*active_entity.fighter.base_stam_cost))
+                active_entity.fighter.mod_attribute('stamina', -(block_w.stamina*active_entity.fighter.base_stam_cost))
                 active_entity.fighter.mod_attribute('ap', -parry_ap)
                 if check == 's':
                     if not hasattr(active_entity.fighter, 'ai'): message = ('You parried the attack. ')
@@ -466,7 +481,7 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
                 check, def_margin, atk_margin = save_roll_con(active_entity.fighter.best_combat_skill.rating, parry_mod, enemy.fighter.atk_result, final_to_hit)
                 #Remove ap and stam
                 if location not in active_entity.fighter.auto_block_locs:
-                    active_entity.fighter.mod_attribute('stamina', -(active_entity.weapons[0].stamina*active_entity.fighter.base_stam_cost))
+                    active_entity.fighter.mod_attribute('stamina', -(block_w.stamina*active_entity.fighter.base_stam_cost))
                     active_entity.fighter.mod_attribute('ap', -parry_ap)
                 else:
                     auto_block = True
@@ -573,6 +588,13 @@ def phase_disengage(active_entity, entities, command, logs, combat_phase, game_m
     fov_recompute = False
     messages = []
     log = logs[2]
+
+    weapons = []
+    for loc in [19,20,27,28]:
+        w = active_entity.fighter.equip_loc.get(loc)
+        if w.weapon:
+            weapons.append(w)
+
     
     if active_entity.fighter.disengage_option is not None or len(command) != 0:
         if active_entity.fighter.disengage_option is not None:
@@ -594,7 +616,7 @@ def phase_disengage(active_entity, entities, command, logs, combat_phase, game_m
                     if x == active_entity.x and y == active_entity.y:
                         wpn_ap = []
                         cs = []
-                        for wpn in active_entity.weapons:
+                        for wpn in weapons:
                             for atk in wpn.attacks:
                                 cs = active_entity.determine_combat_stats(wpn, atk)
                                 wpn_ap.append(cs.get('final ap'))
@@ -867,10 +889,16 @@ def phase_guard(active_entity, command, logs, combat_phase) -> (int, dict):
 
     available_guards = []
 
-    for wpn in active_entity.weapons:
+    weapons = []
+    for loc in [19,20,27,28]:
+        w = active_entity.fighter.equip_loc.get(loc)
+        if w.weapon:
+            weapons.append(w)
+
+    for wpn in weapons:
         for guard in wpn.guards:
             for loc in guard.req_locs:
-                if loc not in active_entity.fighter.paralyzed_locs and loc not in active_entity.fighter.immobilized_locs:
+                if loc not in active_entity.fighter.paralyzed_locs and loc not in active_entity.fighter.immobilized_locs and loc not in active_entity.fighter.severed_locs:
                     if guard not in available_guards:
                         available_guards.append(guard)
                         active_entity.fighter.action.append(guard.name)

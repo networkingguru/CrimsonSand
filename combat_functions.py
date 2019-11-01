@@ -997,6 +997,9 @@ def damage_controller(target, active_entity, location, dam_type, dam_mult, roll,
     #Loops until no more damage is left to do, allowing for pass-through damage
     while location is not None and damage > 0:
 
+        if target.fighter.locations[location][layer] == 0 and layer < 2:
+            layer += 1
+
         if roll <= deflect[layer]: 
             l_names = ['skin','tissue','bone']
             messages.append(active_entity.name + ' hit ' + target.name +', but the blow deflected harmlessly off of ' + target.name + '\'s ' + l_names[layer])
@@ -1026,10 +1029,8 @@ def damage_controller(target, active_entity, location, dam_type, dam_mult, roll,
     if hf_severed_locs != 0:
         for loc in hf_severed_locs:
             if loc in target.fighter.equip_loc:
-                wpn = target.fighter.equip_loc.get(loc)
-                if wpn.name != 'Unarmed':
-                    del target.fighter.equip_loc[loc]
-                    target.weapons.remove(wpn)
+                target.fighter.equip_loc.pop(loc)
+
 
 
     #Handle chopping folk in two
@@ -1352,6 +1353,7 @@ def get_injuries(target, prev_health, location, layer, dam_type) -> list:
     #Determine damage effect level
     #Find % damage
     dam_percent = 0
+
     prev_percent = (prev_health/target.fighter.max_locations[location][layer])
     layer_health = target.fighter.locations[location][layer]
 
@@ -1586,7 +1588,10 @@ def valid_maneuvers(active_entity, target) -> list:
     distance = int(round(distance*36))-36
         
     #Below complexity is due to objects being different, but being functional duplicates
-    for w in active_entity.weapons:
+    for loc in [19,20,27,28]:
+        w = active_entity.fighter.equip_loc.get(loc)
+        if not w.weapon: continue
+
         for mnvr in w.maneuvers:
             if mnvr.name not in all_maneuvers:
                 all_maneuvers[mnvr.name] = mnvr
@@ -1628,7 +1633,12 @@ def valid_maneuvers(active_entity, target) -> list:
         #See if both hands are free if it's a two handed maneuver
         if mnvr.hand:
             if mnvr.hands == 2:
-                if mnvr not in active_entity.weapons[0].maneuvers and mnvr not in active_entity.weapons[1].maneuvers:
+                r_w = active_entity.fighter.equip_loc.get(19)
+                l_w = active_entity.fighter.equip_loc.get(20)
+                if not all([r_w.weapon,l_w.weapon]):
+                    invalid_maneuvers.add(mnvr)
+                    continue 
+                elif mnvr not in r_w.maneuvers and mnvr not in l_w.maneuvers:
                     invalid_maneuvers.add(mnvr)
                     continue 
 
@@ -1663,13 +1673,20 @@ def attack_filter(active_entity, target, weapon, attack) -> bool:
     imm_locs = active_entity.fighter.immobilized_locs | active_entity.fighter.paralyzed_locs | active_entity.fighter.severed_locs
     cs = active_entity.determine_combat_stats(weapon, attack)
     valid = True
+    r_w = active_entity.fighter.equip_loc.get(19)
+    l_w = active_entity.fighter.equip_loc.get(20)
+
     if attack.hand:
         if attack.hands == 2:
-            if attack not in active_entity.weapons[0].attacks and attack not in active_entity.weapons[1].attacks:
+            if r_w == None or l_w == None:
+                valid = False
+            if not all([r_w.weapon,l_w.weapon]):
+                valid = False
+            if attack not in r_w.attacks and attack not in l_w.attacks:
                 valid = False
             if not global_vars.arm_locs.isdisjoint(imm_locs):
                 valid = False
-        elif attack in active_entity.weapons[0].attacks: #R Hand
+        elif r_w is not None and attack in r_w.attacks: #R Hand
             if not global_vars.r_arm_locs.isdisjoint(imm_locs):
                 valid = False        
         else: #L Hand
@@ -1692,10 +1709,13 @@ def attack_filter(active_entity, target, weapon, attack) -> bool:
 def num_valid_attacks(active_entity) -> int:  
     num_valid = 0
     valid = False
-    for weapon in active_entity.weapons:
-        for attack in weapon.attacks:
-            valid = attack_filter(active_entity, active_entity.fighter.curr_target, weapon, attack)
-            if valid: num_valid += 1
+    for loc in [19,20,27,28]:
+        if active_entity.fighter.equip_loc.get(loc) is None: continue
+        weapon = active_entity.fighter.equip_loc.get(loc)
+        if weapon.weapon:
+            for attack in weapon.attacks:
+                valid = attack_filter(active_entity, active_entity.fighter.curr_target, weapon, attack)
+                if valid: num_valid += 1
     
     return num_valid
 

@@ -14,6 +14,7 @@ quality_dict = {'Junk': -.5, 'Very Poor': -.3, 'Poor': -.2, 'Below Average': -.1
 class Weapon:
     def __init__(self, **kwargs):
         self.name = ''
+        self.weapon = True
         self.shafted = False #Used to determine if wpn has a shaft
         self.allowed_main_materials = [] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_steel #Damage component (blade, head, etc) material
