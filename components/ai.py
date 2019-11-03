@@ -106,6 +106,7 @@ def determine_attack(entity) -> None:
     weapons = []
     for loc in [19,20,27,28]:
         w = entity.fighter.equip_loc.get(loc)
+        if w is None: continue
         if w.weapon:
             weapons.append(w)
 

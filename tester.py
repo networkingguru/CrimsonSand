@@ -16,7 +16,17 @@ fighters = options.fighters
 add_fighters(entities, fighters)
 weapons = options.weapons
 add_weapons(entities, weapons)
-entities[0].worn_armor = options.player_armor
+
+ss = entities[0].fighter.get_attribute('ss')
+print(ss)
+entities[0].fighter.mod_attribute('ss',-20)
+print(ss)
+ss = entities[0].fighter.get_attribute('ss')
+print(ss)
+entities[0].fighter.mod_attribute('ss',-20)
+
+
+""" entities[0].worn_armor = options.player_armor
 apply_armor(entities[0])
 
 aggressor = entities[0]
@@ -224,6 +234,6 @@ def armor_protect(target, location, attack, ao_idx, dam_type, dam_amount) -> (in
 
 
 
-locations, dam_amt_list, dam_type_list = armor_control(aggressor, 5, attack, 's', 3000)
+locations, dam_amt_list, dam_type_list = armor_control(aggressor, 5, attack, 's', 3000) """
 
 print('done')

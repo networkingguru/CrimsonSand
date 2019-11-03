@@ -167,6 +167,19 @@ class Fighter:
             else: prop = 'val'
 
             self.set_attribute(attribute, prop, value)
+            attr = self.attr_dict.get(attribute)
+            parent = attr.parent_attr
+
+            children = []
+            for key in self.attr_dict:
+                a = self.attr_dict[key]
+                if a.parent_attr == parent:
+                    children.append(a.val)
+            p = self.parent_attr_dict.get(parent)
+            if p.name == 'Appearance': #Higher fat = lower appearance
+                children[-2] = 100 - children[-2]
+            p_val = int(round(mean(children)))
+            self.set_attribute(parent, prop, p_val)
     
     def name_location(self, location) -> int or str:
         #Method to convert loc names to numbers and vice versa

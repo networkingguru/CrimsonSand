@@ -1442,9 +1442,17 @@ def apply_injury_effects(target, injury, location, remove = False) -> list:
         for a in injury.attr_name:
             idx = injury.attr_name.index(a)
             if remove:
-                target.fighter.mod_attribute(a, -injury.attr_amount[idx])
+                attr_amt = target.fighter.get_attribute(a)
+                max_attr_amt = target.fighter.get_attribute(a, 'max_val')
+                if attr_amt + abs(injury.attr_amount[idx]) > max_attr_amt:
+                    amount = max_attr_amt - attr_amt
+                else:
+                    amount = -injury.attr_amount[idx]
+                target.fighter.mod_attribute(a, amount)
             else:
-                target.fighter.mod_attribute(a, injury.attr_amount[idx])
+                inj_attr_amount = attr_dam_limiter(a, injury, target)
+                target.fighter.mod_attribute(a, inj_attr_amount)
+               
 
     if injury.loc_reduction is not None and not remove:
         target.fighter.locations[location][injury.layer] -= injury.loc_reduction
@@ -1515,6 +1523,69 @@ def apply_injury_effects(target, injury, location, remove = False) -> list:
         target.fighter.state = injury.state
 
     return messages
+
+def attr_dam_limiter(attr, injury, entity) -> int:
+    
+    curr_attr_dam = 0
+
+    arm_attr_limits = {'pwr': (entity.fighter.get_attribute('pwr','max_val')*.15), 'ss': (entity.fighter.get_attribute('ss','max_val')*.15), 'touch': (entity.fighter.get_attribute('touch','max_val')*.3)}
+    leg_attr_limits = {'pwr': (entity.fighter.get_attribute('pwr','max_val')*.25), 'ss': (entity.fighter.get_attribute('ss','max_val')*.25), 'touch': (entity.fighter.get_attribute('touch','max_val')*.1)}
+
+    inj_limb = inj_limb_finder(injury)
+
+    if inj_limb == None: 
+        a_idx = injury.attr_name.index(attr)
+        amount = injury.attr_amount[a_idx]
+        return amount
+
+    if inj_limb in ['ra','la']:
+        limits = arm_attr_limits
+    else:
+        limits = leg_attr_limits
+
+    for inj in entity.fighter.injuries:
+        limb = inj_limb_finder(inj)
+        if limb == inj_limb:
+            if inj.attr_name is not None:
+                for a in inj.attr_name:
+                    if a == attr:
+                        a_idx = inj.attr_name.index(a)
+                        curr_attr_dam += inj.attr_amount[a_idx]
+
+    for a in injury.attr_name:
+        if a == attr:
+            a_idx = injury.attr_name.index(a)
+            amount = injury.attr_amount[a_idx]
+    if limits.get(attr) is not None:
+        if abs(curr_attr_dam) >= limits.get(attr):
+            amount = 0
+        elif abs(amount + curr_attr_dam) >= limits.get(attr):
+            amount = limits.get(attr) - abs(curr_attr_dam)
+            amount *= -1
+
+    return amount
+                    
+
+
+
+def inj_limb_finder(injury) -> str:
+    r_arm_locs = [3,7,11,15,19]
+    l_arm_locs = [4,8,12,16,20]
+    r_leg_locs = [17,21,23,25,27]
+    l_leg_locs = [18,22,24,26,28]
+
+    limb = None
+
+    if injury.location in r_arm_locs:
+        limb = 'ra'
+    elif injury.location in l_arm_locs:
+        limb = 'la'
+    elif injury.location in l_leg_locs:
+        limb = 'll'
+    elif injury.location in r_leg_locs:
+        limb = 'rl'
+    
+    return limb
 
 def calc_modifiers(weapon, location, angle_id) -> (int, int, int, int):
     #Weapon mods
@@ -1590,6 +1661,7 @@ def valid_maneuvers(active_entity, target) -> list:
     #Below complexity is due to objects being different, but being functional duplicates
     for loc in [19,20,27,28]:
         w = active_entity.fighter.equip_loc.get(loc)
+        if w == None: continue
         if not w.weapon: continue
 
         for mnvr in w.maneuvers:
@@ -1635,6 +1707,9 @@ def valid_maneuvers(active_entity, target) -> list:
             if mnvr.hands == 2:
                 r_w = active_entity.fighter.equip_loc.get(19)
                 l_w = active_entity.fighter.equip_loc.get(20)
+                if not all([r_w is not None, l_w is not None]):
+                    invalid_maneuvers.add(mnvr)
+                    continue 
                 if not all([r_w.weapon,l_w.weapon]):
                     invalid_maneuvers.add(mnvr)
                     continue 

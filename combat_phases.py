@@ -90,6 +90,7 @@ def phase_weapon(active_entity, command, logs, combat_phase) -> (int, dict):
     weapons = set()
     for loc in [19,20,27,28]:
         w = active_entity.fighter.equip_loc.get(loc)
+        if w is None: continue
         if w.weapon:
             weapons.add(w)
 
@@ -135,6 +136,7 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
     weapons = set()
     for loc in [19,20,27,28]:
         w = active_entity.fighter.equip_loc.get(loc)
+        if w is None: continue
         if w.weapon:
             weapons.add(w)
 
@@ -592,6 +594,7 @@ def phase_disengage(active_entity, entities, command, logs, combat_phase, game_m
     weapons = []
     for loc in [19,20,27,28]:
         w = active_entity.fighter.equip_loc.get(loc)
+        if w is None: continue
         if w.weapon:
             weapons.append(w)
 
@@ -892,6 +895,7 @@ def phase_guard(active_entity, command, logs, combat_phase) -> (int, dict):
     weapons = []
     for loc in [19,20,27,28]:
         w = active_entity.fighter.equip_loc.get(loc)
+        if w is None: continue
         if w.weapon:
             weapons.append(w)
 

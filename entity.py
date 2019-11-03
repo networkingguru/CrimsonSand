@@ -402,8 +402,9 @@ class Entity:
         weapons = []
         for loc in [19,20,27,28]:
             w = self.fighter.equip_loc.get(loc)
-            if w.weapon:
-                weapons.append(w)
+            if w is not None:
+                if w.weapon:
+                    weapons.append(w)
 
         for wpn in weapons:
             for atk in wpn.attacks:
