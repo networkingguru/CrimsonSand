@@ -319,9 +319,9 @@ class Entity:
         else:
             t_psi = ep
 
-        to_hit = attack.attack_mod + skill_rating + self.fighter.guard_hit_mod
-        to_parry = attack.parry_mod + skill_rating
-        dodge_mod = self.fighter.stance_dodge
+        to_hit = attack.attack_mod + skill_rating + self.fighter.guard_hit_mod + self.fighter.armor_mod + self.fighter.temp_physical_mod
+        to_parry = attack.parry_mod + skill_rating + self.fighter.armor_mod + self.fighter.temp_physical_mod
+        dodge_mod = self.fighter.stance_dodge + self.fighter.armor_mod + self.fighter.temp_physical_mod
         parry_mod = 0
         dam_mult = 1
         weight_factor = (self.fighter.weight/100)**.4
