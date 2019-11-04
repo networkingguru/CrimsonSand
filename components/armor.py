@@ -243,6 +243,8 @@ def apply_armor(entity):
                     for loc in ao.covered_locs:
                         entity.loc_armor[loc].append(ao)
 
+    apply_armor_mods(entity)
+
 #Utility function for apply_armor
 def armor_classifier(armor_component):
     #Sort by general type based on location
@@ -294,6 +296,37 @@ def determine_validity(armor_component, entity):
     
     return error_message
 
+def apply_armor_mods(entity):
+    armor_objects = []
+    total_stam = 0
+    l_mod = 0
+    m_mod = 0
+    h_mod = 0 
+
+    la_skill = entity.fighter.get_attribute('l_armor')
+    ma_skill = entity.fighter.get_attribute('m_armor')
+    ha_skill = entity.fighter.get_attribute('h_armor')
+
+    for loc in entity.loc_armor:
+        for ao in loc:
+            if ao in armor_objects: continue
+            else: armor_objects.append(ao)
+
+    for ao in armor_objects:
+        total_stam += ao.stam_drain
+        if ao.density < .1:
+            l_mod += ao.physical_mod
+        elif ao.density <= .2:
+            m_mod += ao.physical_mod
+        else:
+            h_mod += ao.physical_mod
+    
+    l_mod = clamp(l_mod - la_skill, 0)
+    m_mod = clamp(m_mod - ma_skill, 0)
+    h_mod = clamp(h_mod - ha_skill, 0)
+
+    entity.fighter.mod_attribute('stam_drain', total_stam)
+    entity.fighter.mod_attribute('armor_mod', l_mod + m_mod + h_mod)
 
 
 #Class Definitions
@@ -361,6 +394,7 @@ class Armor_Component:
         self.b_soak = 0 #Amount of force absorbed by padding. Percentage/Scalar
         self.physical_mod = 0 #Modifier to all physical actions due to armor. Reducable with armor skill
         self.stam_drain = 0 #Amount of stamina drained per round when wearing the armor
+        self.density = 0 #Used to determine classification (light, medium, heavy)
 
         self.__dict__.update(kwargs)
         
@@ -443,19 +477,19 @@ class Armor_Component:
             self.s_deflect = .5
             self.p_deflect = .8
             self.t_deflect = 1
-            self.physical_mod = (self.weight / 2) * self.construction.balance
+            self.physical_mod = ((self.weight / 2) * self.construction.balance)*2
         elif self.rigidity == 'semi':
             self.b_deflect = .1
             self.s_deflect = .35
             self.p_deflect = .5
             self.t_deflect = .5
-            self.physical_mod = self.weight * self.construction.balance
+            self.physical_mod = (self.weight * self.construction.balance)*2
         else:
             self.b_deflect = .05
             self.s_deflect = .1
             self.p_deflect = .1
             self.t_deflect = .3
-            self.physical_mod = (self.weight * 2) * self.construction.balance
+            self.physical_mod = ((self.weight * 2) * self.construction.balance)*2
 
         for i in [self.b_deflect, self.s_deflect, self.p_deflect, self.t_deflect]:
             i *= quality_dict.get(self.quality)
@@ -485,9 +519,11 @@ class Armor_Component:
 
         self.name = qual + self.construction.name + ' ' + self.base_name
 
-        self.stam_drain = self.weight * (self.physical_mod / self.weight) 
+        self.stam_drain = self.physical_mod / self.weight
 
         self.max_hits = self.hits
+
+        self.density = self.weight / (self.main_area/100)
 
 #Constructions
 

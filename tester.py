@@ -6,7 +6,7 @@ from utilities import itersubclasses, roll_dice
 from components.material import Material, material_dict
 from components.armor import Armor_Component, Armor_Construction, gen_armor, apply_armor
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
-from utilities import itersubclasses
+from utilities import itersubclasses, clamp
 #from combat_functions import armor_control
 import options
 
@@ -17,21 +17,12 @@ add_fighters(entities, fighters)
 weapons = options.weapons
 add_weapons(entities, weapons)
 
-ss = entities[0].fighter.get_attribute('ss')
-print(ss)
-entities[0].fighter.mod_attribute('ss',-20)
-print(ss)
-ss = entities[0].fighter.get_attribute('ss')
-print(ss)
-entities[0].fighter.mod_attribute('ss',-20)
-
-
-""" entities[0].worn_armor = options.player_armor
+entities[0].worn_armor = options.player_armor
 apply_armor(entities[0])
 
 aggressor = entities[0]
 target = entities[1]
-attack = aggressor.weapons[0].attacks[0]
+attack = aggressor.fighter.equip_loc[19].attacks[0]
 
 
 
@@ -234,6 +225,35 @@ def armor_protect(target, location, attack, ao_idx, dam_type, dam_amount) -> (in
 
 
 
-locations, dam_amt_list, dam_type_list = armor_control(aggressor, 5, attack, 's', 3000) """
+locations, dam_amt_list, dam_type_list = armor_control(aggressor, 5, attack, 's', 3000)
+
+armor_objects = []
+total_stam = 0
+l_mod = 0
+m_mod = 0
+h_mod = 0 
+phys_mod = 0
+la_skill = aggressor.fighter.get_attribute('l_armor')
+ma_skill = aggressor.fighter.get_attribute('m_armor')
+ha_skill = aggressor.fighter.get_attribute('h_armor')
+
+for loc in aggressor.loc_armor:
+    for ao in loc:
+        if ao in armor_objects: continue
+        else: armor_objects.append(ao)
+
+for ao in armor_objects:
+    total_stam += ao.stam_drain
+    if ao.density < .1:
+        l_mod += ao.physical_mod
+    elif ao.density <= .2:
+        m_mod += ao.physical_mod
+    else:
+        h_mod += ao.physical_mod
+ 
+l_mod = clamp(l_mod - la_skill, 0)
+m_mod = clamp(m_mod - ma_skill, 0)
+h_mod = clamp(h_mod - ha_skill, 0)
+
 
 print('done')

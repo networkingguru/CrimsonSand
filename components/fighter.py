@@ -52,6 +52,8 @@ class Fighter:
         self.acted = False
         self.entities_opportunity_attacked = []
         self.disengage_option = None
+        self.armor_mod = 0 #MOdifier to combat rolls due to armor
+        
         #Attributes
         self.male = True
         self.dom_hand = 'R' #'R', 'L', or 'A'
