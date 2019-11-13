@@ -83,6 +83,7 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
                 and blocker is None):
                 entity.mod_attribute('x', x_mod)
                 entity.mod_attribute('y', y_mod)
+                entity.fighter.mod_attribute('stamina', -entity.fighter.base_stam_cost)
                 if global_vars.debug: print(entity.name + ' ' + str(entity.x) + ' ' + str(entity.y))
                 fov_recompute = True
                 if entity.fighter.strafe == 'auto': entity.fighter.facing = facing_dict.get((x_mod,y_mod))
@@ -580,17 +581,18 @@ def perform_attack(active_entity, entities, final_to_hit, target, cs, combat_pha
                 if active_entity.fighter.ap >= active_entity.fighter.last_atk_ap:           
                     combat_phase = CombatPhase.repeat
                     game_state = GameStates.menu
-        
+                else:
+                    combat_phase = CombatPhase.action        
     else:
         #First, see if this is an attack from behind
         if active_entity in target.fighter.targets:
             combat_phase = CombatPhase.defend
         else:
             effects = damage_controller(target, active_entity, location, dam_type, dam_mult, active_entity.fighter.atk_result, cs, entities)
-    
+            combat_phase = CombatPhase.action
+            active_entity.fighter.action.clear()
+
             if effects:
-                combat_phase = CombatPhase.action
-                active_entity.fighter.action.clear()
                 for effect in effects:
                     messages.append(effect)
                 if target.fighter is not None:
@@ -611,6 +613,7 @@ def perform_attack(active_entity, entities, final_to_hit, target, cs, combat_pha
                                     game_state = GameStates.menu
                             else:
                                 active_entity.fighter.combat_choices.clear()
+
 
             if hasattr(active_entity.fighter, 'ai'):
                 menu_dict = dict()
@@ -784,10 +787,15 @@ def handle_persistant_effects(entity, entities):
             #Handle bleeding to death
             if entity.fighter.max_vitae*.25 >= entity.fighter.vitae:
                 messages.append(entity.name + ' has passed out from blood loss and will soon be dead. ')
+                entity.state = EntityState.unconscious
+            if entity.fighter.max_vitae*.15 >= entity.fighter.vitae:
+                messages.append(entity.name + ' has bled to death. ')
+                entity.state = EntityState.dead
         #Handle suffocation
         if entity.fighter.suffocation:
             if entity.fighter.suffocation == 0:
                 messages.append(entity.name + ' has suffocated an died. ')
+                entity.state = EntityState.dead
             else: 
                 entity.fighter.suffocation -= 1
                 messages.append(entity.name + ' is slowly choking to death from a neck wound. ')
@@ -802,6 +810,7 @@ def handle_persistant_effects(entity, entities):
             entity.fighter.gen_stance = FighterStance.prone
             if hasattr(entity.fighter, 'ai'): messages.append(entity.name + ' has passed out due to fatigue. ')
             else: messages.append('You have passed out due to fatigue. ')
+            entity.state = EntityState.unconscious
         #Handle unconsousness
         if entity.state == EntityState.unconscious:
             handle_state_change(entity, entities, EntityState.unconscious)
@@ -817,9 +826,13 @@ def handle_persistant_effects(entity, entities):
         entity.fighter.acted = False
         entity.fighter.wait = False
         entity.fighter.feint = False
+        entity.fighter.combat_choices.clear()
+        entity.fighter.action.clear()
         #Handle death
         if entity.state == EntityState.dead:
             handle_state_change(entity, entities, EntityState.dead)
+        else:
+            handle_mobility_change(entity)
         if not hasattr(entity.fighter, 'ai'): messages.append('A new round has begun. ')
 
     return messages
@@ -828,7 +841,7 @@ def handle_mobility_change(entity):
     #DIct containing direction to x,y AOC mapping for square directly in front of entity
     prone_aoc_dict = {0:(0,-1),1:(1,-1),2:(1,0),3:(1,1),4:(0,1),5:(-1,1),6:(-1,0),7:(-1,-1)}
     #Handle unconsciousness
-    if entity.state in [EntityState.unconscious,EntityState.dead,EntityState.stunned,EntityState.shock]:
+    if entity.state in [EntityState.unconscious,EntityState.stunned,EntityState.shock]:
         entity.fighter.can_act = False
     #Handle leg paralysis
     no_walk_locs = (17,18,21,22,23,24,25,26,27,28)
@@ -1377,6 +1390,12 @@ def get_injuries(target, prev_health, location, layer, dam_type) -> list:
                     max_sev = sev
             i += 1
 
+    if len(messages) == 0:
+        if target.player:
+            messages.add(target.fighter.attacker.name + ' hits you in the ' + target.fighter.name_location(location))
+        else:
+            messages.add('You hit ' + target.name + ' in the ' + target.fighter.name_location(location))
+
     return messages
 
 def find_dam_threshold(percent) -> int:
@@ -1564,10 +1583,7 @@ def attr_dam_limiter(attr, injury, entity) -> int:
             amount *= -1
 
     return amount
-                    
-
-
-
+                
 def inj_limb_finder(injury) -> str:
     r_arm_locs = [3,7,11,15,19]
     l_arm_locs = [4,8,12,16,20]
@@ -2252,7 +2268,7 @@ def change_actor(order, entities, active_entity, combat_phase, game_state, logs)
         order = entities
         global_vars.turn_order = list(order)
         for entity in order:
-            handle_persistant_effects(entity, entities)
+            messages = handle_persistant_effects(entity, entities)
 
     for message in messages:
         log.add_message(Message(message))

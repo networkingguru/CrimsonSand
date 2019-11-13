@@ -163,7 +163,7 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
     
     for option in active_entity.fighter.action:
         if len(command) != 0:
-            if hasattr(active_entity.fighter,'ai') or len(active_entity.fighter.combat_choices) < 2:
+            if hasattr(active_entity.fighter,'ai') or len(active_entity.fighter.combat_choices) <= 2:
                 if command.get(option):
                     if not hasattr(active_entity.fighter, 'ai'):
                         for w in weapons:
@@ -307,7 +307,6 @@ def phase_confirm(active_entity, entities, command, logs, combat_phase) -> (int,
             active_entity.fighter.action.clear()
         if command.get('Restart'):
             #Reset vars
-            active_entity.fighter.combat_choices.clear()
             combat_phase = CombatPhase.action
         
         menu_dict = dict()
@@ -320,8 +319,21 @@ def phase_confirm(active_entity, entities, command, logs, combat_phase) -> (int,
             if hasattr(curr_target.fighter, 'ai'):
                 messages.append('You missed, allowing ' + curr_target.name + ' to counter-attack.')
             else:
-                messages.append(curr_target.name + ' missed, giving you a chance to counter-attack.')
+                messages.append(active_entity.name + ' missed, giving you a chance to counter-attack.')
             active_entity = curr_target
+
+        else:
+            if hasattr(curr_target.fighter, 'ai'):
+                messages.append('You missed.')
+            else:
+                messages.append(active_entity.name + ' missed.')
+                
+        combat_phase = CombatPhase.action
+
+    if combat_phase not in [CombatPhase.repeat, CombatPhase.defend, CombatPhase.confirm]:
+        for e in entities:
+            if e.fighter is not None:
+                e.fighter.combat_choices.clear()
 
     for message in messages:
         log.add_message(Message(message))
@@ -329,6 +341,8 @@ def phase_confirm(active_entity, entities, command, logs, combat_phase) -> (int,
     if hasattr(active_entity.fighter, 'ai'):
         menu_dict = dict()
         game_state = GameStates.default
+
+
 
 
     return combat_phase, menu_dict, active_entity
@@ -402,11 +416,11 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
     parry_ap = cs_p.get('parry ap')
     if active_entity.fighter.ap >= active_entity.fighter.walk_ap: can_dodge = True
     if active_entity.fighter.ap >= parry_ap: can_parry = True
-    if enemy.fighter.counter_attack == active_entity: 
+    if active_entity in enemy.fighter.counter_attack: 
         can_parry = False
         dodge_mod -= 50
         cs['dodge mod'] = dodge_mod
-        enemy.fighter.counter_attack = None
+        enemy.fighter.counter_attack.clear()
 
 
     #Normalized (0-99) percentage scale of probabilities to p/d/b
@@ -546,7 +560,7 @@ def phase_defend(active_entity, enemy, entities, command, logs, combat_phase) ->
                 game_state = GameStates.default
                 menu_dict = dict()
             elif active_entity.fighter.feint and not hit:
-                active_entity.fighter.counter_attack = enemy
+                active_entity.fighter.counter_attack.append(enemy)
                 enemy.fighter.combat_choices.clear()
                 combat_phase = CombatPhase.weapon
             else:
@@ -1159,7 +1173,7 @@ def phase_grapple_defense(active_entity, enemy, entities, command, logs, combat_
                 game_state = GameStates.default
                 
             elif active_entity.fighter.feint and not hit:
-                active_entity.fighter.counter_attack = enemy
+                active_entity.fighter.counter_attack.append(enemy)
                 enemy.fighter.combat_choices.clear()
                 combat_phase = CombatPhase.weapon
             else:

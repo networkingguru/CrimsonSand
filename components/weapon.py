@@ -299,7 +299,7 @@ class Attack():
 
 
         if self.damage_type in ['s','b']:
-            self.stamina += self.weight + int(self.weight*self.axis_vs_com)
+            self.stamina += int((self.weight*self.axis_vs_com)/2)
             self.base_ap += min(self.weight*10, (self.weight * 10)*self.axis_vs_com)
             self.added_mass = self.weight * self.com_perc
             self.attack_mod += (20 - ((self.weight*10) * self.com_perc))    
@@ -309,7 +309,7 @@ class Attack():
                 self.attack_mod += self.main_num * 5
                 self.parry_mod -= self.main_num * 20
         else:
-            self.stamina += self.weight/2
+            self.stamina += self.weight/5
             self.base_ap += self.weight * 5
             self.added_mass = self.weight/10
             

@@ -6,7 +6,7 @@ import global_vars
 from combat_control import combat_controller
 from combat_functions import change_actor
 from ui_control import create_terminal, blt_handle_keys, render, fill_status_panel, blt_handle_global_input, BLTWindow
-from enums import GameStates, CombatPhase
+from enums import GameStates, CombatPhase, EntityState
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from components.armor import apply_armor
 from game_map import array_gen, fill_map
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     #Begin main loop
     while not leave:
         if global_vars.debug_time: t0 = time.time()
-
+        
         render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, modal_dialog)
 
         combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
@@ -105,6 +105,8 @@ if __name__ == "__main__":
         if len(event) > 0 and event[0] == 'exit': leave = True
         if combat_phase == CombatPhase.explore:
             command = event
+        elif curr_actor.state == EntityState.dead:
+            combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
         elif curr_actor.player:
             #Below complexity is due to modal nature. if targets exist, block for input. 
             #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu

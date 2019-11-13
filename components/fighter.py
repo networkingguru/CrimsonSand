@@ -21,7 +21,7 @@ class Fighter:
         self.last_atk_ap = 0
         self.targets = [] #This is a list of targets in AOC, set by update_targets
         self.curr_target = None
-        self.counter_attack = None #Hold the target against who a counter attack can be executed
+        self.counter_attack = [] #Hold the target against who a counter attack can be executed
         self.loc_hit_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived hit chances
         self.loc_dodge_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived dodge chances
         self.loc_parry_diff = [] #A list of dicts in the same order as self.targets in 'location name':mod format displayed to fighter to show perceived parry chances
@@ -431,8 +431,8 @@ class Fighter:
         self.stability_mods = self.stance_stability + self.atk_instability + self.paralysis_instability + (100 - self.clarity)
         self.stability = self.stability_mods
 
-        #Base stamina cost for actions; clamped so all actions require at least some stamina over regin
-        self.base_stam_cost = clamp(int(round(((self.get_attribute('fat')/self.get_attribute('str'))*(self.weight/100)*10))),self.max_stamr+1) 
+        #Base stamina cost for actions; clamped so all actions require a medium amount of stamina
+        self.base_stam_cost = clamp(int(round(((self.get_attribute('fat')/self.get_attribute('str'))*(self.weight/100)*10))),self.max_stamr/5) 
 
         #Hit Locations
         self.locations = []
