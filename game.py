@@ -56,9 +56,11 @@ if __name__ == "__main__":
     players = []
     players.extend(fill_player_list(entities))
     enemies = []
-    enemies = set(entities) - set(players)
+    enemies = list(set(entities) - set(players))
     players[0].worn_armor = options.player_armor
-    apply_armor(players[0])
+    enemies[0].worn_armor = options.enemy_armor
+    for e in entities:
+        apply_armor(e)
     fill_status_panel(players[0], status_log)
     
     #Global order vars; players get first move

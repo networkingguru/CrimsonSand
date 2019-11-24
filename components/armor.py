@@ -510,7 +510,7 @@ class Armor_Component:
         self.p_deflect_max = deflect_max
         self.t_deflect_max = deflect_max * 25
 
-        self.b_soak = .045/self.construction.main_material.hardness * self.thickness
+        self.b_soak = round(.045/self.construction.main_material.hardness * self.thickness, 3)
 
         qual = ''
 

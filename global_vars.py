@@ -4,5 +4,5 @@ arm_locs = set([7,8,11,12,15,16,19,20]) #Set containing numbers for all arm loca
 r_arm_locs = set([7,11,15,19])
 l_arm_locs = set([8,12,16,20])
 leg_locs = set(range(21,29))
-debug = False
+debug = True
 debug_time = False

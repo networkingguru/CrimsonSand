@@ -995,6 +995,12 @@ def damage_controller(target, active_entity, location, dam_type, dam_mult, roll,
     deflect, soak = calc_damage_soak(dam_type, target)
 
     messages = []
+
+    new_locs = []
+    dam_amt_list = []
+    dam_type_list = []
+
+    attack = target.fighter.attacker.fighter.combat_choices[1]
     
     #Calc pre-soak damage total
     if maneuver:
@@ -1010,31 +1016,23 @@ def damage_controller(target, active_entity, location, dam_type, dam_mult, roll,
     #Loops until no more damage is left to do, allowing for pass-through damage
     while location is not None and damage > 0:
 
-        if target.fighter.locations[location][layer] == 0 and layer < 2:
-            layer += 1
+        if len(target.loc_armor[location]) != 0: #Handle armor if any
+            new_locs, dam_amt_list, dam_type_list = armor_control(target, location, attack, dam_type, dam_amount)
+            if len(new_locs) > 1: #Armor not penetrated, damage dispersed
+                for loc in new_locs:
+                    idx = new_locs.index(loc)
+                    deflect, soak = calc_damage_soak(dam_type_list[idx], target)
+                    msgs, _, _, _ = dam_loop(target, loc, layer, active_entity, atk_angle, rel_angle, dam_type_list[idx], dam_amt_list[idx], soak, deflect, roll)
+                    messages.extend(msgs)
 
-        if roll <= deflect[layer]: 
-            l_names = ['skin','tissue','bone']
-            messages.append(active_entity.name + ' hit ' + target.name +', but the blow deflected harmlessly off of ' + target.name + '\'s ' + l_names[layer])
-            break
-        
-        #Store previous damage level to avoid repeating damage effects
-        prev_health = target.fighter.locations[location][layer]
-        
-        #determine how much damage is done to loc/layer and if pass-through occurs
-        new_location, new_layer, new_damage = calc_layer_damage(target, location, layer, dam_type, dam_amount, soak, atk_angle, rel_angle)  
-
-        messages.extend(get_injuries(target, prev_health, location, layer, dam_type))
-
-        if new_location != location or new_layer != layer:
-            damage = new_damage
-            layer = new_layer
-            location = new_location
+                    damage = 0 #Exit loop
+            else:
+                msgs, damage, location, layer = dam_loop(target, location, layer, active_entity, atk_angle, rel_angle, dam_type, dam_amount, soak, deflect, roll)
+                messages.extend(msgs)
         else:
-            damage = 0
-            location = None
+            msgs, damage, location, layer = dam_loop(target, location, layer, active_entity, atk_angle, rel_angle, dam_type, dam_amount, soak, deflect, roll)
+            messages.extend(msgs)
 
-        handle_mobility_change(target)
         
     #Handle weapon removal for severed limbs
     hands_feet = (19,20,27,28)
@@ -1059,11 +1057,48 @@ def damage_controller(target, active_entity, location, dam_type, dam_mult, roll,
 
     return messages
 
+def dam_loop(target, location, layer, active_entity, atk_angle, rel_angle, dam_type, dam_amount, soak, deflect, roll):
+    messages = []
+
+    if target.fighter.locations[location][layer] == 0 and layer < 2:
+        layer += 1
+
+    if roll <= deflect[layer]: 
+        l_names = ['skin','tissue','bone']
+        messages.append(active_entity.name + ' hit ' + target.name +', but the blow deflected harmlessly off of ' + target.name + '\'s ' + l_names[layer])
+        dam_amount = 0
+
+    
+    #Store previous damage level to avoid repeating damage effects
+    prev_health = target.fighter.locations[location][layer]
+    
+    #determine how much damage is done to loc/layer and if pass-through occurs
+    new_location, new_layer, new_damage = calc_layer_damage(target, location, layer, dam_type, dam_amount, soak, atk_angle, rel_angle)  
+
+    messages.extend(get_injuries(target, prev_health, location, layer, dam_type))
+
+    if new_location != location or new_layer != layer:
+        damage = new_damage
+        layer = new_layer
+        location = new_location
+    else:
+        damage = 0
+        location = None
+
+    handle_mobility_change(target)
+
+    return messages, damage, location, layer
+
+
+
 def armor_control(target, location, attack, dam_type, dam_amount) -> (list, list, list):
     locations = [location]
-    dam_amt_list = [dam_amount]
-    dam_type_list = [dam_type] 
+    dam_amt_list = []
+    dam_type_list = [] 
     ao_idx =  1 #Counter. Subtracted from len of loc_armor to determine ao to effect
+
+    if global_vars.debug:
+        print('Pre-armor damage is', str(round(dam_amount)), sep=' ')
 
     if ao_idx == 1:
         idx = len(target.loc_armor[location]) - ao_idx 
@@ -1080,6 +1115,8 @@ def armor_control(target, location, attack, dam_type, dam_amount) -> (list, list
                         locations.append(l)
             ao_idx += 1
             dam_total = sum(dam_amt_list)
+            if global_vars.debug:
+                print('Post-displace damage total is', str(dam_total), sep=' ')
 
 
 
@@ -1090,6 +1127,9 @@ def armor_control(target, location, attack, dam_type, dam_amount) -> (list, list
         for loc in locations:
             idx = locations.index(loc)
             dam_amt_list[idx], dam_type_list[idx] = armor_protect(target, loc, attack, ao_idx, dam_type_list[idx], dam_amt_list[idx])
+            if global_vars.debug:
+                ao = target.loc_armor[loc][len(target.loc_armor[location]) - ao_idx]
+                print(ao.name, 'hit for', str(round(dam_amt_list[idx])), 'of', dam_type_list[idx], 'damage.', sep=' ')
 
         dam_total = sum(dam_amt_list)
         ao_idx += 1
@@ -1100,8 +1140,8 @@ def armor_displace(target, location, attack, ao_idx, dam_type, dam_amount) -> (l
     idx = len(target.loc_armor[location]) - ao_idx 
     ao = target.loc_armor[location][idx]
     locs = [location]
-    dam_amt_list = [dam_amount]
-    dam_type_list = [dam_type]
+    dam_amt_list = []
+    dam_type_list = []
     deflect = False
     deflect_max = 0
 
@@ -1127,7 +1167,7 @@ def armor_displace(target, location, attack, ao_idx, dam_type, dam_amount) -> (l
     if not deflect:
         #Determine if attack penetrates
         armor_breach_psi = attack.main_area * ao.hits_sq_in
-        if dam_amount > armor_breach_psi or ao.hits:
+        if dam_amount > armor_breach_psi or dam_amount > ao.hits:
             dam_amount -= min([armor_breach_psi, ao.hits])
             ao.hits -= dam_amount
             dam_amt_list[0] = dam_amount
@@ -1142,29 +1182,30 @@ def armor_displace(target, location, attack, ao_idx, dam_type, dam_amount) -> (l
             if len(ao.covered_locs) < 4:
                 locs = ao.covered_locs
             else:
-                while len(locs) < 3:
+                while len(locs) < 3: 
                     i = 1
-                    if location - 2 in ao.covered_locs:
+                    if location - 2 in ao.covered_locs and location - 2 not in locs:
                         locs.append(location - 2)
-                    if location + 2 in ao.covered_locs:
+                    elif location + 2 in ao.covered_locs and location + 2 not in locs:
                         locs.append(location + 2)
-                    if location - 1 in ao.covered_locs:
+                    elif location - 1 in ao.covered_locs and location - 1 not in locs:
                         locs.append(location - 1)
-                    if location + 1 in ao.covered_locs:
+                    elif location + 1 in ao.covered_locs and location + 1 not in locs:
                         locs.append(location + 1)
-                    while i < len(ao.covered_locs):
-                        if ao.covered_locs[i] != location:
-                            locs.append(ao.covered_locs[i])
-                        i += 1
-                    print('Reached end of armor_displace without reaching while loop condition')#Should never be hit
-                    break 
+                    else:
+                        while i < len(ao.covered_locs):
+                            if ao.covered_locs[i] != location:
+                                locs.append(ao.covered_locs[i])
+                            i += 1
+                        print('Reached end of armor_displace without reaching while loop condition')#Should never be hit
+                        break 
         
             for l in locs:
                 dam_type_list.append('b')
                 if l == locs[0]:
-                    dam_amt_list.append(dam_amount *.5 * ao.b_soak)
+                    dam_amt_list.append(dam_amount *.5 * (1 - ao.b_soak))
                 else:
-                    dam_amt_list.append(dam_amount * .25 * ao.b_soak)        
+                    dam_amt_list.append(dam_amount * .25 * (1 - ao.b_soak))        
             
     else: #Deflected
         dam_amount = 0 
@@ -1231,18 +1272,20 @@ def armor_protect(target, location, attack, ao_idx, dam_type, dam_amount) -> (in
                 dam_amount -= min([armor_breach_psi, ao.hits])
                 ao.hits -= dam_amount
                 penetrate = True
+            else:
+                ao.hits -= dam_amount
         #If no penetration, convert damage and apply to next area(s)
         if not penetrate:
             if dam_type == 'b':
-                dam_amount = dam_amount * ao.b_soak
+                dam_amount = dam_amount * (1 - ao.b_soak)
             elif dam_type == 't':
                 ao.hits -= dam_amount
                 dam_type = 'b'
-                dam_amount = dam_amount *.2 * ao.b_soak
+                dam_amount = dam_amount *.2 * (1 - ao.b_soak)
             else:
                 ao.hits -= dam_amount
                 dam_type = 'b'
-                dam_amount = dam_amount *.8 * ao.b_soak
+                dam_amount = dam_amount *.8 * (1 - ao.b_soak)
 
     else: #Deflected
         dam_amount = 0
@@ -1331,7 +1374,19 @@ def calc_layer_damage(target, location, layer, dam_type, dam_amount, soak, atk_a
     #Calc final damage
     damage = int(round((1-soak[layer])*dam_amount))
 
-    if target.fighter.locations[location][layer] < damage:
+    if dam_type == 'b':
+        if target.fighter.locations[location][layer] < damage:
+            if layer == 2:
+                layer = 0
+                location = find_next_location(location, atk_angle, entity_angle)
+                damage -= target.fighter.locations[location][layer]
+        
+            target.fighter.locations[location][layer] = 0
+        else:
+            target.fighter.locations[location][layer] -= damage
+            if layer < 2:
+                layer += 1
+    elif target.fighter.locations[location][layer] < damage:
         damage -= target.fighter.locations[location][layer]
         target.fighter.locations[location][layer] = 0
         if layer < 2:

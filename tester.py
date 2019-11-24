@@ -255,5 +255,12 @@ l_mod = clamp(l_mod - la_skill, 0)
 m_mod = clamp(m_mod - ma_skill, 0)
 h_mod = clamp(h_mod - ha_skill, 0)
 
+l = []
+
+while len(l) < 3:
+    l.append(1)
+    print(len(l))
+    
+
 
 print('done')
