@@ -5,6 +5,7 @@ from tcod import event, console
 import textwrap
 import options
 import global_vars
+from math import ceil
 from enums import MenuTypes, GameStates, CombatPhase, EntityState
 from game_messages import Message
 from utilities import inch_conv
@@ -300,7 +301,8 @@ class BLTWindow:
         self.w = int(w)
         self.header = None
         self.options = ['You are disabled and may not attack']
-        self.h = len(self.options) + 3
+
+        self.h = 4
         self.bg_color = bg_color
         self.color = color
     def add_header(self, header):
@@ -308,7 +310,12 @@ class BLTWindow:
             self.header = textwrap.wrap(header, self.w-2)
             self.h = len(self.header)
             if self.options is not None: 
-                self.h += len(self.options)+3
+                #Calc option length with text wrapping
+                opt_len = 0
+                for o in self.options:
+                    opt_len += ceil(len(o)/(self.w-4))
+
+                self.h = opt_len + 5
             else: self.h += 3
     def draw_window(self):
 
@@ -350,10 +357,24 @@ class BLTWindow:
 
             for option in self.options:
                 opt_index = self.options.index(option)
+                wrapped_option = textwrap.wrap(option, self.w-4)
                 if opt_index < 26:
                     letter_index = ord('a') + opt_index
                 else:
                     letter_index = ord('0') + opt_index - 26
                 terminal.layer(2)
-                text = '[font=big](' + chr(letter_index) + ') ' + option
-                terminal.printf(x+1, y+1+header_len+1+(self.options.index(option)), '[color=white]'+ text)
+                if len(wrapped_option) == 1:
+                    text = '[font=big](' + chr(letter_index) + ') ' + option
+                    terminal.printf(x+1, y+1+header_len+1+(self.options.index(option)), '[color=white]'+ text)
+                else:
+                    for o in wrapped_option:
+                        if wrapped_option.index(o) == 0:
+                            text = '[font=big](' + chr(letter_index) + ') ' + o
+                            terminal.printf(x+1, y+1+header_len+1+(self.options.index(option)), '[color=white]'+ text)
+                        else:
+                            text = '[font=big]    ' + o
+                            terminal.printf(x+1, y+1+header_len+1+(self.options.index(option)+wrapped_option.index(o)), '[color=white]'+ text)
+
+                        
+                        
+

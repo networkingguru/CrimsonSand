@@ -815,8 +815,8 @@ class De_Medium_Sword(Weapon):
         self.t_striker = 'none'
         self.hands = [1,2] #List can include 0,1,2
         self.quality = 'Average'
-        self.base_name = 'Long Sword'
-        self.bname_variants = ['Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'] #A list of variant names for the weapon
+        self.base_name = 'Hand and a Half Sword'
+        self.bname_variants = ['Hand and a Half Sword'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
         self.skill = 'long_sword' #This is the default skill used for the weapon. String
         self.length = 45
         self.shaft_length = 6 #Also used as tethers for flail and whip like weapons
