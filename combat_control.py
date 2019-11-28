@@ -9,17 +9,16 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
 
     if combat_phase == CombatPhase.explore:
         if isinstance(command, str):
-            if command == 'strafe': 
+            if command.get('strafe'): 
                 message = strafe_control(active_entity)
                 logs[2].add_message(message)
         elif len(command) != 0:
-            if command[0] == 'move' or 'spin':
-                moved = move_actor(game_map, active_entity, entities, command, logs)
-                if moved: 
-                    combat_phase_new = detect_enemies(entities)
-                    #If phase changed, go into new phase
-                    if combat_phase != combat_phase_new:
-                        combat_phase = combat_phase_new
+            if command.get('move') or command.get('spin'):
+                move_actor(game_map, active_entity, entities, command, logs)
+                combat_phase_new = detect_enemies(entities)
+                #If phase changed, go into new phase
+                if combat_phase != combat_phase_new:
+                    combat_phase = combat_phase_new
                    
     if combat_phase == CombatPhase.init:
         combat_phase, order = phase_init(entities)

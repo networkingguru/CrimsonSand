@@ -44,18 +44,17 @@ def phase_action(active_entity, players, entities, order, command, logs, game_ma
     if len(command) != 0:
         #Check and see if entity has a target in aoc
         if len(active_entity.fighter.targets) == 0:
-            if isinstance(command, str):
-                if command == 'strafe': 
-                    message = strafe_control(active_entity)
-                    log.add_message(message)
+            if command.get('strafe'): 
+                message = strafe_control(active_entity)
+                log.add_message(message)
             elif len(command) != 0: 
-                if isinstance(command, dict):
-                    if command.get('End Turn'):
-                        active_entity.fighter.end_turn = True
-                        combat_phase = CombatPhase.action
+                if command.get('End Turn'):
+                    active_entity.fighter.end_turn = True
+                    combat_phase = CombatPhase.action
                 elif active_entity.fighter.ap >= active_entity.fighter.walk_ap:
-                    if command[0] in ['move','spin','prone','stand','kneel']:
-                        moved = move_actor(game_map, active_entity, entities, command, logs)                         
+                    cmd_list = list(command.keys())
+                    if cmd_list[0] in ['move','spin','prone','stand','kneel']:
+                        move_actor(game_map, active_entity, entities, command, logs)                         
 
                     if global_vars.debug: print(active_entity.name + ' ap:' + str(active_entity.fighter.ap))
 
@@ -648,11 +647,8 @@ def phase_disengage(active_entity, entities, command, logs, combat_phase, game_m
             strafe = active_entity.fighter.strafe
             active_entity.fighter.strafe = 'enemy'
             #Move player
-            fov_recompute = move_actor(game_map, active_entity, entities, action, logs)
-            if fov_recompute:
-                #Subtract move AP and stamina
-                active_entity.fighter.mod_attribute('ap', -active_entity.fighter.walk_ap)
-                active_entity.fighter.mod_attribute('stamina', -active_entity.fighter.base_stam_cost)
+            move_actor(game_map, active_entity, entities, action, logs)
+
             active_entity.fighter.disengage = False
             active_entity.fighter.disengage_option = None
             for entity in entities:
@@ -706,11 +702,8 @@ def phase_move(active_entity, entities, command, logs, combat_phase, game_map) -
                 strafe = active_entity.fighter.strafe
                 active_entity.fighter.strafe = 'enemy'
                 #Move player
-                fov_recompute = move_actor(game_map, active_entity, entities, action, logs)
-                if fov_recompute:
-                    #Subtract move AP and stamina
-                    active_entity.fighter.mod_attribute('ap', -active_entity.fighter.walk_ap)
-                    active_entity.fighter.mod_attribute('stamina', -active_entity.fighter.base_stam_cost)
+                move_actor(game_map, active_entity, entities, action, logs)
+
                 active_entity.fighter.disengage = False
                 active_entity.fighter.disengage_option = None
                 active_entity.fighter.strafe = strafe

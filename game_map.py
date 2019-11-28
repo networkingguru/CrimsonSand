@@ -142,7 +142,7 @@ def cells_to_keys(cells, entity) -> (list, list):
 
 def command_to_offset(command) -> list:
     direction = []
-    direction.extend(command[1])
+    direction.extend(command.get('move'))
     y_mod = 0
     x_mod = 0
     for xy in direction:

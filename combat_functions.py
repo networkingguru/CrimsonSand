@@ -45,7 +45,7 @@ def find_closest_enemy(entity):
                 closest_dist = dist
                 entity.fighter.closest_fighter = enemy
 
-def move_actor(game_map, entity, entities, command, logs) -> bool:
+def move_actor(game_map, entity, entities, command, logs):
 
     fov_recompute = False
     #Dict containing facing direction based on x,y offset
@@ -67,7 +67,7 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
     if not entity.fighter.can_act:
         message = Message('You can\'t move while unconscious!', 'black')
 
-    if command[0] == 'move' and entity.fighter.can_act and entity.fighter.can_walk:
+    if command.get('move') and entity.fighter.can_act and entity.fighter.can_walk:
         #Mark last known pos of entity for AI
         for e in entities:
             if e is not entity and hasattr(e.fighter, 'ai'):
@@ -92,15 +92,15 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
                     e_angle = (e_angle // 45) * 45
                     entity.fighter.facing = angle_dict.get(e_angle)
                 if not hasattr(entity.fighter, 'ai'): 
-                    message = Message('You move ' + command[1], 'black')
+                    message = Message('You move ' + command.get('move'), 'black')
                     message_log.add_message(message)
             if blocker and not hasattr(entity.fighter, 'ai'):
                 message = Message('You can\'t walk over '+blocker.name+'!', 'black')
                 message_log.add_message(message)
 
         
-    if command[0] == 'spin': 
-        direction = command[1]
+    if command.get('spin'): 
+        direction = command.get('spin')
         if direction == 'ccw': entity.fighter.facing -= 1
         else: entity.fighter.facing += 1
         fov_recompute = True
@@ -109,27 +109,28 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
         elif entity.fighter.facing == -1: entity.fighter.facing = 7
         #Change facing
         
-    if command[0] == 'spin' or 'move':
+    if command.get('spin') or command.get('move'):
         entity.fighter.update_aoc_facing()
         entity.fighter.aoc = change_face(entity.fighter.aoc_facing, entity.x, entity.y, entity.fighter.reach)
 
-    if command[0] == 'prone':
+    if command.get('prone'):
         message = Message('You drop prone', 'black')
         entity.fighter.gen_stance = FighterStance.prone
         fov_recompute = True
     
-    if command[0] == 'kneel':
+    if command.get('kneel'):
         message = Message('You kneel', 'black')
         entity.fighter.gen_stance = FighterStance.kneeling
         fov_recompute = True
 
-    if command[0] == 'stand' and entity.fighter.can_stand:
+    if command.get('stand') and entity.fighter.can_stand:
         message = Message('You stand up', 'black')
         entity.fighter.gen_stance = FighterStance.standing
         fov_recompute = True
 
     if fov_recompute == True:
         entity.fighter.mod_attribute('ap', -ap_cost)
+        entity.fighter.mod_attribute('stamina', -entity.fighter.base_stam_cost)
 
     if hasattr(entity, 'fighter') and fov_recompute == True:
         if global_vars.debug_time: t0 = time.time()
@@ -155,7 +156,6 @@ def move_actor(game_map, entity, entities, command, logs) -> bool:
             e_targets = aoc_check(entities, target)
             update_targets(target, e_targets)
 
-    return fov_recompute #Used to id that entity moved for ap reduction in combat
 
 def relo_actor(game_map, target, aggressor, entities, direction, distance) -> bool:
     '''Used to relocate an actor, suich as when they are pushed or thrown by something else'''
@@ -2166,76 +2166,76 @@ def init_combat(active_entity, order, command) -> (dict, int, int, list):
     messages = []
     menu_dict = dict()
 
-    try:
-        if command.get('Wait'):
-            if active_entity.player:
-                messages.append('You decide to wait for your opponents to act')
-            else:
-                messages.append(active_entity.name + ' waits for you to act')
-            active_entity.fighter.wait = True
+
+    if command.get('Wait'):
+        if active_entity.player:
+            messages.append('You decide to wait for your opponents to act')
+        else:
+            messages.append(active_entity.name + ' waits for you to act')
+        active_entity.fighter.wait = True
+        combat_phase = CombatPhase.action
+        game_state = GameStates.default
+    elif command.get('Maneuver'):
+        if active_entity.player:
+            messages.append('You decide to attempt a special maneuver')
+        combat_phase = CombatPhase.maneuver
+    elif command.get('Change Stance'):
+        if active_entity.player:
+            messages.append('You decide to change your stance')
+        combat_phase = CombatPhase.stance
+    elif command.get('Change Guard'):
+        if active_entity.player:
+            messages.append('You decide to change your guard')
+        combat_phase = CombatPhase.guard                     
+    elif command.get('Attack'):
+        if active_entity.player:
+            messages.append('You decide to attack')
+        combat_phase = CombatPhase.weapon
+    elif command.get('Move'):
+        if active_entity.player:
+            messages.append('You decide to move.')
+        else:
+            messages.append(active_entity.name + ' moves. ')
+        combat_phase = CombatPhase.move
+    elif command.get('End Turn'):
+        if active_entity.player:
+            messages.append('You decide to end your turn')
+        else:
+            if active_entity.fighter.male: pro = 'his'
+            else: pro = 'her'
+            messages.append(active_entity.name + ' ends ' + pro + ' turn')
+        active_entity.fighter.end_turn = True
+        active_entity.fighter.action.clear()
+        combat_phase = CombatPhase.action
+        game_state = GameStates.default 
+
+    elif active_entity.fighter.can_act:
+        #CHeck to see if entity can attack
+        valid_attacks = num_valid_attacks(active_entity)
+        valid_mnvrs = valid_maneuvers(active_entity, active_entity.fighter.curr_target)
+        active_entity.fighter.action.clear()
+        if valid_attacks > 0:
+            active_entity.fighter.action.append('Attack')
+        if active_entity.fighter.ap >= active_entity.fighter.walk_ap and active_entity.fighter.can_walk:
+            active_entity.fighter.action.append('Move')
+        if len(valid_mnvrs) > 0:
+            active_entity.fighter.action.append('Maneuver')
+        if len(order) > 1 and len(active_entity.fighter.action) >= 1: 
+            active_entity.fighter.action.append('Wait')
+            active_entity.fighter.action.append('Change Stance')
+            active_entity.fighter.action.append('Change Guard')
+        if len(active_entity.fighter.action) >= 1:
+            active_entity.fighter.action.append('End Turn')
+            game_state = GameStates.menu
+        else:
+            active_entity.fighter.end_turn = True
             combat_phase = CombatPhase.action
             game_state = GameStates.default
-        elif command.get('Maneuver'):
-            if active_entity.player:
-                messages.append('You decide to attempt a special maneuver')
-            combat_phase = CombatPhase.maneuver
-        elif command.get('Change Stance'):
-            if active_entity.player:
-                messages.append('You decide to change your stance')
-            combat_phase = CombatPhase.stance
-        elif command.get('Change Guard'):
-            if active_entity.player:
-                messages.append('You decide to change your guard')
-            combat_phase = CombatPhase.guard                     
-        elif command.get('Attack'):
-            if active_entity.player:
-                messages.append('You decide to attack')
-            combat_phase = CombatPhase.weapon
-        elif command.get('Move'):
-            if active_entity.player:
-                messages.append('You decide to move.')
-            else:
-                messages.append(active_entity.name + ' moves. ')
-            combat_phase = CombatPhase.move
-        elif command.get('End Turn'):
-            if active_entity.player:
-                messages.append('You decide to end your turn')
-            else:
-                if active_entity.fighter.male: pro = 'his'
-                else: pro = 'her'
-                messages.append(active_entity.name + ' ends ' + pro + ' turn')
-            active_entity.fighter.end_turn = True
-            active_entity.fighter.action.clear()
-            combat_phase = CombatPhase.action
-            game_state = GameStates.default 
-    except:
-        if active_entity.fighter.can_act:
-            #CHeck to see if entity can attack
-            valid_attacks = num_valid_attacks(active_entity)
-            valid_mnvrs = valid_maneuvers(active_entity, active_entity.fighter.curr_target)
-            active_entity.fighter.action.clear()
-            if valid_attacks > 0:
-                active_entity.fighter.action.append('Attack')
-            if active_entity.fighter.ap >= active_entity.fighter.walk_ap and active_entity.fighter.can_walk:
-                active_entity.fighter.action.append('Move')
-            if len(valid_mnvrs) > 0:
-                active_entity.fighter.action.append('Maneuver')
-            if len(order) > 1 and len(active_entity.fighter.action) >= 1: 
-                active_entity.fighter.action.append('Wait')
-                active_entity.fighter.action.append('Change Stance')
-                active_entity.fighter.action.append('Change Guard')
-            if len(active_entity.fighter.action) >= 1:
-                active_entity.fighter.action.append('End Turn')
-                game_state = GameStates.menu
-            else:
-                active_entity.fighter.end_turn = True
-                combat_phase = CombatPhase.action
-                game_state = GameStates.default
-                return menu_dict, combat_phase, game_state, order, messages
+            return menu_dict, combat_phase, game_state, order, messages
 
-            combat_menu_header = 'What do you wish to do?'
+        combat_menu_header = 'What do you wish to do?'
 
-            menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}                       
+        menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}                       
 
     if hasattr(active_entity.fighter, 'ai'):
         game_state = GameStates.default

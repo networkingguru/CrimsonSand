@@ -105,9 +105,32 @@ def create_terminal(w,h) -> bool:
     terminal.refresh()
     return term
 
+def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, game_map, order) -> dict: 
+    command = {}
+    if game_state != GameStates.menu: command = blt_handle_global_input(game_state)
+
+    
+    elif active_entity.player:
+        #Below complexity is due to modal nature. if targets exist, block for input. 
+        #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
+        if len(active_entity.fighter.targets) == 0:
+            command = blt_handle_keys(game_state, menu_dict)
+        else:
+            if 'options' in menu_dict:
+                command = blt_handle_keys(game_state, menu_dict)
+
+    elif not active_entity.player:
+        command = active_entity.fighter.ai.ai_command(active_entity, entities, combat_phase, game_map, order)
+
+        if global_vars.debug: print(active_entity.name + ' actions: ', *active_entity.fighter.action, sep=', ')
+        if global_vars.debug and isinstance(command, str): print(active_entity.name + ' command: ' + command)
+
+    return command
+
+
 def blt_handle_keys(game_state, menu_dict) -> str or None:
     key = terminal.read()
-    command = []
+    command = {}
 
     if key == terminal.TK_CLOSE:
         exit()
@@ -150,7 +173,7 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
 
 def blt_handle_global_input(game_state) -> str or int or None:
     
-    command = []
+    command = {}
     if terminal.has_input():
         key = terminal.read()
         if key == terminal.TK_CLOSE:
@@ -159,7 +182,10 @@ def blt_handle_global_input(game_state) -> str or int or None:
             if not 88 < key < 99 and terminal.check(terminal.TK_CHAR):
                 key = chr(terminal.state(terminal.TK_CHAR))
             keymap = options.key_maps[game_state.value - 1]
-            command = keymap.get(key)
+            if keymap.get(key) is not None:
+                command = keymap.get(key)
+            for k in command.keys():
+                print(k)
     return command
                 
             
