@@ -9,6 +9,8 @@ from math import ceil
 from enums import MenuTypes, GameStates, CombatPhase, EntityState
 from game_messages import Message
 from utilities import inch_conv
+from bltGui.bltGui import bltFrame as Frame
+from bltGui.bltGui import *
 
 
 def gen_status_panel(player) -> list:
@@ -93,6 +95,7 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
 def create_terminal(w,h) -> bool:
     term = terminal.open()
     terminal.set('window: size='+str(w)+'x'+str(h)+', cellsize=10x10, title=Crimson Sands')
+
     #Fonts
     terminal.set("text font: fonts\\consolab.ttf, size=8x14")
     terminal.set("font: fonts\\DejaVuSansMono-Bold.ttf, size=10x10")
