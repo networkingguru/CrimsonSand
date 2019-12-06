@@ -35,7 +35,10 @@ if __name__ == "__main__":
     type_list = options.panel_types
     color_list = options.panel_colors
 
+    frame_list = []
+
     leave = False
+    dirty = True
 
     #Message Log init
     message_log = MessageLog(1, options.message_panel_w-1, options.message_panel_h-2)
@@ -94,8 +97,8 @@ if __name__ == "__main__":
     while not leave:
         if global_vars.debug_time: t0 = time.time()
         
-        render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, modal_dialog)
-
+        if dirty: render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, modal_dialog)
+        old_menu = menu_dict
         combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
         if curr_actor != new_curr_actor:
             if global_vars.debug: print(curr_actor.name + ' ' + new_curr_actor.name)
@@ -104,15 +107,21 @@ if __name__ == "__main__":
         elif curr_actor.state == EntityState.dead:
             combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
 
-        command = handle_input(curr_actor, game_state, menu_dict, entities, combat_phase, game_map, order)
+        command, dirty = handle_input(curr_actor, game_state, menu_dict, entities, combat_phase, game_map, order, frame_list)
+        
         menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
+        if old_menu != menu_dict: dirty = True
+
         if len(command) != 0:
+            dirty = True
             if command.get('exit'): leave = True
             
             fill_status_panel(players[0], status_log)
             command = {}
+            frame_list.clear()
             if global_vars.debug: print('Phase: ' + str(combat_phase))
+
 
 
         if global_vars.debug_time: t1 = time.time()

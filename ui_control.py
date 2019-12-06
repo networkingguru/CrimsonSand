@@ -9,8 +9,25 @@ from math import ceil
 from enums import MenuTypes, GameStates, CombatPhase, EntityState
 from game_messages import Message
 from utilities import inch_conv
-from bltGui.bltGui import bltFrame as Frame
-from bltGui.bltGui import *
+from bltGui import bltFrame as Frame
+import bltGui
+
+
+
+def initialize():
+    key = bltGui.bltInput.update()
+    mouse = bltGui.bltInput.mouse
+
+
+def render_frames(frame_list):
+    for f in frame_list:
+
+        f.draw()
+
+def update(frame_list):
+    frame_list.sort(key=lambda x: x.layer, reverse=True)
+    for f in frame_list:
+        f.update()
 
 
 def gen_status_panel(player) -> list:
@@ -49,7 +66,7 @@ def fill_status_panel(player, log) -> None:
         log.add_message(Message(entry))
 
 
-def render(entities, players, game_map, con_list, offset_list, type_list, dim_list, color_list, logs, menu_dict = dict(), modal_dialog = None) -> None:
+def render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict = dict(), modal_dialog = None) -> None:
     terminal.clear()
     map_con = con_list[0]
     for con in con_list:
@@ -62,6 +79,8 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
         
         if con_type == 0:
             render_map_con(entities, players, game_map, dim_x, dim_y, offset_x, offset_y)
+            map_x, map_y = offset_x, offset_y
+            map_dim_x, map_dim_y = dim_x, dim_y
 
         elif con_type == 3:
             log = logs[con_type-1]
@@ -69,24 +88,36 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
         else:
             log = logs[con_type-1]
             render_status_con(entities, players, game_map, dim_x, dim_y, con_type, log, offset_x, offset_y)
+            
     
     if menu_dict != None:
         menu_type = menu_dict.get('type')
         menu_header = menu_dict.get('header')
         menu_options = menu_dict.get('options')
         hide_options = menu_dict.get('mode')
-        
+        x_offset = int(map_x + round(map_dim_x / 3))
+        y_offset = int(map_y + round(map_dim_y / 3))
+
+
         if menu_type == MenuTypes.combat:
             if not hide_options:
-                modal_dialog.options = menu_options
-                modal_dialog.add_header(menu_header)
-                modal_dialog.draw_window()
+                options = menu_options
+                header = menu_header                 
             else:
-                modal_dialog.options = None
-                modal_dialog.add_header(menu_header)
-                modal_dialog.draw_window()
+                options = []
+                header = menu_header
+
+            if len(frame_list) == 0:
+                bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list)
+                initialize()
+            
+    
+
+    if len(frame_list) != 0:
+        render_frames(frame_list)
 
     terminal.refresh()
+
    
 
 
@@ -95,6 +126,7 @@ def render(entities, players, game_map, con_list, offset_list, type_list, dim_li
 def create_terminal(w,h) -> bool:
     term = terminal.open()
     terminal.set('window: size='+str(w)+'x'+str(h)+', cellsize=10x10, title=Crimson Sands')
+    terminal.set("input: filter={keyboard+, mouse+}")
 
     #Fonts
     terminal.set("text font: fonts\\consolab.ttf, size=8x14")
@@ -105,8 +137,10 @@ def create_terminal(w,h) -> bool:
     terminal.refresh()
     return term
 
-def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, game_map, order) -> dict: 
+def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, game_map, order, frame_list) -> (dict, bool): 
     command = {}
+    dirty = False
+
     if game_state != GameStates.menu: command = blt_handle_global_input(game_state)
 
     
@@ -117,7 +151,19 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
             command = blt_handle_keys(game_state, menu_dict)
         else:
             if 'options' in menu_dict:
-                command = blt_handle_keys(game_state, menu_dict)
+                if len(frame_list) != 0:
+                    
+                    key = bltGui.bltInput.update()       
+                    update(frame_list)
+
+                    if key is not None:
+                        dirty = True
+                        for control in frame_list[0].controls:
+                            if isinstance(control, bltGui.bltListbox):
+                                item = control.return_item()
+                                if item is not None:
+                                    command = {item:item}
+
 
     elif not active_entity.player:
         command = active_entity.fighter.ai.ai_command(active_entity, entities, combat_phase, game_map, order)
@@ -125,10 +171,14 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
         if global_vars.debug: print(active_entity.name + ' actions: ', *active_entity.fighter.action, sep=', ')
         if global_vars.debug and isinstance(command, str): print(active_entity.name + ' command: ' + command)
 
-    return command
+    
+        
 
 
-def blt_handle_keys(game_state, menu_dict) -> str or None:
+    return command, dirty
+
+
+def blt_handle_keys(game_state, menu_dict, frame_list = []) -> str or None:
     key = terminal.read()
     command = {}
 
@@ -156,7 +206,10 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
                         keymap = options.key_maps[0]
                         command = keymap.get(key)
             else:
-                if terminal.check(terminal.TK_CHAR):
+                
+
+
+                """ if terminal.check(terminal.TK_CHAR):
                     key = ord(chr(terminal.state(terminal.TK_CHAR)))
                 for option in menu_options:
                     opt_index = menu_options.index(option)
@@ -166,7 +219,7 @@ def blt_handle_keys(game_state, menu_dict) -> str or None:
                         cp = ord('0') + opt_index - 26
                     if cp == key:
                         command = {menu_options[opt_index]:menu_options[opt_index]}
-                        pass
+                        pass """
     
     return command
 
@@ -184,8 +237,6 @@ def blt_handle_global_input(game_state) -> str or int or None:
             keymap = options.key_maps[game_state.value - 1]
             if keymap.get(key) is not None:
                 command = keymap.get(key)
-            for k in command.keys():
-                print(k)
     return command
                 
             
@@ -320,7 +371,32 @@ def print_entities(entities, ox, oy) -> None:
             terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=darker amber][color=darker gray]'+corpse.char+'[/color][/bk_color]')
 
 
+def bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list):
 
+    #draw_demo()
+    items = options
+    i_width = len(max(items,key=len)) + 8
+    item_dict = {0:'First one', 1:'Second one', 2:'Third one', 3:'Last one'}
+    if header is not None:
+        header_h = len(textwrap.wrap(header, len(items)))
+
+    list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True)
+    content_frame = bltGui.bltShowListFrame(i_width + x_offset, y_offset,25,20, "", frame=True, draggable=True)
+    content_frame.set_dict(item_dict)
+
+
+
+    list_box = bltGui.bltListbox(list_frame, 1, header_h, items, False, True)
+    list_frame.add_control(list_box)
+    content_frame.add_control(bltGui.bltResizeFrameButton(content_frame))
+    list_box.register('changed', content_frame)
+
+
+
+    frame_list.append(list_frame)
+    frame_list.append(content_frame)
+
+    
         
 
 class BLTWindow:
