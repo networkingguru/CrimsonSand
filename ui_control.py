@@ -158,11 +158,12 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
 
                     if key is not None:
                         dirty = True
-                        for control in frame_list[0].controls:
-                            if isinstance(control, bltGui.bltListbox):
-                                item = control.return_item()
-                                if item is not None:
-                                    command = {item:item}
+                        for frame in frame_list:
+                            for control in frame.controls:
+                                if isinstance(control, bltGui.bltListbox):
+                                    if control.selected_index is not None:
+                                        item = control.return_item()
+                                        command = {item:item}
 
 
     elif not active_entity.player:
@@ -378,7 +379,7 @@ def bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list):
     i_width = len(max(items,key=len)) + 8
     item_dict = {0:'First one', 1:'Second one', 2:'Third one', 3:'Last one'}
     if header is not None:
-        header_h = len(textwrap.wrap(header, len(items)))
+        header_h = len(textwrap.wrap(header, i_width))
 
     list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True)
     content_frame = bltGui.bltShowListFrame(i_width + x_offset, y_offset,25,20, "", frame=True, draggable=True)
