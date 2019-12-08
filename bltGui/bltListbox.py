@@ -50,7 +50,7 @@ class bltListbox(Control):
         
         if self.expanded:
             if self.hover or self.lock_focus:
-                if key is not None and key < 130:
+                if key is not None and key not in range(128,141):
                     if key in [terminal.TK_UP, terminal.TK_DOWN, terminal.TK_ENTER, terminal.TK_KP_ENTER]:
                         if self.hover_index is not None:
                             if key == terminal.TK_UP:
@@ -75,6 +75,18 @@ class bltListbox(Control):
                                 self.hover_index = len(self.items) - 1
                             self.dispatch('changed', self.hover_index)
                             self.dirty = True
+                    else:
+                        for item in self.items:
+                            item_index = self.items.index(item)
+                            cp = 4 + item_index
+                            if cp == key:
+                                self.hover_index = item_index
+                                self.selected_index = item_index
+                                self.dispatch('changed', self.hover_index)
+                                self.dispatch('changed', self.selected_index)
+                                self.dirty = True
+                                break
+
 
             if mouse.hover_rect(self.x + x, self.y + y, self.length + 1, len(self.items)):
                 if mouse.hover_rect(self.x + x + self.length, self.y + y, 1, 1) and self.collapse:

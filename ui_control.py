@@ -191,36 +191,7 @@ def blt_handle_keys(game_state, menu_dict, frame_list = []) -> str or None:
                 key = chr(terminal.state(terminal.TK_CHAR))
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
-        if game_state == GameStates.menu:
-            try:
-                menu_type = menu_dict.get('type')
-                menu_header = menu_dict.get('header')
-                menu_options = menu_dict.get('options')
-                hide_options = menu_dict.get('mode')
-            except:
-                print('Something is missing from the menu_dict')
-            if hide_options:
-                if not 88 < key < 99 and terminal.check(terminal.TK_CHAR):
-                    key = chr(terminal.state(terminal.TK_CHAR))
-                for item in menu_options:
-                    if key == item:
-                        keymap = options.key_maps[0]
-                        command = keymap.get(key)
-            else:
-                
 
-
-                """ if terminal.check(terminal.TK_CHAR):
-                    key = ord(chr(terminal.state(terminal.TK_CHAR)))
-                for option in menu_options:
-                    opt_index = menu_options.index(option)
-                    if opt_index < 26:
-                        cp = ord('a') + opt_index
-                    else:
-                        cp = ord('0') + opt_index - 26
-                    if cp == key:
-                        command = {menu_options[opt_index]:menu_options[opt_index]}
-                        pass """
     
     return command
 
@@ -376,10 +347,10 @@ def bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list):
 
     #draw_demo()
     items = options
-    i_width = len(max(items,key=len)) + 8
+    i_width = 20 #len(max(items,key=len)) + 8
     item_dict = {0:'First one', 1:'Second one', 2:'Third one', 3:'Last one'}
     if header is not None:
-        header_h = len(textwrap.wrap(header, i_width))
+        header_h = min(1,len(textwrap.wrap(header, i_width)))
 
     list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True)
     content_frame = bltGui.bltShowListFrame(i_width + x_offset, y_offset,25,20, "", frame=True, draggable=True)
