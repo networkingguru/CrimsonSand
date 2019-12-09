@@ -100,15 +100,11 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
 
 
         if menu_type == MenuTypes.combat:
-            if not hide_options:
-                options = menu_options
-                header = menu_header                 
-            else:
-                options = []
-                header = menu_header
+            options = menu_options
+            header = menu_header                 
 
             if len(frame_list) == 0:
-                bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list)
+                bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list, hide_options)
                 initialize()
             
     
@@ -140,6 +136,7 @@ def create_terminal(w,h) -> bool:
 def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, game_map, order, frame_list) -> (dict, bool): 
     command = {}
     dirty = False
+    hide_options = menu_dict.get('mode')
 
     if game_state != GameStates.menu: command = blt_handle_global_input(game_state)
 
@@ -158,12 +155,15 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
 
                     if key is not None:
                         dirty = True
-                        for frame in frame_list:
-                            for control in frame.controls:
-                                if isinstance(control, bltGui.bltListbox):
-                                    if control.selected_index is not None:
-                                        item = control.return_item()
-                                        command = {item:item}
+                        if not hide_options:
+                            for frame in frame_list:
+                                for control in frame.controls:
+                                    if isinstance(control, bltGui.bltListbox):
+                                        if control.selected_index is not None:
+                                            item = control.return_item()
+                                            command = {item:item}
+                        else:
+                            command = blt_handle_keys(game_state, menu_dict)
 
 
     elif not active_entity.player:
@@ -179,9 +179,10 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
     return command, dirty
 
 
-def blt_handle_keys(game_state, menu_dict, frame_list = []) -> str or None:
+def blt_handle_keys(game_state, menu_dict) -> str or None:
     key = terminal.read()
     command = {}
+    menu_options = menu_dict.get('options')
 
     if key == terminal.TK_CLOSE:
         exit()
@@ -191,6 +192,10 @@ def blt_handle_keys(game_state, menu_dict, frame_list = []) -> str or None:
                 key = chr(terminal.state(terminal.TK_CHAR))
             keymap = options.key_maps[game_state.value - 1]
             command = keymap.get(key)
+        elif key is not None and menu_options is not None:
+            if key in menu_options:
+                keymap = options.key_maps[0]
+                command = keymap.get(key)
 
     
     return command
@@ -343,30 +348,37 @@ def print_entities(entities, ox, oy) -> None:
             terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=darker amber][color=darker gray]'+corpse.char+'[/color][/bk_color]')
 
 
-def bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list):
-
-    #draw_demo()
-    items = options
-    i_width = 20 #len(max(items,key=len)) + 8
-    item_dict = {0:'First one', 1:'Second one', 2:'Third one', 3:'Last one'}
+def bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list, hide_options):
+    items = []
+    
+    
     if header is not None:
-        header_h = min(1,len(textwrap.wrap(header, i_width)))
+        i_width = len(header)+2
+        header_h = 1
+    if not hide_options:
+        items = options
+        i_width = len(max(items,key=len)) + 8
+        header_h = len(textwrap.wrap(header, i_width))+2
+        item_dict = {0:'First one', 1:'Second one', 2:'Third one', 3:'Last one'}
+        content_frame = bltGui.bltShowListFrame(i_width + x_offset, y_offset,25,20, "", frame=True, draggable=True, color_skin = 'GRAY')
+        content_frame.set_dict(item_dict)
+        content_frame.add_control(bltGui.bltResizeFrameButton(content_frame))
+        list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True, color_skin = 'GRAY')
+        list_box = bltGui.bltListbox(list_frame, 1, header_h, items, False, True)
+        list_box.register('changed', content_frame)
+    else:
+        content_frame = None
+        list_box = None
+        list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True, color_skin = 'GRAY')
+    
 
-    list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True)
-    content_frame = bltGui.bltShowListFrame(i_width + x_offset, y_offset,25,20, "", frame=True, draggable=True)
-    content_frame.set_dict(item_dict)
-
-
-
-    list_box = bltGui.bltListbox(list_frame, 1, header_h, items, False, True)
-    list_frame.add_control(list_box)
-    content_frame.add_control(bltGui.bltResizeFrameButton(content_frame))
-    list_box.register('changed', content_frame)
-
-
-
+    if list_box is not None:    
+        list_frame.add_control(list_box)
+    
     frame_list.append(list_frame)
-    frame_list.append(content_frame)
+
+    if content_frame is not None:
+        frame_list.append(content_frame)
 
     
         

@@ -56,5 +56,13 @@ COLOR_SKINS = {
         'SELECTED': "darkest azure",
         'BKSELECTED': "azure",
         },
+    'GRAY': {
+        'COLOR': 'white',
+        'BKCOLOR': "black",
+        'HOVER': "white",
+        'BKHOVER': "darker gray",
+        'SELECTED': "white",
+        'BKSELECTED': "light gray",
+        },
 
 }

@@ -23,7 +23,7 @@ class bltListbox(Control):
         self.hover = False
         self.lock_focus = lock_focus
 
-        self.colors = Skins.COLOR_SKINS['DEFAULT']
+        self.colors = Skins.COLOR_SKINS['GRAY']
 
         self.collapse = collapse
         if self.collapse:
