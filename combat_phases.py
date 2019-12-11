@@ -601,6 +601,7 @@ def phase_disengage(active_entity, entities, command, logs, combat_phase, game_m
     combat_menu_header = 'Use the directional movement keys to move. '
     active_entity.fighter.disengage = True 
     fov_recompute = False
+    can_attack = False
     messages = []
     log = logs[2]
 
@@ -626,6 +627,7 @@ def phase_disengage(active_entity, entities, command, logs, combat_phase, game_m
                 opp_attackers.append(entity)
         if len(opp_attackers) > 0:
             for entity in opp_attackers:
+                can_attack = False
                 for coords in entity.fighter.aoc:
                     x = coords[0]
                     y = coords[1]
@@ -638,11 +640,14 @@ def phase_disengage(active_entity, entities, command, logs, combat_phase, game_m
                                 wpn_ap.append(cs.get('final ap'))
                         min_ap = min(wpn_ap)
                         if entity.fighter.ap >= min_ap:
-                            entity.fighter.entities_opportunity_attacked.append(active_entity)
-                            #Give enemy a single attack
-                            active_entity = entity
-                            combat_phase = CombatPhase.action
-        else:
+                            can_attack = True
+                if can_attack:
+                    entity.fighter.entities_opportunity_attacked.append(active_entity)
+                    #Give enemy a single attack
+                    active_entity = entity
+                    combat_phase = CombatPhase.action
+                    break
+        if len(opp_attackers) == 0 or not can_attack:
             #Set strafe to follow enemy, but record current setting to set back
             strafe = active_entity.fighter.strafe
             active_entity.fighter.strafe = 'enemy'
@@ -690,7 +695,7 @@ def phase_move(active_entity, entities, command, logs, combat_phase, game_map) -
             action = command
         active_entity.fighter.disengage_option = action            
 
-        if action[0] != 'exit':
+        if action.get('move'):
             action_offset = tuple(command_to_offset(action))
             
             if action_offset in d_offsets:
@@ -713,7 +718,7 @@ def phase_move(active_entity, entities, command, logs, combat_phase, game_map) -
 
         
     
-        if action[0] == 'exit':
+        if action.get('exit'):
             combat_phase = CombatPhase.action
             active_entity.fighter.disengage_option = None
             menu_dict = dict()

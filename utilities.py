@@ -143,6 +143,7 @@ def entity_angle(reference, axis, relative = True) -> int:
 def find_command(keymap, wanted_cmd) -> list:
     '''Function searches the keymap for the command and returns the key(s) associated with it. Reverse of dict.get'''
     keys = []
+    wanted_cmd = {wanted_cmd[0]:wanted_cmd[1]}
     for key, command in keymap.items():
         if command == wanted_cmd:
             keys.append(key)

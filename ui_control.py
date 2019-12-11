@@ -162,8 +162,13 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                         if control.selected_index is not None:
                                             item = control.return_item()
                                             command = {item:item}
-                        else:
-                            command = blt_handle_keys(game_state, menu_dict)
+                        elif key < 128:
+                            char = chr(key+93) #Needed because BLT returns a hex value for the scan code that is offset -93
+                            if key in menu_dict.get('options'):
+                                command = blt_handle_keys(game_state, menu_dict, key)
+                            elif char in menu_dict.get('options'):
+                                command = blt_handle_keys(game_state, menu_dict, char)
+                            
 
 
     elif not active_entity.player:
@@ -179,8 +184,9 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
     return command, dirty
 
 
-def blt_handle_keys(game_state, menu_dict) -> str or None:
-    key = terminal.read()
+def blt_handle_keys(game_state, menu_dict, key = None) -> str or None:
+    if key is None:
+        key = terminal.read()
     command = {}
     menu_options = menu_dict.get('options')
 
