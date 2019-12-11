@@ -95,6 +95,7 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         menu_header = menu_dict.get('header')
         menu_options = menu_dict.get('options')
         hide_options = menu_dict.get('mode')
+        desc = menu_dict.get('desc')
         x_offset = int(map_x + round(map_dim_x / 3))
         y_offset = int(map_y + round(map_dim_y / 3))
 
@@ -104,7 +105,7 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
             header = menu_header                 
 
             if len(frame_list) == 0:
-                bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list, hide_options)
+                bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list, hide_options)
                 initialize()
             
     
@@ -354,9 +355,9 @@ def print_entities(entities, ox, oy) -> None:
             terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=darker amber][color=darker gray]'+corpse.char+'[/color][/bk_color]')
 
 
-def bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list, hide_options):
+def bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list, hide_options):
     items = []
-    
+    item_dict = {}
     
     if header is not None:
         i_width = len(header)+2
@@ -365,7 +366,8 @@ def bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list, hide_
         items = options
         i_width = len(max(items,key=len)) + 8
         header_h = len(textwrap.wrap(header, i_width))+2
-        item_dict = {0:'First one', 1:'Second one', 2:'Third one', 3:'Last one'}
+        if desc is not None:
+            item_dict = make_item_dict(options, desc)
         content_frame = bltGui.bltShowListFrame(i_width + x_offset, y_offset,25,20, "", frame=True, draggable=True, color_skin = 'GRAY')
         content_frame.set_dict(item_dict)
         content_frame.add_control(bltGui.bltResizeFrameButton(content_frame))
@@ -386,7 +388,16 @@ def bltgui_menu(terminal, x_offset, y_offset, header, options, frame_list, hide_
     if content_frame is not None:
         frame_list.append(content_frame)
 
+def make_item_dict(options, desc) -> dict:
+    i = 0
+    item_dict = {}
+    for option in options:
+        for key in desc:
+            if option == key:
+                item_dict[i] = desc.get(key)
+                i+=1
     
+    return item_dict
         
 
 class BLTWindow:

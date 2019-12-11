@@ -2165,6 +2165,7 @@ def init_combat(active_entity, order, command) -> (dict, int, int, list):
     combat_phase = CombatPhase.action
     messages = []
     menu_dict = dict()
+    menu_desc = {}
 
 
     if command.get('Wait'):
@@ -2216,16 +2217,23 @@ def init_combat(active_entity, order, command) -> (dict, int, int, list):
         active_entity.fighter.action.clear()
         if valid_attacks > 0:
             active_entity.fighter.action.append('Attack')
+            menu_desc['Attack'] = 'Attack an enemy with a weapon. '
         if active_entity.fighter.ap >= active_entity.fighter.walk_ap and active_entity.fighter.can_walk:
             active_entity.fighter.action.append('Move')
+            menu_desc['Move'] = 'Change position. \nIf you move out of an enemy\'s zone of control, this will provoke a free attack, with the enemy\'s AP cost being deducted from your AP. \nIf the enemy hits, you will have failed to disengage. '
         if len(valid_mnvrs) > 0:
             active_entity.fighter.action.append('Maneuver')
+            menu_desc['Maneuver'] = 'Perform a combat maneuver, such as a grappling technique or a feint. '
         if len(order) > 1 and len(active_entity.fighter.action) >= 1: 
             active_entity.fighter.action.append('Wait')
+            menu_desc['Wait'] = 'Wait for the next enemy to act, taking your turn after they complete thier\'s. '
             active_entity.fighter.action.append('Change Stance')
+            menu_desc['Change Stance'] = 'Change your fighting stance, which will change the offensive and defensive bonuses received. '
             active_entity.fighter.action.append('Change Guard')
+            menu_desc['Change Guard'] = 'Change your guard, which will change the defensive bonuses received and automatic blocking locations. '
         if len(active_entity.fighter.action) >= 1:
             active_entity.fighter.action.append('End Turn')
+            menu_desc['End Turn'] = 'End your turn. AP does not carry forward between turns, but stamina and vitae reginerate between turns. '
             game_state = GameStates.menu
         else:
             active_entity.fighter.end_turn = True
@@ -2235,7 +2243,7 @@ def init_combat(active_entity, order, command) -> (dict, int, int, list):
 
         combat_menu_header = 'What do you wish to do?'
 
-        menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}                       
+        menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': menu_desc}                       
 
     if hasattr(active_entity.fighter, 'ai'):
         game_state = GameStates.default

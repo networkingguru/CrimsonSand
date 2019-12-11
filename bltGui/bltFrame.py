@@ -4,6 +4,7 @@ from . import bltSkins
 from . import bltInput
 from .bltButton import bltButton
 import textwrap
+import itertools
 
 from . import bltColor as Color
 from .bltControl import bltControl as Control
@@ -65,6 +66,7 @@ class bltFrame(Control):
         self._fulltext = value
         self._wrapped_text = self.wrap_text(value)
 
+
     @property
     def dirty(self):
         if self._dirty:
@@ -110,8 +112,15 @@ class bltFrame(Control):
     def wrap_text(self, text):
         if isinstance(text, LambdaType):
             text = text()
-        text = textwrap.dedent(text).strip()
-        return textwrap.wrap(text, self.width - 2)
+        #text = textwrap.dedent(text).strip()
+        w = textwrap.TextWrapper(self.width - 2,break_long_words=False)
+        t_list = [w.wrap(i) for i in text.split('\n') if i != '']
+        t_list = list(itertools.chain.from_iterable(t_list))
+
+
+        #text = textwrap.wrap(text, self.width - 2)
+
+        return t_list
 
 
     def update(self):
@@ -181,9 +190,9 @@ class bltFrame(Control):
             for i, line in enumerate(self.text):
                 if i <= self.height - 3:
                     terminal.puts(self.pos.x + 1,
-                                  self.pos.y + 1 + i,
-                                  line
-                                  )
+                                self.pos.y + 1 + i,
+                                line
+                                )
                 else:
                     break
 
