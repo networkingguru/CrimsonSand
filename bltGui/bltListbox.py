@@ -131,7 +131,7 @@ class bltListbox(Control):
             if self.header is not None:
                 color = self.colors['COLOR']
                 bkcolor = self.colors['BKCOLOR']
-                terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y, "[c={0}] {2}".format(color, bkcolor, self.header))
+                terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y, self.owner.font + "[c={0}] {2}".format(color, bkcolor, self.header))
             for i, item in enumerate(self.items):
                 letter_index = ord('a') + i
                 color = self.colors['COLOR']
@@ -144,8 +144,8 @@ class bltListbox(Control):
                     bkcolor = self.colors['BKSELECTED']
 
                 if bkcolor is not None:
-                    terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y + i + self.header_h, "[c={0}]".format(bkcolor) + str("[U+2588]" * (self.length+5)))
-                terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y + i + self.header_h, "[c={0}] {3}) {2}".format(color, bkcolor, item, chr(letter_index)))
+                    terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y + i + self.header_h, self.owner.font + "[c={0}]".format(bkcolor) + str("[U+2588]" * (self.length+5)))
+                terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y + i + self.header_h, self.owner.font + "[c={0}] {3}) {2}".format(color, bkcolor, item, chr(letter_index)))
 
             if self.collapse:
                 bkcolor = self.colors['SELECTED']
@@ -164,10 +164,10 @@ class bltListbox(Control):
 
 
             if bkcolor is not None:
-                terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y , "[c={0}]".format(bkcolor) + str("[U+2588]" * (self.length+5)))
+                terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y , self.owner.font + "[c={0}]".format(bkcolor) + str("[U+2588]" * (self.length+5)))
             if self.selected_index is not None:
                 item = self.items[i]
-                terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y, "[c={0}] {3}) {2}".format(color, bkcolor, item, chr(letter_index)))
+                terminal.puts(self.x + self.owner.pos.x, self.y + self.owner.pos.y, self.owner.font + "[c={0}] {3}) {2}".format(color, bkcolor, item, chr(letter_index)))
 
             if self.collapse:
                 bkcolor = self.colors['BKCOLOR']

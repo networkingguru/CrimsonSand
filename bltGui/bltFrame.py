@@ -19,7 +19,7 @@ class bltFrame(Control):
 
     layer_index = 10
 
-    def __init__(self, x, y, w ,h, title=None, frame=True, layer=None, text="", draggable=False, visible=True, skin=None, color_skin=None):
+    def __init__(self, x, y, w ,h, title=None, frame=True, layer=None, text="", draggable=False, visible=True, skin=None, color_skin=None, font='', title_font = ''):
         Control.__init__(self, ['close', 'show'])
         self.pos = Pos(x, y)
         self.width = w
@@ -27,6 +27,8 @@ class bltFrame(Control):
         self.title = title
         self._wrapped_text = self.wrap_text(text)
         self._fulltext = text
+        self.font = font
+        self.title_font = title_font
 
         self.frame = frame
         if layer is None:
@@ -145,15 +147,6 @@ class bltFrame(Control):
         for x1 in range(self.width):
             for y1 in range(self.height):
 
-                '''
-                if color_skin['BKCOLOR']:
-                    old_color = terminal.state(terminal.TK_COLOR)
-                    terminal.color(self.bkcolor)
-                    terminal.puts(x1 + self.pos.x, y1 + self.pos.y, self.skin['BACKGROUND'])
-                    terminal.color(old_color)
-                if self.color:
-                    terminal.color(self.color)
-                '''
                 terminal.color(self.color_skin['BKCOLOR'])
                 terminal.puts(x1 + self.pos.x, y1 + self.pos.y, self.skin['BACKGROUND'])
                 terminal.color(self.color_skin['COLOR'])
@@ -191,16 +184,16 @@ class bltFrame(Control):
                 if i <= self.height - 3:
                     terminal.puts(self.pos.x + 1,
                                 self.pos.y + 1 + i,
-                                line
+                                self.font + line
                                 )
                 else:
                     break
 
-        terminal.puts(offset_x1 + self.pos.x, self.pos.y, self.title)
+        terminal.puts(offset_x1 + self.pos.x, self.pos.y, self.title_font + self.title)
 
         for p in self.print_queue:
             text = textwrap.dedent(p[2]).strip()
-            terminal.puts(p[0] + self.pos.x, p[1] + self.pos.y, textwrap.fill(text, self.width - 2))
+            terminal.puts(p[0] + self.pos.x, p[1] + self.pos.y, self.font + textwrap.fill(text, self.width - 2))
 
     def _test_mouse(self):
         if mouse.hover_rect(self.pos.x, self.pos.y, self.width, self.height, layer=self.layer):
@@ -319,14 +312,6 @@ class bltShowListFrame(bltFrame):
         for key in self.item_dict:
             if key == value:
                 self.text = self.item_dict.get(key)
-        """ if value == 0:
-            self.text = "[c=red]Item 1[/c] This is the first item on the list!."
-        if value == 1:
-            self.text = "[c=red]Item 2[/c] This is the second item on the list!. And its really long ... alkjdshflkashdfkasdfkshxdtfhas  selhf dsa fjsadf aslkdf salkdf alkskjhs  jidskf asefa sfas saehf lasdf lausd f"
-        if value == 2 :
-            self.text = "[c=red]Item 3[/c] This one is not."
-        if value == 3:
-            self.text = "[c=red]Item 4[/c] Last one! 01011001010 0 10 10101 010 1 1 01 0 0 0 1100010 10 " """
         self.dirty = True
 
 
