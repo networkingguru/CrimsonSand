@@ -6,7 +6,7 @@ from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_
 from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
 from combat_functions import (aoc_check, turn_order, strafe_control, move_actor, init_combat, attack_filter, determine_valid_angles, determine_valid_locs, angle_id, 
     calc_final_mods, perform_attack, perform_maneuver, find_defense_probability, damage_controller, get_adjacent_cells, valid_maneuvers, remove_maneuver, apply_maneuver,
-    apply_injuries, apply_injury_effects, apply_stability_damage )
+    apply_injuries, apply_injury_effects, apply_stability_damage, weapon_desc )
 
 def phase_init(entities) -> (int, list):
     active_fighters = 0
@@ -81,6 +81,7 @@ def phase_weapon(active_entity, command, logs, combat_phase) -> (int, dict):
     messages = []
     log = logs[2]
     valid = False
+    desc_list = []
     
 
     #Choose your weapon
@@ -94,13 +95,45 @@ def phase_weapon(active_entity, command, logs, combat_phase) -> (int, dict):
             weapons.add(w)
 
     for wpn in weapons:
+        dam_max = 0
+        dam_min = 10000
+        to_hit_max = 0
+        to_hit_min = None
+        parry_mod_min = 200
+        parry_mod_max = 0
+        dodge_mod_min = 200
+        dodge_mod_max = 0
+        ap_min = 1000
+        ap_max = 0
+
         for atk in wpn.attacks:
             valid = attack_filter(active_entity, active_entity.fighter.curr_target, wpn, atk)
-            if valid:              
-                if wpn.name not in active_entity.fighter.action:
-                    active_entity.fighter.action.append(wpn.name)
+            if valid:
+                #Below is for desc in menu dict
+                cs = active_entity.determine_combat_stats(wpn, atk)
+                dam = max([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
+                if dam > dam_max: dam_max = dam
+                if dam < dam_min: dam_min = dam
+                if cs.get('to hit') > to_hit_max: to_hit_max = cs.get('to hit')
+                if to_hit_min == None: to_hit_min = cs.get('to hit')
+                elif cs.get('to hit') < to_hit_min: to_hit_min = cs.get('to hit')
+                if cs.get('parry mod') < parry_mod_min: parry_mod_min = cs.get('parry mod')
+                if cs.get('parry mod') > parry_mod_max: parry_mod_max = cs.get('parry mod')
+                if cs.get('dodge mod') < dodge_mod_min: dodge_mod_min = cs.get('dodge mod')
+                if cs.get('dodge mod') > dodge_mod_max: dodge_mod_max = cs.get('dodge mod')
+                if cs.get('final ap') < ap_min: ap_min = cs.get('final ap')
+                if cs.get('final ap') > ap_max: ap_max = cs.get('final ap')
 
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
+                    
+        if wpn.name not in active_entity.fighter.action and dam_max > 0:
+            active_entity.fighter.action.append(wpn.name)
+            wpn_desc = {'dam_max':dam_max, 'dam_min':dam_min, 'to_hit_max': to_hit_max, 'to_hit_min': to_hit_min, 'parry_mod_min': parry_mod_min, 'parry_mod_max': parry_mod_max, 'dodge_mod_min': dodge_mod_min, 'dodge_mod_max': dodge_mod_max, 'ap_min': ap_min, 'ap_max': ap_max}
+            desc_list.append(wpn_desc)
+    
+
+    
+
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': weapon_desc(desc_list,active_entity.fighter.action)}
     
     for option in active_entity.fighter.action:
         if len(command) != 0:

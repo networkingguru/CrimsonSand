@@ -346,7 +346,7 @@ class Jab(Attack):
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 'b'
-        self.base_ap = 10
+        self.base_ap = 3
         self.hand = True
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -372,7 +372,7 @@ class Haymaker(Attack):
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 'b'
-        self.base_ap = 25
+        self.base_ap = 12
         self.hand = True
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -398,7 +398,7 @@ class Hook(Attack):
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 'b'
-        self.base_ap = 20
+        self.base_ap = 10
         self.hand = True
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -424,7 +424,7 @@ class Uppercut(Attack):
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 'b'
-        self.base_ap = 20
+        self.base_ap = 10
         self.hand = True
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -451,7 +451,7 @@ class Hammerfist(Attack):
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 'b'
-        self.base_ap = 10
+        self.base_ap = 5
         self.hand = True
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -477,7 +477,7 @@ class Elbow_Strike(Attack):
         self.striker = 'accent'
         self.hands = 1
         self.damage_type = 'b'
-        self.base_ap = 10
+        self.base_ap = 5
         self.hand = True
         self.length = -10 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -503,7 +503,7 @@ class Front_Kick(Attack):
         self.striker = 'main'
         self.hands = 0
         self.damage_type = 'b'
-        self.base_ap = 15
+        self.base_ap = 13
         self.hand = False
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -529,7 +529,7 @@ class Roundhouse_Kick(Attack):
         self.striker = 'main'
         self.hands = 0
         self.damage_type = 'b'
-        self.base_ap = 30
+        self.base_ap = 15
         self.hand = False
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -555,7 +555,7 @@ class Side_Kick(Attack):
         self.striker = 'main'
         self.hands = 0
         self.damage_type = 'b'
-        self.base_ap = 20
+        self.base_ap = 10
         self.hand = False
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -580,7 +580,7 @@ class Stomp(Attack):
         self.striker = 'main'
         self.hands = 0
         self.damage_type = 'b'
-        self.base_ap = 10
+        self.base_ap = 5
         self.hand = False
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -606,7 +606,7 @@ class Knee_Strike(Attack):
         self.striker = 'accent'
         self.hands = 0
         self.damage_type = 'b'
-        self.base_ap = 15
+        self.base_ap = 8
         self.hand = False
         self.length = -15 #Used to add or subtract from base weapon length for added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -632,7 +632,7 @@ class Slash(Attack):
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 's'
-        self.base_ap = 10
+        self.base_ap = 15
         self.hand = True
         self.length = weapon.main_length #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -658,7 +658,7 @@ class Slash_2H(Attack):
         self.striker = 'main'
         self.hands = 2
         self.damage_type = 's'
-        self.base_ap = 15
+        self.base_ap = 20
         self.hand = True
         self.length = weapon.main_length #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -684,7 +684,7 @@ class Stab(Attack):
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 'p'
-        self.base_ap = 5
+        self.base_ap = 7
         self.hand = True
         self.length = weapon.main_length #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
@@ -710,7 +710,7 @@ class Pommel_Strike(Attack):
         self.striker = 'accent'
         self.hands = 1
         self.damage_type = 'b'
-        self.base_ap = 0
+        self.base_ap = 5
         self.hand = True
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)

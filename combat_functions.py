@@ -2339,6 +2339,38 @@ def change_actor(order, entities, active_entity, combat_phase, game_state, logs)
             
     return combat_phase, game_state, order, active_entity
 
+def weapon_desc(desc_list, weapons) -> dict:
+    desc = {}
+    i = 0
+    for w in desc_list:
+        if w.get('to_hit_min') == w.get('to_hit_max'):
+            hit_str = str(w.get('to_hit_min'))
+        else:
+            hit_str = str(w.get('to_hit_min'))+'-'+str(w.get('to_hit_max'))
+        if w.get('parry_mod_min') == w.get('parry_mod_max'):
+            parry_str = str(w.get('parry_mod_min'))
+        else:
+            parry_str = str(w.get('parry_mod_min'))+'-'+str(w.get('parry_mod_max'))
+        if w.get('dodge_mod_min') == w.get('dodge_mod_max'):
+            dodge_str = str(w.get('dodge_mod_max'))
+        else:
+            dodge_str = str(w.get('dodge_mod_min'))+'-'+str(w.get('dodge_mod_max'))
+        if w.get('ap_min') == w.get('ap_max'):
+            ap_str = str(w.get('ap_min'))
+        else:
+            ap_str = str(w.get('ap_min'))+'-'+str(w.get('ap_max'))
+
+        w_dam_desc = 'Damage Range: '+str(w.get('dam_min'))+' - '+str(w.get('dam_max'))+'\n'
+        w_hit_desc = 'Base To-Hit Chance: '+ hit_str +'\n'
+        w_parry_desc = 'Parry Mods: '+ parry_str +'\n'
+        w_dodge_desc = 'Dodge Mods: '+ dodge_str +'\n'
+        w_ap_desc = 'AP Cost: '+ ap_str +'\n'
+        w_desc = w_dam_desc + w_hit_desc + w_parry_desc + w_dodge_desc + w_ap_desc
+        desc[weapons[i]] = w_desc
+        i+=1
+    
+    return desc
+
 
 
 

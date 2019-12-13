@@ -389,13 +389,14 @@ def bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list,
         frame_list.append(content_frame)
 
 def make_item_dict(options, desc) -> dict:
-    i = 0
     item_dict = {}
+    i = 0
     for option in options:
         for key in desc:
             if option == key:
                 item_dict[i] = desc.get(key)
                 i+=1
+
     
     return item_dict
         
