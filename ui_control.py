@@ -364,16 +364,18 @@ def bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list,
         header_h = 1
     if not hide_options:
         items = options
-        i_width = len(max(items,key=len)) + 8
+        i_width = max(30, len(max(items,key=len)) + 8)
         header_h = len(textwrap.wrap(header, i_width))+2
+        list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
+        list_box = bltGui.bltListbox(list_frame, 1, header_h+1, items, False, True)
         if desc is not None:
             item_dict = make_item_dict(options, desc)
-        content_frame = bltGui.bltShowListFrame(i_width + x_offset, y_offset,25,20, "", frame=True, draggable=True, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
-        content_frame.set_dict(item_dict)
-        content_frame.add_control(bltGui.bltResizeFrameButton(content_frame))
-        list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
-        list_box = bltGui.bltListbox(list_frame, 1, header_h, items, False, True)
-        list_box.register('changed', content_frame)
+            content_frame = bltGui.bltShowListFrame(i_width + x_offset, y_offset,25,20, "", frame=True, draggable=True, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+            content_frame.set_dict(item_dict)
+            content_frame.add_control(bltGui.bltResizeFrameButton(content_frame))
+            list_box.register('changed', content_frame)
+        else:
+            content_frame = None
     else:
         content_frame = None
         list_box = None
