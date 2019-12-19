@@ -6,7 +6,7 @@ from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_
 from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
 from combat_functions import (aoc_check, turn_order, strafe_control, move_actor, init_combat, attack_filter, determine_valid_angles, determine_valid_locs, angle_id, 
     calc_final_mods, perform_attack, perform_maneuver, find_defense_probability, damage_controller, get_adjacent_cells, valid_maneuvers, remove_maneuver, apply_maneuver,
-    apply_injuries, apply_injury_effects, apply_stability_damage, weapon_desc )
+    apply_injuries, apply_injury_effects, apply_stability_damage, weapon_desc, option_desc )
 
 def phase_init(entities) -> (int, list):
     active_fighters = 0
@@ -164,6 +164,7 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
     messages = []
     log = logs[2]
     valid = False
+    desc_list = []
 
     weapons = set()
     for loc in [19,20,27,28]:
@@ -186,12 +187,21 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
         valid = attack_filter(active_entity, active_entity.fighter.curr_target, active_entity.fighter.combat_choices[0], atk)
         if valid and not atk.name in active_entity.fighter.action:
             active_entity.fighter.action.append(atk.name)
+            #Below is for desc in menu dict
+            cs = active_entity.determine_combat_stats(wpn, atk)
+            dam = max([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
+            to_hit = cs.get('to hit')
+            parry_mod = cs.get('parry mod')
+            dodge_mod = cs.get('dodge mod')
+            ap = cs.get('final ap')
+            wpn_desc = {'dam':dam, 'to_hit': to_hit,'parry_mod': parry_mod, 'dodge_mod': dodge_mod, 'ap': ap}
+            desc_list.append(wpn_desc)
     
     
     #Sort the list of objects alphabetically using the name attribute     
     active_entity.fighter.action.sort()
 
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': option_desc(desc_list, active_entity.fighter.action)}
     
     for option in active_entity.fighter.action:
         if len(command) != 0:

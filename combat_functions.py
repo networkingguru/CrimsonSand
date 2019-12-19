@@ -2371,6 +2371,20 @@ def weapon_desc(desc_list, weapons) -> dict:
     
     return desc
 
+def option_desc(desc_list, attacks) -> dict:
+    desc = {}
+    i = 0
+    for a in desc_list:
+        a_dam_desc = 'Damage: Up to '+str(a.get('dam'))+'\n'
+        a_hit_desc = 'To Hit Chance: '+str(a.get('to_hit'))+' percent\n'
+        a_parry_desc = 'Parry Mods: '+str(a.get('parry_mod'))+'\n'
+        a_dodge_desc = 'Dodge Mods: '+str(a.get('dodge_mod'))+'\n'
+        a_ap_desc = 'AP: '+str(a.get('ap'))+'\n'
+        a_desc = a_dam_desc + a_hit_desc + a_parry_desc + a_dodge_desc + a_ap_desc
+        desc[attacks[i]] = a_desc
+        i+=1
+
+    return desc
 
 
 
