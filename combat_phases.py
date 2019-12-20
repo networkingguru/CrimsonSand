@@ -236,6 +236,7 @@ def phase_location(active_entity, command, logs, combat_phase) -> (int, dict):
     menu_dict = dict()
     messages = []
     log = logs[2]
+    desc_dict = {}
 
     #Choose the hit location
     combat_menu_header = 'Where do you want to aim?'
@@ -246,7 +247,17 @@ def phase_location(active_entity, command, logs, combat_phase) -> (int, dict):
     #Prune list to only valid
     locations = prune_list(curr_target.fighter.get_locations(), valid_locs, True, False)
     active_entity.fighter.action = locations
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
+    for loc in locations:
+        desc = 'No injuries'
+        #Below is for desc in menu dict
+        for injury in curr_target.fighter.injuries:
+            if injury.loc_name == loc:
+                desc = injury.title
+        desc_dict[loc] = desc
+
+    
+
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': desc_dict}
     
     if len(command) != 0:    
         for option in active_entity.fighter.action:
