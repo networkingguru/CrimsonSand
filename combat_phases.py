@@ -131,7 +131,6 @@ def phase_weapon(active_entity, command, logs, combat_phase) -> (int, dict):
             desc_list.append(wpn_desc)
     
 
-    
 
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': weapon_desc(desc_list,active_entity.fighter.action)}
     
@@ -303,9 +302,22 @@ def phase_option2(active_entity, command, logs, combat_phase) -> (int, dict):
     menu_dict = dict()
     messages = []
     log = logs[2]
+    desc_list = []
+    angle_desc = {}
     #Choose the angle of attack
     combat_menu_header = 'What angle would you like to attack from?'
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
+    for angle in active_entity.fighter.action:
+        #Below is for desc in menu dict
+        cs = active_entity.determine_combat_stats(active_entity.fighter.combat_choices[0], active_entity.fighter.combat_choices[1],active_entity.fighter.combat_choices[2], angle_id(angle))
+        dam = max([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
+        to_hit = cs.get('to hit')
+        parry_mod = cs.get('parry mod')
+        dodge_mod = cs.get('dodge mod')
+        angle_desc = {'dam':dam, 'to_hit': to_hit,'parry_mod': parry_mod, 'dodge_mod': dodge_mod}
+        desc_list.append(angle_desc)
+
+
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': option_desc(desc_list, active_entity.fighter.action)}
     if len(command) != 0:
         for option in active_entity.fighter.action:
             choice = command.get(option)
