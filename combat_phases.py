@@ -248,12 +248,18 @@ def phase_location(active_entity, command, logs, combat_phase) -> (int, dict):
     locations = prune_list(curr_target.fighter.get_locations(), valid_locs, True, False)
     active_entity.fighter.action = locations
     for loc in locations:
-        desc = 'No injuries'
+        desc_i = 'No injuries'
+        desc_a = 'No armor'
         #Below is for desc in menu dict
         for injury in curr_target.fighter.injuries:
             if injury.loc_name == loc:
-                desc = injury.title
-        desc_dict[loc] = desc
+                desc_i = injury.title
+        if len(curr_target.loc_armor[curr_target.fighter.name_location(loc)]) > 0:
+            for armor in reversed(curr_target.loc_armor[curr_target.fighter.name_location(loc)]):
+                if armor.hits > 0:
+                    desc_a = 'Armor: ' + armor.name
+                    break
+        desc_dict[loc] = desc_i + '\n' + desc_a
 
     
 
