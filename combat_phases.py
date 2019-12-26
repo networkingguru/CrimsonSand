@@ -253,7 +253,10 @@ def phase_location(active_entity, command, logs, combat_phase) -> (int, dict):
         #Below is for desc in menu dict
         for injury in curr_target.fighter.injuries:
             if injury.loc_name == loc:
-                desc_i = injury.title
+                if desc_i == 'No injuries':
+                    desc_i = injury.title
+                else:
+                    desc_i = desc_i + ', ' + injury.title
         if len(curr_target.loc_armor[curr_target.fighter.name_location(loc)]) > 0:
             for armor in reversed(curr_target.loc_armor[curr_target.fighter.name_location(loc)]):
                 if armor.hits > 0:

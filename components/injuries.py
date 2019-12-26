@@ -546,7 +546,7 @@ class Light_Muscle_Damage(Injury):
         self.layer = 1
         self.loc_name = recipient.fighter.name_location(location)
         descriptors = self.damage_descriptor(self.layer, dam_type)
-        self.title = 'Lightly '+ descriptors[0].capitalize() + self.loc_name.capitalize() + ' Muscles'
+        self.title = 'Lightly '+ descriptors[0].capitalize() + ' ' + self.loc_name.capitalize() + ' Muscles'
         self.location = location
         self.recipient = recipient
         self.description = '{0}\'s {2} muscles have been lightly {3}. '
@@ -570,7 +570,7 @@ class Moderate_Muscle_Damage(Injury):
         self.layer = 1
         self.loc_name = recipient.fighter.name_location(location)
         descriptors = self.damage_descriptor(self.layer, dam_type)
-        self.title = descriptors[1].capitalize() + self.loc_name.capitalize() + ' Muscles'
+        self.title = descriptors[1].capitalize() + ' ' + self.loc_name.capitalize() + ' Muscles'
         self.location = location
         self.recipient = recipient
         self.description = '{0}\'s {2} muscles have been {3}. This damage will restrict {1} movement. '
@@ -616,7 +616,7 @@ class Heavy_Muscle_Damage(Injury):
         self.layer = 1
         self.loc_name = recipient.fighter.name_location(location)
         descriptors = self.damage_descriptor(self.layer, dam_type)
-        self.title = descriptors[2].capitalize() + self.loc_name.capitalize() + ' Muscles'
+        self.title = descriptors[2].capitalize() + ' ' + self.loc_name.capitalize() + ' Muscles'
         self.location = location
         self.recipient = recipient
         self.description = '{0}\'s {2} muscles have been {3}. Because of this, {5} can no longer move any affected limbs, and will likely never regain full strength. '
