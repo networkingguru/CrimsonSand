@@ -250,7 +250,16 @@ def phase_location(active_entity, command, logs, combat_phase) -> (int, dict):
     for loc in locations:
         desc_i = 'No injuries'
         desc_a = 'No armor'
+        desc_c = ''
         #Below is for desc in menu dict
+        cs = active_entity.determine_combat_stats(active_entity.fighter.combat_choices[0], active_entity.fighter.combat_choices[1],curr_target.fighter.name_location(loc))
+        dam = max([cs.get('b psi'), cs.get('s psi'), cs.get('p psi'), cs.get('t psi')])
+        to_hit = cs.get('to hit')
+        parry_mod = cs.get('parry mod')
+        dodge_mod = cs.get('dodge mod')
+        desc_list = [{'dam':dam, 'to_hit': to_hit,'parry_mod': parry_mod, 'dodge_mod': dodge_mod}]
+        desc_od = option_desc(desc_list, [active_entity.fighter.combat_choices[1]])
+        desc_c = desc_od.get(active_entity.fighter.combat_choices[1])
         for injury in curr_target.fighter.injuries:
             if injury.loc_name == loc:
                 if desc_i == 'No injuries':
@@ -262,7 +271,7 @@ def phase_location(active_entity, command, logs, combat_phase) -> (int, dict):
                 if armor.hits > 0:
                     desc_a = 'Armor: ' + armor.name
                     break
-        desc_dict[loc] = desc_i + '\n' + desc_a
+        desc_dict[loc] = desc_c + '\n' + desc_i + '\n' + desc_a
 
     
 

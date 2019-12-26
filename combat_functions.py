@@ -2379,7 +2379,10 @@ def option_desc(desc_list, attacks) -> dict:
         a_hit_desc = 'To Hit Chance: '+str(a.get('to_hit'))+' percent\n'
         a_parry_desc = 'Parry Mods: '+str(a.get('parry_mod'))+'\n'
         a_dodge_desc = 'Dodge Mods: '+str(a.get('dodge_mod'))+'\n'
-        a_ap_desc = 'AP: '+str(a.get('ap'))+'\n'
+        if a.get('ap') is not None:
+            a_ap_desc = 'AP: '+str(a.get('ap'))
+        else:
+            a_ap_desc = ''
         a_desc = a_dam_desc + a_hit_desc + a_parry_desc + a_dodge_desc + a_ap_desc
         desc[attacks[i]] = a_desc
         i+=1
