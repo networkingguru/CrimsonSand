@@ -139,41 +139,44 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
     dirty = False
     hide_options = menu_dict.get('mode')
 
-    if game_state != GameStates.menu: command = blt_handle_global_input(game_state)
+    
 
     
-    elif active_entity.player:
+    if active_entity.player:
         #Below complexity is due to modal nature. if targets exist, block for input. 
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
-        if len(active_entity.fighter.targets) == 0:
-            command = blt_handle_keys(game_state, menu_dict)
+        if game_state != GameStates.menu: command = blt_handle_global_input(game_state)
         else:
-            if 'options' in menu_dict:
-                if len(frame_list) != 0:
-                    
-                    key = bltGui.bltInput.update()       
-                    update(frame_list)
+            if len(active_entity.fighter.targets) == 0:
+                command = blt_handle_keys(game_state, menu_dict)
+            else:
+                if 'options' in menu_dict:
+                    if len(frame_list) != 0:
+                        
+                        key = bltGui.bltInput.update()       
+                        update(frame_list)
 
-                    if key is not None:
-                        dirty = True
-                        if not hide_options:
-                            for frame in frame_list:
-                                for control in frame.controls:
-                                    if isinstance(control, bltGui.bltListbox):
-                                        if control.selected_index is not None:
-                                            item = control.return_item()
-                                            command = {item:item}
-                        elif key < 128:
-                            char = chr(key+93) #Needed because BLT returns a hex value for the scan code that is offset -93
-                            if key in menu_dict.get('options'):
-                                command = blt_handle_keys(game_state, menu_dict, key)
-                            elif char in menu_dict.get('options'):
-                                command = blt_handle_keys(game_state, menu_dict, char)
+                        if key is not None:
+                            dirty = True
+                            if not hide_options:
+                                for frame in frame_list:
+                                    for control in frame.controls:
+                                        if isinstance(control, bltGui.bltListbox):
+                                            if control.selected_index is not None:
+                                                item = control.return_item()
+                                                command = {item:item}
+                            elif key < 128:
+                                char = chr(key+93) #Needed because BLT returns a hex value for the scan code that is offset -93
+                                if key in menu_dict.get('options'):
+                                    command = blt_handle_keys(game_state, menu_dict, key)
+                                elif char in menu_dict.get('options'):
+                                    command = blt_handle_keys(game_state, menu_dict, char)
                             
 
 
     elif not active_entity.player:
         command = active_entity.fighter.ai.ai_command(active_entity, entities, combat_phase, game_map, order)
+        dirty = True
 
         if global_vars.debug: print(active_entity.name + ' actions: ', *active_entity.fighter.action, sep=', ')
         if global_vars.debug and isinstance(command, str): print(active_entity.name + ' command: ' + command)

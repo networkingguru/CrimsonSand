@@ -66,7 +66,7 @@ player_weapons = {'r_wpn': player_r_weapon, 'l_wpn': player_l_weapon, 'rf_wpn': 
 player_armor = [{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.1},{'component':'Hauberk','construction':'Padded','main_material' : 'leather','thickness':.3}, {'component':'Hauberk','construction':'Chain','main_material' : 'Hardened Steel','thickness':.2}, {'component':'Jerkin','construction':'Padded','main_material' : 'Cloth','thickness':.05}, {'component':'Coif','construction':'Chain','main_material' : 'Hardened Steel','thickness':.3}, {'component':'Coif','construction':'Padded','main_material' : 'Cloth','thickness':.3}]
 
 #Enemy specs
-enemy_attr = low_init
+enemy_attr = hw
 enemy_s_dict = {}
 enemy_fighter = ['Enemy', enemy_attr, enemy_s_dict, 0, CombatAI]
 enemy_r_weapon = 'Unarmed'

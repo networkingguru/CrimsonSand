@@ -19,7 +19,7 @@ class CombatAI:
 
 
     def ai_command(self, entity, entities, combat_phase, game_map, order) -> str:
-        command = []
+        command = {}
         weapons = []
         for loc in [19,20,27,28]:
             if entity.fighter.equip_loc.get(loc) is None: continue  
@@ -191,7 +191,7 @@ def avoid_attack(attacker, defender, cs) -> str:
     can_block = False
     attack = attacker.fighter.combat_choices[1]
     atk_name = attack.name 
-    command = []
+    command = {}
     weapons = []
     for loc in [19,20,27,28]:
         w = defender.fighter.equip_loc.get(loc)
@@ -294,7 +294,6 @@ def hunt_target(curr_actor, entities, game_map) -> list or str:
                         command = random_hunt(curr_actor, entities, game_map)
     try:
         if len(path) > 1:
-            command = ['move']
             y_dir = None
             x_dir = None
             x,y = path[0]
@@ -311,16 +310,15 @@ def hunt_target(curr_actor, entities, game_map) -> list or str:
                 mv_dir = y_dir
             else:
                 mv_dir = x_dir
-            command.append(mv_dir)
+            command = {'move':mv_dir}
 
         elif len(path) == 1:
             if get_blocking_entities_at_location(entities, closest_coords[0], closest_coords[1]) is not None:
                 #Spin to closest enemy
                 if len(curr_actor.fighter.targets) == 0:
-                    command = ['spin']
                     angle = entity_angle(closest_enemy, curr_actor)
-                    if angle <= 180: command.append('ccw')
-                    else: command.append('cw')
+                    if angle <= 180: command = {'spin':'ccw'}
+                    else: command = {'spin':'cw'}
     except:
         pass
             
@@ -348,10 +346,9 @@ def random_hunt(curr_actor, entities, game_map) -> list or str:
     #Has entire radius been seen? If not, spin until it has. 
     elif not fov_explored:
         pos = Entity(unexplored_pos[0], unexplored_pos[1], 0x2588, 'dark gray', 'Focus', EntityState.inanimate)
-        command = ['spin']
         angle = entity_angle(pos, curr_actor)
-        if angle <= 180: command.append('ccw')
-        else: command.append('cw')
+        if angle <= 180: command = {'spin':'ccw'}
+        else: command = {'spin':'cw'}
     else: #Create a path to a radnom location, store the path in the command queue, and return the first comand from the queue
         closest_dist = None
         rand_x = randint(min((curr_actor.x-10),0), min((curr_actor.x+10),game_map.width))
@@ -362,7 +359,6 @@ def random_hunt(curr_actor, entities, game_map) -> list or str:
             closest_coords = [rand_x, rand_y]
             path = astar.get_path(curr_actor.x, curr_actor.y, closest_coords[0], closest_coords[1])
             for i in reversed(path):
-                command = ['move']
                 y_dir = None
                 x_dir = None
                 x,y = path[0]
@@ -379,7 +375,7 @@ def random_hunt(curr_actor, entities, game_map) -> list or str:
                     mv_dir = y_dir
                 else:
                     mv_dir = x_dir
-                command.append(mv_dir)
+                command = {'move':mv_dir}
                 curr_actor.fighter.ai.command_queue.append(command)
             curr_actor.fighter.ai.command_queue.remove(command)
         
