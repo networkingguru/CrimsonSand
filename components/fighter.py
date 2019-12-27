@@ -315,27 +315,12 @@ class Fighter:
         target_parry[location] += parry_mod
 
     def change_stance(self, stance) -> None:
-        self.stance_stability = 0 #Set back to neutral before applying mods
-        self.stance_dodge = 0
-        self.stance_power = 1
+
+        stance_dict = stance_constants(stance)
         
-        if 'Open' in stance:
-            self.stance_stability += 10
-        if 'Long' in stance:
-            self.stance_stability += 10
-            self.stance_dodge += -10
-        elif 'Short' in stance:
-            self.stance_stability += -10
-            self.stance_dodge += 10
-        if 'High' in stance:
-            self.stance_dodge += 10
-        elif 'Low' in stance:
-            self.stance_power += .1
-        if 'Front' in stance:
-            self.stance_power += .1
-        elif 'Rear' in stance:
-            self.stance_power += -.1
-            self.stance_dodge += 10
+        self.stance_stability = stance_dict.get('stability')
+        self.stance_dodge = stance_dict.get('dodge')
+        self.stance_power = stance_dict.get('power')
         
         self.stance = stance
 
@@ -523,6 +508,31 @@ class Fighter:
 
 
         self.init = (self.get_attribute('men') + self.get_attribute('swift'))/4 + (self.get_attribute('sens') + self.get_attribute(self.best_combat_skill.abbr))/4
+
+def stance_constants(stance) -> dict:
+    stance_stability = 0
+    stance_dodge = 0
+    stance_power = 1
+
+    if 'Open' in stance:
+        stance_stability += 10
+    if 'Long' in stance:
+        stance_stability += 10
+        stance_dodge += -10
+    elif 'Short' in stance:
+        stance_stability += -10
+        stance_dodge += 10
+    if 'High' in stance:
+        stance_dodge += 10
+    elif 'Low' in stance:
+        stance_power += .1
+    if 'Front' in stance:
+        stance_power += .1
+    elif 'Rear' in stance:
+        stance_power += -.1
+        stance_dodge += 10
+
+    return {'stability': stance_stability, 'dodge': stance_dodge, 'power': stance_power}
 
 
 class Attribute():

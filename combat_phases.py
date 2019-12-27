@@ -4,6 +4,7 @@ from enums import CombatPhase, MenuTypes, EntityState, GameStates, FighterStance
 from game_messages import Message
 from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un, find_defense_probability, itersubclasses
 from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
+from components.fighter import stance_constants
 from combat_functions import (aoc_check, turn_order, strafe_control, move_actor, init_combat, attack_filter, determine_valid_angles, determine_valid_locs, angle_id, 
     calc_final_mods, perform_attack, perform_maneuver, find_defense_probability, damage_controller, get_adjacent_cells, valid_maneuvers, remove_maneuver, apply_maneuver,
     apply_injuries, apply_injury_effects, apply_stability_damage, weapon_desc, option_desc )
@@ -937,6 +938,7 @@ def phase_stance(active_entity, command, logs, combat_phase) -> (int, dict):
     messages = []
     log = logs[2]
     min_ap = active_entity.get_min_ap()
+    desc_menu = {}
 
     active_entity.fighter.action = ['Return']
 
@@ -949,11 +951,20 @@ def phase_stance(active_entity, command, logs, combat_phase) -> (int, dict):
         for l in stance_lengths:
             for h in stance_heights:
                 for g in stance_weights:
-                    active_entity.fighter.action.append(w + ', ' + l + ', ' + h + ', ' + g)
+                    stance = w + ', ' + l + ', ' + h + ', ' + g
+                    active_entity.fighter.action.append(stance)
+                    stance_dict = stance_constants(stance)
+                    stance_stab_str = 'Stance Stability Mod: ' + str(stance_dict.get('stability'))
+                    stance_dodge_str = 'Stance Dodge Mod: ' + str(stance_dict.get('dodge'))
+                    stance_pwr_str = 'Stance Damage: ' + str(round(stance_dict.get('power')*100)) + '%'
+                    desc_str = '\n'.join([stance_stab_str, stance_dodge_str, stance_pwr_str])
+                    desc_menu[stance] = desc_str
+
+
 
 
     combat_menu_header = 'Choose your stance:'
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': desc_menu}
     if len(command) != 0:
         for option in active_entity.fighter.action:
             choice = command.get(option)
