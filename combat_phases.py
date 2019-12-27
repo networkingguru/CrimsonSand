@@ -963,7 +963,7 @@ def phase_stance(active_entity, command, logs, combat_phase) -> (int, dict):
 
 
 
-    combat_menu_header = 'Choose your stance:'
+    combat_menu_header = 'Current Stance: ' + active_entity.fighter.stance + '\nChoose your stance:'
     menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': desc_menu}
     if len(command) != 0:
         for option in active_entity.fighter.action:
@@ -994,28 +994,24 @@ def phase_guard(active_entity, command, logs, combat_phase) -> (int, dict):
     menu_dict = dict()
     messages = []
     log = logs[2]
+    desc_menu = {}
 
     active_entity.fighter.action = ['Return']
 
     available_guards = []
 
-    weapons = []
-    for loc in [19,20,27,28]:
-        w = active_entity.fighter.equip_loc.get(loc)
-        if w is None: continue
-        if w.weapon:
-            weapons.append(w)
+    weapon = active_entity.pick_dom_weapon()
 
-    for wpn in weapons:
-        for guard in wpn.guards:
-            for loc in guard.req_locs:
-                if loc not in active_entity.fighter.paralyzed_locs and loc not in active_entity.fighter.immobilized_locs and loc not in active_entity.fighter.severed_locs:
-                    if guard not in available_guards:
-                        available_guards.append(guard)
-                        active_entity.fighter.action.append(guard.name)
+    for guard in weapon.guards:
+        for loc in guard.req_locs:
+            if loc not in active_entity.fighter.paralyzed_locs and loc not in active_entity.fighter.immobilized_locs and loc not in active_entity.fighter.severed_locs:
+                if guard not in available_guards:
+                    available_guards.append(guard)
+                    active_entity.fighter.action.append(guard.name)
+                    desc_menu[guard.name] = guard.desc
   
-    combat_menu_header = 'Choose your guard:'
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
+    combat_menu_header = 'Current Guard: ' + active_entity.fighter.guard + '\nChoose your guard: '
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': desc_menu}
     if len(command) != 0:
         for option in active_entity.fighter.action:
             choice = command.get(option)

@@ -7,6 +7,7 @@ from components import weapon
 from utilities import clamp, inch_conv, itersubclasses
 
 
+
 weapon_master_list = list(itersubclasses(weapon.Weapon))
 
 class Entity:
@@ -414,19 +415,18 @@ class Entity:
         min_ap = min(min_wpn_ap)
         return min_ap
     
-    def set_default_guard(self):
-        weapons = []
-        for loc in [19,20,27,28]:
-            w = self.fighter.equip_loc.get(loc)
-            if w.weapon:
-                weapons.append(w)
+    def set_default_guard(self) -> None:
+        weapon = self.pick_dom_weapon()
 
-        for wpn in weapons:
-            for guard in wpn.guards:
-                if self.fighter.dom_hand == 'R' or 'A':
-                    if guard.rh_default: self.fighter.change_guard(guard)
+        for loc in [19,20,27,28]:
+            if weapon == self.fighter.equip_loc.get(loc):
+                if loc in [19,27]:
+                    for guard in weapon.guards:
+                        if guard.rh_default: self.fighter.change_guard(guard)
                 else:
-                    if guard.lh_default: self.fighter.change_guard(guard)
+                    for guard in weapon.guards:
+                        if guard.lh_default: self.fighter.change_guard(guard)
+                    
 
     def set_reach(self) -> None:
         weapons = []
@@ -464,7 +464,38 @@ class Entity:
             idx += 1
         return attr_dict
 
+    def pick_dom_weapon(self) -> object:
+        weapon = None
+        active_entity = self
+        if active_entity.fighter.dom_hand == 'R' or 'A':
+            #Only pick a single weapon, starting with the dominant hand and favoring actual weapons over Unarmed
+            for loc in [19,20,27,28]:
+                w = active_entity.fighter.equip_loc.get(loc)
+                if w is None or w.name is 'Unarmed': continue
+                if w.weapon:
+                    weapon = w
+                    break
+            if weapon == None:
+                for loc in [19,20,27,28]:
+                    w = active_entity.fighter.equip_loc.get(loc)
+                    if w.weapon:
+                        weapon = w
+                        break
+        else:
+            for loc in [20,19,28,27]:
+                w = active_entity.fighter.equip_loc.get(loc)
+                if w is None or w.name is 'Unarmed': continue
+                if w.weapon:
+                    weapon = w
+                    break
+            if weapon == None:
+                for loc in [20,19,28,27]:
+                    w = active_entity.fighter.equip_loc.get(loc)
+                    if w.weapon:
+                        weapon = w
+                        break
 
+        return weapon
 
 
 def create_entity_list(entity_list) -> list:

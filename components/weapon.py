@@ -321,8 +321,9 @@ class Attack():
                 self.parry_mod -= self.main_num * 20
 
 class Guard():
-    def __init__(self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = [], rh_default = False, lh_default = False):
+    def __init__(self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = [], rh_default = False, lh_default = False, desc = ''):
         self.name = name
+        self.desc = desc
         self.loc_hit_mods = loc_hit_mods #A dict in 'location name':mod format with mods to hit chance based on location
         self.hit_mod = hit_mod
         self.dodge_mod = dodge_mod
@@ -772,17 +773,23 @@ class Unarmed(Weapon):
         #self, name, loc_hit_mods, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
         self.conventional = Guard('Conventional', {'Face': -10, 'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
                                 'L Ribs': -20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20}, 0, 0, 0, [7,8,11,12,15,16], [9,10], 
-                                True)
+                                True, desc = 'Minor face protection, good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, to-hit and parry chances. \n\nAuto-blocks ribs.')
         self.southpaw = Guard('Southpaw', {'Face': -10, 'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
                                 'R Ribs': -20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20}, 0, 0, 0, [7,8,11,12,15,16],[9,10], 
-                                False, True)
+                                False, True, desc = 'Minor face protection, good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, to-hit and parry chances. \n\nAuto-blocks ribs.')
         self.high = Guard('High', {'Scalp': -20, 'Face': -30, 'Neck': -60, 'R Chest': -40, 'L Chest': -40, 'R Ribs': -20, 'L Ribs': -20, 'R Elbow': 20, 'L Elbow': 20, 'R Forearm': 20, 
-                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20}, -10, -20, 20, [7,8,11,12,15,16], [0,1,2,5,6])
+                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20}, -10, -20, 20, [7,8,11,12,15,16], [0,1,2,5,6], 
+                                desc = 'Good head protection, very good neck protection, good upper body protection, exposes arms. \n\n-20 to dodge, -10 to-hit and +20 parry chances. \n\nAuto-blocks head, neck, and chest.')
         self.low = Guard('Low', {'Scalp': 20, 'Face': -10, 'Neck': -80, 'R Chest': -80, 'L Chest': -80, 'R Ribs': -80, 'L Ribs': -80, 'R Forearm': 20, 
-                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20, 'R Abdomen': -60, 'L Abdomen': -60}, -20, -10, 20, [7,8,11,12,15,16], [2,5,6,9,10,13,14])
-        self.half = Guard('Half', {'Neck': -10, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'R Ribs': -60, 
-                                'R Elbow': -60, 'R Forearm': -60, 'R Hand': -60}, 20, 20, 0, [7,11,15], [9])
-        self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half]
+                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20, 'R Abdomen': -60, 'L Abdomen': -60}, -20, -10, 20, [7,8,11,12,15,16], [2,5,6,9,10,13,14], 
+                                desc = 'Minor face protection, excellent neck protection, excellent core protection, exposes scalp and arms. \n\n-10 to dodge, -20 to-hit and +20 to parry chances. \n\nAuto-blocks neck and center torso.')
+        self.half_l = Guard('Half, L lead', {'Neck': -10, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'R Ribs': -60, 
+                                'R Elbow': -60, 'R Forearm': -60, 'R Hand': -60}, 20, 20, 0, [7,11,15], [9, 10],
+                                desc = 'Minor neck protection, good right-side protection, exposes left shoulder. \n\n+20 to dodge, +20 to-hit and neutral parry chances. \n\nAuto-blocks ribs.')
+        self.half_r = Guard('Half, R lead', {'Neck': -10, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'L Ribs': -60, 
+                                'L Elbow': -60, 'L Forearm': -60, 'L Hand': -60}, 20, 20, 0, [7,11,15], [9, 10],
+                                desc = 'Minor neck protection, good left-side protection, exposes right shoulder. \n\n+20 to dodge, +20 to-hit and neutral parry chances. \n\nAuto-blocks ribs.')
+        self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half_l, self.half_r]
         self.base_maneuvers = [Headbutt,Tackle,Push,Trip,Bearhug,Collar_Tie,Limb_Capture,Wind_Choke,Strangle_Hold,Compression_Lock,Blood_Choke,Joint_Lock,Neck_Crank,Reap,Sacrifice_Throw,Hip_Throw,Shoulder_Throw,Single_Leg_Takedown,Double_Leg_Takedown]
 
 class De_Medium_Sword(Weapon):
@@ -851,29 +858,31 @@ class De_Medium_Sword(Weapon):
         self.base_attacks = [Slash, Slash_2H, Stab, Pommel_Strike]
         self.attacks = []
         #Guards below
-        #self, name, loc_hit_mods, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
         self.ox_r = Guard('Hanging, Right-handed', {'Neck': -60, 'R Shoulder': -80, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
                                 'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -60, 
-                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [19,20])
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [19,20], 
+                                desc = 'Excellent neck protection, good right-side protection, exposes left side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
         self.ox_l = Guard('Hanging, Left-handed', {'Neck': -60, 'L Shoulder': -80, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
                                 'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -60, 
-                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [19,20])
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [19,20], 
+                                desc = 'Excellent neck protection, good left-side protection, exposes right side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
         self.plow_r = Guard('Middle, Right-handed', {'Neck': -20, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
                                 'L Ribs': -20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': -40, 'R Abdomen': -80, 'R Hip': -80, 'L Hip': -40}, 10, 20, 0, [7,8,11,12,15,16,19,20], 
-                                [4,6,8,10,12,14,16,19,20], True)
+                                [4,6,8,10,12,14,16,19,20], True, desc = 'Minor neck protection, very good right side protection, exposes left side. \n\n+10 to hit, +20 to dodge, neutral parry chances. \n\nAuto-blocks left upper body and hands.')
         self.plow_l = Guard('Middle, Left-handed', {'Neck': -20, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
                                 'R Ribs': -20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -80, 
                                 'L Shin': -100, 'L Foot': -100, 'R Knee': 30, 'R Shin': 20, 'R Abdomen': -40, 'L Abdomen': -80, 'L Hip': -80, 'R Hip': -40}, 10, 20, 0, [7,8,11,12,15,16,19,20], 
-                                [3,5,7,9,11,13,15,19,20], False, True)
+                                [3,5,7,9,11,13,15,19,20], False, True, desc = 'Minor neck protection, very good left side protection, exposes right side. \n\n+10 to hit, +20 to dodge, neutral parry chances. \n\nAuto-blocks right upper body and hands.')
         self.low = Guard('Low', {'Neck': -20, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
                                 'L Elbow': -40, 'R Elbow': 20, 'L Forearm': -20, 'R Forearm': 20, 'L Thigh': -60, 'L Knee': -80, 
                                 'L Shin': -100, 'L Foot': -100, 'R Knee': 30, 'R Shin': 20, 'R Abdomen': -40, 'L Abdomen': -20, 'L Hip': -80, 'R Hip': -40}, 0, 30, -10, [7,8,11,12,15,16,19,20], 
-                                [23,24,25,26,27,28])
+                                [23,24,25,26,27,28], desc = 'Minor neck protection, very good left side protection, exposes right side. \n\nNeutral to hit, +30 to dodge, -10 to parry chances. \n\nAuto-blocks lower legs.')
         self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
                                 'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
-                                [0,1])
+                                [0,1], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = [] 
