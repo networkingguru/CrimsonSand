@@ -690,10 +690,11 @@ def perform_maneuver(active_entity, entities, final_to_hit, target, combat_phase
         
     else:
         #First, see if this is an attack from behind
-        if active_entity in target.fighter.targets:
+        if (active_entity.x,active_entity.y) in target.fighter.fov_visible:
             combat_phase = CombatPhase.grapple_defense
         else:
             effects = apply_maneuver(active_entity, target, type(mnvr), location, entities, game_map)
+            effects.insert(0, active_entity.name + ' performs a suprise ' + mnvr.name + ' on ' + target.name + '.' )
     
             if effects:
                 combat_phase = CombatPhase.action
@@ -1724,6 +1725,7 @@ def valid_maneuvers(active_entity, target) -> list:
     all_maneuvers = {}
     invalid_maneuvers = set()
 
+
     #Find distance between active_entity and defender. 
     distance = sqrt((target.x - active_entity.x)**2 + (target.y - active_entity.y)**2)
     #Convert squares into inches and round it off. 36" subtracted due to each combatant being in the middle of a square
@@ -1735,20 +1737,36 @@ def valid_maneuvers(active_entity, target) -> list:
         if w == None: continue
         if not w.weapon: continue
 
-        for mnvr in w.maneuvers:
-            if mnvr.name not in all_maneuvers:
-                all_maneuvers[mnvr.name] = mnvr
+        for m in w.base_maneuvers:
+            temp_m = m(active_entity, target, 'Scalp')
+            if len(temp_m.locs_allowed) > 0:
+                for l in temp_m.locs_allowed:
+                    loc_name = target.fighter.name_location(l)
+                    mnvr = m(active_entity,target,loc_name)
+                    if (loc <=20 and not mnvr.hand) or (loc > 27 and mnvr.hand): 
+                        continue
+                    valid_locs = determine_valid_locs(active_entity, target, mnvr)
+                    if l not in valid_locs:
+                        continue
+                    if mnvr.name not in all_maneuvers:
+                        all_maneuvers[mnvr.name] = mnvr
+            else:
+                mnvr = temp_m
+            
+                if (loc <=20 and not mnvr.hand) or (loc > 27 and mnvr.hand): 
+                    continue
+                if mnvr.name not in all_maneuvers:
+                    all_maneuvers[mnvr.name] = mnvr
 
     mnvr_set = set(all_maneuvers.values())
 
     for mnvr in mnvr_set:
-
         #Find valid locations based on angle/dist
-        reachable_locs = set(determine_valid_locs(active_entity, target, mnvr))
+        #reachable_locs = set(determine_valid_locs(active_entity, target, mnvr))
         #Remove any maneuvers that cannot reach a valid target
-        if reachable_locs.isdisjoint(mnvr.locs_allowed):
-            invalid_maneuvers.add(mnvr)
-            continue
+        # if reachable_locs.isdisjoint(mnvr.locs_allowed):
+        #     invalid_maneuvers.add(mnvr)
+        #     continue
         
         #Check prereqs and remove maneuvers that do not meet them
         if len(mnvr.prereq) != 0:
@@ -1781,10 +1799,10 @@ def valid_maneuvers(active_entity, target) -> list:
                 if not all([r_w is not None, l_w is not None]):
                     invalid_maneuvers.add(mnvr)
                     continue 
-                if not all([r_w.weapon,l_w.weapon]):
+                if not all([r_w.weapon, l_w.weapon]):
                     invalid_maneuvers.add(mnvr)
                     continue 
-                elif mnvr not in r_w.maneuvers and mnvr not in l_w.maneuvers:
+                elif type(r_w) is not type(l_w):
                     invalid_maneuvers.add(mnvr)
                     continue 
 

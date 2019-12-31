@@ -96,7 +96,7 @@ if __name__ == "__main__":
     #Begin main loop
     while not leave:
         if global_vars.debug_time: t0 = time.time()
-        
+
         if dirty: render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, modal_dialog)
         old_menu = menu_dict
         combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
@@ -111,8 +111,10 @@ if __name__ == "__main__":
         
         menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
-        if old_menu != menu_dict: dirty = True
-
+        if old_menu != menu_dict: 
+            dirty = True
+            frame_list.clear()
+            
         if len(command) != 0:
             dirty = True
             if command.get('exit'): leave = True

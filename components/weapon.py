@@ -93,12 +93,13 @@ class Weapon:
         self.sharpness = 1 
         self.pointedness = 1
 
+        #Lists of attacks, mnvrs, guards
         self.base_attacks = []
         self.attacks = []
         self.base_maneuvers = []
-        self.maneuvers = []
         self.guards = []
 
+        #Cost and rarity
         self.cost = 0
         self.normality = 1
 

@@ -99,7 +99,6 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         x_offset = int(map_x + round(map_dim_x / 3))
         y_offset = int(map_y + round(map_dim_y / 3))
 
-
         if menu_type == MenuTypes.combat:
             options = menu_options
             header = menu_header                 
@@ -107,17 +106,11 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
             if len(frame_list) == 0:
                 bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list, hide_options)
                 initialize()
-            
-    
 
     if len(frame_list) != 0:
         render_frames(frame_list)
 
     terminal.refresh()
-
-   
-
-
 
 
 def create_terminal(w,h) -> bool:

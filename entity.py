@@ -129,18 +129,11 @@ class Entity:
                             else:
                                 atk.name += '(L)'
 
-
-                
-                for m in new_wpn.base_maneuvers:
-                    mnvr = m(self,self,'Scalp')
-                    if (loc <=1 and not mnvr.hand) or (loc > 1 and mnvr.hand): #loc variable defines the 'location' the attack originates from. locs = 0:R hand, 1:L Hand, 2:R Foot, 3: L foot
-                        continue
-                    new_wpn.maneuvers.append(mnvr)
                     
 
         #Sort the lists of objects alphabetically using the name attribute            
         new_wpn.attacks.sort(key=lambda x: x.name)
-        new_wpn.maneuvers.sort(key=lambda x: x.name)
+
 
     def validate_attacks(self) -> None:
 

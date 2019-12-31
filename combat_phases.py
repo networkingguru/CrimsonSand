@@ -824,22 +824,26 @@ def phase_maneuver(active_entity, command, logs, combat_phase) -> (int, dict):
     log = logs[2]
     min_ap = active_entity.get_min_ap()
     maneuvers = valid_maneuvers(active_entity, active_entity.fighter.curr_target)
+    menu_desc = {'Return':'Return to the previous menu'}
 
     active_entity.fighter.action = ['Return']
 
     if active_entity.fighter.curr_target is not None:
         if active_entity.fighter.ap >= active_entity.fighter.walk_ap + min_ap + active_entity.fighter.curr_target.get_min_ap():
             active_entity.fighter.action.append('Leave opening and counter')
+            menu_desc['Leave opening and counter'] = 'Perform a feint by leaving an obvious opening and attempting to counter it. \nIf successful, you will get a bonus attack on the opponent, but if you fail, they will get a bonus to attack you. \nThe opponent gets to use your AP to make the attack.'
         if len(maneuvers) > 0:
             for m in maneuvers:
                 active_entity.fighter.action.append(m.name)
+                menu_desc[m.name] = m.desc
         for m in active_entity.fighter.maneuvers:
             if m.aggressor is active_entity:
                 active_entity.fighter.action.append('Release ' + m.name)
+                menu_desc['Release ' + m.name] = ''
 
 
     combat_menu_header = 'Choose your maneuver:'
-    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False}
+    menu_dict = {'type': MenuTypes.combat, 'header': combat_menu_header, 'options': active_entity.fighter.action, 'mode': False, 'desc': menu_desc}
     if len(command) != 0:
         for option in active_entity.fighter.action:
             choice = command.get(option)
@@ -1139,7 +1143,7 @@ def phase_grapple_defense(active_entity, enemy, entities, command, logs, combat_
 
     if mnvr.counterable:
         for m in valid_mnvrs:
-            for c in mnvr.counters:
+            for c in mnvr.counter_mnvrs:
                 if type(m) is c:                  
                     c_skills = []
                     for s in c.skills:
@@ -1170,7 +1174,7 @@ def phase_grapple_defense(active_entity, enemy, entities, command, logs, combat_
 
     if can_counter:
         for m in valid_mnvrs:
-            for c in mnvr.counters:
+            for c in mnvr.counter_mnvrs:
                 if type(m) is c:
                     c_skills = []
                     for s in c.skills:
@@ -1196,6 +1200,7 @@ def phase_grapple_defense(active_entity, enemy, entities, command, logs, combat_
             if command.get('Allow the manuever'):
                 hit = True
                 effects = apply_maneuver(enemy, active_entity, type(mnvr), location, entities, game_map)
+                effects.insert(0, active_entity.name + ' allows ' + enemy.name + ' to complete a ' + mnvr.name + '.')
                 
             if command.get('Dodge'):
                 check, def_margin, atk_margin = save_roll_con(active_entity.fighter.get_attribute('dodge'), dodge_mod, enemy.fighter.atk_result, final_to_hit)
