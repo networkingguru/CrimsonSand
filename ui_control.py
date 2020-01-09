@@ -362,7 +362,8 @@ def bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list,
         items = options
         i_width = max(30, len(max(items,key=len)) + 8)
         header_h = len(textwrap.wrap(header, i_width))+2
-        list_frame = Frame(x_offset,y_offset,i_width,len(items)+header_h+2, "", text=header, frame=True, draggable=True, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
+        list_frame = Frame(x_offset,y_offset,i_width,max(len(items)+header_h+2,8), "", text=header, frame=True, draggable=True, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
+        list_frame.add_control(bltGui.bltResizeFrameButton(list_frame))
         list_box = bltGui.bltListbox(list_frame, 1, header_h+1, items, False, True)
         if desc is not None:
             item_dict = make_item_dict(options, desc)

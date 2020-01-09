@@ -1183,7 +1183,7 @@ class Intestinal_Damage(Injury):
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 1000 #Duration of blood loss
         else:
-            self.description = '{0}\'s intestines have been {3}. Blood seeps from the open wound, and the sight of {4} own intestines spilling out causes {0} a large degree of alarm. '
+            self.description = '{0}\'s intestines have been {3}. Blood seeps from the open wound, and the sight of {1} own intestines spilling out causes {4} a large degree of alarm. '
             vitae_dam = recipient.fighter.max_vitae*.02
             self.bleed_amount = vitae_dam #Amount of blood loss
             self.bleed_duration = 100 #Duration of blood loss

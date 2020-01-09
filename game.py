@@ -61,7 +61,7 @@ if __name__ == "__main__":
     enemies = []
     enemies = list(set(entities) - set(players))
     players[0].worn_armor = options.player_armor
-    enemies[0].worn_armor = options.enemy_armor
+    enemies[0].worn_armor = options.enemy_no_armor
     for e in entities:
         apply_armor(e)
     fill_status_panel(players[0], status_log)

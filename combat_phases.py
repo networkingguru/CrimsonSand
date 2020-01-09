@@ -1089,6 +1089,15 @@ def phase_grapple_defense(active_entity, enemy, entities, command, logs, combat_
     log = logs[2]
     message = None
     effects = []
+    if enemy is None:
+        for entity in entities:
+            if not entity.fighter:
+                continue
+            else:
+                if entity.fighter.curr_target == active_entity:
+                    enemy = entity
+                    break
+
     mnvr = enemy.fighter.combat_choices[0]
     can_dodge = False
     can_reverse = mnvr.reversible

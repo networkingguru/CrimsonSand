@@ -75,7 +75,7 @@ enemy_rf_weapon = 'Unarmed'
 enemy_lf_weapon = 'Unarmed'
 enemy_weapons = {'r_wpn': enemy_r_weapon, 'l_wpn': enemy_l_weapon, 'rf_wpn': enemy_rf_weapon, 'lf_wpn': enemy_lf_weapon}
 enemy_armor = [{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.1},{'component':'Hauberk','construction':'Padded','main_material' : 'leather','thickness':.3}, {'component':'Hauberk','construction':'Chain','main_material' : 'Hardened Steel','thickness':.2}, {'component':'Jerkin','construction':'Padded','main_material' : 'Cloth','thickness':.05}, {'component':'Coif','construction':'Chain','main_material' : 'Hardened Steel','thickness':.3}, {'component':'Coif','construction':'Padded','main_material' : 'Cloth','thickness':.3}]
-
+enemy_no_armor = []
 #Fighter and Weapons lists
 fighters = [player_fighter, enemy_fighter]
 weapons = {'Player': player_weapons, 'Enemy': enemy_weapons}

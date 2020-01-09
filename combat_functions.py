@@ -1096,6 +1096,7 @@ def armor_control(target, location, attack, dam_type, dam_amount) -> (list, list
     locations = [location]
     dam_amt_list = []
     dam_type_list = [] 
+    dam_total = 0
     ao_idx =  1 #Counter. Subtracted from len of loc_armor to determine ao to effect
 
     if global_vars.debug:
@@ -1730,9 +1731,15 @@ def valid_maneuvers(active_entity, target) -> list:
     distance = sqrt((target.x - active_entity.x)**2 + (target.y - active_entity.y)**2)
     #Convert squares into inches and round it off. 36" subtracted due to each combatant being in the middle of a square
     distance = int(round(distance*36))-36
+    avail_locs = [19,20,27,28]
+    for mnvr in active_entity.fighter.maneuvers:
+        for l in mnvr.immobilized_locs:
+            if l in avail_locs: avail_locs.remove(l)
+        for l in mnvr.agg_immob_locs:
+            if l in avail_locs: avail_locs.remove(l)
         
     #Below complexity is due to objects being different, but being functional duplicates
-    for loc in [19,20,27,28]:
+    for loc in avail_locs:
         w = active_entity.fighter.equip_loc.get(loc)
         if w == None: continue
         if not w.weapon: continue
