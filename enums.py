@@ -3,6 +3,11 @@ from enum import Enum, auto
 class GameStates(Enum):
     default = auto()
     menu = auto()
+    inventory = auto()
+    c_sheet = auto()
+    main_menu = auto()
+    c_creation = auto()
+    company_mgmt = auto
 
 class EntityState(Enum):
     conscious = auto()

@@ -70,10 +70,19 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
     terminal.clear()
     if game_state in [GameStates.default, GameStates.menu]:
         render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict)
+    elif game_state == GameStates.c_sheet:
+        pass
 
     
 
     terminal.refresh()
+
+def render_csheet(players) -> None:
+    player = players[0]
+    max_x = options.screen_width
+    max_y = options.screen_height
+
+    terminal.puts(max_x/2, max_y/2, '[font=big font][color=white][bg_color=black]Character Sheet Test')
 
 def render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict) -> None:
     map_con = con_list[0]
@@ -196,7 +205,7 @@ def blt_handle_keys(game_state, menu_dict, key = None) -> str or None:
     if key == terminal.TK_CLOSE:
         exit()
     else:
-        if game_state == GameStates.default:
+        if game_state != GameStates.menu:
             if not 88 < key < 99 and terminal.check(terminal.TK_CHAR):
                 key = chr(terminal.state(terminal.TK_CHAR))
             keymap = options.key_maps[game_state.value - 1]
