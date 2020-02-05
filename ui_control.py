@@ -66,8 +66,16 @@ def fill_status_panel(player, log) -> None:
         log.add_message(Message(entry))
 
 
-def render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict = dict(), modal_dialog = None) -> None:
+def render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, game_state) -> None:
     terminal.clear()
+    if game_state in [GameStates.default, GameStates.menu]:
+        render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict)
+
+    
+
+    terminal.refresh()
+
+def render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict) -> None:
     map_con = con_list[0]
     for con in con_list:
         idx = con_list.index(con)
@@ -109,8 +117,6 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
 
     if len(frame_list) != 0:
         render_frames(frame_list)
-
-    terminal.refresh()
 
 
 def create_terminal(w,h) -> bool:

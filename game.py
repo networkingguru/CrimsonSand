@@ -27,7 +27,6 @@ if __name__ == "__main__":
     menu_dict = dict()
 
     term = create_terminal(options.screen_width, options.screen_height)
-    modal_dialog = BLTWindow(options.modal_x, options.modal_y, options.modal_w, 'white', 'black')
 
     con_list = ['map_con', 'status_panel', 'enemy_panel', 'message_panel']
     offset_list = ((options.map_x,options.map_y),(options.status_panel_x,options.status_panel_y),(options.enemy_panel_x,options.enemy_panel_y),
@@ -97,7 +96,7 @@ if __name__ == "__main__":
     while not leave:
         if global_vars.debug_time: t0 = time.time()
 
-        if dirty: render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, modal_dialog)
+        if dirty: render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, game_state)
         old_menu = menu_dict
         combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
         if curr_actor != new_curr_actor:

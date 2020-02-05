@@ -1096,7 +1096,7 @@ def armor_control(target, location, attack, dam_type, dam_amount) -> (list, list
     locations = [location]
     dam_amt_list = []
     dam_type_list = [] 
-    dam_total = 0
+    dam_total = dam_amount
     ao_idx =  1 #Counter. Subtracted from len of loc_armor to determine ao to effect
 
     if global_vars.debug:
