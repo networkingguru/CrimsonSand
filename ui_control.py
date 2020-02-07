@@ -81,18 +81,26 @@ def render_csheet(players) -> None:
     player = players[0]
     max_x = options.screen_width
     max_y = options.screen_height
+
+    #Headers for sheet
     name_h = 'Name: '
     prof_h = 'Profession: '
     eth_h = 'Ethnicity: '
     age_h = 'Age: '
     wt_h = 'Weight: '
     ht_h = 'Height: '
+    gender_h = 'Gender: '
+    hand_h = 'Dominant Hand: '
 
+    #Len vars used for variable spacing
     name_len = 12+len(name_h)+len(player.name)
     prof_len = 12+name_len+len(prof_h)+len('Fighter') #Replace when professions implemented
     age_len = 12+len(age_h)+len(str(player.fighter.age))
     ht_len = 12+age_len+len(ht_h)+len(inch_conv(player.fighter.height))
+    wt_len = 12+ht_len+len(wt_h)+len(str(player.fighter.weight))
+    gender_len = 12+wt_len+len(gender_h)+len(('Male' if player.fighter.male else 'Female'))
 
+    #General Attributes
     terminal.puts(2, 2, '[font=headi][color=white][bg_color=black]'+ name_h)
     terminal.puts(2+len(name_h), 2, '[font=head][color=white][bg_color=black]' + player.name)
 
@@ -107,6 +115,66 @@ def render_csheet(players) -> None:
 
     terminal.puts(age_len, 4, '[font=bodyi][color=white][bg_color=black]'+ht_h)
     terminal.puts(age_len+len(ht_h), 4, '[font=body][color=white][bg_color=black]' + inch_conv(player.fighter.height))
+
+    terminal.puts(ht_len, 4, '[font=bodyi][color=white][bg_color=black]'+wt_h)
+    terminal.puts(ht_len+len(wt_h), 4, '[font=body][color=white][bg_color=black]' + str(player.fighter.weight))
+
+    terminal.puts(wt_len, 4, '[font=bodyi][color=white][bg_color=black]'+gender_h)
+    terminal.puts(wt_len+len(gender_h), 4, '[font=body][color=white][bg_color=black]' + ('Male' if player.fighter.male else 'Female'))
+
+    terminal.puts(gender_len, 4, '[font=bodyi][color=white][bg_color=black]'+hand_h)
+    terminal.puts(gender_len+len(hand_h), 4, '[font=body][color=white][bg_color=black]' + ('Right' if player.fighter.dom_hand == 'R' else ('Left' if player.fighter.dom_hand == 'L' else 'Ambidexterous')))
+
+    #Primary Attributes
+
+    #Header
+    terminal.puts(2, 7, '[font=headi][color=white][bg_color=black]'+ 'Primary Attributes')
+    terminal.puts(6+len('Primary Attributes'), 7, '[font=headi][color=white][bg_color=black]' + 'Secondary Attributes')
+
+    y = 9
+
+    #Parent Attributes
+    for key, attr in player.fighter.parent_attr_dict.items():
+        terminal.puts(2, y, '[font=headi][color=white][bg_color=black]'+ attr.name + ": ")
+        terminal.puts(16, y, '[font=head][color=white][bg_color=black]' + str(attr.val))
+        for k, a in player.fighter.attr_dict.items():
+            #Child Attributes
+            if a.parent_attr == attr.abr:
+                terminal.puts(24, y, '[font=bodyi][color=white][bg_color=black]'+ a.name + ": ")
+                terminal.puts(44, y, '[font=body][color=white][bg_color=black]' + str(a.val))
+                y += 2
+
+    #Skills
+
+    #Header
+    terminal.puts(50, 7, '[font=headi][color=white][bg_color=black]'+ 'Skill Name')
+    terminal.puts(54+len('Skill Name'), 7, '[font=headi][color=white][bg_color=black]' + 'Level')
+    terminal.puts(58+len('Skill Name')+len('Level'), 7, '[font=headi][color=white][bg_color=black]' + 'Rating')
+
+    y = 9
+
+    #Skill name, level and value
+    for key, skill in player.fighter.skill_dict.items():
+        terminal.puts(50, y, '[font=body][color=white][bg_color=black]'+ skill.name + ": ")
+        terminal.puts(64, y, '[font=body][color=white][bg_color=black]' + str(skill.level))
+        terminal.puts(73, y, '[font=body][color=white][bg_color=black]' + str(skill.rating))
+        y +=2
+
+    y = 7
+
+    #Hit locations 
+    terminal.puts(85, y, '[font=headi][color=white][bg_color=black]Hit Location')
+    terminal.puts(105, y, '[font=headi][color=white][bg_color=black]Dermitology')
+    terminal.puts(120, y, '[font=headi][color=white][bg_color=black]Tissue')
+    terminal.puts(130, y, '[font=headi][color=white][bg_color=black]Bone')
+    y += 2
+    for hit_location in player.fighter.locations:
+            terminal.color('white')
+            terminal.puts(85, y, '[font=body]'+player.fighter.name_location(player.fighter.locations.index(hit_location)) + ':')
+            terminal.puts(105, y, '[font=body]'+str(hit_location[0]))
+            terminal.puts(120, y, '[font=body]'+str(hit_location[1]))
+            terminal.puts(130, y, '[font=body]'+str(hit_location[2]))
+            y += 2
 
 
 
