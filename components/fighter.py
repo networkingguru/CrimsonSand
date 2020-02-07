@@ -5,7 +5,7 @@ from enums import FighterStance
 from chargen_functions import height_curve
 
 class Fighter:
-    def __init__(self, facing, ai = None, l_blocker = None, r_blocker = None):
+    def __init__(self, facing, ai = None, l_blocker = None, r_blocker = None, age = 18):
         #Transitory combat variables
         self.end_turn = False
         if ai is not None:
@@ -59,6 +59,7 @@ class Fighter:
         self.dom_hand = 'R' #'R', 'L', or 'A'
         self.attr_dict = dict()
         self.parent_attr_dict = dict()
+        self.age = age
         
         #Skills
         self.skill_dict = dict()

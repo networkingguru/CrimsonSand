@@ -71,7 +71,7 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
     if game_state in [GameStates.default, GameStates.menu]:
         render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict)
     elif game_state == GameStates.c_sheet:
-        pass
+        render_csheet(players)
 
     
 
@@ -81,8 +81,37 @@ def render_csheet(players) -> None:
     player = players[0]
     max_x = options.screen_width
     max_y = options.screen_height
+    name_h = 'Name: '
+    prof_h = 'Profession: '
+    eth_h = 'Ethnicity: '
+    age_h = 'Age: '
+    wt_h = 'Weight: '
+    ht_h = 'Height: '
 
-    terminal.puts(max_x/2, max_y/2, '[font=big font][color=white][bg_color=black]Character Sheet Test')
+    name_len = 12+len(name_h)+len(player.name)
+    prof_len = 12+name_len+len(prof_h)+len('Fighter') #Replace when professions implemented
+    age_len = 12+len(age_h)+len(str(player.fighter.age))
+    ht_len = 12+age_len+len(ht_h)+len(inch_conv(player.fighter.height))
+
+    terminal.puts(2, 2, '[font=headi][color=white][bg_color=black]'+ name_h)
+    terminal.puts(2+len(name_h), 2, '[font=head][color=white][bg_color=black]' + player.name)
+
+    terminal.puts(name_len, 2, '[font=headi][color=white][bg_color=black]'+prof_h)
+    terminal.puts(name_len+len(prof_h), 2, '[font=head][color=white][bg_color=black]' + 'Fighter')#Replace when professions implemented
+
+    terminal.puts(prof_len, 2, '[font=headi][color=white][bg_color=black]'+eth_h)
+    terminal.puts(prof_len+len(eth_h), 2, '[font=head][color=white][bg_color=black]' + 'Barbarian')#Replace when ethnicities implemented
+
+    terminal.puts(2, 4, '[font=bodyi][color=white][bg_color=black]'+age_h)
+    terminal.puts(2+len(age_h), 4, '[font=body][color=white][bg_color=black]' + str(player.fighter.age))
+
+    terminal.puts(age_len, 4, '[font=bodyi][color=white][bg_color=black]'+ht_h)
+    terminal.puts(age_len+len(ht_h), 4, '[font=body][color=white][bg_color=black]' + inch_conv(player.fighter.height))
+
+
+
+
+
 
 def render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict) -> None:
     map_con = con_list[0]
@@ -135,8 +164,12 @@ def create_terminal(w,h) -> bool:
 
     #Fonts
     terminal.set("text font: fonts\\consolab.ttf, size=8x14")
+    terminal.set("big font: fonts\\consolab.ttf, size=12x16")
     terminal.set("font: fonts\\DejaVuSansMono-Bold.ttf, size=10x10")
-    terminal.set("big font: fonts\\consolab.ttf, size=10x16")
+    terminal.set("headi font: fonts\\DejaVuSansMono-BoldOblique.ttf, size=16")
+    terminal.set("head font: fonts\\DejaVuSansMono-Bold.ttf, size=14")
+    terminal.set("bodyi font: fonts\\DejaVuSansMono-BoldOblique.ttf, size=13")
+    terminal.set("body font: fonts\\DejaVuSansMono-Bold.ttf, size=12")
     
     terminal.composition(terminal.TK_OFF)
     terminal.refresh()
@@ -229,7 +262,7 @@ def blt_handle_global_input(game_state) -> str or int or None:
         else:
             if not 88 < key < 99 and terminal.check(terminal.TK_CHAR):
                 key = chr(terminal.state(terminal.TK_CHAR))
-            keymap = options.key_maps[game_state.value - 1]
+            keymap = options.key_maps[0]
             if keymap.get(key) is not None:
                 command = keymap.get(key)
     return command

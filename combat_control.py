@@ -6,19 +6,21 @@ from combat_functions import strafe_control, move_actor, update_targets, detect_
 from enums import CombatPhase, GameStates
 
 def combat_controller(game_map, active_entity, entities, players, command, logs, combat_phase, game_state, order) -> (dict, int, int, object, list):
-
+    menu_dict = dict()
+    
     if combat_phase == CombatPhase.explore:
-        if isinstance(command, str):
+        if len(command) != 0:
             if command.get('strafe'): 
                 message = strafe_control(active_entity)
                 logs[2].add_message(message)
-        elif len(command) != 0:
-            if command.get('move') or command.get('spin'):
+            elif command.get('move') or command.get('spin'):
                 move_actor(game_map, active_entity, entities, command, logs)
                 combat_phase_new = detect_enemies(entities)
                 #If phase changed, go into new phase
                 if combat_phase != combat_phase_new:
                     combat_phase = combat_phase_new
+            elif command.get('csheet'):
+                game_state = GameStates.c_sheet
                    
     if combat_phase == CombatPhase.init:
         combat_phase, order = phase_init(entities)

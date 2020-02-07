@@ -87,7 +87,7 @@ default_keys = {'q':{'move':'nw'}, 'w':{'move':'n'}, 'e':{'move':'ne'}, 'd':{'mo
                 80: {'move':'w'}, 79:{'move':'e'},82:{'move':'n'},81:{'move':'s'},';':{'strafe':'strafe'},95:{'move':'nw'}, 
                 96:{'move':'n'}, 97:{'move':'ne'}, 94:{'move':'e'}, 91:{'move':'se'},90:{'move':'s'},
                 89:{'move':'sw'},92:{'move':'w'},98:{'spin':'ccw'},'u':{'stand':'stand'},'p':{'prone':'prone'},'k':{'kneel':'kneel'},
-                '@':{'c_sheet':'c_sheet'}}
+                '@':{'csheet':'csheet'}}
 
 key_maps = [default_keys]
 
