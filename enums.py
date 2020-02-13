@@ -8,6 +8,7 @@ class GameStates(Enum):
     main_menu = auto()
     c_creation = auto()
     company_mgmt = auto
+    pause = auto()
 
 class EntityState(Enum):
     conscious = auto()

@@ -82,7 +82,7 @@ def render_csheet(players) -> None:
     max_x = options.screen_width
     max_y = options.screen_height
 
-    #Headers for sheet
+    #Static headers for sheet
     name_h = 'Name: '
     prof_h = 'Profession: '
     eth_h = 'Ethnicity: '
@@ -91,6 +91,13 @@ def render_csheet(players) -> None:
     ht_h = 'Height: '
     gender_h = 'Gender: '
     hand_h = 'Dominant Hand: '
+    stam_h = 'Stamina: '
+    vitae_h = 'Vitae: '
+    ap_h = 'AP: '
+    init_h = 'Initiative: '
+    wpnr_h = 'Weapon Reach: '
+    ohr_h = 'Off-hand Reach: '
+    kickr_h = 'Kick Reach: '
 
     #Len vars used for variable spacing
     name_len = 12+len(name_h)+len(player.name)
@@ -99,6 +106,13 @@ def render_csheet(players) -> None:
     ht_len = 12+age_len+len(ht_h)+len(inch_conv(player.fighter.height))
     wt_len = 12+ht_len+len(wt_h)+len(str(player.fighter.weight))
     gender_len = 12+wt_len+len(gender_h)+len(('Male' if player.fighter.male else 'Female'))
+    stam_len = 8+len(stam_h)+len(str(player.fighter.stamina) + '/' + str(player.fighter.max_stamina))
+    vitae_len = 8+stam_len+len(vitae_h)+len(str(player.fighter.vitae) + '/' + str(player.fighter.max_vitae))
+    ap_len = 8+vitae_len+len(ap_h)+len(str(player.fighter.ap) + '/' + str(player.fighter.max_ap))
+    init_len = 8+ap_len+len(init_h)+len(str(int(player.fighter.init)))
+    wpnr_len = 8+init_len+len(wpnr_h)+len(str(player.fighter.reach) + ' squares')
+    ohr_len = 8+wpnr_len+len(ohr_h)+len(str(player.fighter.reach_oh) + ' squares')
+
 
     #General Attributes
     terminal.puts(2, 2, '[font=headi][color=white][bg_color=black]'+ name_h)
@@ -168,15 +182,37 @@ def render_csheet(players) -> None:
     terminal.puts(120, y, '[font=headi][color=white][bg_color=black]Tissue')
     terminal.puts(130, y, '[font=headi][color=white][bg_color=black]Bone')
     y += 2
+    loc = 0
     for hit_location in player.fighter.locations:
             terminal.color('white')
-            terminal.puts(85, y, '[font=body]'+player.fighter.name_location(player.fighter.locations.index(hit_location)) + ':')
+            terminal.puts(85, y, '[font=body]'+player.fighter.name_location(loc) + ':')
             terminal.puts(105, y, '[font=body]'+str(hit_location[0]))
             terminal.puts(120, y, '[font=body]'+str(hit_location[1]))
             terminal.puts(130, y, '[font=body]'+str(hit_location[2]))
             y += 2
+            loc += 1
 
+    #Minor stats
+    terminal.puts(2, 68, '[font=text][color=white][bg_color=black]'+stam_h)
+    terminal.puts(2+len(stam_h), 68, '[font=text][color=white][bg_color=black]' + str(player.fighter.stamina) + '/' + str(player.fighter.max_stamina))
 
+    terminal.puts(stam_len, 68, '[font=text][color=white][bg_color=black]'+vitae_h)
+    terminal.puts(stam_len+len(vitae_h), 68, '[font=text][color=white][bg_color=black]' + str(player.fighter.vitae) + '/' + str(player.fighter.max_vitae))
+
+    terminal.puts(vitae_len, 68, '[font=text][color=white][bg_color=black]'+ap_h)
+    terminal.puts(vitae_len+len(ap_h), 68, '[font=text][color=white][bg_color=black]' + str(player.fighter.ap) + '/' + str(player.fighter.max_ap))
+
+    terminal.puts(ap_len, 68, '[font=text][color=white][bg_color=black]'+init_h)
+    terminal.puts(ap_len+len(init_h), 68, '[font=text][color=white][bg_color=black]' + str(int(player.fighter.init)))
+
+    terminal.puts(init_len, 68, '[font=text][color=white][bg_color=black]'+wpnr_h)
+    terminal.puts(init_len+len(wpnr_h), 68, '[font=text][color=white][bg_color=black]' + str(player.fighter.reach) + ' squares')
+
+    terminal.puts(wpnr_len, 68, '[font=text][color=white][bg_color=black]'+ohr_h)
+    terminal.puts(wpnr_len+len(ohr_h), 68, '[font=text][color=white][bg_color=black]' + str(player.fighter.reach_oh) + ' squares')
+
+    terminal.puts(ohr_len, 68, '[font=text][color=white][bg_color=black]'+kickr_h)
+    terminal.puts(ohr_len+len(kickr_h), 68, '[font=text][color=white][bg_color=black]' + str(player.fighter.reach_leg) + ' squares')
 
 
 

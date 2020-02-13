@@ -116,7 +116,11 @@ if __name__ == "__main__":
             
         if len(command) != 0:
             dirty = True
-            if command.get('exit'): leave = True
+            if command.get('exit'): 
+                if game_state in [GameStates.c_sheet, GameStates.pause]:
+                    game_state = GameStates.default
+                elif menu_dict == {}:
+                    game_state = GameStates.pause
             
             fill_status_panel(players[0], status_log)
             command = {}
