@@ -302,10 +302,15 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                         update(frame_list)
 
                         if key is not None:
+                            if key == terminal.TK_CLOSE:
+                                exit()
                             dirty = True
                             if not hide_options:
                                 if key == 41:
-                                    command = {'esc':'esc'}
+                                    if 'Return' in menu_dict.get('options'):
+                                        command = {'Return':'Return'}
+                                    else:                                  
+                                        command = {'esc':'esc'}
                                 else:
                                     for frame in frame_list:
                                         for control in frame.controls:
