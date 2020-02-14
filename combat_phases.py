@@ -7,7 +7,30 @@ from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
 from components.fighter import stance_constants
 from combat_functions import (aoc_check, turn_order, strafe_control, move_actor, init_combat, attack_filter, determine_valid_angles, determine_valid_locs, angle_id, 
     calc_final_mods, perform_attack, perform_maneuver, find_defense_probability, damage_controller, get_adjacent_cells, valid_maneuvers, remove_maneuver, apply_maneuver,
-    apply_injuries, apply_injury_effects, apply_stability_damage, weapon_desc, option_desc )
+    apply_injuries, apply_injury_effects, apply_stability_damage, weapon_desc, option_desc, detect_enemies )
+
+def phase_pause(command, game_state, combat_phase, entities) -> (int, int, dict, bool):
+    menu_dict = dict()
+    clear = False
+
+
+    if len(command) != 0:
+        if command.get('esc'):
+            game_state = GameStates.default
+            combat_phase = detect_enemies(entities)
+            clear = True
+        elif command.get('Save Game'):
+            pass
+        elif  command.get('Quit Game'):
+            game_state = GameStates.quit
+
+    else:
+        menu_desc = {'Save Game':'Save the game to disk', 'Quit Game':'Exit without saving'}
+        menu_dict = {'type': MenuTypes.combat, 'header': 'Pause Menu', 'options': ['Save Game', 'Quit Game'], 'mode': False, 'desc': menu_desc}   
+        game_state = GameStates.menu
+
+    return game_state, combat_phase, menu_dict, clear 
+            
 
 def phase_init(entities) -> (int, list):
     active_fighters = 0

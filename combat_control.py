@@ -1,14 +1,18 @@
 
 from combat_phases import (phase_init, phase_action, phase_weapon, phase_option, phase_location,  
     phase_option2, phase_confirm, phase_repeat, phase_defend, phase_disengage, phase_move, phase_maneuver, phase_feint, phase_stance, phase_guard, phase_grapple,
-    phase_grapple_confirm, phase_grapple_defense)
+    phase_grapple_confirm, phase_grapple_defense, phase_pause)
 from combat_functions import strafe_control, move_actor, update_targets, detect_enemies
 from enums import CombatPhase, GameStates
 
 def combat_controller(game_map, active_entity, entities, players, command, logs, combat_phase, game_state, order) -> (dict, int, int, object, list):
     menu_dict = dict()
+    clear = False
 
-    if game_state not in [GameStates.c_sheet, GameStates.pause]:
+    if game_state not in [GameStates.c_sheet]:
+        if combat_phase  == CombatPhase.pause:
+            game_state, combat_phase, menu_dict, clear = phase_pause(command, game_state, combat_phase, entities)
+        
         if combat_phase == CombatPhase.explore:
             if len(command) != 0:
                 if command.get('strafe'): 
@@ -77,14 +81,13 @@ def combat_controller(game_map, active_entity, entities, players, command, logs,
 
         if game_state == GameStates.default:
             menu_dict = dict()
-    elif game_state == GameStates.pause:
-        pass
+
         
 
     if command.get('csheet'):
         game_state = GameStates.c_sheet
 
-    return menu_dict, combat_phase, game_state, active_entity, order
+    return menu_dict, combat_phase, game_state, active_entity, order, clear
         
 
 

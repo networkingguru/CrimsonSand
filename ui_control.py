@@ -292,7 +292,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
         if game_state != GameStates.menu: command = blt_handle_global_input(game_state)
         else:
-            if len(active_entity.fighter.targets) == 0:
+            if len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
             else:
                 if 'options' in menu_dict:
@@ -304,18 +304,22 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                         if key is not None:
                             dirty = True
                             if not hide_options:
-                                for frame in frame_list:
-                                    for control in frame.controls:
-                                        if isinstance(control, bltGui.bltListbox):
-                                            if control.selected_index is not None:
-                                                item = control.return_item()
-                                                command = {item:item}
+                                if key == 41:
+                                    command = {'esc':'esc'}
+                                else:
+                                    for frame in frame_list:
+                                        for control in frame.controls:
+                                            if isinstance(control, bltGui.bltListbox):
+                                                if control.selected_index is not None:
+                                                    item = control.return_item()
+                                                    command = {item:item}
                             elif key < 128:
                                 char = chr(key+93) #Needed because BLT returns a hex value for the scan code that is offset -93
                                 if key in menu_dict.get('options'):
                                     command = blt_handle_keys(game_state, menu_dict, key)
                                 elif char in menu_dict.get('options'):
                                     command = blt_handle_keys(game_state, menu_dict, char)
+                                
                             
 
 

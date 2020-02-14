@@ -8,7 +8,7 @@ class GameStates(Enum):
     main_menu = auto()
     c_creation = auto()
     company_mgmt = auto
-    pause = auto()
+    quit = auto()
 
 class EntityState(Enum):
     conscious = auto()
@@ -56,3 +56,4 @@ class CombatPhase(Enum):
     grapple = auto()
     grapple_defense = auto()
     grapple_confirm = auto()
+    pause =  auto()

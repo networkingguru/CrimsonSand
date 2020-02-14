@@ -95,6 +95,8 @@ if __name__ == "__main__":
     #Begin main loop
     while not leave:
         if global_vars.debug_time: t0 = time.time()
+        if game_state == GameStates.quit: 
+            leave = True
 
         if dirty: render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, game_state)
         old_menu = menu_dict
@@ -108,19 +110,22 @@ if __name__ == "__main__":
 
         command, dirty = handle_input(curr_actor, game_state, menu_dict, entities, combat_phase, game_map, order, frame_list)
         
-        menu_dict, combat_phase, game_state, curr_actor, order = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
+        menu_dict, combat_phase, game_state, curr_actor, order, clear = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
         if old_menu != menu_dict: 
             dirty = True
             frame_list.clear()
+
+        if clear: command = dict()
             
         if len(command) != 0:
             dirty = True
-            if command.get('exit'): 
-                if game_state in [GameStates.c_sheet, GameStates.pause]:
+            if command.get('esc'): 
+                if game_state in [GameStates.c_sheet] or combat_phase == CombatPhase.pause:
                     game_state = GameStates.default
-                elif menu_dict == {}:
-                    game_state = GameStates.pause
+                else:
+                    combat_phase = CombatPhase.pause
+
             
             fill_status_panel(players[0], status_log)
             command = {}
