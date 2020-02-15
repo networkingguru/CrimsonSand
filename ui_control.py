@@ -72,10 +72,34 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict)
     elif game_state == GameStates.c_sheet:
         render_csheet(players)
-
-    
+    elif game_state == GameStates.main_menu:
+        render_main_menu(frame_list, menu_dict)
 
     terminal.refresh()
+
+def render_main_menu(frame_list, menu_dict) -> None:
+    
+     
+
+    menu_type = menu_dict.get('type')
+    menu_header = menu_dict.get('header')
+    menu_options = menu_dict.get('options')
+    hide_options = menu_dict.get('mode')
+    desc = menu_dict.get('desc')
+    x_offset = 70
+    y_offset = 35
+
+    if menu_type == MenuTypes.combat:
+        options = menu_options
+        header = menu_header                 
+
+        if len(frame_list) == 0:
+            bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list, hide_options)
+            initialize()
+
+    if len(frame_list) != 0:
+        render_frames(frame_list)
+
 
 def render_csheet(players) -> None:
     player = players[0]
@@ -290,9 +314,9 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
     if active_entity.player:
         #Below complexity is due to modal nature. if targets exist, block for input. 
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
-        if game_state != GameStates.menu: command = blt_handle_global_input(game_state)
+        if game_state not in [GameStates.menu, GameStates.main_menu]: command = blt_handle_global_input(game_state)
         else:
-            if len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
+            if game_state != GameStates.main_menu and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
             else:
                 if 'options' in menu_dict:
@@ -324,9 +348,6 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                     command = blt_handle_keys(game_state, menu_dict, key)
                                 elif char in menu_dict.get('options'):
                                     command = blt_handle_keys(game_state, menu_dict, char)
-                                
-                            
-
 
     elif not active_entity.player:
         command = active_entity.fighter.ai.ai_command(active_entity, entities, combat_phase, game_map, order)
@@ -334,10 +355,6 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
 
         if global_vars.debug: print(active_entity.name + ' actions: ', *active_entity.fighter.action, sep=', ')
         if global_vars.debug and isinstance(command, str): print(active_entity.name + ' command: ' + command)
-
-    
-        
-
 
     return command, dirty
 

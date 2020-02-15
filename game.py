@@ -6,7 +6,7 @@ import global_vars
 from combat_control import combat_controller
 from combat_functions import change_actor
 from ui_control import create_terminal, handle_input, render, fill_status_panel, BLTWindow
-from enums import GameStates, CombatPhase, EntityState
+from enums import GameStates, CombatPhase, EntityState, MenuTypes
 from entity import create_entity_list, fill_player_list, add_fighters, add_weapons
 from components.armor import apply_armor
 from game_map import array_gen, fill_map
@@ -25,7 +25,8 @@ if __name__ == "__main__":
     dim_list = [(options.map_width, options.map_height), (options.status_panel_w, options.status_panel_h), 
                 (options.enemy_panel_w, options.enemy_panel_h), (options.message_panel_w, options.message_panel_h)]
 
-    menu_dict = dict()
+    menu_desc = {'New Game':'Start a new game', 'Load Game': 'Load the game from disk','Quit Game':'Exit the game'}
+    menu_dict = {'type': MenuTypes.combat, 'header': 'Main Menu', 'options': ['New Game', 'Load Game','Quit Game'], 'mode': False, 'desc': menu_desc}
 
     term = create_terminal(options.screen_width, options.screen_height)
 
@@ -39,6 +40,7 @@ if __name__ == "__main__":
 
     leave = False
     dirty = True
+    clear = False
 
     #Message Log init
     message_log = MessageLog(1, options.message_panel_w-1, options.message_panel_h-2)
@@ -76,7 +78,7 @@ if __name__ == "__main__":
 
 
     #Map/state init
-    game_state = GameStates.default
+    game_state = GameStates.main_menu
     combat_phase = CombatPhase.explore
     command = []
     event = []
@@ -111,7 +113,8 @@ if __name__ == "__main__":
 
         command, dirty = handle_input(curr_actor, game_state, menu_dict, entities, combat_phase, game_map, order, frame_list)
         
-        menu_dict, combat_phase, game_state, curr_actor, order, clear = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
+        if game_state not in [GameStates.main_menu]:
+            menu_dict, combat_phase, game_state, curr_actor, order, clear = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
 
         if old_menu != menu_dict: 
             dirty = True
