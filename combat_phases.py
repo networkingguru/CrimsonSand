@@ -2,7 +2,7 @@ import global_vars
 import options
 from enums import CombatPhase, MenuTypes, EntityState, GameStates, FighterStance
 from game_messages import Message
-from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un, find_defense_probability, itersubclasses
+from utilities import inch_conv, roll_dice, prune_list, entity_angle, save_roll_con, save_roll_un, find_defense_probability, itersubclasses, save_game
 from game_map import cells_to_keys, get_adjacent_cells, command_to_offset
 from components.fighter import stance_constants
 from combat_functions import (aoc_check, turn_order, strafe_control, move_actor, init_combat, attack_filter, determine_valid_angles, determine_valid_locs, angle_id, 
@@ -20,13 +20,16 @@ def phase_pause(command, game_state, combat_phase, entities) -> (int, int, dict,
             combat_phase = detect_enemies(entities)
             clear = True
         elif command.get('Save Game'):
-            pass
+            game_state = GameStates.default
+            combat_phase = detect_enemies(entities)
         elif  command.get('Quit Game'):
             game_state = GameStates.quit
+        elif  command.get('Load Game'):
+            game_state = GameStates.load
 
     else:
-        menu_desc = {'Save Game':'Save the game to disk', 'Quit Game':'Exit without saving'}
-        menu_dict = {'type': MenuTypes.combat, 'header': 'Pause Menu', 'options': ['Save Game', 'Quit Game'], 'mode': False, 'desc': menu_desc}   
+        menu_desc = {'Save Game':'Save the game to disk', 'Load Game': 'Load the game from disk','Quit Game':'Exit without saving'}
+        menu_dict = {'type': MenuTypes.combat, 'header': 'Pause Menu', 'options': ['Save Game', 'Load Game','Quit Game'], 'mode': False, 'desc': menu_desc}   
         game_state = GameStates.menu
 
     return game_state, combat_phase, menu_dict, clear 

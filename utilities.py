@@ -1,6 +1,8 @@
 import math
 from random import randint
 import global_vars
+import dill
+from game_messages import Message
 
 def roll_dice(dice, facing, explode = False) -> int:
     roll = 0
@@ -218,3 +220,23 @@ def itersubclasses(cls, _seen=None):
             yield sub
             for sub in itersubclasses(sub, _seen):
                 yield sub
+
+def save_game() -> list:
+    messages = []
+    try:
+        dill.dump_session(filename='game.pkl')
+        messages.append(Message('Game saved'))
+    except:
+        messages.append(Message('There was an error saving the game. '))
+
+    return messages
+
+def load_game() -> list:
+    messages = []
+    try:
+        dill.load_session (filename='game.pkl')
+        messages.append(Message('Game loaded'))
+    except:
+        messages.append(Message('There was an error loading the game. '))
+
+    return messages

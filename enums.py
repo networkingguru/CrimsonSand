@@ -9,6 +9,7 @@ class GameStates(Enum):
     c_creation = auto()
     company_mgmt = auto
     quit = auto()
+    load = auto()
 
 class EntityState(Enum):
     conscious = auto()

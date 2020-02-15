@@ -12,6 +12,7 @@ from components.armor import apply_armor
 from game_map import array_gen, fill_map
 from fov_aoc import modify_fov, change_face
 from game_messages import MessageLog, Message
+from utilities import save_game, load_game
 
 
  
@@ -125,6 +126,14 @@ if __name__ == "__main__":
                     game_state = GameStates.default
                 else:
                     combat_phase = CombatPhase.pause
+            if command.get('Save Game'):
+                messages = save_game()
+                for msg in messages:
+                    logs[2].add_message(msg)
+            if command.get('Load Game'):
+                messages = load_game()
+                for msg in messages:
+                    logs[2].add_message(msg)
 
             
             fill_status_panel(players[0], status_log)
