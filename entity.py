@@ -4,15 +4,16 @@ from statistics import mean
 from copy import deepcopy, copy
 from components.fighter import Fighter, Attribute, Skill
 from components import weapon
+from components.circumstances import circumstances
 from utilities import clamp, inch_conv, itersubclasses
 
 
-
+circum_list = list(circumstances)
 weapon_master_list = list(itersubclasses(weapon.Weapon))
 
 class Entity:
 
-    def __init__(self, x, y, char, color, name, state, player = False, blocks = False, fighter = None, weapons = None):
+    def __init__(self, x, y, char, color, name, state, player = False, blocks = False, fighter = None, weapons = None, circumstance = circum_list[0]):
         self.x = x
         self.y = y
         self.char = char
@@ -23,6 +24,7 @@ class Entity:
         self.fighter = fighter
         self.state = state
         self.guard = None
+        self.circumstance = circumstance
         self.worn_armor = {} #Dict of dicts in the following format: 1:{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.05}
         self.loc_armor = [] #List of lists, populated by apply_armor, in order from inner to outer
         while len(self.loc_armor)<29:
