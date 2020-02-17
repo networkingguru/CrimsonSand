@@ -60,6 +60,8 @@ class Fighter:
         self.attr_dict = dict()
         self.parent_attr_dict = dict()
         self.age = age
+        self.ethnicity = None
+        self.social_standing_roll = 0
         
         #Skills
         self.skill_dict = dict()
