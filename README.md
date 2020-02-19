@@ -8,6 +8,8 @@ Bearlibterminal 0.15.7 +</br>
 numpy 1.16.2 +</br>
 libtcod 9.2.5 +</br>
 
+dill 0.3.1.1+</br>
+
 
 
 Current Features:
@@ -58,7 +60,7 @@ Current Features:
 
 - Reach modeled using weapon length, limb length, relative angle, character flexibility, and pivot point. For example, based on the angle of you and your opponent, you may be able to punch his left shoulder but not his right. Or you may be able to stomp his foot but not his hand. 
 
-  ​
+  
 
 
 

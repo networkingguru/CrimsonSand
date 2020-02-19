@@ -127,7 +127,7 @@ allowed_ethnicities = ['Corrillian','Stygian','Barbarian']
 
 woodsman = Upbringing(name='Woodsman',desc=desc,max_social_standing=45,attr_mods=attr_mods,allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'pwr':30,'will':10,'stam':-20,'immune':-10}
+attr_mods = {'pwr':30,'will':10,'sta':-20,'immune':-10}
 desc = 'You spent your childhood mining. The constant breaking of rock has made you immensely strong, but the inhalation of dust has scarred your lungs.'
 allowed_ethnicities = ['Corrillian','Stygian']
 
@@ -238,7 +238,7 @@ sohei = Upbringing(name='Training',desc=desc,min_social_standing=36,max_social_s
 
 desc = 'Your childhood was spent training intensely to become a Samurai. '
 allowed_ethnicities = ['Eastern']
-allowed_prof = ['Samurai']
+allowed_prof = ['Daisho Samurai', 'No-Dachi Samurai', 'Yari Samurai']
 
 samurai = Upbringing(name='Training',desc=desc,min_social_standing=46,max_social_standing=55,
                     allowed_ethnicities=allowed_ethnicities,allowed_prof=allowed_prof)
@@ -250,9 +250,16 @@ allowed_prof = ['Ninja','Geisha']
 ninja = Upbringing(name='Training',desc=desc,min_social_standing=56,max_social_standing=85,
                     allowed_ethnicities=allowed_ethnicities,allowed_prof=allowed_prof)
 
+desc = 'Your childhood was spent training intensely in secret to become a hidden assassin and operative for the Eastern empire. You never knew your parents, and other of your ethinicity are a mystery to you. '
+allowed_ethnicities = ['Corrillian','Stygian','Solomanian']
+allowed_prof = ['Ninja']
+
+f_ninja = Upbringing(name='Kidnapped and trained',desc=desc,
+                    allowed_ethnicities=allowed_ethnicities,allowed_prof=allowed_prof)
+
 desc = 'As a member of the ruling caste outside of the succession, you spent your childhood in brutal training, as you have your pick of professions. You are representative of the pinnacle of Eastern Empire training. '
 allowed_ethnicities = ['Eastern']
-allowed_prof = ['Ninja','Geisha','Fighter','Samurai','Monk','Sohei']
+allowed_prof = ['Ninja','Geisha','Fighter','Daisho Samurai', 'No-Dachi Samurai', 'Yari Samurai','Monk','Sohei']
 attr_mods = {'wis':10,'men':10,'man':10,'swift':20,'ped':10,'flex':10,'sta':20,'will':20}
 
 ruling = Upbringing(name='Ruling Caste Training',desc=desc,min_social_standing=86,attr_mods=attr_mods,
@@ -273,14 +280,14 @@ allowed_ethnicities = ['Solomanian']
 s_fisherman = Upbringing(name='Fisherman',desc=desc,max_social_standing=20,attr_mods=attr_mods,
                     allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'pwr':30,'will':10,'stam':-20,'immune':-10}
+attr_mods = {'pwr':30,'will':10,'sta':-20,'immune':-10}
 desc = 'You spent your childhood mining. The constant breaking of rock has made you immensely strong, but the inhalation of dust has scarred your lungs.'
 allowed_ethnicities = ['Solomanian']
 
 s_miner = Upbringing(name='Miner',desc=desc,max_social_standing=20,attr_mods=attr_mods,allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'man':10,'bal':10,'swift':10}
-free_skills = ['Deflect','Dodge','Brawling','Long Sword','Dagger','Mace','Spear']
+attr_mods = {'man':10,'bal':10,'sta':10}
+free_skills = ['Long Sword','Dagger','Mace','Spear']
 desc = 'Your childhood was spent training to become a member of the Solomanian Infantry. You are skilled with basic weaponry and tactics.'
 allowed_ethnicities = ['Solomanian']
 allowed_prof = ['Fighter']
@@ -288,4 +295,36 @@ allowed_prof = ['Fighter']
 s_fighter = Upbringing(name='Training',desc=desc,min_social_standing=21, max_social_standing=55,attr_mods=attr_mods,free_skills=free_skills,
                     allowed_prof=allowed_prof,allowed_ethnicities=allowed_ethnicities)
 
+attr_mods = {'wis':10,'men':10,'ped':10,'bal':20,'ss':10,'pwr':10}
+desc = 'Your childhood was spent training to become a member of the Solomanian Navy. You can handle the choppiest seas.'
+allowed_ethnicities = ['Solomanian']
+allowed_prof = ['Mariner']
+
+s_mariner = Upbringing(name='Training',desc=desc,min_social_standing=56, max_social_standing=75,attr_mods=attr_mods,
+                    allowed_prof=allowed_prof,allowed_ethnicities=allowed_ethnicities)
+
+attr_mods = {'man':10,'ped':10,'ss':20,'pwr':20,'sta':10}
+free_skills = ['Mace','Spear','Short Sword']
+desc = 'Your childhood was spent training to become a Solomanian Death Knight. Your prerquisite attributes have all been enchanced, and you have been trained in a variety of secondary weapons.'
+allowed_ethnicities = ['Solomanian']
+allowed_prof = ['Death Knight']
+
+s_knight = Upbringing(name='Training',desc=desc,min_social_standing=76, max_social_standing=95,attr_mods=attr_mods,free_skills=free_skills,
+                    allowed_prof=allowed_prof,allowed_ethnicities=allowed_ethnicities)
+
+attr_mods = {'man':10,'ped':10,'ss':20,'pwr':20,'sta':10,'wis':10,'men':10,'bal':10}
+desc = 'As a member of the Solomanian aristocracy, your childhood was spent training to be an advanced spcimen of your culture, capable of excelling at any role. You have no specific skills, but you are highly trained in body and mind.'
+allowed_ethnicities = ['Solomanian']
+allowed_prof = ['Death Knight','Fighter','Mariner']
+
+s_noble = Upbringing(name='Advanced Training',desc=desc,min_social_standing=96, attr_mods=attr_mods,
+                    allowed_prof=allowed_prof,allowed_ethnicities=allowed_ethnicities)
+
+attr_mods = {'man':20,'will':10,'wis':10,'men':10,'bal':10}
+desc = 'Your childhood was spent with your tribe on the steppes, learning to ride, shoot, hunt and raid. You have no specific skills, but are crafty and very good with your hands.'
+allowed_ethnicities = ['Nomad']
+allowed_prof = ['Desert Ranger']
+
+nomad = Upbringing(name='Nomad',desc=desc, attr_mods=attr_mods,
+                    allowed_prof=allowed_prof,allowed_ethnicities=allowed_ethnicities)
 

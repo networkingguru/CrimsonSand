@@ -62,6 +62,7 @@ class Fighter:
         self.age = age
         self.ethnicity = None
         self.social_standing_roll = 0
+        self.upbringing = None
         
         #Skills
         self.skill_dict = dict()
@@ -93,6 +94,7 @@ class Fighter:
         self.clar_recovery = 0
         self.stability_mods = 0
         self.stability = self.stability_mods
+        self.lm = 0 #Learning modifier
         
         #Reach
         self.reach = None #Main hand reach. All reach vars set by entity.set_reach
@@ -418,6 +420,7 @@ class Fighter:
         self.clar_recovery = self.get_attribute('will')/4
         self.stability_mods = self.stance_stability + self.atk_instability + self.paralysis_instability + (100 - self.clarity)
         self.stability = self.stability_mods
+        self.lm = ((self.get_attribute('comp') * 0.25) + (self.get_attribute('men') * 0.5) + (self.get_attribute('log') * 0.15) + (self.get_attribute('wis') * 0.05) + (self.get_attribute('mem') * 0.05)) / 100
 
         #Base stamina cost for actions; clamped so all actions require a medium amount of stamina
         self.base_stam_cost = clamp(int(round(((self.get_attribute('fat')/self.get_attribute('str'))*(self.weight/100)*10))),self.max_stamr/5) 
