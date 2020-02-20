@@ -1,9 +1,9 @@
 import weakref
-from components.circumstances import circumstances
+from components.circumstances import Circumstance
 
 all_circumstances = []
 
-for obj in circumstances:
+for obj in Circumstance.getinstances():
     all_circumstances.append(obj.name)
 
 
@@ -77,7 +77,7 @@ allowed_ethnicities = ['Corrillian','Stygian','Kebrini']
 thief = Upbringing(name='Thief',desc=desc,max_social_standing=45,attr_mods=attr_mods,free_skills=free_skills,
                     skill_mods=skill_mods,allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'comp':-10,'comm':-10,'wis':-10,'log':-20,'pow':30,'bone':20}
+attr_mods = {'comp':-10,'comm':-10,'wis':-10,'log':-20,'pwr':30,'bone':20}
 free_skills = ['Dodge','Brawling','Mace']
 skill_mods = {'brawling':20}
 desc = 'You have always been bigger than normal, so you gravitated towards pushing people around. You are strong and good with your fists, but your understanding of other aspects of life is a bit lacking.'
@@ -92,7 +92,7 @@ allowed_ethnicities = ['Corrillian','Stygian','Kebrini']
 
 conman = Upbringing(name='Con Artist',desc=desc,max_social_standing=55,attr_mods=attr_mods,allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'pow':10,'bone':10,'man':10,'sta':10,'fat':10,'swift':-10,'hear':-20}
+attr_mods = {'pwr':10,'bone':10,'man':10,'sta':10,'fat':10,'swift':-10,'hear':-20}
 free_skills = ['Small Hammer']
 desc = 'You grew up apprenticing to be a blacksmith. You are good with a hammer, and have no aversion to hard work. But all that noise has not been kind to your hearing.'
 allowed_ethnicities = ['Corrillian','Stygian','Kebrini']
@@ -107,7 +107,7 @@ allowed_ethnicities = ['Corrillian','Stygian']
 fisherman = Upbringing(name='Fisherman',desc=desc,max_social_standing=45,attr_mods=attr_mods,
                     allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'comp':10,'comm':10,'wis':-10,'log':10,'mem':10,'immune':-10,'shock':-10,'tox':-10,'will':-20,'sta':-20,'man':10,'ped':10,'flex':10,'bal':10,'ss':-20,'pwr':-10}
+attr_mods = {'comp':10,'comm':10,'wis':-10,'log':10,'mem':10,'immune':-10,'shock':-10,'toxic':-10,'will':-20,'sta':-20,'man':10,'ped':10,'flex':10,'bal':10,'ss':-20,'pwr':-10}
 free_skills = ['Dodge','Deflect','Wrestling','Boxing','Long Sword']
 desc = 'As a child, your every desire was provided for due to your high social standing and doting parents. You got the best of educations, and are very well rounded, but are a stranger to adversity.'
 allowed_ethnicities = ['Corrillian','Stygian','Kebrini']
@@ -133,7 +133,7 @@ allowed_ethnicities = ['Corrillian','Stygian']
 
 miner = Upbringing(name='Miner',desc=desc,max_social_standing=50,attr_mods=attr_mods,allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'log':-10,'men':-10,'cre':-10,'mem':-10,'comp':-10,'swift':10,'pow':10}
+attr_mods = {'log':-10,'men':-10,'cre':-10,'mem':-10,'comp':-10,'swift':10,'pwr':10}
 free_skills = ['Dodge','Brawling','Mace']
 skill_mods = {'dodge':10,'brawling':10}
 desc = 'As the child of a warrior, you spent your childhood learning the ways of tribal battle. You are swift, strong, and know how to fight, but unused to intense thought.'
@@ -142,7 +142,7 @@ allowed_ethnicities = ['Barbarian']
 warrior = Upbringing(name='Warrior\'s Child',desc=desc,max_social_standing=70,attr_mods=attr_mods,free_skills=free_skills,
                     skill_mods=skill_mods,allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'mem':-10,'comp':-10,'will':-10,'swift':10,'pow':10}
+attr_mods = {'mem':-10,'comp':-10,'will':-10,'swift':10,'pwr':10}
 free_skills = ['Deflect','Brawling','Long Sword']
 desc = 'As the child of a tribal elder, you spent your childhood learning how to lead men in battle. You are swift, strong, and know how to fight, but impatient and somwhat uneducated.'
 allowed_ethnicities = ['Barbarian']
@@ -150,7 +150,7 @@ allowed_ethnicities = ['Barbarian']
 elder = Upbringing(name='Elder\'s Child',desc=desc,min_social_standing=71,max_social_standing=95,attr_mods=attr_mods,free_skills=free_skills,
                     allowed_ethnicities=allowed_ethnicities)
 
-attr_mods = {'will':-20,'swift':10,'pow':10}
+attr_mods = {'will':-20,'swift':10,'pwr':10}
 free_skills = ['Dodge','Deflect','Brawling','Great Sword']
 desc = 'As the child of a chieftan, you have been groomed to lead the tribe. You are better educated than other barbarians, and familiar with heavy weapons, but have had your spirit broken by your father.'
 allowed_ethnicities = ['Barbarian']
@@ -181,7 +181,7 @@ allowed_prof = []
 e_thief = Upbringing(name='Thief',desc=desc,max_social_standing=15,attr_mods=attr_mods,free_skills=free_skills,
                     skill_mods=skill_mods,allowed_ethnicities=allowed_ethnicities,allowed_prof=allowed_prof)
 
-attr_mods = {'comp':-10,'comm':-10,'wis':-10,'log':-20,'pow':30,'bone':20}
+attr_mods = {'comp':-10,'comm':-10,'wis':-10,'log':-20,'pwr':30,'bone':20}
 free_skills = ['Dodge','Brawling','Mace']
 skill_mods = {'brawling':20}
 desc = 'You have always been bigger than normal, so you gravitated towards pushing people around. You are strong and good with your fists, but your understanding of other aspects of life is a bit lacking.'
@@ -198,7 +198,7 @@ allowed_prof = []
 
 e_conman = Upbringing(name='Con Artist',desc=desc,max_social_standing=5,attr_mods=attr_mods,allowed_ethnicities=allowed_ethnicities,allowed_prof=allowed_prof)
 
-attr_mods = {'pow':10,'bone':10,'man':10,'sta':10,'fat':10,'swift':-10,'hear':-20}
+attr_mods = {'pwr':10,'bone':10,'man':10,'sta':10,'fat':10,'swift':-10,'hear':-20}
 free_skills = ['Small Hammer']
 desc = 'You grew up apprenticing to be a blacksmith. You are good with a hammer, and have no aversion to hard work. But all that noise has not been kind to your hearing.'
 allowed_ethnicities = ['Eastern']
@@ -265,7 +265,7 @@ attr_mods = {'wis':10,'men':10,'man':10,'swift':20,'ped':10,'flex':10,'sta':20,'
 ruling = Upbringing(name='Ruling Caste Training',desc=desc,min_social_standing=86,attr_mods=attr_mods,
                     allowed_ethnicities=allowed_ethnicities,allowed_prof=allowed_prof)
 
-attr_mods = {'pow':10,'bone':10,'man':10,'sta':10,'fat':10,'swift':-10,'hear':-20}
+attr_mods = {'pwr':10,'bone':10,'man':10,'sta':10,'fat':10,'swift':-10,'hear':-20}
 free_skills = ['Small Hammer']
 desc = 'You grew up apprenticing to be a blacksmith. You are good with a hammer, and have no aversion to hard work. But all that noise has not been kind to your hearing.'
 allowed_ethnicities = ['Solomanian']

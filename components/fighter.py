@@ -4,6 +4,14 @@ from utilities import inch_conv, clamp
 from enums import FighterStance
 from chargen_functions import height_curve
 
+
+
+attr_name_dict = {'int':'Intellect','log':'Logic','mem':'Memory','wis':'Wisdom','comp':'Comprehension','comm':'Communication','cre':'Creativity','men':'Mental Celerity','will':'Willpower',
+                    'str':'Strength','ss':'Steady State','pwr':'Power','agi':'Agility','man':'Manual Dexterity','ped':'Pedal Dexterity','bal':'Balance','swift':'Swiftness',
+                    'flex':'Flexibility','con':'Constitution','sta':'Stamina','derm':'Dermatology','bone':'Bone Structure','immune':'Immune System','shock':'Shock Resistance',
+                    'toxic':'Toxic Resistance','sens':'Senses','sit':'Sight','hear':'Hearing','ts':'Taste/Smell','touch':'Touch','appear':'Appearance','fac':'Facial Features',
+                    'ht':'Height','fat':'Body Fat','shap':'Shapeliness'}
+
 class Fighter:
     def __init__(self, facing, ai = None, l_blocker = None, r_blocker = None, age = 18):
         #Transitory combat variables
