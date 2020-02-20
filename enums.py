@@ -18,6 +18,7 @@ class GameStates(Enum):
     profession = auto()
     shop = auto()
     equip = auto()
+    hire = auto()
 
 class EntityState(Enum):
     conscious = auto()

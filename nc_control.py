@@ -1,5 +1,5 @@
 from enums import GameStates
-from nc_functions import choose_circumstance
+from nc_functions import choose_circumstance, choose_sex
 
 def nc_controller(curr_actor, entities, game_state, command) -> (dict, int, bool):
     clear = False
@@ -7,7 +7,7 @@ def nc_controller(curr_actor, entities, game_state, command) -> (dict, int, bool
     if game_state == GameStates.circumstance:
         menu_dict, game_state, clear = choose_circumstance(curr_actor, game_state, command)
     elif game_state == GameStates.sex:
-        pass
+        menu_dict, game_state, clear = choose_sex(curr_actor, game_state, command)
     elif game_state == GameStates.ethnicity:
         pass
     elif game_state == GameStates.social:
