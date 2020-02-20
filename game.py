@@ -13,6 +13,7 @@ from game_map import array_gen, fill_map
 from fov_aoc import modify_fov, change_face
 from game_messages import MessageLog, Message
 from utilities import save_game, load_game
+from nc_control import nc_controller
 
 
  
@@ -103,18 +104,21 @@ if __name__ == "__main__":
 
         if dirty: render(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict, game_state)
         old_menu = menu_dict
-        combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
-        if curr_actor != new_curr_actor:
-            if global_vars.debug: print(curr_actor.name + ' ' + new_curr_actor.name)
-            curr_actor = new_curr_actor
+        if game_state == GameStates.default:
+            combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
+            if curr_actor != new_curr_actor:
+                if global_vars.debug: print(curr_actor.name + ' ' + new_curr_actor.name)
+                curr_actor = new_curr_actor
 
         elif curr_actor.state == EntityState.dead:
             combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
 
         command, dirty = handle_input(curr_actor, game_state, menu_dict, entities, combat_phase, game_map, order, frame_list)
         
-        if game_state not in [GameStates.main_menu]:
+        if game_state in [GameStates.menu, GameStates.default, GameStates.inventory, GameStates.c_sheet, GameStates.quit, GameStates.load]:
             menu_dict, combat_phase, game_state, curr_actor, order, clear = combat_controller(game_map, curr_actor, entities, players, command, logs, combat_phase, game_state, order)
+        elif game_state != GameStates.main_menu:
+            menu_dict, game_state, clear = nc_controller(curr_actor,entities,game_state,command)
 
         if old_menu != menu_dict: 
             dirty = True
@@ -129,6 +133,10 @@ if __name__ == "__main__":
                     game_state = GameStates.default
                 else:
                     combat_phase = CombatPhase.pause
+            if command.get('New Game'):
+                entities = create_entity_list([options.new_player])
+                curr_actor = entities[0]
+                game_state = GameStates.circumstance
             if command.get('Save Game'):
                 messages = save_game()
                 for msg in messages:

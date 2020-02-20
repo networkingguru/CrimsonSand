@@ -26,7 +26,7 @@ class Circumstance():
             desc_add += 'You will receive free training and equipment, but no income. '
         elif self.c_creation:
             desc_add += 'You will receive '+str(self.fight_income_scalar*100)+'%% of the purse for each fight you personally win. You will be responsible for purchasing your own equipment, training, and medical care. '
-        if not self.mgmt:
+        if not self.c_creation:
             desc_add += 'Character creation will be disabled for this run. '
         if not self.mgmt:
             desc_add += 'Management mode will be disabled for this run. '
@@ -57,4 +57,4 @@ slave = Circumstance(name='Slave', desc=slave_desc, slave=True, fight_income_sca
 cont_glad_desc = 'You are a contracted gladiator to a gladiator company. '
 cont_glad = Circumstance(name='Contracted Gladiator', desc=cont_glad_desc, score_mult=4)
 
-circumstances = Circumstance.getinstances()
+

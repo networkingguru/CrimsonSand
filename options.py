@@ -81,6 +81,9 @@ player = (60, 50, '@', 'white', 'Player', enums.EntityState.conscious, True, Tru
 enemy = (60, 60, '@', 'yellow', 'Enemy', enums.EntityState.conscious, False, True)
 entities = [player, enemy]
 
+#New player template
+new_player = (60, 50, '@', 'white', 'New Player', enums.EntityState.conscious, True, True)
+
 #Key Dicts in order of key, command_verb
 default_keys = {'q':{'move':'nw'}, 'w':{'move':'n'}, 'e':{'move':'ne'}, 'd':{'move':'e'}, 'c':{'move':'se'}, 
                 'x':{'move':'s'}, 'z':{'move':'sw'},'a':{'move':'w'}, 41: {'esc': 'esc'}, '.':{'spin':'cw'}, ',':{'spin':'ccw'},

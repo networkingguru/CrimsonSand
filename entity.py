@@ -4,11 +4,11 @@ from statistics import mean
 from copy import deepcopy, copy
 from components.fighter import Fighter, Attribute, Skill
 from components import weapon
-from components.circumstances import circumstances
+from components.circumstances import Circumstance
 from utilities import clamp, inch_conv, itersubclasses
 
 
-circum_list = list(circumstances)
+circum_list = list(Circumstance.getinstances())
 weapon_master_list = list(itersubclasses(weapon.Weapon))
 
 class Entity:

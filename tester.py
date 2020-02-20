@@ -10,6 +10,7 @@ from utilities import itersubclasses, clamp
 #from combat_functions import armor_control
 import options
 from components.professions import DeathKnight
+from components.circumstances import Circumstance, circumstances
 
 entity_list = options.entities
 entities = create_entity_list(entity_list)
@@ -25,8 +26,11 @@ p = DeathKnight(entities[0])
 
 p.calc_level(4)
 
-
+#for c in Circumstance.getinstances():
+    #print(c.name)
     
+for c in circumstances:
+    print(c.name)
 
 
 print('done')

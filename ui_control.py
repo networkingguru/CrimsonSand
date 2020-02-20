@@ -74,6 +74,8 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_csheet(players)
     elif game_state == GameStates.main_menu:
         render_main_menu(frame_list, menu_dict)
+    elif game_state in [GameStates.circumstance]:
+        render_page(frame_list,menu_dict)
 
     terminal.refresh()
 
@@ -95,6 +97,24 @@ def render_main_menu(frame_list, menu_dict) -> None:
 
         if len(frame_list) == 0:
             bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list, hide_options)
+            initialize()
+
+    if len(frame_list) != 0:
+        render_frames(frame_list)
+
+def render_page(frame_list, menu_dict) -> None:
+
+    header = menu_dict.get('header')
+    header_pos = int(90-(len(header)/2))
+
+    terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
+    menu_type = menu_dict.get('type')
+
+    if menu_type == MenuTypes.page:
+               
+
+        if len(frame_list) == 0:
+            bltgui_page(terminal,40,90,menu_dict,frame_list)
             initialize()
 
     if len(frame_list) != 0:
@@ -314,9 +334,9 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
     if active_entity.player:
         #Below complexity is due to modal nature. if targets exist, block for input. 
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
-        if game_state not in [GameStates.menu, GameStates.main_menu]: command = blt_handle_global_input(game_state)
+        if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance]: command = blt_handle_global_input(game_state)
         else:
-            if game_state != GameStates.main_menu and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
+            if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
             else:
                 if 'options' in menu_dict:
@@ -528,6 +548,29 @@ def print_entities(entities, ox, oy) -> None:
         elif (corpse.x, corpse.y) in players_explored:
             terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=darker amber][color=darker gray]'+corpse.char+'[/color][/bk_color]')
 
+def bltgui_page(terminal, w, h, menu_dict, frame_list):
+    items = menu_dict.get('options')   
+    desc = menu_dict.get('desc')
+    
+
+    list_frame = Frame(0,0,w,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+
+    list_box = bltGui.bltListbox(list_frame, 5, 5, items, False, True)
+    if desc is not None:
+        item_dict = make_item_dict(items, desc)
+        content_frame = bltGui.bltShowListFrame(41, 15,120,70, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+        content_frame.set_dict(item_dict)
+        list_box.register('changed', content_frame)
+    else:
+        content_frame = None
+    
+    if list_box is not None:    
+        list_frame.add_control(list_box)
+    
+    frame_list.append(list_frame)
+
+    if content_frame is not None:
+        frame_list.append(content_frame)
 
 def bltgui_menu(terminal, x_offset, y_offset, header, options, desc, frame_list, hide_options):
     items = []

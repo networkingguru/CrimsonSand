@@ -6,10 +6,18 @@ class GameStates(Enum):
     inventory = auto()
     c_sheet = auto()
     main_menu = auto()
-    c_creation = auto()
-    company_mgmt = auto
     quit = auto()
     load = auto()
+    circumstance = auto()
+    sex = auto()
+    ethnicity = auto()
+    social = auto()
+    attributes = auto()
+    upbringing = auto()
+    age = auto()
+    profession = auto()
+    shop = auto()
+    equip = auto()
 
 class EntityState(Enum):
     conscious = auto()
@@ -26,15 +34,16 @@ class FighterStance(Enum):
     sitting = auto()
 
 class WeaponTypes(Enum):
-    thrust_and_slash = auto
-    thrust = auto
-    slash = auto
-    flail = auto
+    thrust_and_slash = auto()
+    thrust = auto()
+    slash = auto()
+    flail = auto()
 
 class MenuTypes(Enum):
-    combat = auto
-    inventory = auto
-    options = auto
+    combat = auto()
+    inventory = auto()
+    options = auto()
+    page = auto()
 
 class CombatPhase(Enum):   
     explore = auto()
