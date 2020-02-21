@@ -560,6 +560,8 @@ def bltgui_page(terminal, w, h, menu_dict, frame_list):
         item_dict = make_item_dict(items, desc)
         content_frame = bltGui.bltShowListFrame(41, 15,120,70, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
         content_frame.set_dict(item_dict)
+        slider = bltGui.bltSlider(content_frame,55,0,10,0,min_val=1,max_val=4,visible=False,skin='SOLID',label='Page')
+        content_frame.add_control(slider)
         list_box.register('changed', content_frame)
     else:
         content_frame = None

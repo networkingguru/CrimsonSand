@@ -3,6 +3,8 @@ from collections import namedtuple
 from . import bltSkins
 from . import bltInput
 from .bltButton import bltButton
+from .bltSlider import bltSlider
+from math import ceil
 import textwrap
 import itertools
 
@@ -27,6 +29,7 @@ class bltFrame(Control):
         self.title = title
         self._wrapped_text = self.wrap_text(text)
         self._fulltext = text
+        self._text_pages = []
         self.font = font
         self.title_font = title_font
 
@@ -114,9 +117,10 @@ class bltFrame(Control):
     def wrap_text(self, text):
         if isinstance(text, LambdaType):
             text = text()
-        #text = textwrap.dedent(text).strip()
+        text = textwrap.dedent(text).strip()
         w = textwrap.TextWrapper(self.width - 2,break_long_words=False)
         t_list = [w.wrap(i) for i in text.split('\n') if i != '']
+
         t_list = list(itertools.chain.from_iterable(t_list))
 
 
@@ -312,7 +316,43 @@ class bltShowListFrame(bltFrame):
         for key in self.item_dict:
             if key == value:
                 self.text = self.item_dict.get(key)
+
+        if len(self.controls) > 0:
+            for c in self.controls:
+                if isinstance(c,bltSlider):
+                    if len(self._wrapped_text) < self.height - 2:
+                        c.visible = False
+                    else:
+                        c.visible = True
+                        c.max_val = ceil(len(self._wrapped_text)/self.height)
+                        c.value_per_cell =  c.max_val / c.width
+                        self.paginate()
+                        
         self.dirty = True
+
+    def paginate(self):
+        pages = []
+        n = 0
+        page = []
+        for l in self._wrapped_text:
+            if n < self.height - 2:
+                page.append(l)
+                n+=1
+            else:
+                pages.append(page)
+                page = []
+                n = 0
+
+        if len(page) > 0:
+            pages.append(page)
+
+        self._text_pages = pages
+
+    def change_page(self,page=0):
+       
+        self._wrapped_text = self._text_pages[page-1]
+
+
 
 
 

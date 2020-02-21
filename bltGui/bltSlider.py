@@ -12,7 +12,8 @@ class bltSlider(Control):
                  update_func=None,
                  direction='VERTICAL',
                  label=None,
-                 skin='DOUBLE'
+                 skin='DOUBLE',
+                 visible=True
                  ):
         Control.__init__(self, ['changed'])
         self.owner = owner
@@ -35,11 +36,12 @@ class bltSlider(Control):
             self.label = ""
         self.skin = bltSkins.GLYPH_SKINS[skin]
         self.dirty = True
+        self.visible = visible
         self.frame_element = False
 
 
     def draw(self):
-        if self.dirty:
+        if self.dirty and self.visible:
             #draw slider
             mouse = bltInput.mouse
             terminal.color('darker azure')
@@ -59,6 +61,7 @@ class bltSlider(Control):
             terminal.puts(self.x + x , self.y + y, self.skin['SLIDER_L'])
             terminal.puts(self.x+ 1 + x, self.y + y, self.skin['SLIDER_MID'] * (self.width-2))
             terminal.puts(self.x + x  +  self.width - 1, self.y + y, self.skin['SLIDER_R'])
+
 
 
 
@@ -119,6 +122,7 @@ class bltSlider(Control):
             #print "Slider: Val: {0}, Vpc: {1}".format(self.value, self.value_per_cell)
             self.dispatch('changed', self.value)
             self.dirty = True
+            self.owner.change_page(self.value)
         else:
             self.dragging = False
             self.click_x = None

@@ -10,7 +10,10 @@ from utilities import itersubclasses, clamp
 #from combat_functions import armor_control
 import options
 from components.professions import DeathKnight
-from components.circumstances import Circumstance, circumstances
+from components.circumstances import Circumstance
+import textwrap
+import itertools
+
 
 entity_list = options.entities
 entities = create_entity_list(entity_list)
@@ -22,15 +25,14 @@ add_weapons(entities, weapons)
 entities[0].worn_armor = options.player_armor
 apply_armor(entities[0])
 
-p = DeathKnight(entities[0])
+text = '\n'*5 + 'done'
+w = textwrap.TextWrapper(8,break_long_words=False,replace_whitespace=False,drop_whitespace=False)
+t_list = [w.wrap(text=text)]
+t_list = list(itertools.chain.from_iterable(t_list))
 
-p.calc_level(4)
 
-#for c in Circumstance.getinstances():
-    #print(c.name)
-    
-for c in circumstances:
-    print(c.name)
+
+
 
 
 print('done')

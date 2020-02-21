@@ -113,6 +113,7 @@ if __name__ == "__main__":
         elif curr_actor.state == EntityState.dead:
             combat_phase, game_state, order, new_curr_actor = change_actor(order, entities, curr_actor, combat_phase, game_state, logs)
 
+
         command, dirty = handle_input(curr_actor, game_state, menu_dict, entities, combat_phase, game_map, order, frame_list)
         
         if game_state in [GameStates.menu, GameStates.default, GameStates.inventory, GameStates.c_sheet, GameStates.quit, GameStates.load]:

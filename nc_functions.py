@@ -93,7 +93,7 @@ def choose_ethnicity(curr_actor, game_state, command) -> (dict, int, bool):
             culture_txt = 'Culture: ' + e.culture
             history_txt = 'History: ' + e.history
 
-            menu_desc[e.name] = phys_txt + '\n' + age_txt + '\n' + attr_txt + '\n' + culture_txt + '\n' + history_txt
+            menu_desc[e.name] = '_'*110 + '\n' + phys_txt + '\n' + '*'*110 + '\n' + age_txt + '\n' + '*'*110 + '\n' + attr_txt + '\n' + '*'*110 + '\n' + culture_txt + '\n' + '*'*110 + '\n' + history_txt
 
 
         menu_dict['desc'] = menu_desc
