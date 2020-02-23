@@ -99,6 +99,7 @@ if __name__ == "__main__":
     #Begin main loop
     while not leave:
         if global_vars.debug_time: t0 = time.time()
+        
         if game_state == GameStates.quit: 
             leave = True
 

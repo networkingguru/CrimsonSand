@@ -1,8 +1,11 @@
 from enums import GameStates, MenuTypes
 from components.circumstances import Circumstance
 from components.ethnicities import Ethnicity
-from utilities import inch_conv
+from components.professions import Profession
+from components.upbringing import get_valid_upbringings
+from utilities import inch_conv,roll_dice
 from components.fighter import attr_name_dict
+
 
 sex_attr_mods_m = {'Logic':5,'Wisdom':-5,'Comprehension':-5,'Communication':-5,'Mental Celerity':-5,'Willpower':5,'Steady State':30,'Power':30,'Manual Dexterity':-5,
                     'Pedal Dexterity':-10,'Balance':-5,'Swiftness':-10,'Flexibility':-10,'Stamina':5,'Dermatology':5,'Bone Structure':15,'Immune System':5, 'Shock Resistance':-10,
@@ -98,5 +101,71 @@ def choose_ethnicity(curr_actor, game_state, command) -> (dict, int, bool):
 
         menu_dict['desc'] = menu_desc
 
+
+    return menu_dict, game_state, clear
+
+def roll_social(curr_actor, game_state, command) -> (dict, int, bool):
+    roll = 0
+    standing = ''
+    professions = set()
+    u_profs = set()
+    clear = False
+    
+    roll_button = {'text':'Roll Dice','command':'roll'}
+    accept_button = {'text':'Accept Standing and Continue','command':'accept'}
+    buttons = [roll_button,accept_button]
+
+    if len(command) > 0:
+        if command.get('roll'):
+            roll = roll_dice(1,100)
+            if roll <= 10:
+                standing = 'Lower Lower Class'
+            elif roll <= 20:
+                standing = 'Middle Lower Class'
+            elif roll <= 30:
+                standing = 'Upper Lower Class'
+            elif roll <= 45:
+                standing = 'Lower Middle Class'    
+            elif roll <= 60:
+                standing = 'Middle Middle Class'  
+            elif roll <= 75:
+                standing = 'Upper Middle Class' 
+            elif roll <= 85:
+                standing = 'Lower Upper Class'     
+            elif roll <= 95:
+                standing = 'Middle Upper Class'
+            else:
+                standing = 'Upper Upper Class'  
+            for e in Ethnicity.getinstances():
+                if e.name == curr_actor.creation_choices.get('ethnicity'):
+                    professions = set(e.allowed_prof)
+
+            for u in get_valid_upbringings(curr_actor,roll):
+                u_profs.update(u.allowed_prof)
+
+            professions = professions.intersection(u_profs)
+
+            for p in Profession.__subclasses__():
+                prof = p(curr_actor)
+                if prof.name in professions:
+                    if prof.male_allowed == False and curr_actor.creation_choices.get('sex') == 'Male':
+                        professions.discard(prof.name)
+                    if prof.female_allowed == False and curr_actor.creation_choices.get('sex') == 'Female':
+                        professions.discard(prof.name)
+                
+            curr_actor.temp_store = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions,'buttons':buttons}}
+
+
+        elif command.get('accept') and curr_actor.temp_store.get('desc').get('roll') > 0:
+            curr_actor.creation_choices['social'] = curr_actor.temp_store.get('desc').get('roll')
+            menu_dict = {}
+            game_state = GameStates.attributes
+            curr_actor.temp_store = {}
+            clear = True
+
+    if len(curr_actor.temp_store) == 0:
+        menu_dict = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions,'buttons':buttons}}
+    else:
+        menu_dict = curr_actor.temp_store 
 
     return menu_dict, game_state, clear

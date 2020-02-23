@@ -130,8 +130,3 @@ solomanian = Ethnicity(name='Solomanian', culture=culture, history=history, phys
 
 
 
-
-
-
-
-ethnicities = Ethnicity.getinstances()

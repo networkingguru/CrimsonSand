@@ -38,6 +38,18 @@ class Upbringing():
                 dead.add(ref)
         cls._instances -= dead
 
+def get_valid_upbringings(entity,social):
+    valid = []
+
+
+    for u in Upbringing.getinstances():
+        if entity.creation_choices.get('ethnicity') in u.allowed_ethnicities and u.min_social_standing < social < u.max_social_standing and entity.creation_choices.get('circumstance') in u.allowed_circumstances:
+            valid.append(u)
+
+ 
+    return valid
+
+
 attr_mods = {'ss':20,'pwr':10,'sta':30,'log':-20,'wis':-10,'cre':-10,'men':-10,'will':30,'fat':-30}
 
 slave = Upbringing(name='Slave',desc='You have been a slave your entire life. Upon turning 16 your owner sold you to a gladiator company. ',

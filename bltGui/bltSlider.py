@@ -41,7 +41,7 @@ class bltSlider(Control):
 
 
     def draw(self):
-        if self.dirty and self.visible:
+        if self.visible:
             #draw slider
             mouse = bltInput.mouse
             terminal.color('darker azure')

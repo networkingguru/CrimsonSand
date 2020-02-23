@@ -45,6 +45,7 @@ class MenuTypes(Enum):
     inventory = auto()
     options = auto()
     page = auto()
+    roll = auto()
 
 class CombatPhase(Enum):   
     explore = auto()

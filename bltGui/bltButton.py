@@ -3,12 +3,14 @@ from bearlibterminal import terminal
 from .bltControl import bltControl as Control
 
 class bltButton(Control):
-    def __init__(self, owner, x, y,  text, function=None, length=None):
+    def __init__(self, owner, x, y,  text, function=None, length=None, command=None):
         Control.__init__(self, ['hover', 'pressed'])
         self.owner = owner
         self.text = text
         self.x = x
         self.y = y
+        self.command = command
+        self.clicked = False
 
         if length is None:
             self.length = len(text)
@@ -24,7 +26,7 @@ class bltButton(Control):
         self.back_alt = 'dark blue'
 
         if function is None:
-            self.function = self.do_nothing
+            self.function = self.do_nothing()
         else:
             self.function = function
         self.hover = False
@@ -33,41 +35,42 @@ class bltButton(Control):
         self.frame_element = False
 
     def draw(self):
-        if self.dirty:
-            mouse = Input.mouse
+        #if self.dirty:
+        mouse = Input.mouse
 
-            if self.owner:
-                layer = self.owner.layer
-                x = self.owner.pos.x
-                y = self.owner.pos.y
-            else:
-                layer = terminal.state(terminal.TK_LAYER)
-                x = 0
-                y = 0
-            terminal.layer(layer)
+        if self.owner:
+            layer = self.owner.layer
+            x = self.owner.pos.x
+            y = self.owner.pos.y
+        else:
+            layer = terminal.state(terminal.TK_LAYER)
+            x = 0
+            y = 0
+        terminal.layer(layer)
 
-            if self.hover:
-                if self.pressed:
-                    terminal.color('darkest grey')
-                    terminal.puts(x + self.x, y + self.y, "[U+2584]" * self.length)
-                    terminal.puts(x + self.x, y + self.y + 1, "[U+2588]" * self.length)
-                    terminal.puts(x + self.x, y + self.y + 2, "[U+2580]" * self.length)
-                    terminal.color('darker grey')
-                    terminal.puts(x + self.x, y + self.y + 1, str(self.text).center(self.length, " "))
-                    return self.function()
-                terminal.color(self.back)
+        if self.hover:
+            if self.pressed:
+                terminal.color('darkest grey')
                 terminal.puts(x + self.x, y + self.y, "[U+2584]" * self.length)
                 terminal.puts(x + self.x, y + self.y + 1, "[U+2588]" * self.length)
                 terminal.puts(x + self.x, y + self.y + 2, "[U+2580]" * self.length)
-                terminal.color(self.fore)
+                terminal.color('darker grey')
                 terminal.puts(x + self.x, y + self.y + 1, str(self.text).center(self.length, " "))
-            else:
-                terminal.color(self.back_alt)
-                terminal.puts(x + self.x, y + self.y, "[U+2584]" * self.length)
-                terminal.puts(x + self.x, y + self.y + 1, "[U+2588]" * self.length)
-                terminal.puts(x + self.x, y + self.y + 2, "[U+2580]" * self.length)
-                terminal.color(self.fore_alt)
-                terminal.puts(x + self.x, y + self.y + 1, str(self.text).center(self.length, " "))
+                self.clicked = True
+                #return self.function()
+            terminal.color(self.back)
+            terminal.puts(x + self.x, y + self.y, "[U+2584]" * self.length)
+            terminal.puts(x + self.x, y + self.y + 1, "[U+2588]" * self.length)
+            terminal.puts(x + self.x, y + self.y + 2, "[U+2580]" * self.length)
+            terminal.color(self.fore)
+            terminal.puts(x + self.x, y + self.y + 1, str(self.text).center(self.length, " "))
+        else:
+            terminal.color(self.back_alt)
+            terminal.puts(x + self.x, y + self.y, "[U+2584]" * self.length)
+            terminal.puts(x + self.x, y + self.y + 1, "[U+2588]" * self.length)
+            terminal.puts(x + self.x, y + self.y + 2, "[U+2580]" * self.length)
+            terminal.color(self.fore_alt)
+            terminal.puts(x + self.x, y + self.y + 1, str(self.text).center(self.length, " "))
             self.dirty = False
 
     def update(self):
@@ -84,7 +87,8 @@ class bltButton(Control):
         if mouse.hover_rect(self.x + x, self.y + y, self.length, 3):
             self.hover = True
             if mouse.lbutton_pressed:
-                    return self.function(self)
+                #return self.function(self)
+                self.clicked = True
             self.dirty = True
         else:
             if self.hover:

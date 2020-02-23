@@ -132,7 +132,7 @@ class bltFrame(Control):
     def update(self):
         for c in self.controls:
             c.update()
-        self._test_mouse()
+        #self._test_mouse()
         if self.resizing:
             self._resize()
 

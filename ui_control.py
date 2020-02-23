@@ -76,6 +76,8 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_main_menu(frame_list, menu_dict)
     elif len(menu_dict) > 0 and game_state in [GameStates.circumstance, GameStates.sex, GameStates.ethnicity]:
         render_page(frame_list,menu_dict)
+    elif len(menu_dict) > 0 and game_state in [GameStates.social]:
+        render_rollpage(frame_list,menu_dict)
 
     terminal.refresh()
 
@@ -120,6 +122,23 @@ def render_page(frame_list, menu_dict) -> None:
     if len(frame_list) != 0:
         render_frames(frame_list)
 
+def render_rollpage(frame_list, menu_dict) -> None:
+
+    header = menu_dict.get('header')
+    header_pos = int(90-(len(header)/2))
+
+    terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
+    menu_type = menu_dict.get('type')
+
+    if menu_type == MenuTypes.roll:
+               
+
+        if len(frame_list) == 0:
+            bltgui_rollpage(terminal,40,90,menu_dict,frame_list)
+            initialize()
+
+    if len(frame_list) != 0:
+        render_frames(frame_list)
 
 def render_csheet(players) -> None:
     player = players[0]
@@ -334,7 +353,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
     if active_entity.player:
         #Below complexity is due to modal nature. if targets exist, block for input. 
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
-        if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity]: command = blt_handle_global_input(game_state)
+        if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, GameStates.social]: command = blt_handle_global_input(game_state)
         else:
             if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
@@ -362,6 +381,10 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                                 if control.selected_index is not None:
                                                     item = control.return_item()
                                                     command = {item:item}
+                                            elif menu_dict.get('type') == MenuTypes.roll and isinstance(control,bltGui.bltButton):
+                                                if control.clicked:
+                                                    command = {control.command:control.command}
+                                                    control.clicked = False
                             elif key < 128:
                                 char = chr(key+93) #Needed because BLT returns a hex value for the scan code that is offset -93
                                 if key in menu_dict.get('options'):
@@ -547,6 +570,34 @@ def print_entities(entities, ox, oy) -> None:
             terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=dark amber][color='+corpse.color+']'+corpse.char+'[/color][/bk_color]')
         elif (corpse.x, corpse.y) in players_explored:
             terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=darker amber][color=darker gray]'+corpse.char+'[/color][/bk_color]')
+
+def bltgui_rollpage(terminal, w, h, menu_dict, frame_list):  
+    desc = menu_dict.get('desc')
+
+    list_frame = Frame(0,0,w,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    content_frame = bltGui.bltShowListFrame(41,15,120,70, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+
+    i=0
+    for b in desc.get('buttons'):
+        button = bltGui.bltButton(list_frame, 15, 10+i*2, b.get('text'),command=b.get('command'))
+        i+=1
+        list_frame.add_control(button)
+   
+
+    if desc.get('roll') > 0:
+        prof_string = ''
+        prof_list = list(desc.get('prof'))
+        for p in prof_list:
+            if p == prof_list[-1]:
+                prof_string = prof_string + p 
+            else:
+                prof_string = prof_string + p + ', '
+        content_frame.text = 'Roll: ' + str(desc.get('roll')) + '\nSocial Standing: ' + desc.get('standing') + '\nAllowed Professions: ' + prof_string
+        
+        
+    frame_list.append(list_frame)
+
+    frame_list.append(content_frame)
 
 def bltgui_page(terminal, w, h, menu_dict, frame_list):
     items = menu_dict.get('options')   

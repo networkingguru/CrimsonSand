@@ -11,8 +11,7 @@ from utilities import itersubclasses, clamp
 import options
 from components.professions import DeathKnight
 from components.circumstances import Circumstance
-import textwrap
-import itertools
+from components.upbringing import get_valid_upbringings
 
 
 entity_list = options.entities
@@ -21,14 +20,16 @@ fighters = options.fighters
 add_fighters(entities, fighters)
 weapons = options.weapons
 add_weapons(entities, weapons)
+entities[0].creation_choices['sex'] = 'Male'
+entities[0].creation_choices['circumstance'] = 'Contracted Gladiator'
+entities[0].creation_choices['ethnicity'] = 'Eastern'
+
+
 
 entities[0].worn_armor = options.player_armor
 apply_armor(entities[0])
 
-text = '\n'*5 + 'done'
-w = textwrap.TextWrapper(8,break_long_words=False,replace_whitespace=False,drop_whitespace=False)
-t_list = [w.wrap(text=text)]
-t_list = list(itertools.chain.from_iterable(t_list))
+u_list = get_valid_upbringings(entities[0],50)
 
 
 
