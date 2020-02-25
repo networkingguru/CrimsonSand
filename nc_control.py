@@ -1,5 +1,5 @@
 from enums import GameStates
-from nc_functions import choose_circumstance, choose_sex, choose_ethnicity, roll_social
+from nc_functions import choose_circumstance, choose_sex, choose_ethnicity, roll_social, roll_attr
 
 def nc_controller(curr_actor, entities, game_state, command) -> (dict, int, bool):
     clear = False
@@ -13,7 +13,7 @@ def nc_controller(curr_actor, entities, game_state, command) -> (dict, int, bool
     elif game_state == GameStates.social:
         menu_dict, game_state, clear = roll_social(curr_actor, game_state, command)
     elif game_state == GameStates.attributes:
-        pass
+        menu_dict, game_state, clear = roll_attr(curr_actor, game_state, command)
     elif game_state == GameStates.upbringing:
         pass
     elif game_state == GameStates.age:

@@ -78,6 +78,8 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_page(frame_list,menu_dict)
     elif len(menu_dict) > 0 and game_state in [GameStates.social]:
         render_rollpage(frame_list,menu_dict)
+    elif len(menu_dict) > 0 and game_state in [GameStates.attributes]:
+        render_attrpage(frame_list,menu_dict)
 
     terminal.refresh()
 
@@ -277,7 +279,23 @@ def render_csheet(players) -> None:
     terminal.puts(ohr_len, 68, '[font=text][color=white][bg_color=black]'+kickr_h)
     terminal.puts(ohr_len+len(kickr_h), 68, '[font=text][color=white][bg_color=black]' + str(player.fighter.reach_leg) + ' squares')
 
+def render_attrpage(frame_list, menu_dict) -> None:
 
+    header = menu_dict.get('header')
+    header_pos = int(90-(len(header)/2))
+
+    terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
+    menu_type = menu_dict.get('type')
+
+    if menu_type == MenuTypes.attr:
+               
+
+        #if len(frame_list) == 0:
+        bltgui_attrpage(terminal,40,90,menu_dict,frame_list)
+        initialize()
+
+    if len(frame_list) != 0:
+        render_frames(frame_list)
 
 
 def render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict) -> None:
@@ -353,7 +371,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
     if active_entity.player:
         #Below complexity is due to modal nature. if targets exist, block for input. 
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
-        if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, GameStates.social]: command = blt_handle_global_input(game_state)
+        if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, GameStates.social, GameStates.attributes]: command = blt_handle_global_input(game_state)
         else:
             if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
@@ -385,6 +403,14 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                                 if control.clicked:
                                                     command = {control.command:control.command}
                                                     control.clicked = False
+                                            elif menu_dict.get('type') == MenuTypes.attr:
+                                                if isinstance(control,bltGui.bltButton):
+                                                    if control.clicked:
+                                                        command = {control.command:control.command}
+                                                elif isinstance(control,bltGui.bltRadioButton):
+                                                    if control.checked:
+                                                        command = {'slot':control.command}
+
                             elif key < 128:
                                 char = chr(key+93) #Needed because BLT returns a hex value for the scan code that is offset -93
                                 if key in menu_dict.get('options'):
@@ -570,6 +596,44 @@ def print_entities(entities, ox, oy) -> None:
             terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=dark amber][color='+corpse.color+']'+corpse.char+'[/color][/bk_color]')
         elif (corpse.x, corpse.y) in players_explored:
             terminal.puts(corpse.x+ox, corpse.y+oy, '[bk_color=darker amber][color=darker gray]'+corpse.char+'[/color][/bk_color]')
+
+def bltgui_attrpage(terminal, w, h, menu_dict, frame_list):  
+    desc = menu_dict.get('desc')
+    roll_buttons = desc.get('roll_buttons')
+    assigned_slots = desc.get('assigned_slots')
+    attributes = desc.get('attributes')
+
+    list_frame = Frame(0,0,w,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    #content_frame = bltGui.bltShowListFrame(41,15,120,70, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+
+    #Roll radio buttons
+    radio_buttons = []
+    for r in roll_buttons:
+        if r.get('slot') not in assigned_slots:
+            button = bltGui.bltRadioButton(list_frame,40,10 + r.get('slot')*3,label=str(r.get('roll')),command=r.get('slot'))
+            list_frame.add_control(button)
+            radio_buttons.append(button)
+
+    for r in radio_buttons:
+        r.group = radio_buttons
+
+    #Attribute buttons
+    i=0
+    for key,value in attributes.items():
+        button = bltGui.bltButton(list_frame,80,10+(i*3),key,command=key)
+        list_frame.add_control(button)
+        terminal.puts(95, 10+(i*3), '[font=text][color=white][bg_color=black]'+str(value))
+        i+=1
+
+    button_roll = bltGui.bltButton(list_frame,40,5,'Roll Dice',command='roll')
+    button_accept = bltGui.bltButton(list_frame,80,5,'Accept and Continue',command='accept')
+
+    list_frame.add_control(button_roll)
+    list_frame.add_control(button_accept)
+        
+        
+    frame_list.append(list_frame)
+
 
 def bltgui_rollpage(terminal, w, h, menu_dict, frame_list):  
     desc = menu_dict.get('desc')

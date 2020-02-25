@@ -229,6 +229,63 @@ class bltCheckBoxButton(bltButton):
 
 
 
+class bltRadioButton(bltButton):
+    def __init__(self, owner, x, y, label="", checked=False, function=bltButton.toggle,command=None):
+        bltButton.__init__(self, owner, x, y,  "o", length=1, function=function)
+        self.checked_text = "●"
+        self.frame_element = False
+        self.checked = checked
+        self.label = label
+        self.command = command
+        self.length = len(self.text)
+        self.group = [] #List that includes all buttons in the radio group
 
+    def draw(self):
+        if self.dirty:
+            if self.checked:
+                text = self.checked_text
+            else:
+                text = self.text
 
+            terminal.layer(self.owner.layer)
+            if self.hover:
+                terminal.color(self.back)
+                terminal.puts(self.owner.pos.x + self.x, self.owner.pos.y + self.y, "[U+2588]" * self.length)
+                terminal.color(self.fore)
+                terminal.puts(self.owner.pos.x + self.x, self.owner.pos.y + self.y, text)
+            else:
+                terminal.color(self.back_alt)
+                terminal.puts(self.owner.pos.x + self.x, self.owner.pos.y + self.y, "[U+2588]" * self.length)
+                terminal.color(self.fore_alt)
+                terminal.puts(self.owner.pos.x + self.x, self.owner.pos.y + self.y, text)
+            terminal.puts(self.owner.pos.x + self.x + self.length + 1, self.owner.pos.y + self.y, self.label)
+            self.dirty = False
 
+    def update(self):
+        mouse = Input.mouse
+        if self.owner:
+            layer = self.owner.layer
+            x = self.owner.pos.x
+            y = self.owner.pos.y
+        else:
+            layer = terminal.state(terminal.TK_LAYER)
+            x = 0
+            y = 0
+
+        if mouse.hover_rect(self.x + x, self.y + y, self.length, 1):
+            self.hover = True
+            if mouse.lbutton_pressed:
+                self.group_toggle()
+            self.dirty = True
+        else:
+            if self.hover:
+                self.dirty = True
+            self.hover = False
+            self.pressed = False
+        return False
+
+    def group_toggle(self):
+        bltButton.toggle(self)
+        for b in self.group:
+            if b.checked and b != self:
+                b.function(b)

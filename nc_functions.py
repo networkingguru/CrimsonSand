@@ -5,6 +5,7 @@ from components.professions import Profession
 from components.upbringing import get_valid_upbringings
 from utilities import inch_conv,roll_dice
 from components.fighter import attr_name_dict
+from chargen_functions import random_attr
 
 
 sex_attr_mods_m = {'Logic':5,'Wisdom':-5,'Comprehension':-5,'Communication':-5,'Mental Celerity':-5,'Willpower':5,'Steady State':30,'Power':30,'Manual Dexterity':-5,
@@ -165,6 +166,59 @@ def roll_social(curr_actor, game_state, command) -> (dict, int, bool):
 
     if len(curr_actor.temp_store) == 0:
         menu_dict = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions,'buttons':buttons}}
+    else:
+        menu_dict = curr_actor.temp_store 
+
+    return menu_dict, game_state, clear
+
+def roll_attr(curr_actor, game_state, command) -> (dict, int, bool):
+    clear=False
+    rolls = []
+    menu_dict = {}
+    assigned_slots = []
+    roll_buttons = []
+    attributes = {'Logic':0,'Wisdom':0,'Comprehension':0,'Communication':0,'Mental Celerity':0,'Willpower':0,'Steady State':0,'Power':0,'Manual Dexterity':0,
+                    'Pedal Dexterity':0,'Balance':0,'Swiftness':0,'Flexibility':0,'Stamina':0,'Dermatology':0,'Bone Structure':0,'Immune System':0, 'Shock Resistance':0,
+                    'Sight':0,'Hearing':0,'Taste/Smell':0,'Touch':0,'Body Fat':0}
+
+    if len(command) > 0:
+        if command.get('roll'):
+            rolls = random_attr(1)
+            i=0
+            for r in rolls:
+                roll_buttons.append({'slot':i,'roll':r,'selected':False})
+                i+=1
+
+            curr_actor.temp_store = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll_buttons':roll_buttons,'assigned_slots':assigned_slots,'attributes':attributes}}
+
+        elif command.get('slot'):
+            roll_buttons = curr_actor.temp_store.get('desc').get('roll_buttons')
+            for r in roll_buttons:
+                if r.get('slot') != command.get('slot'):
+                    r['selected'] = False
+                else:
+                    r['selected'] = True                  
+
+        elif command.get('accept') and len(curr_actor.temp_store.get('attributes')) == len(curr_actor.temp_store.get('assigned_slots')):
+            curr_actor.creation_choices['attributes'] = curr_actor.temp_store.get('desc').get('attributes')
+            menu_dict = {}
+            game_state = GameStates.upbringing
+            curr_actor.temp_store = {}
+            clear = True
+
+        else:
+            roll_buttons = curr_actor.temp_store.get('desc').get('roll_buttons')
+            attributes = curr_actor.temp_store.get('desc').get('attributes')
+            assigned_slots = curr_actor.temp_store.get('desc').get('assigned_slots')
+            for a in attributes:
+                if command.get(a):
+                    for r in roll_buttons:
+                        if r.get('selected') == True:
+                            attributes[a] = r.get('roll')
+                            assigned_slots.append(r.get('slot'))
+
+    if len(curr_actor.temp_store) == 0:
+        menu_dict = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll_buttons':roll_buttons,'assigned_slots':assigned_slots,'attributes':attributes}}
     else:
         menu_dict = curr_actor.temp_store 
 
