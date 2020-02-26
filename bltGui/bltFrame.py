@@ -24,6 +24,7 @@ class bltFrame(Control):
     def __init__(self, x, y, w ,h, title=None, frame=True, layer=None, text="", draggable=False, visible=True, skin=None, color_skin=None, font='', title_font = ''):
         Control.__init__(self, ['close', 'show'])
         self.pos = Pos(x, y)
+        self.name = ''
         self.width = w
         self.height = h
         self.title = title

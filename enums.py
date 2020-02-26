@@ -13,6 +13,7 @@ class GameStates(Enum):
     ethnicity = auto()
     social = auto()
     attributes = auto()
+    attributes2 = auto()
     upbringing = auto()
     age = auto()
     profession = auto()
@@ -47,6 +48,7 @@ class MenuTypes(Enum):
     page = auto()
     roll = auto()
     attr = auto()
+    attr2 = auto()
 
 class CombatPhase(Enum):   
     explore = auto()

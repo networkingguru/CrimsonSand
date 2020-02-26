@@ -290,11 +290,28 @@ def render_attrpage(frame_list, menu_dict) -> None:
     if menu_type == MenuTypes.attr:
                
 
-        #if len(frame_list) == 0:
-        bltgui_attrpage(terminal,40,90,menu_dict,frame_list)
-        initialize()
+        if len(frame_list) == 0:
+            bltgui_attrpage(terminal,40,90,menu_dict,frame_list)
+            initialize()
 
     if len(frame_list) != 0:
+        desc = menu_dict.get('desc')
+        rolls = desc.get('rolls')
+        roll_frame = None
+        roll_text = ''
+        for f in frame_list:
+            if f.name == 'roll_frame':
+                roll_frame = f
+
+
+        if len(rolls) > 0:
+            i=0
+            for r in rolls:
+                roll_text += str(r) + '\n'
+                i+=1
+            if roll_frame is not None:
+                roll_frame.text = roll_text
+
         render_frames(frame_list)
 
 
@@ -599,53 +616,46 @@ def print_entities(entities, ox, oy) -> None:
 
 def bltgui_attrpage(terminal, w, h, menu_dict, frame_list):  
     desc = menu_dict.get('desc')
-    roll_buttons = desc.get('roll_buttons')
-    assigned_slots = desc.get('assigned_slots')
-    attributes = desc.get('attributes')
+    rolls = desc.get('rolls')
+    items = menu_dict.get('options')
+    roll_text = ''
 
-    list_frame = Frame(0,0,w,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    #content_frame = bltGui.bltShowListFrame(41,15,120,70, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+    list_frame = Frame(0,0,20,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    list_box = bltGui.bltListbox(list_frame, 5, 5, items, False, True)
+    list_frame.add_control(list_box)
+    roll_frame = bltGui.bltShowListFrame(21,5,10,h-5, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+    roll_frame.name = 'roll_frame'
+    scale_frame = bltGui.bltShowListFrame(31,5,120,h-5, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+    
+    if len(rolls) > 0:
+        i=0
+        for r in rolls:
+            roll_text + str(r) + '\n'
+        roll_frame.text = roll_text
 
-    #Roll radio buttons
-    radio_buttons = []
-    for r in roll_buttons:
-        if r.get('slot') not in assigned_slots:
-            button = bltGui.bltRadioButton(list_frame,40,10 + r.get('slot')*3,label=str(r.get('roll')),command=r.get('slot'))
-            list_frame.add_control(button)
-            radio_buttons.append(button)
 
-    for r in radio_buttons:
-        r.group = radio_buttons
+    scale_text1 = 'Generic Attribute Scale\n***********************************************************************\nScore      Description\n=======    ============================================================\n'
+    scale_text2 = '0-10       Almost completely disabled\n11-20      Very disabled\n21-30      Moderately disabled\n31-60      Slightly disabled\n61-80      Well below average\n'
+    scale_text3 = '81-90      Below average\n91-100     Average\n101-110    Above average\n111-140    Well above average\n141-160    Exceptional\n161-180    Highly Exceptional\n181-200    Genetically gifted\n200+       Legendary'
+    scale_frame.text = scale_text1 + scale_text2 + scale_text3
 
-    #Attribute buttons
-    i=0
-    for key,value in attributes.items():
-        button = bltGui.bltButton(list_frame,80,10+(i*3),key,command=key)
-        list_frame.add_control(button)
-        terminal.puts(95, 10+(i*3), '[font=text][color=white][bg_color=black]'+str(value))
-        i+=1
-
-    button_roll = bltGui.bltButton(list_frame,40,5,'Roll Dice',command='roll')
-    button_accept = bltGui.bltButton(list_frame,80,5,'Accept and Continue',command='accept')
-
-    list_frame.add_control(button_roll)
-    list_frame.add_control(button_accept)
-        
-        
     frame_list.append(list_frame)
+    frame_list.append(scale_frame)
+    frame_list.append(roll_frame)
+      
+        
+    
+
 
 
 def bltgui_rollpage(terminal, w, h, menu_dict, frame_list):  
     desc = menu_dict.get('desc')
+    items = menu_dict.get('options')
 
     list_frame = Frame(0,0,w,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     content_frame = bltGui.bltShowListFrame(41,15,120,70, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
-
-    i=0
-    for b in desc.get('buttons'):
-        button = bltGui.bltButton(list_frame, 15, 10+i*2, b.get('text'),command=b.get('command'))
-        i+=1
-        list_frame.add_control(button)
+    list_box = bltGui.bltListbox(list_frame, 5, 5, items, False, True)
+    list_frame.add_control(list_box)
    
 
     if desc.get('roll') > 0:

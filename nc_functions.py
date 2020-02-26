@@ -112,12 +112,9 @@ def roll_social(curr_actor, game_state, command) -> (dict, int, bool):
     u_profs = set()
     clear = False
     
-    roll_button = {'text':'Roll Dice','command':'roll'}
-    accept_button = {'text':'Accept Standing and Continue','command':'accept'}
-    buttons = [roll_button,accept_button]
 
     if len(command) > 0:
-        if command.get('roll'):
+        if command.get('Roll') or command.get('Re-roll'):
             roll = roll_dice(1,100)
             if roll <= 10:
                 standing = 'Lower Lower Class'
@@ -154,10 +151,10 @@ def roll_social(curr_actor, game_state, command) -> (dict, int, bool):
                     if prof.female_allowed == False and curr_actor.creation_choices.get('sex') == 'Female':
                         professions.discard(prof.name)
                 
-            curr_actor.temp_store = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions,'buttons':buttons}}
+            curr_actor.temp_store = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Re-roll','Accept Roll'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions}}
 
 
-        elif command.get('accept') and curr_actor.temp_store.get('desc').get('roll') > 0:
+        elif command.get('Accept Roll') and curr_actor.temp_store.get('desc').get('roll') > 0:
             curr_actor.creation_choices['social'] = curr_actor.temp_store.get('desc').get('roll')
             menu_dict = {}
             game_state = GameStates.attributes
@@ -165,13 +162,41 @@ def roll_social(curr_actor, game_state, command) -> (dict, int, bool):
             clear = True
 
     if len(curr_actor.temp_store) == 0:
-        menu_dict = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions,'buttons':buttons}}
+        menu_dict = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Roll'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions}}
     else:
         menu_dict = curr_actor.temp_store 
 
     return menu_dict, game_state, clear
 
 def roll_attr(curr_actor, game_state, command) -> (dict, int, bool):
+    clear=False
+    rolls = []
+    menu_dict = {}
+
+
+    if len(command) > 0:
+        if command.get('Roll') or command.get('Re-roll'):
+            rolls = sorted(random_attr(2),reverse=True) 
+            
+            curr_actor.temp_store = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Re-roll','Accept'], 'mode': False, 'desc': {'rolls':rolls}}
+                
+
+        elif command.get('Accept'):
+            curr_actor.creation_choices['rolls'] = curr_actor.temp_store.get('desc').get('rolls')
+            menu_dict = {}
+            game_state = GameStates.attributes2
+            curr_actor.temp_store = {}
+            clear = True
+
+
+    if len(curr_actor.temp_store) == 0:
+        menu_dict = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Roll'], 'mode': False, 'desc': {'rolls':rolls}}
+    else:
+        menu_dict = curr_actor.temp_store 
+
+    return menu_dict, game_state, clear
+
+def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
     clear=False
     rolls = []
     menu_dict = {}
