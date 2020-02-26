@@ -240,3 +240,34 @@ def load_game() -> list:
         messages.append(Message('There was an error loading the game. '))
 
     return messages
+
+def make_bar(value,max=200,min=0,reverse=False):
+    if reverse:
+        bars = (value - ((max - min)*-1))/50
+    else:
+        bars = (value / ((max - min)/50))/10
+
+    if bars < 2:
+        color = '[color=red]'
+    elif bars < 4:
+        color = '[color=yellow]'
+    else:
+        color = '[color=green]'
+
+    bar = color
+
+    if bars > 5:
+        bar += '█████+'
+    else:
+        while bars > 0:
+            if bars >= 1:
+                bar += '█'
+                bars -= 1
+            elif bars < 1:
+                bar += '▌'
+                bars = 0
+
+    return bar
+
+
+    

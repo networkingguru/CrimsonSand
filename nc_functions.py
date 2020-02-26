@@ -198,53 +198,51 @@ def roll_attr(curr_actor, game_state, command) -> (dict, int, bool):
 
 def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
     clear=False
-    rolls = []
-    menu_dict = {}
-    assigned_slots = []
-    roll_buttons = []
+    rolls = curr_actor.creation_choices.get('rolls')
     attributes = {'Logic':0,'Wisdom':0,'Comprehension':0,'Communication':0,'Mental Celerity':0,'Willpower':0,'Steady State':0,'Power':0,'Manual Dexterity':0,
                     'Pedal Dexterity':0,'Balance':0,'Swiftness':0,'Flexibility':0,'Stamina':0,'Dermatology':0,'Bone Structure':0,'Immune System':0, 'Shock Resistance':0,
                     'Sight':0,'Hearing':0,'Taste/Smell':0,'Touch':0,'Body Fat':0}
+    
+    if len(curr_actor.temp_store) == 0:
+        curr_actor.temp_store = {'type': MenuTypes.attr2, 'header': 'Assign rolls to your attributes', 'options': ['Revert'], 'mode': False, 'desc': {'attributes':attributes,'index':0,'roll':0}}
+    
+    i =  curr_actor.temp_store.get('desc').get('index')
+
 
     if len(command) > 0:
-        if command.get('roll'):
-            rolls = random_attr(1)
-            i=0
-            for r in rolls:
-                roll_buttons.append({'slot':i,'roll':r,'selected':False})
-                i+=1
-
-            curr_actor.temp_store = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll_buttons':roll_buttons,'assigned_slots':assigned_slots,'attributes':attributes}}
-
-        elif command.get('slot'):
-            roll_buttons = curr_actor.temp_store.get('desc').get('roll_buttons')
-            for r in roll_buttons:
-                if r.get('slot') != command.get('slot'):
-                    r['selected'] = False
-                else:
-                    r['selected'] = True                  
-
-        elif command.get('accept') and len(curr_actor.temp_store.get('attributes')) == len(curr_actor.temp_store.get('assigned_slots')):
+        if command.get('Accept'):
             curr_actor.creation_choices['attributes'] = curr_actor.temp_store.get('desc').get('attributes')
             menu_dict = {}
             game_state = GameStates.upbringing
             curr_actor.temp_store = {}
             clear = True
+        elif command.get('Revert'):
+            curr_actor.temp_store['desc']['attributes'] = attributes
+            curr_actor.temp_store['desc']['index' ]= 0
+            curr_actor.temp_store['options' ]= ['Accept','Revert']
 
         else:
-            roll_buttons = curr_actor.temp_store.get('desc').get('roll_buttons')
-            attributes = curr_actor.temp_store.get('desc').get('attributes')
-            assigned_slots = curr_actor.temp_store.get('desc').get('assigned_slots')
-            for a in attributes:
-                if command.get(a):
-                    for r in roll_buttons:
-                        if r.get('selected') == True:
-                            attributes[a] = r.get('roll')
-                            assigned_slots.append(r.get('slot'))
-
-    if len(curr_actor.temp_store) == 0:
-        menu_dict = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Roll','Accept'], 'mode': False, 'desc': {'roll_buttons':roll_buttons,'assigned_slots':assigned_slots,'attributes':attributes}}
+            for key,value in curr_actor.temp_store['desc']['attributes'].items():
+                x = command.get(key)
+                if command.get(key):
+                    curr_actor.temp_store['desc']['attributes'][key] = rolls[i]
+                    curr_actor.temp_store['desc']['index'] += 1
+                    curr_actor.temp_store['options'].remove(key)
     else:
-        menu_dict = curr_actor.temp_store 
+        if curr_actor.temp_store.get('desc').get('attributes'):
+            attrs = curr_actor.temp_store.get('desc').get('attributes')
+        else:
+            attrs = attributes
+        for key,value in attrs.items():
+            if value == 0 and key not in curr_actor.temp_store.get('options'):
+                curr_actor.temp_store['options'].append(key)
+        if len(curr_actor.temp_store['options']) == 1:
+            curr_actor.temp_store['options'].append('Accept')
+        if i <= len(rolls)-2:
+            curr_actor.temp_store['desc']['roll'] = rolls[i]
+
+
+
+    menu_dict = curr_actor.temp_store 
 
     return menu_dict, game_state, clear
