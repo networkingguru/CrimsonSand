@@ -40,6 +40,8 @@ class Upbringing():
 
 def get_valid_upbringings(entity,social):
     valid = []
+    if social is None:
+        social = entity.creation_choices.get('social')
 
 
     for u in Upbringing.getinstances():
@@ -262,7 +264,7 @@ allowed_prof = ['Ninja','Geisha']
 ninja = Upbringing(name='Training',desc=desc,min_social_standing=56,max_social_standing=85,
                     allowed_ethnicities=allowed_ethnicities,allowed_prof=allowed_prof)
 
-desc = 'Your childhood was spent training intensely in secret to become a hidden assassin and operative for the Eastern empire. You never knew your parents, and other of your ethinicity are a mystery to you. '
+desc = 'Your childhood was spent training intensely in secret to become a hidden assassin and operative for the Eastern empire. You never knew your parents, and others of your ethinicity are a mystery to you. '
 allowed_ethnicities = ['Corrillian','Stygian','Solomanian']
 allowed_prof = ['Ninja']
 

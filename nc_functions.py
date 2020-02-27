@@ -63,7 +63,7 @@ def choose_sex(curr_actor, game_state, command) -> (dict, int, bool):
         female_desc = 'Females are the baseline sex, and have no positive or negative attribute modifiers. '
 
         for a in sex_attr_mods_m:
-            male_desc += a + ': ' + str(int(sex_attr_mods_m.get(a))) + '%\n'
+            male_desc += a + ': ' + str(int(sex_attr_mods_m.get(a))) + '\n'
 
         menu_desc = {'Male': male_desc, 'Female': female_desc}
 
@@ -93,7 +93,10 @@ def choose_ethnicity(curr_actor, game_state, command) -> (dict, int, bool):
             age_txt = 'Age Ranges: Child: 0 - ' + str(e.age_ranges.get('Child')) + ' Young Adult: ' + str(e.age_ranges.get('Child')+1) + ' - ' + str(e.age_ranges.get('Young Adult')) + ' Adult: ' + str(e.age_ranges.get('Young Adult')+1) + ' - ' + str(e.age_ranges.get('Adult')) + ' Mature Adult: ' + str(e.age_ranges.get('Adult')+1) + ' - ' + str(e.age_ranges.get('Mature Adult')) + ' Elderly: ' + str(e.age_ranges.get('Mature Adult')+1) + '+'
             attr_txt = 'Attribute modifiers: '
             for a in e.attr_mods:
-                attr_txt += attr_name_dict.get(a) + ': ' + str(int(e.attr_mods.get(a))) + '%, '
+                if list(e.attr_mods.keys())[-1] == a:
+                    attr_txt += attr_name_dict.get(a) + ': ' + str(int(e.attr_mods.get(a)))
+                else:
+                    attr_txt += attr_name_dict.get(a) + ': ' + str(int(e.attr_mods.get(a))) + ', '
             culture_txt = 'Culture: ' + e.culture
             history_txt = 'History: ' + e.history
 
@@ -254,10 +257,53 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
     return menu_dict, game_state, clear
 
 def choose_upbringing(curr_actor, game_state, command) -> (dict, int, bool):
-    pass
+    valid_upbringings = get_valid_upbringings(curr_actor, None)
+    menu_dict = {'type': MenuTypes.page, 'header': 'Choose your childhood upbringing', 'options': [], 'mode': False, 'desc': {}}
+    clear = False
+
+    if len(command) > 0:
+        for u in valid_upbringings:
+            if command.get(u.name):
+                curr_actor.creation_choices['upbringing'] = u.name 
+                game_state = GameStates.age
+                clear = True
+
+    else:
+        for u in valid_upbringings:
+            menu_dict['options'].append(u.name)
+            attr_txt = 'Attribute modifiers: '
+            skill_txt = 'Free Skills: '
+            skill_mod_txt = 'Skill Modifiers: '
+            if len(u.attr_mods) > 0:
+                for a in u.attr_mods:
+                    if list(u.attr_mods.keys())[-1] == a:
+                        attr_txt += attr_name_dict.get(a) + ': ' + str(int(u.attr_mods.get(a)))
+                    else:
+                        attr_txt += attr_name_dict.get(a) + ': ' + str(int(u.attr_mods.get(a))) + ', '
+            else:
+                attr_txt += 'None'
+            if len(u.free_skills) > 0:
+                for s in u.free_skills:
+                    if u.free_skills[-1] == s:
+                        skill_txt += s
+                    else:
+                        skill_txt += s + ', '
+            else:
+                skill_txt += 'None'
+            if len(u.skill_mods) > 0:
+                for s in u.skill_mods:
+                    if list(u.skill_mods.keys())[-1] == s:
+                        skill_mod_txt += s.capitalize() + ': ' + str(int(u.skill_mods.get(s)))
+                    else:
+                        skill_mod_txt += s.capitalize() + ': ' + str(int(u.skill_mods.get(s))) + ', '
+            else:
+                skill_mod_txt += 'None'
 
 
+            menu_dict['desc'][u.name] = u.desc + '\n' + attr_txt + '\n' + skill_txt + '\n' + skill_mod_txt
 
+
+    return menu_dict, game_state, clear
 
 
 

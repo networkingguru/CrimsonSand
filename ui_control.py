@@ -76,7 +76,7 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_csheet(players)
     elif game_state == GameStates.main_menu:
         render_main_menu(frame_list, menu_dict)
-    elif len(menu_dict) > 0 and game_state in [GameStates.circumstance, GameStates.sex, GameStates.ethnicity]:
+    elif len(menu_dict) > 0 and game_state in [GameStates.circumstance, GameStates.sex, GameStates.ethnicity, GameStates.upbringing]:
         render_page(frame_list,menu_dict)
     elif len(menu_dict) > 0 and game_state in [GameStates.social]:
         render_rollpage(frame_list,menu_dict)
@@ -421,7 +421,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
         #Below complexity is due to modal nature. if targets exist, block for input. 
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
         if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, 
-                            GameStates.social, GameStates.attributes, GameStates.attributes2]: command = blt_handle_global_input(game_state)
+                            GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing]: command = blt_handle_global_input(game_state)
         else:
             if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
