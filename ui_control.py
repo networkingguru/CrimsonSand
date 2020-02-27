@@ -9,6 +9,8 @@ from math import ceil
 from enums import MenuTypes, GameStates, CombatPhase, EntityState
 from game_messages import Message
 from utilities import inch_conv, make_bar
+from components.professions import Profession
+from chargen_functions import attr_descriptions, rating_description
 from bltGui import bltFrame as Frame
 import bltGui
 
@@ -321,11 +323,15 @@ def render_attr_assn(frame_list, menu_dict) -> None:
     header = menu_dict.get('header')
     desc = menu_dict.get('desc')
     roll = desc.get('roll')
-    header_pos = int(90-(len(header)/2))
+    header_pos = int((90-(len(header))/2))
+    dir_string = ''
 
     terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
-    dir_string = '[font=head][color=white][bg_color=black]'+ 'Select the attribute for the following roll:'+ str(roll)
-    dir_x = int((180-len(dir_string))/2)
+    if roll is not None:
+        if roll > 0:
+            dir_string = '[font=head][color=white][bg_color=black]'+ 'Select the attribute for the following roll:\t'+ str(roll)
+            
+    dir_x = int(110-(len(dir_string)/2))
     terminal.puts(dir_x, 5, dir_string)
 
 
@@ -634,31 +640,108 @@ def print_entities(entities, ox, oy) -> None:
 def bltgui_assn_attr(terminal, w, h, menu_dict, frame_list):  
     desc = menu_dict.get('desc')
     roll = desc.get('roll')
+    attributes = desc.get('attributes')
     items = menu_dict.get('options')
+    attr_mods = desc.get('attr_mods')
+    desc1 = {'Revert':'Revert all attribute choices and start over'}
+    sex_mods = {}
+    eth_mods = {}
+    desc2 = {}
+    desc3 = {}
 
+    for key,value in attr_mods.items():
+        if attr_mods.get(key).get('sex'):
+            sex_mods[key] = attr_mods.get(key).get('sex')
+        if attr_mods.get(key).get('ethnicity'):
+            eth_mods[key] = attr_mods.get(key).get('ethnicity') 
+    #Build dict for desc1 frame
+    for o in items:
+        if not desc1.get(o):
+            sm = 0
+            em = 0
+            if sex_mods.get(o):
+                sm = sex_mods.get(o)
+            if eth_mods.get(o):
+                em = eth_mods.get(o)
+            desc1[o] = 'Base Rating: '+str(roll)+'\tSex Mod: '+str(sm)+'\tEthnicity Mod: '+str(em)+'\tFinal Rating: '+str(roll+sm+em)
+            #Build dict for desc3 frame
+            for key,value in attributes.items():
+                if key == o:
+                    desc3[key] = rating_description(key,roll+sm+em)
 
-    list_frame = Frame(0,20,30,h-20,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    #Build dict for desc2_frame
+    for key,value in attributes.items():
+        desc2[key] = attr_descriptions(key)
+
+    list_frame = Frame(0,10,30,h-20,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     list_frame.name = 'list_frame'
-    list_box = bltGui.bltListbox(list_frame, 5, 5, items, False, True)
+    list_box = bltGui.bltListbox(list_frame, 5, 0, items, False, True)
     list_frame.add_control(list_box)
-    desc1_frame = bltGui.bltShowListFrame(31,20,w-40,20, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+    desc1_frame = bltGui.bltShowListFrame(31,11,w-70,10, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
     desc1_frame.name = 'desc1_frame'
-    desc2_frame = bltGui.bltShowListFrame(31,41,w-40,50, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+    desc2_frame = bltGui.bltShowListFrame(31,21,w-70,10, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
     desc2_frame.name = 'desc2_frame'
+    desc3_frame = bltGui.bltShowListFrame(31,41,w-70,30, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
+    desc3_frame.name = 'desc3_frame'
+    profs_frame = bltGui.bltShowListFrame(31,71,w-70,10, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
+    profs_frame.name = 'profs_frame'
+    attrs_frame = bltGui.bltShowListFrame(141,10,40,h-10, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=big]')
+    attrs_frame.name = 'attrs_frame'
+
+    list_box.register('changed', desc1_frame)
+    list_box.register('changed', desc2_frame)
+    list_box.register('changed', desc3_frame)
     
+
+    
+    if desc is not None:
+        item_dict = make_item_dict(items, desc1)
+        item_dict2 = make_item_dict(items, desc2)
+        item_dict3 = make_item_dict(items, desc3)
+        desc1_frame.set_dict(item_dict)
+        desc2_frame.set_dict(item_dict2)
+        desc3_frame.set_dict(item_dict3)
+
 
     frame_list.append(list_frame)
     frame_list.append(desc1_frame)
     frame_list.append(desc2_frame)
+    frame_list.append(desc3_frame)
+    frame_list.append(attrs_frame)
+    frame_list.append(profs_frame)
 
 def update_assn_attr(menu_dict, frame_list):  
     desc = menu_dict.get('desc')
-    roll = desc.get('roll')
     items = menu_dict.get('options')
+    attributes = desc.get('attributes')
+    professions = desc.get('professions')
+    curr_actor = desc.get('curr_actor')
+
 
     for f in frame_list:
         if f.name == 'list_frame':
             f.items = items
+        if f.name == 'attrs_frame':
+            text = ''
+            for key,value in attributes.items():
+                text += key + ': ' + str(value) + '\n'
+            f.text = text
+        if f.name == 'profs_frame':
+            text = 'Professions Allowed and thier Attribute Prerequisites:\n'
+            for p in Profession.__subclasses__():
+                prof = p(curr_actor)
+                if prof.name in professions:
+                    text += prof.name + ': '
+                    for key,value in prof.prereq_dict.items():
+                        if list(prof.prereq_dict.keys())[-1] == key:
+                            text += key + '-' + str(value) + '\n'
+                        else:    
+                            text += key + '-' + str(value) + ', '
+            f.text = text
+
+                    
+
+
 
 
 
@@ -775,12 +858,14 @@ def make_item_dict(options, desc) -> dict:
     item_dict = {}
     i = 0
     for option in options:
+        if option == 'Revert':
+            i+=1
+            continue
         for key in desc:
             if option == key:
                 item_dict[i] = desc.get(key)
                 i+=1
 
-    
     return item_dict
         
 

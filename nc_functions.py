@@ -134,22 +134,8 @@ def roll_social(curr_actor, game_state, command) -> (dict, int, bool):
                 standing = 'Middle Upper Class'
             else:
                 standing = 'Upper Upper Class'  
-            for e in Ethnicity.getinstances():
-                if e.name == curr_actor.creation_choices.get('ethnicity'):
-                    professions = set(e.allowed_prof)
-
-            for u in get_valid_upbringings(curr_actor,roll):
-                u_profs.update(u.allowed_prof)
-
-            professions = professions.intersection(u_profs)
-
-            for p in Profession.__subclasses__():
-                prof = p(curr_actor)
-                if prof.name in professions:
-                    if prof.male_allowed == False and curr_actor.creation_choices.get('sex') == 'Male':
-                        professions.discard(prof.name)
-                    if prof.female_allowed == False and curr_actor.creation_choices.get('sex') == 'Female':
-                        professions.discard(prof.name)
+            
+            professions = allowed_profs(curr_actor,roll)
                 
             curr_actor.temp_store = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Re-roll','Accept Roll'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions}}
 
@@ -176,7 +162,7 @@ def roll_attr(curr_actor, game_state, command) -> (dict, int, bool):
 
     if len(command) > 0:
         if command.get('Roll') or command.get('Re-roll'):
-            rolls = sorted(random_attr(2),reverse=True) 
+            rolls = sorted(random_attr(1),reverse=True) 
             
             curr_actor.temp_store = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Re-roll','Accept'], 'mode': False, 'desc': {'rolls':rolls}}
                 
@@ -199,12 +185,30 @@ def roll_attr(curr_actor, game_state, command) -> (dict, int, bool):
 def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
     clear=False
     rolls = curr_actor.creation_choices.get('rolls')
-    attributes = {'Logic':0,'Wisdom':0,'Comprehension':0,'Communication':0,'Mental Celerity':0,'Willpower':0,'Steady State':0,'Power':0,'Manual Dexterity':0,
-                    'Pedal Dexterity':0,'Balance':0,'Swiftness':0,'Flexibility':0,'Stamina':0,'Dermatology':0,'Bone Structure':0,'Immune System':0, 'Shock Resistance':0,
-                    'Sight':0,'Hearing':0,'Taste/Smell':0,'Touch':0,'Body Fat':0}
+    attributes = {'Logic':0,'Wisdom':0,'Memory':0,'Comprehension':0,'Communication':0,'Creativity':0,'Mental Celerity':0,'Willpower':0,'Steady State':0,'Power':0,'Manual Dexterity':0,
+                    'Pedal Dexterity':0,'Balance':0,'Swiftness':0,'Flexibility':0,'Stamina':0,'Dermatology':0,'Bone Structure':0,'Immune System':0, 'Shock Resistance':0,'Toxic Resistance':0,
+                    'Sight':0,'Hearing':0,'Taste/Smell':0,'Touch':0,'Facial Features':0,'Height':0,'Body Fat':0,'Facial Features':0,'Shapeliness':0}
+    attr_mods = {} #Dict of dicts in format attr:{ethnicity:mod,sex:mod}
+    ethnicity = curr_actor.creation_choices.get('ethnicity')
+    professions = allowed_profs(curr_actor)
+
+    if curr_actor.creation_choices.get('sex') == 'Male':
+        for key,value in sex_attr_mods_m.items():
+            attr_mods[key] = {}
+            attr_mods[key]['sex'] = value
+
+    for e in Ethnicity.getinstances():
+        if e.name == ethnicity:
+            for key,value in e.attr_mods.items():
+                a_name = attr_name_dict.get(key)
+                if attr_mods.get(a_name):
+                    attr_mods[a_name]['ethnicity'] = value
+                else:
+                    attr_mods[a_name] = {}
+                    attr_mods[a_name]['ethnicity'] = value
     
     if len(curr_actor.temp_store) == 0:
-        curr_actor.temp_store = {'type': MenuTypes.attr2, 'header': 'Assign rolls to your attributes', 'options': ['Revert'], 'mode': False, 'desc': {'attributes':attributes,'index':0,'roll':0}}
+        curr_actor.temp_store = {'type': MenuTypes.attr2, 'header': 'Assign rolls to your attributes', 'options': ['Revert'], 'mode': False, 'desc': {'attributes':attributes,'index':0,'roll':0,'attr_mods':attr_mods,'professions':professions,'curr_actor':curr_actor}}
     
     i =  curr_actor.temp_store.get('desc').get('index')
 
@@ -219,7 +223,7 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
         elif command.get('Revert'):
             curr_actor.temp_store['desc']['attributes'] = attributes
             curr_actor.temp_store['desc']['index' ]= 0
-            curr_actor.temp_store['options' ]= ['Accept','Revert']
+            curr_actor.temp_store['options' ]= ['Revert']
 
         else:
             for key,value in curr_actor.temp_store['desc']['attributes'].items():
@@ -236,13 +240,49 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
         for key,value in attrs.items():
             if value == 0 and key not in curr_actor.temp_store.get('options'):
                 curr_actor.temp_store['options'].append(key)
-        if len(curr_actor.temp_store['options']) == 1:
+        if i == 29 and 'Accept' not in curr_actor.temp_store.get('options'):
             curr_actor.temp_store['options'].append('Accept')
-        if i <= len(rolls)-2:
+        if i <= len(rolls)-1:
             curr_actor.temp_store['desc']['roll'] = rolls[i]
+        else:
+            curr_actor.temp_store['desc']['roll'] = 0
 
 
 
     menu_dict = curr_actor.temp_store 
 
     return menu_dict, game_state, clear
+
+def choose_upbringing(curr_actor, game_state, command) -> (dict, int, bool):
+    pass
+
+
+
+
+
+
+def allowed_profs(curr_actor, roll=0) -> set:
+    professions = set()
+    u_profs = set()
+
+    if curr_actor.creation_choices.get('social'):
+        roll = curr_actor.creation_choices.get('social')
+
+    for e in Ethnicity.getinstances():
+        if e.name == curr_actor.creation_choices.get('ethnicity'):
+            professions = set(e.allowed_prof)
+
+    for u in get_valid_upbringings(curr_actor,roll):
+        u_profs.update(u.allowed_prof)
+
+    professions = professions.intersection(u_profs)
+
+    for p in Profession.__subclasses__():
+        prof = p(curr_actor)
+        if prof.name in professions:
+            if prof.male_allowed == False and curr_actor.creation_choices.get('sex') == 'Male':
+                professions.discard(prof.name)
+            if prof.female_allowed == False and curr_actor.creation_choices.get('sex') == 'Female':
+                professions.discard(prof.name)
+
+    return professions
