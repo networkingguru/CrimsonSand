@@ -12,6 +12,7 @@ from utilities import inch_conv, make_bar
 from components.professions import Profession
 from chargen_functions import attr_descriptions, rating_description
 from bltGui import bltFrame as Frame
+from bltGui.bltTextBox import bltNumericBox as NumBox
 import bltGui
 
 
@@ -84,6 +85,8 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_attrpage(frame_list,menu_dict)
     elif len(menu_dict) > 0 and game_state == GameStates.attributes2:
         render_attr_assn(frame_list,menu_dict)
+    elif len(menu_dict) > 0 and game_state == GameStates.age:
+        render_age(frame_list,menu_dict)
 
     terminal.refresh()
 
@@ -347,6 +350,34 @@ def render_attr_assn(frame_list, menu_dict) -> None:
         update_assn_attr(menu_dict,frame_list)
         render_frames(frame_list)
 
+def render_age(frame_list, menu_dict) -> None:
+
+    header = menu_dict.get('header')
+    desc = menu_dict.get('desc')
+    age = desc.get('age')
+    mods = desc.get('age mods')
+    header_pos = int((90-(len(header))/2))
+    dir_string = ''
+
+    terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
+    
+    menu_type = menu_dict.get('type')
+
+    if menu_type == MenuTypes.num_page:
+               
+        if len(frame_list) == 0:
+            bltgui_age_page(terminal,options.screen_width,options.screen_height,menu_dict,frame_list)
+            initialize()
+
+        if len(frame_list) != 0:
+            for f in frame_list:
+                if f.name == 'desc frame':
+                    f.text = 'Mods based on your age: \n' + mods
+            render_frames(frame_list)
+
+
+
+
 def render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict) -> None:
     map_con = con_list[0]
     for con in con_list:
@@ -421,7 +452,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
         #Below complexity is due to modal nature. if targets exist, block for input. 
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
         if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, 
-                            GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing]: command = blt_handle_global_input(game_state)
+                            GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing, GameStates.age]: command = blt_handle_global_input(game_state)
         else:
             if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
@@ -449,6 +480,8 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                                 if control.selected_index is not None:
                                                     item = control.return_item()
                                                     command = {item:item}
+                                            elif isinstance(control,NumBox):
+                                                command = {'Age':control.text}
                                             
 
                             elif key < 128:
@@ -740,10 +773,29 @@ def update_assn_attr(menu_dict, frame_list):
             f.text = text
 
                     
+def bltgui_age_page(terminal, w, h, menu_dict, frame_list):
+    items = menu_dict.get('options')   
+    desc = menu_dict.get('desc')
+    header = menu_dict.get('header')
+    
 
+    list_frame = Frame(0,5,w,15,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
 
+    if len(items) > 0:
+        list_box = bltGui.bltListbox(list_frame, 87, 10, items, False, True)
+        list_frame.add_control(list_box)
 
+    text_box = NumBox(list_frame,88,5,desc.get('age'),min_val=16,max_val=60)
 
+    desc_frame = Frame(30, 20,120,70,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+    desc_frame.name = 'desc frame'
+    desc_frame.text = 'Mods based on your age: \n' + desc.get('age mods')
+
+    
+    list_frame.add_control(text_box)
+
+    frame_list.append(list_frame)
+    frame_list.append(desc_frame)
 
 def bltgui_attrpage(terminal, w, h, menu_dict, frame_list):  
     desc = menu_dict.get('desc')
@@ -795,20 +847,24 @@ def bltgui_rollpage(terminal, w, h, menu_dict, frame_list):
 def bltgui_page(terminal, w, h, menu_dict, frame_list):
     items = menu_dict.get('options')   
     desc = menu_dict.get('desc')
+    list_box = None
+    content_frame = None
     
 
     list_frame = Frame(0,0,w,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-
-    list_box = bltGui.bltListbox(list_frame, 5, 5, items, False, True)
-    if desc is not None:
-        item_dict = make_item_dict(items, desc)
-        content_frame = bltGui.bltShowListFrame(41, 15,120,70, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
-        content_frame.set_dict(item_dict)
-        slider = bltGui.bltSlider(content_frame,55,0,10,0,min_val=1,max_val=4,visible=False,skin='SOLID',label='Page')
-        content_frame.add_control(slider)
-        list_box.register('changed', content_frame)
-    else:
-        content_frame = None
+    if len(items) > 0:
+        list_box = bltGui.bltListbox(list_frame, 5, 5, items, False, True)
+        
+        if desc is not None:
+            item_dict = make_item_dict(items, desc)
+            content_frame = bltGui.bltShowListFrame(41, 15,120,70, "", frame=False, draggable=False, color_skin = 'GRAY', font = '[font=text]', title_font='[font=big]')
+            content_frame.set_dict(item_dict)
+            slider = bltGui.bltSlider(content_frame,55,0,10,0,min_val=1,max_val=4,visible=False,skin='SOLID',label='Page')
+            content_frame.add_control(slider)
+            list_box.register('changed', content_frame)
+        
+        else:
+            content_frame = None
     
     if list_box is not None:    
         list_frame.add_control(list_box)

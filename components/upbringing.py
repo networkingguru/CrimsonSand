@@ -45,12 +45,17 @@ def get_valid_upbringings(entity,social):
 
 
     for u in Upbringing.getinstances():
-        if entity.creation_choices.get('ethnicity') in u.allowed_ethnicities and u.min_social_standing < social < u.max_social_standing and entity.creation_choices.get('circumstance') in u.allowed_circumstances:
+        if entity.creation_choices.get('ethnicity') in u.allowed_ethnicities and u.min_social_standing <= social <= u.max_social_standing and entity.creation_choices.get('circumstance') in u.allowed_circumstances:
             valid.append(u)
 
  
     return valid
 
+
+
+desc = 'You had an average childhood for your village, and have no major advantages or drawbacks.'
+
+normal = Upbringing(name='Normal',desc=desc,min_social_standing=0,max_social_standing=100)
 
 attr_mods = {'ss':20,'pwr':10,'sta':30,'log':-20,'wis':-10,'cre':-10,'men':-10,'will':30,'fat':-30}
 
@@ -68,10 +73,6 @@ desc = 'You spent most of your childhood begging on the streets of a large city.
 allowed_ethnicities = ['Corrillian','Stygian','Kebrini','Solomanian']
 
 beggar = Upbringing(name='Beggar',desc=desc,max_social_standing=15,attr_mods=attr_mods)
-
-desc = 'You had an average childhood for your village, and have no major advantages or drawbacks.'
-
-normal = Upbringing(name='Normal',desc=desc,min_social_standing=20,max_social_standing=65)
 
 attr_mods = {'log':-10,'cre':-20,'comp':-10,'comm':-10,'man':10,'bal':10,'swift':10}
 free_skills = ['Deflect','Dodge','Brawling','Short Sword','Dagger','Mace','Spear']

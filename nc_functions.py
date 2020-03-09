@@ -1,6 +1,6 @@
 from enums import GameStates, MenuTypes
 from components.circumstances import Circumstance
-from components.ethnicities import Ethnicity
+from components.ethnicities import Ethnicity, age_mods
 from components.professions import Profession
 from components.upbringing import get_valid_upbringings
 from utilities import inch_conv,roll_dice
@@ -17,8 +17,18 @@ def choose_circumstance(curr_actor, game_state, command) -> (dict, int, bool):
     clear = False
     menu_dict = {}
     menu_desc = {}
+    skip = True
 
-    if len(command) != 0:
+    if skip: #For debugging
+        for c in Circumstance.getinstances():
+            menu_dict = {'type': MenuTypes.page, 'header': 'Choose your starting circumstances', 'options': [], 'mode': False, 'desc': {}}   
+            curr_actor.circumstance = c
+            curr_actor.creation_choices['circumstance'] = c.name
+            game_state = GameStates.sex
+            clear = True
+            break
+
+    elif len(command) != 0:
         for c in Circumstance.getinstances():
             if command.get(c.name):
                 curr_actor.circumstance = c
@@ -35,15 +45,24 @@ def choose_circumstance(curr_actor, game_state, command) -> (dict, int, bool):
 
         menu_dict['desc'] = menu_desc
 
-
     return menu_dict, game_state, clear
 
 def choose_sex(curr_actor, game_state, command) -> (dict, int, bool):
     clear = False
     menu_dict = {}
     menu_desc = {}
+    skip = True
+    
+    if skip: #For debugging
+        curr_actor.creation_choices['sex'] = 'Male'
+        clear = True
+        menu_dict = {'type': MenuTypes.page, 'header': 'Choose your sex', 'options': ['Male','Female'], 'mode': False, 'desc': {}} 
+        if curr_actor.circumstance.c_creation:
+            game_state = GameStates.ethnicity           
+        else:
+            game_state = GameStates.hire
 
-    if len(command) != 0:
+    elif len(command) != 0:
         if command.get('Male'):
             curr_actor.creation_choices['sex'] = 'Male'
         elif command.get('Female'):
@@ -76,8 +95,18 @@ def choose_ethnicity(curr_actor, game_state, command) -> (dict, int, bool):
     clear = False
     menu_dict = {}
     menu_desc = {}
+    skip = True
+    
+    if skip: #For debugging
+        for e in Ethnicity.getinstances():
+            menu_dict = {'type': MenuTypes.page, 'header': 'Choose your ethnicity', 'options': [], 'mode': False, 'desc': {}} 
+            curr_actor.creation_choices['ethnicity'] = e.name
+            game_state = GameStates.social
+            clear = True
+            break
 
-    if len(command) != 0:
+
+    elif len(command) != 0:
         for e in Ethnicity.getinstances():
             if command.get(e.name):
                 curr_actor.creation_choices['ethnicity'] = e.name
@@ -114,9 +143,16 @@ def roll_social(curr_actor, game_state, command) -> (dict, int, bool):
     professions = set()
     u_profs = set()
     clear = False
+    skip = True
     
+    if skip: #For debugging
+        menu_dict = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Roll'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions}}
+        curr_actor.creation_choices['social'] = 100
+        game_state = GameStates.attributes
+        curr_actor.temp_store = {}
+        clear = True
 
-    if len(command) > 0:
+    elif len(command) > 0:
         if command.get('Roll') or command.get('Re-roll'):
             roll = roll_dice(1,100)
             if roll <= 10:
@@ -161,9 +197,17 @@ def roll_attr(curr_actor, game_state, command) -> (dict, int, bool):
     clear=False
     rolls = []
     menu_dict = {}
+    skip = True
+    
+    if skip: #For debugging
+        rolls = sorted(random_attr(1),reverse=True)
+        curr_actor.creation_choices['rolls'] = rolls
+        menu_dict = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Roll'], 'mode': False, 'desc': {'rolls':rolls}}
+        game_state = GameStates.attributes2
+        curr_actor.temp_store = {}
+        clear = True
 
-
-    if len(command) > 0:
+    elif len(command) > 0:
         if command.get('Roll') or command.get('Re-roll'):
             rolls = sorted(random_attr(1),reverse=True) 
             
@@ -190,10 +234,11 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
     rolls = curr_actor.creation_choices.get('rolls')
     attributes = {'Logic':0,'Wisdom':0,'Memory':0,'Comprehension':0,'Communication':0,'Creativity':0,'Mental Celerity':0,'Willpower':0,'Steady State':0,'Power':0,'Manual Dexterity':0,
                     'Pedal Dexterity':0,'Balance':0,'Swiftness':0,'Flexibility':0,'Stamina':0,'Dermatology':0,'Bone Structure':0,'Immune System':0, 'Shock Resistance':0,'Toxic Resistance':0,
-                    'Sight':0,'Hearing':0,'Taste/Smell':0,'Touch':0,'Facial Features':0,'Height':0,'Body Fat':0,'Facial Features':0,'Shapeliness':0}
+                    'Sight':0,'Hearing':0,'Taste/Smell':0,'Touch':0,'Facial Features':0,'Height':0,'Body Fat':0,'Shapeliness':0}
     attr_mods = {} #Dict of dicts in format attr:{ethnicity:mod,sex:mod}
     ethnicity = curr_actor.creation_choices.get('ethnicity')
     professions = allowed_profs(curr_actor)
+    skip = True
 
     if curr_actor.creation_choices.get('sex') == 'Male':
         for key,value in sex_attr_mods_m.items():
@@ -215,8 +260,18 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
     
     i =  curr_actor.temp_store.get('desc').get('index')
 
+    if skip: #For debugging
+        curr_actor.creation_choices['attributes'] = curr_actor.temp_store.get('desc').get('attributes')
+        menu_dict = curr_actor.temp_store
+        game_state = GameStates.upbringing
+        curr_actor.temp_store = {}
+        clear = True
+        i = 0
+        for key,value in curr_actor.creation_choices['attributes'].items():
+            curr_actor.creation_choices['attributes'][key] = curr_actor.creation_choices['rolls'][i]
+            i += 1
 
-    if len(command) > 0:
+    elif len(command) > 0:
         if command.get('Accept'):
             curr_actor.creation_choices['attributes'] = curr_actor.temp_store.get('desc').get('attributes')
             menu_dict = {}
@@ -230,7 +285,6 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
 
         else:
             for key,value in curr_actor.temp_store['desc']['attributes'].items():
-                x = command.get(key)
                 if command.get(key):
                     curr_actor.temp_store['desc']['attributes'][key] = rolls[i]
                     curr_actor.temp_store['desc']['index'] += 1
@@ -260,13 +314,24 @@ def choose_upbringing(curr_actor, game_state, command) -> (dict, int, bool):
     valid_upbringings = get_valid_upbringings(curr_actor, None)
     menu_dict = {'type': MenuTypes.page, 'header': 'Choose your childhood upbringing', 'options': [], 'mode': False, 'desc': {}}
     clear = False
+    skip = True
+    
+    if skip: #For debugging
+        for u in valid_upbringings:
+            curr_actor.creation_choices['upbringing'] = u.name 
+            game_state = GameStates.age
+            clear = True
+            break
 
-    if len(command) > 0:
+
+    elif len(command) > 0:
         for u in valid_upbringings:
             if command.get(u.name):
                 curr_actor.creation_choices['upbringing'] = u.name 
                 game_state = GameStates.age
                 clear = True
+                menu_dict = {}
+                curr_actor.temp_store = {}
 
     else:
         for u in valid_upbringings:
@@ -305,6 +370,42 @@ def choose_upbringing(curr_actor, game_state, command) -> (dict, int, bool):
 
     return menu_dict, game_state, clear
 
+def choose_age(curr_actor, game_state, command) -> (dict, int, bool):
+    
+    menu_dict = {'type': MenuTypes.num_page, 'header': 'Choose your age', 'options': ['Accept'], 'mode': False, 'desc': {}}
+    clear = False
+    eth_name = curr_actor.creation_choices.get('ethnicity')
+    ethnicity = None
+
+    for e in Ethnicity.getinstances():
+        if e.name == eth_name:
+            ethnicity = e
+
+    if len(command) > 0:
+        if command.get('Age'):
+            curr_actor.temp_store['Age'] = command.get('Age')
+        elif command.get('Accept'):
+            curr_actor.creation_choices['age'] = curr_actor.temp_store.get('Age')
+            game_state = GameStates.profession
+            clear = True          
+
+    else:
+        if not curr_actor.temp_store.get('Age'):
+            curr_actor.temp_store['Age'] = '16'
+
+    mod_dict = age_mods(int(curr_actor.temp_store.get('Age')),ethnicity)
+
+    mod_str = ''
+    for key, value in mod_dict.items():
+        if key is not list(mod_dict.keys())[-1]:
+            mod_str += key + ': ' + str(value) + ', '
+        else:
+            mod_str += key + ': ' + str(value)
+
+    menu_dict['desc']['age mods'] = mod_str
+    menu_dict['desc']['age'] = curr_actor.temp_store.get('Age')
+
+    return menu_dict, game_state, clear
 
 
 def allowed_profs(curr_actor, roll=0) -> set:
