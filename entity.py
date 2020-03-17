@@ -2,7 +2,7 @@ import math
 import time
 from statistics import mean
 from copy import deepcopy, copy
-from components.fighter import Fighter, Attribute, Skill
+from components.fighter import Fighter, Attribute, Skill, attr_name_dict
 from components import weapon
 from components.circumstances import Circumstance
 from utilities import clamp, inch_conv, itersubclasses
@@ -450,16 +450,14 @@ class Entity:
                 
         self.fighter.reach_leg = clamp(inch_conv((self.fighter.height*self.fighter.location_ratios[17]) + self.fighter.equip_loc.get(27).length, 1), 2)
 
-    def add_attributes(self, attr_list) -> dict:
-        attr_dict = dict()
-        name_list = ['Logic', 'Memory', 'Wisdom', 'Comprehension', 'Communication', 'Creativity', 'Mental Celerity', 'Willpower', 'Steady State', 'Power', 'Manual Dexterity', 'Pedal Dexterity', 'Balance', 'Swiftness', 'Flexibility', 'Stamina', 'Dermatology', 'Bone', 'Immune', 'Shock', 'Toxic', 'Sight', 'Hearing', 'Taste/Smell', 'Touch', 'Facial Features', 'Height', 'Body Fat', 'Shapliness']
-        abr_list = ['log','mem','wis','comp','comm','cre','men','will','ss','pwr','man','ped','bal','swift','flex','sta','derm','bone','immune','shock','toxic','sit','hear','ts','touch','fac','ht','fat','shape']
-        idx = 0
-        for a in attr_list:
-            atr = Attribute(name_list[idx], abr_list[idx], a)
-            attr_dict[abr_list[idx]] = atr
-            idx += 1
-        return attr_dict
+    def add_attributes(self, attr_dict) -> dict:
+        attr_dict2 = dict()
+        for a,v in attr_dict.items():
+            abr = a
+            name = attr_name_dict.get(a)
+            atr = Attribute(name, abr, v)
+            attr_dict2[a] = atr
+        return attr_dict2
 
     def pick_dom_weapon(self) -> object:
         weapon = None

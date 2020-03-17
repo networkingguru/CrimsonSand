@@ -17,6 +17,8 @@ class GameStates(Enum):
     upbringing = auto()
     age = auto()
     profession = auto()
+    skills = auto()
+    name = auto()
     shop = auto()
     equip = auto()
     hire = auto()
@@ -50,6 +52,7 @@ class MenuTypes(Enum):
     attr = auto()
     attr2 = auto()
     num_page = auto()
+    prof_page = auto()
 
 class CombatPhase(Enum):   
     explore = auto()

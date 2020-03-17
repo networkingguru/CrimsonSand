@@ -594,6 +594,7 @@ class Skill():
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None #Only used during PC creation
 
         self.__dict__.update(kwargs)
 
@@ -619,15 +620,20 @@ class Skill():
         ter_avg = 0
         base_rating = 0
         rating = 0
-
-        for attr in self.prim_base:
-            prim_list.append(self.entity.fighter.get_attribute(attr))
-
-        for attr in self.sec_base:
-            sec_list.append(self.entity.fighter.get_attribute(attr))
-        
-        for attr in self.ter_base:
-            ter_list.append(self.entity.fighter.get_attribute(attr))
+        if self.attributes == None:
+            for attr in self.prim_base:
+                prim_list.append(self.entity.fighter.get_attribute(attr))
+            for attr in self.sec_base:
+                sec_list.append(self.entity.fighter.get_attribute(attr))         
+            for attr in self.ter_base:
+                ter_list.append(self.entity.fighter.get_attribute(attr))
+        else:
+            for attr in self.prim_base:
+                prim_list.append(self.attributes.get(attr_name_dict.get(attr)))
+            for attr in self.sec_base:
+                sec_list.append(self.attributes.get(attr_name_dict.get(attr)))    
+            for attr in self.ter_base:
+                ter_list.append(self.attributes.get(attr_name_dict.get(attr)))
 
         prim_avg = mean(prim_list)
         if len(sec_list) > 0: sec_avg = mean(sec_list)
@@ -665,6 +671,7 @@ class Deflect(Skill):
         self.offensive = False
         self.unarmed = True
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -691,6 +698,7 @@ class Dodge(Skill):
         self.offensive = False
         self.unarmed = True
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -717,6 +725,7 @@ class Martial_Arts(Skill):
         self.offensive = True
         self.unarmed = True
         self.grappling = True
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -743,6 +752,7 @@ class Boxing(Skill):
         self.offensive = True
         self.unarmed = True
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -769,6 +779,7 @@ class Brawling(Skill):
         self.offensive = True
         self.unarmed = True
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -795,6 +806,7 @@ class Wrestling(Skill):
         self.offensive = True
         self.unarmed = True
         self.grappling = True
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -821,6 +833,7 @@ class Long_Sword(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -847,6 +860,7 @@ class Dagger(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -873,6 +887,7 @@ class Short_Sword(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -899,6 +914,7 @@ class Great_Sword(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -925,6 +941,7 @@ class Small_Axe(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -951,6 +968,7 @@ class Large_Axe(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -977,6 +995,7 @@ class Staff(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1003,6 +1022,7 @@ class Mace(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1029,6 +1049,7 @@ class Flail(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1055,6 +1076,7 @@ class Small_Hammer(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1081,6 +1103,7 @@ class Large_Hammer(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1107,6 +1130,7 @@ class Lance(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1133,6 +1157,7 @@ class Spear(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1159,6 +1184,7 @@ class Polearm(Skill):
         self.offensive = True
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1185,6 +1211,7 @@ class Light_Armor(Skill):
         self.offensive = False
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1211,6 +1238,7 @@ class Medium_Armor(Skill):
         self.offensive = False
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1237,6 +1265,7 @@ class Heavy_Armor(Skill):
         self.offensive = False
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()
@@ -1263,6 +1292,7 @@ class Shield(Skill):
         self.offensive = False
         self.unarmed = False
         self.grappling = False
+        self.attributes = None
 
         self.__dict__.update(kwargs)
         self.level = self.set_level()

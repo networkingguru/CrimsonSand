@@ -3,8 +3,8 @@ from components.circumstances import Circumstance
 from components.ethnicities import Ethnicity, age_mods
 from components.professions import Profession
 from components.upbringing import get_valid_upbringings
+from components.fighter import attr_name_dict, Skill
 from utilities import inch_conv,roll_dice
-from components.fighter import attr_name_dict
 from chargen_functions import random_attr
 
 
@@ -21,12 +21,13 @@ def choose_circumstance(curr_actor, game_state, command) -> (dict, int, bool):
 
     if skip: #For debugging
         for c in Circumstance.getinstances():
-            menu_dict = {'type': MenuTypes.page, 'header': 'Choose your starting circumstances', 'options': [], 'mode': False, 'desc': {}}   
-            curr_actor.circumstance = c
-            curr_actor.creation_choices['circumstance'] = c.name
-            game_state = GameStates.sex
-            clear = True
-            break
+            if c.name == 'Contracted Gladiator':
+                menu_dict = {'type': MenuTypes.page, 'header': 'Choose your starting circumstances', 'options': [], 'mode': False, 'desc': {}}   
+                curr_actor.circumstance = c
+                curr_actor.creation_choices['circumstance'] = c.name
+                game_state = GameStates.sex
+                clear = True
+                break
 
     elif len(command) != 0:
         for c in Circumstance.getinstances():
@@ -99,11 +100,12 @@ def choose_ethnicity(curr_actor, game_state, command) -> (dict, int, bool):
     
     if skip: #For debugging
         for e in Ethnicity.getinstances():
-            menu_dict = {'type': MenuTypes.page, 'header': 'Choose your ethnicity', 'options': [], 'mode': False, 'desc': {}} 
-            curr_actor.creation_choices['ethnicity'] = e.name
-            game_state = GameStates.social
-            clear = True
-            break
+            if e.name == 'Corrillian':
+                menu_dict = {'type': MenuTypes.page, 'header': 'Choose your ethnicity', 'options': [], 'mode': False, 'desc': {}} 
+                curr_actor.creation_choices['ethnicity'] = e.name
+                game_state = GameStates.social
+                clear = True
+                break
 
 
     elif len(command) != 0:
@@ -141,13 +143,12 @@ def roll_social(curr_actor, game_state, command) -> (dict, int, bool):
     roll = 0
     standing = ''
     professions = set()
-    u_profs = set()
     clear = False
     skip = True
     
     if skip: #For debugging
         menu_dict = {'type': MenuTypes.roll, 'header': 'Roll for your family\'s social standing', 'options': ['Roll'], 'mode': False, 'desc': {'roll':roll,'standing':standing,'prof':professions}}
-        curr_actor.creation_choices['social'] = 100
+        curr_actor.creation_choices['social'] = 50
         game_state = GameStates.attributes
         curr_actor.temp_store = {}
         clear = True
@@ -200,7 +201,8 @@ def roll_attr(curr_actor, game_state, command) -> (dict, int, bool):
     skip = True
     
     if skip: #For debugging
-        rolls = sorted(random_attr(1),reverse=True)
+        while len(rolls) < 29:
+            rolls.append(200)
         curr_actor.creation_choices['rolls'] = rolls
         menu_dict = {'type': MenuTypes.attr, 'header': 'Roll for your base attributes', 'options': ['Roll'], 'mode': False, 'desc': {'rolls':rolls}}
         game_state = GameStates.attributes2
@@ -235,32 +237,18 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
     attributes = {'Logic':0,'Wisdom':0,'Memory':0,'Comprehension':0,'Communication':0,'Creativity':0,'Mental Celerity':0,'Willpower':0,'Steady State':0,'Power':0,'Manual Dexterity':0,
                     'Pedal Dexterity':0,'Balance':0,'Swiftness':0,'Flexibility':0,'Stamina':0,'Dermatology':0,'Bone Structure':0,'Immune System':0, 'Shock Resistance':0,'Toxic Resistance':0,
                     'Sight':0,'Hearing':0,'Taste/Smell':0,'Touch':0,'Facial Features':0,'Height':0,'Body Fat':0,'Shapeliness':0}
-    attr_mods = {} #Dict of dicts in format attr:{ethnicity:mod,sex:mod}
+    attr_mods = determine_attr_mods(curr_actor) #Dict of dicts in format attr:{ethnicity:mod,sex:mod}
     ethnicity = curr_actor.creation_choices.get('ethnicity')
     professions = allowed_profs(curr_actor)
     skip = True
 
-    if curr_actor.creation_choices.get('sex') == 'Male':
-        for key,value in sex_attr_mods_m.items():
-            attr_mods[key] = {}
-            attr_mods[key]['sex'] = value
-
-    for e in Ethnicity.getinstances():
-        if e.name == ethnicity:
-            for key,value in e.attr_mods.items():
-                a_name = attr_name_dict.get(key)
-                if attr_mods.get(a_name):
-                    attr_mods[a_name]['ethnicity'] = value
-                else:
-                    attr_mods[a_name] = {}
-                    attr_mods[a_name]['ethnicity'] = value
     
     if len(curr_actor.temp_store) == 0:
         curr_actor.temp_store = {'type': MenuTypes.attr2, 'header': 'Assign rolls to your attributes', 'options': ['Revert'], 'mode': False, 'desc': {'attributes':attributes,'index':0,'roll':0,'attr_mods':attr_mods,'professions':professions,'curr_actor':curr_actor}}
-    
+
     i =  curr_actor.temp_store.get('desc').get('index')
 
-    if skip: #For debugging
+    if skip:    #For debugging
         curr_actor.creation_choices['attributes'] = curr_actor.temp_store.get('desc').get('attributes')
         menu_dict = curr_actor.temp_store
         game_state = GameStates.upbringing
@@ -286,7 +274,10 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
         else:
             for key,value in curr_actor.temp_store['desc']['attributes'].items():
                 if command.get(key):
-                    curr_actor.temp_store['desc']['attributes'][key] = rolls[i]
+                    attr_mod = 0
+                    if attr_mods.get(key):
+                        attr_mod = sum(attr_mods.get(key).values())
+                    curr_actor.temp_store['desc']['attributes'][key] = rolls[i] + attr_mod
                     curr_actor.temp_store['desc']['index'] += 1
                     curr_actor.temp_store['options'].remove(key)
     else:
@@ -299,13 +290,7 @@ def assign_attr(curr_actor, game_state, command) -> (dict, int, bool):
                 curr_actor.temp_store['options'].append(key)
         if i == 29 and 'Accept' not in curr_actor.temp_store.get('options'):
             curr_actor.temp_store['options'].append('Accept')
-        if i <= len(rolls)-1:
-            curr_actor.temp_store['desc']['roll'] = rolls[i]
-        else:
-            curr_actor.temp_store['desc']['roll'] = 0
-
-
-
+        curr_actor.temp_store['desc']['roll'] = rolls[i] if i <= len(rolls) - 1 else 0
     menu_dict = curr_actor.temp_store 
 
     return menu_dict, game_state, clear
@@ -318,10 +303,11 @@ def choose_upbringing(curr_actor, game_state, command) -> (dict, int, bool):
     
     if skip: #For debugging
         for u in valid_upbringings:
-            curr_actor.creation_choices['upbringing'] = u.name 
-            game_state = GameStates.age
-            clear = True
-            break
+            if u.name == 'Normal':
+                curr_actor.creation_choices['upbringing'] = u.name 
+                game_state = GameStates.age
+                clear = True
+                break
 
 
     elif len(command) > 0:
@@ -371,17 +357,25 @@ def choose_upbringing(curr_actor, game_state, command) -> (dict, int, bool):
     return menu_dict, game_state, clear
 
 def choose_age(curr_actor, game_state, command) -> (dict, int, bool):
-    
+    valid_upbringings = get_valid_upbringings(curr_actor, None)
     menu_dict = {'type': MenuTypes.num_page, 'header': 'Choose your age', 'options': ['Accept'], 'mode': False, 'desc': {}}
     clear = False
     eth_name = curr_actor.creation_choices.get('ethnicity')
     ethnicity = None
+    skip = True
 
     for e in Ethnicity.getinstances():
         if e.name == eth_name:
             ethnicity = e
+    if skip: #For debugging
+        for _ in valid_upbringings:
+            curr_actor.temp_store['Age'] = '35'
+            curr_actor.creation_choices['age'] = '35' 
+            game_state = GameStates.profession
+            clear = True
+            break
 
-    if len(command) > 0:
+    elif len(command) > 0:
         if command.get('Age'):
             curr_actor.temp_store['Age'] = command.get('Age')
         elif command.get('Accept'):
@@ -407,8 +401,119 @@ def choose_age(curr_actor, game_state, command) -> (dict, int, bool):
 
     return menu_dict, game_state, clear
 
+def choose_profs(curr_actor, game_state, command) -> (dict, int, bool):
+    
+    menu_dict = {'type': MenuTypes.page, 'header': 'Choose your past professions', 'options': ['Accept','Revert'], 'mode': False, 'desc': {}}
+    clear = False
+    eth_name = curr_actor.creation_choices.get('ethnicity')
+    ethnicity = None
+    professions = None
+    valid_upbringings = get_valid_upbringings(curr_actor, None)
+    valid_profs_list = []
+    years = int(curr_actor.creation_choices.get('age')) - 16
+    valid_professions = prune_profs(curr_actor,allowed_profs(curr_actor)) 
+    skip = False
+    attrs = curr_actor.creation_choices.get('attributes')
+    attr_mods = determine_attr_mods(curr_actor)
+
+    for a,d in attr_mods.items():
+            attrs[a] += sum(d.values())
+
+    #Add fighter component if missing
+    if curr_actor.fighter is None:
+        attr_dict = dict()
+        for a,v in attrs.items():
+            for k,n in attr_name_dict.items():
+                if n == a:
+                    abr = k
+                    break
+            attr_dict[k] = v
+        f_attrs = [attr_dict,{},0]
+        curr_actor.add_fighter_component(f_attrs)
+
+    for e in Ethnicity.getinstances():
+        if e.name == eth_name:
+            ethnicity = e
+    
+    if len(valid_professions) == 0 or skip:
+        curr_actor.creation_choices['professions'] = {} 
+        game_state = GameStates.name
+        clear = True
+        menu_dict = {}
+        curr_actor.temp_store = {}
+
+    elif len(command) > 0:
+        if command.get('Accept'):
+            game_state = GameStates.name
+            clear = True
+            menu_dict = {}
+            curr_actor.temp_store = {}
+        elif command.get('Revert'):
+            curr_actor.creation_choices['professions'] = {} 
+        else: 
+            for p in valid_professions:
+                if command.get(p.name):
+                    if not curr_actor.creation_choices.get('profession').get(p.name):
+                        curr_actor.creation_choices['profession'][p.name] = 0
+                    curr_actor.creation_choices['profession'][p.name] += 1      
+
+    else:
+        for p in valid_professions:
+            valid_profs_list.append(p.name)
+
+        valid_profs_list.sort()
+        if not curr_actor.creation_choices.get('professions'):
+            curr_actor.creation_choices['professions'] = {}
+        if len(curr_actor.creation_choices.get('professions')) > 0:
+            for key,value in curr_actor.creation_choices.get('professions').items():
+                years -= value
+        
+        if years > 0:
+            menu_dict['options'].extend(valid_profs_list)
+            for p in valid_professions:
+                prim_desc = 'Primary Skills: '
+                prim_elect_desc = 'Primary Elective Skills: '
+                sec_desc = 'Secondary Skills: '
+                sec_elect_desc = 'Secondary Elective Skills: '
+                prof_dict, skill_dict = determine_ranks(curr_actor,p)
+                prof_str, skill_str = convert_ranks(curr_actor,prof_dict,skill_dict)
+
+                for key,value in p.base_primary_dict.items():
+                    if list(p.base_primary_dict.keys())[-1] == key:
+                        prim_desc += key + ': ' + str(value)
+                    else:
+                        prim_desc += key + ': ' + str(value) + ', '
+                if len(p.elect_primary_skills) > 0:
+                    for key,value in p.elect_primary_skills.items():
+                        if list(p.elect_primary_skills.keys())[-1] == key:
+                            prim_elect_desc += key + ': ' + str(value)
+                        else:
+                            prim_elect_desc += key + ': ' + str(value) + ', '
+                else:
+                    prim_elect_desc += 'None'
+                if len(p.base_sec_dict) > 0:
+                    for key,value in p.base_sec_dict.items():
+                        if list(p.base_sec_dict.keys())[-1] == key:
+                            sec_desc += key + ': ' + str(value)
+                        else:
+                            sec_desc += key + ': ' + str(value) + ', '
+                else:
+                    sec_desc += 'None'
+                if len(p.elect_sec_skills) > 0:
+                    for key,value in p.elect_sec_skills.items():
+                        if list(p.elect_sec_skills.keys())[-1] == key:
+                            sec_elect_desc += key + ': ' + str(value)
+                        else:
+                            sec_elect_desc += key + ': ' + str(value) + ', '
+                else:
+                    sec_elect_desc += 'None'
+                menu_dict['desc'][p] = prim_desc + '\n' + sec_desc + '\n' + prim_elect_desc + '\n' + sec_elect_desc + '\n' + prof_str + '\n' + skill_str
+
+
+    return menu_dict, game_state, clear
 
 def allowed_profs(curr_actor, roll=0) -> set:
+    #Goal: Return a set of valid profs based on social standing, ethnicity, and upbringing
     professions = set()
     u_profs = set()
 
@@ -433,3 +538,166 @@ def allowed_profs(curr_actor, roll=0) -> set:
                 professions.discard(prof.name)
 
     return professions
+
+def prune_profs(curr_actor, professions) -> set:
+    #Goal: Prune a set of professions based on attribute prerequisites
+    invalid_profs = set()
+    prof_objects = set()
+    for prof in professions:
+        for pr in Profession.__subclasses__():
+            p = pr(curr_actor)
+            if p.name == prof:
+                for key,value in p.prereq_dict.items():
+                    if curr_actor.creation_choices.get('attributes').get(attr_name_dict.get(key)) < value:
+                        invalid_profs.add(p.name)
+    professions -= invalid_profs
+    for prof in professions:
+        for pr in Profession.__subclasses__():
+            p = pr(curr_actor)
+            if p.name == prof:
+                prof_objects.add(p)
+
+    return prof_objects
+
+def determine_ranks(curr_actor, selected_prof=None) -> (dict, dict):
+    #Goal: Return two dicts with profession and level and skill and xp based on profession choices and upbringing/ethnicity
+    py_dict = curr_actor.creation_choices.get('professions')
+    prof_dict = {}
+    skill_dict = {}
+    primary_skills = {}
+    secondary_skills = {}
+    attrs = curr_actor.creation_choices.get('attributes')
+    attr_mods = determine_attr_mods(curr_actor)
+
+    for u in get_valid_upbringings(curr_actor, None):
+        if u.name == curr_actor.creation_choices.get('upbringing'):
+            upbringing = u
+
+    for e in Ethnicity.getinstances():
+        if e.name == curr_actor.creation_choices.get('ethnicity'):
+            ethnicity = e
+
+    for a,d in attr_mods.items():
+        attrs[a] += sum(d.values())
+
+    #Add year from selected profession, if present
+    if selected_prof is not None:
+        if not py_dict.get(selected_prof.name):
+            py_dict[selected_prof.name] = 0
+        py_dict[selected_prof.name] += 1
+
+    #Determine profession ranks
+    for prof_str,years in py_dict.items():
+        for pr in Profession.__subclasses__():
+            p = pr(curr_actor)
+            if prof_str == p.name:
+                p.calc_level(attrs,years)
+                prof_dict[p.name] = p.level
+
+    #Determine skill levels, taking into account primary/secondary skills as well as free skills
+    for s in upbringing.free_skills:
+        for sk in Skill.__subclasses__():
+            skl = sk(curr_actor)
+            if skl.name == s:
+                secondary_skills[s] = skl.cost
+    for s in ethnicity.free_skills:
+        for sk in Skill.__subclasses__():
+            skl = sk(curr_actor)
+            if skl.name == s:
+                secondary_skills[s] += skl.cost
+    for p in prof_dict:
+        level = prof_dict.get(p)
+        for pr in Profession.__subclasses__():
+            pro = pr(curr_actor)
+            if pro.name == p:
+                prof = pro
+        for ps,l in prof.base_primary_dict.items():
+            for sk in Skill.__subclasses__():
+                skl = sk(curr_actor)
+                if skl.name == ps:
+                    lvl = level-1 + l
+                    xp = 0
+                    while lvl > 0:
+                        xp += lvl * skl.cost
+                        lvl -= 1
+            if not primary_skills.get(ps):
+                primary_skills[ps] = 0
+            primary_skills[ps] += xp
+            if secondary_skills.get(ps):
+                primary_skills[ps] += secondary_skills.get(ps)
+                del secondary_skills[ps]
+        for ps,l in prof.base_sec_dict.items():
+            for sk in Skill.__subclasses__():
+                skl = sk(curr_actor)
+                if skl.name == ps:
+                    xp = 0
+                    while l > 0:
+                        xp += l * skl.cost
+                        l -= 1
+            if primary_skills.get(ps):
+                primary_skills[ps] += xp
+            else:
+                if not secondary_skills.get(ps):
+                    secondary_skills[ps] = 0
+                secondary_skills[ps] += xp
+
+    skill_dict = {**primary_skills,**secondary_skills}
+
+    return prof_dict, skill_dict
+
+def convert_ranks(curr_actor, prof_dict, skill_dict) -> (str,str):
+    prof_str = 'Professions and ranks: '
+    skill_str = 'Skills and levels: '
+
+    if len(prof_dict) == 0:
+        prof_str + 'None'
+    else:
+        for p,y in prof_dict.items():
+            for pr in Profession.__subclasses__():
+                prof = pr(curr_actor)
+                if prof.name == p:
+                    prof_str + p + ': ' + prof.title_list[y-1]
+                    if list(prof_dict.keys())[-1] != p:
+                        prof_str + ', '
+    if len(skill_dict) == 0:
+        skill_str + 'None'
+    else:
+        for s,x in skill_dict.items():
+            for sk in Skill.__subclasses__():
+                skl = sk(curr_actor,x)
+                if skl.name == s:
+                    skill_str + s + ': ' + str(skl.set_level())
+                    if list(skill_dict.keys())[-1] != s:
+                        skill_str + ', '
+
+    return prof_str, skill_str
+
+
+def determine_attr_mods(curr_actor) -> dict:
+    #Goal: Get all attribute mods based on sex and ethnicity and return them in a dict of dicts
+    attr_mods = {} #Dict of dicts in format attr:{ethnicity:mod,sex:mod}
+    ethnicity = curr_actor.creation_choices.get('ethnicity')
+    for u in get_valid_upbringings(curr_actor, None):
+        if u.name == curr_actor.creation_choices.get('upbringing'):
+            upbringing = u
+
+    if curr_actor.creation_choices.get('sex') == 'Male':
+        for key,value in sex_attr_mods_m.items():
+            attr_mods[key] = {}
+            attr_mods[key]['sex'] = value
+
+    for e in Ethnicity.getinstances():
+        if e.name == ethnicity:
+            for key,value in e.attr_mods.items():
+                a_name = attr_name_dict.get(key)
+                if not attr_mods.get(a_name):
+                    attr_mods[a_name] = {}
+                attr_mods[a_name]['ethnicity'] = value
+
+    for key,value in u.attr_mods.items():
+        a_name = attr_name_dict.get(key)
+        if not attr_mods.get(a_name):
+            attr_mods[a_name] = {}
+        attr_mods[a_name]['upbringing'] = value
+    
+    return attr_mods

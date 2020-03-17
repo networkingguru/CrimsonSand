@@ -77,7 +77,7 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_csheet(players)
     elif game_state == GameStates.main_menu:
         render_main_menu(frame_list, menu_dict)
-    elif len(menu_dict) > 0 and game_state in [GameStates.circumstance, GameStates.sex, GameStates.ethnicity, GameStates.upbringing]:
+    elif len(menu_dict) > 0 and game_state in [GameStates.circumstance, GameStates.sex, GameStates.ethnicity, GameStates.upbringing, GameStates.profession]:
         render_page(frame_list,menu_dict)
     elif len(menu_dict) > 0 and game_state in [GameStates.social]:
         render_rollpage(frame_list,menu_dict)
@@ -481,7 +481,9 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                                     item = control.return_item()
                                                     command = {item:item}
                                             elif isinstance(control,NumBox):
-                                                command = {'Age':control.text}
+                                                if control.updated:
+                                                    command = {'Age':control.text}
+                                                    control.updated = False
                                             
 
                             elif key < 128:

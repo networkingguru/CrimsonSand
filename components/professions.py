@@ -1,5 +1,6 @@
 from math import sqrt
 from statistics import mean
+from components.fighter import attr_name_dict
 
 class Profession():
     def __init__(self, **kwargs):
@@ -52,27 +53,31 @@ class Profession():
         
         return level_costs
 
-    def calc_attr_mult(self) -> int:
+    def calc_attr_mult(self,attributes) -> int:
         #Find all the prerteq attributes, figure out the amount the entity's attr exceeds it as a multiple, and cosolidate all of those into a single mult
         mult_list = []
         mult = 0
         for atr in self.prereq_dict:
             a = self.prereq_dict.get(atr)
-            b = self.entity.fighter.get_attribute(atr)
+            b = attributes.get(attr_name_dict.get(atr))
             mult_list.append(b/a)
 
         mult = mean(mult_list)
 
         return mult
 
-    def calc_level(self, years) -> None:
+    def calc_level(self, attributes, years) -> None:
         #Calc the effective level
         self.years = years
         level = 0
-        attr_mult = self.calc_attr_mult()
-        if self.entity.fighter.lm + attr_mult >= 1:
-            total_lm = sqrt(self.entity.fighter.lm + attr_mult)
-        else: total_lm = self.entity.fighter.lm + attr_mult
+        attr_mult = self.calc_attr_mult(attributes)
+        if self.entity.fighter is not None:
+            lm = self.entity.fighter.lm
+        else:
+            lm = ((attributes.get(attr_name_dict.get('comp')) * 0.25) + (attributes.get(attr_name_dict.get('men'))  * 0.5) + (attributes.get(attr_name_dict.get('log'))  * 0.15) + (attributes.get(attr_name_dict.get('wis'))  * 0.05) + (attributes.get(attr_name_dict.get('mem'))  * 0.05)) / 100
+        if lm + attr_mult >= 1:
+            total_lm = sqrt(lm + attr_mult)
+        else: total_lm = lm + attr_mult
 
         self.experience = 5000 * years * total_lm
         level_costs = self.calc_lvl_cost()

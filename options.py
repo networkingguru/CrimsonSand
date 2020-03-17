@@ -50,8 +50,17 @@ tallboy = [130,130,130,130,130,130,130,130,250,250,130,130,130,130,130,130,130,1
 hi_init = [130,130,130,130,130,130,430,130,250,250,130,130,130,430,130,130,130,130,130,130,130,130,130,130,130,130,350,80,130]
 low_init = [130,130,130,130,130,130,30,130,150,150,130,130,130,30,130,130,130,130,130,130,130,130,130,130,130,130,50,50,130]
 
+def convert_attr_list(attr_list) -> dict:
+    abr_list = ['log','mem','wis','comp','comm','cre','men','will','ss','pwr','man','ped','bal','swift','flex','sta','derm','bone','immune','shock','toxic','sit','hear','ts','touch','fac','ht','fat','shape']
+    attr_dict = dict()
+    i = 0
+    for a in attr_list:
+        attr_dict[abr_list[i]] = a
+        i += 1
+    return attr_dict
+
 #Fighter specs
-player_attr = hw
+player_attr = convert_attr_list(hw)
 player_s_dict = {'brawling': 8, 'deflect': 8, 'dodge': 6, 'wrestling': 12, 'long_sword': 8}
 player_fighter = ['Player', player_attr, player_s_dict, 4]
 player_r_weapon = 'De_Medium_Sword'
@@ -62,7 +71,7 @@ player_weapons = {'r_wpn': player_r_weapon, 'l_wpn': player_l_weapon, 'rf_wpn': 
 player_armor = [{'component':'Curiass','construction':'Plate','main_material' : 'Hardened Steel','thickness':.1},{'component':'Hauberk','construction':'Padded','main_material' : 'leather','thickness':.3}, {'component':'Hauberk','construction':'Chain','main_material' : 'Hardened Steel','thickness':.2}, {'component':'Jerkin','construction':'Padded','main_material' : 'Cloth','thickness':.05}, {'component':'Coif','construction':'Chain','main_material' : 'Hardened Steel','thickness':.3}, {'component':'Coif','construction':'Padded','main_material' : 'Cloth','thickness':.3}]
 
 #Enemy specs
-enemy_attr = low_init
+enemy_attr = convert_attr_list(low_init)
 enemy_s_dict = {}
 enemy_fighter = ['Enemy', enemy_attr, enemy_s_dict, 0, CombatAI]
 enemy_r_weapon = 'Unarmed'

@@ -88,6 +88,7 @@ class bltNumericBox(Control):
         self.active = False
         self.dirty = True
         self.frame_element = False
+        self.updated = False
 
     def draw(self):
         if self.dirty:
@@ -136,6 +137,7 @@ class bltNumericBox(Control):
             if text.isnumeric() and (self.min_val <= int(text) <= self.max_val):
                 self.text = str(text)
                 self.error = None
+                self.updated = True
             else:
                 self.error = 'Text must be numeric and between ' + str(self.min_val) + ' and ' + str(self.max_val) + '.'
 
