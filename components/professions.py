@@ -79,7 +79,7 @@ class Profession():
             total_lm = sqrt(lm + attr_mult)
         else: total_lm = lm + attr_mult
 
-        self.experience = 5000 * years * total_lm
+        self.experience = 3000 * years * total_lm
         level_costs = self.calc_lvl_cost()
         for lvl in level_costs:
             if self.experience <= lvl:

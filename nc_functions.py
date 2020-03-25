@@ -1,3 +1,5 @@
+import global_vars
+import time
 from enums import GameStates, MenuTypes
 from components.circumstances import Circumstance
 from components.ethnicities import Ethnicity, age_mods
@@ -6,6 +8,7 @@ from components.upbringing import get_valid_upbringings
 from components.fighter import attr_name_dict, Skill
 from utilities import inch_conv,roll_dice
 from chargen_functions import random_attr
+from copy import deepcopy
 
 
 sex_attr_mods_m = {'Logic':5,'Wisdom':-5,'Comprehension':-5,'Communication':-5,'Mental Celerity':-5,'Willpower':5,'Steady State':30,'Power':30,'Manual Dexterity':-5,
@@ -380,6 +383,7 @@ def choose_age(curr_actor, game_state, command) -> (dict, int, bool):
             curr_actor.temp_store['Age'] = command.get('Age')
         elif command.get('Accept'):
             curr_actor.creation_choices['age'] = curr_actor.temp_store.get('Age')
+            curr_actor.temp_store = {}
             game_state = GameStates.profession
             clear = True          
 
@@ -402,25 +406,19 @@ def choose_age(curr_actor, game_state, command) -> (dict, int, bool):
     return menu_dict, game_state, clear
 
 def choose_profs(curr_actor, game_state, command) -> (dict, int, bool):
-    
-    menu_dict = {'type': MenuTypes.page, 'header': 'Choose your past professions', 'options': ['Accept','Revert'], 'mode': False, 'desc': {}}
+    menu_dict = {}
     clear = False
-    eth_name = curr_actor.creation_choices.get('ethnicity')
-    ethnicity = None
-    professions = None
-    valid_upbringings = get_valid_upbringings(curr_actor, None)
-    valid_profs_list = []
     years = int(curr_actor.creation_choices.get('age')) - 16
-    valid_professions = prune_profs(curr_actor,allowed_profs(curr_actor)) 
     skip = False
-    attrs = curr_actor.creation_choices.get('attributes')
-    attr_mods = determine_attr_mods(curr_actor)
-
-    for a,d in attr_mods.items():
-            attrs[a] += sum(d.values())
+    
 
     #Add fighter component if missing
     if curr_actor.fighter is None:
+        attrs = curr_actor.creation_choices.get('attributes')
+        attr_mods = determine_attr_mods(curr_actor)
+
+        for a,d in attr_mods.items():
+                attrs[a] += sum(d.values())
         attr_dict = dict()
         for a,v in attrs.items():
             for k,n in attr_name_dict.items():
@@ -431,9 +429,22 @@ def choose_profs(curr_actor, game_state, command) -> (dict, int, bool):
         f_attrs = [attr_dict,{},0]
         curr_actor.add_fighter_component(f_attrs)
 
+    #Add ethnicity, SS, age, upbringing, sex to fighter
+    if curr_actor.creation_choices.get('sex') != 'Male':
+        curr_actor.fighter.male = False
+    for u in get_valid_upbringings(curr_actor, None):
+        if u.name == curr_actor.creation_choices.get('upbringing'):
+            curr_actor.fighter.upbringing = u
     for e in Ethnicity.getinstances():
-        if e.name == eth_name:
-            ethnicity = e
+        if e.name == curr_actor.creation_choices.get('ethnicity'):
+            curr_actor.fighter.ethnicity = e
+    curr_actor.fighter.social = curr_actor.creation_choices.get('social')
+    curr_actor.fighter.age = curr_actor.creation_choices.get('age')
+    
+
+    if not curr_actor.temp_store.get('valid_professions'):
+        curr_actor.temp_store['valid_professions'] = prune_profs(curr_actor,allowed_profs(curr_actor))
+    valid_professions = curr_actor.temp_store.get('valid_professions')
     
     if len(valid_professions) == 0 or skip:
         curr_actor.creation_choices['professions'] = {} 
@@ -453,64 +464,80 @@ def choose_profs(curr_actor, game_state, command) -> (dict, int, bool):
         else: 
             for p in valid_professions:
                 if command.get(p.name):
-                    if not curr_actor.creation_choices.get('profession').get(p.name):
-                        curr_actor.creation_choices['profession'][p.name] = 0
-                    curr_actor.creation_choices['profession'][p.name] += 1      
+                    if not curr_actor.creation_choices.get('professions').get(p.name):
+                        curr_actor.creation_choices['professions'][p.name] = 0
+                    curr_actor.creation_choices['professions'][p.name] += 1
+                    curr_actor.temp_store['menu_dict'] = gen_profs_menu(curr_actor,valid_professions,years)
+                    menu_dict = curr_actor.temp_store.get('menu_dict')
+
 
     else:
-        for p in valid_professions:
-            valid_profs_list.append(p.name)
-
-        valid_profs_list.sort()
-        if not curr_actor.creation_choices.get('professions'):
-            curr_actor.creation_choices['professions'] = {}
-        if len(curr_actor.creation_choices.get('professions')) > 0:
-            for key,value in curr_actor.creation_choices.get('professions').items():
-                years -= value
-        
-        if years > 0:
-            menu_dict['options'].extend(valid_profs_list)
-            for p in valid_professions:
-                prim_desc = 'Primary Skills: '
-                prim_elect_desc = 'Primary Elective Skills: '
-                sec_desc = 'Secondary Skills: '
-                sec_elect_desc = 'Secondary Elective Skills: '
-                prof_dict, skill_dict = determine_ranks(curr_actor,p)
-                prof_str, skill_str = convert_ranks(curr_actor,prof_dict,skill_dict)
-
-                for key,value in p.base_primary_dict.items():
-                    if list(p.base_primary_dict.keys())[-1] == key:
-                        prim_desc += key + ': ' + str(value)
-                    else:
-                        prim_desc += key + ': ' + str(value) + ', '
-                if len(p.elect_primary_skills) > 0:
-                    for key,value in p.elect_primary_skills.items():
-                        if list(p.elect_primary_skills.keys())[-1] == key:
-                            prim_elect_desc += key + ': ' + str(value)
-                        else:
-                            prim_elect_desc += key + ': ' + str(value) + ', '
-                else:
-                    prim_elect_desc += 'None'
-                if len(p.base_sec_dict) > 0:
-                    for key,value in p.base_sec_dict.items():
-                        if list(p.base_sec_dict.keys())[-1] == key:
-                            sec_desc += key + ': ' + str(value)
-                        else:
-                            sec_desc += key + ': ' + str(value) + ', '
-                else:
-                    sec_desc += 'None'
-                if len(p.elect_sec_skills) > 0:
-                    for key,value in p.elect_sec_skills.items():
-                        if list(p.elect_sec_skills.keys())[-1] == key:
-                            sec_elect_desc += key + ': ' + str(value)
-                        else:
-                            sec_elect_desc += key + ': ' + str(value) + ', '
-                else:
-                    sec_elect_desc += 'None'
-                menu_dict['desc'][p] = prim_desc + '\n' + sec_desc + '\n' + prim_elect_desc + '\n' + sec_elect_desc + '\n' + prof_str + '\n' + skill_str
+        if not curr_actor.temp_store.get('menu_dict'):
+            curr_actor.temp_store['menu_dict'] = gen_profs_menu(curr_actor,valid_professions,years)
+        menu_dict = curr_actor.temp_store.get('menu_dict')
 
 
     return menu_dict, game_state, clear
+
+def gen_profs_menu(curr_actor,valid_professions,years) -> dict:
+    valid_profs_list = []
+    menu_dict = {'type': MenuTypes.page, 'header': 'Choose your past professions', 'options': ['Revert','Accept'], 'mode': False, 'desc': {}}
+
+    for p in valid_professions:
+        valid_profs_list.append(p.name)
+
+    valid_profs_list.sort()
+    if not curr_actor.creation_choices.get('professions'):
+        curr_actor.creation_choices['professions'] = {}
+    if len(curr_actor.creation_choices.get('professions')) > 0:
+        for _,value in curr_actor.creation_choices.get('professions').items():
+            years -= value
+
+    if years > 0:
+        menu_dict['options'].extend(valid_profs_list)
+        for p_str in valid_profs_list:
+            for p in valid_professions:
+                if p.name == p_str:
+                    prim_desc = 'Primary Skills(' + p.name + '): ' 
+                    prim_elect_desc = 'Primary Elective Skills(' + p.name + '): '
+                    sec_desc = 'Secondary Skills(' + p.name + '): '
+                    sec_elect_desc = 'Secondary Elective Skills(' + p.name + '): '
+                    
+                    prof_dict, skill_dict = determine_ranks(curr_actor,p)
+                    prof_str, skill_str = convert_ranks(curr_actor,prof_dict,skill_dict)
+                    
+
+                    for key,value in p.base_primary_dict.items():
+                        if list(p.base_primary_dict.keys())[-1] == key:
+                            prim_desc += key + ': ' + str(value)
+                        else:
+                            prim_desc += key + ': ' + str(value) + ', '
+                    if len(p.elect_primary_skills) > 0:
+                        for key,value in p.elect_primary_skills.items():
+                            if list(p.elect_primary_skills.keys())[-1] == key:
+                                prim_elect_desc += key + ': ' + str(value)
+                            else:
+                                prim_elect_desc += key + ': ' + str(value) + ', '
+                    else:
+                        prim_elect_desc += 'None'
+                    if len(p.base_sec_dict) > 0:
+                        for key,value in p.base_sec_dict.items():
+                            if list(p.base_sec_dict.keys())[-1] == key:
+                                sec_desc += key + ': ' + str(value)
+                            else:
+                                sec_desc += key + ': ' + str(value) + ', '
+                    else:
+                        sec_desc += 'None'
+                    if len(p.elect_sec_skills) > 0:
+                        for key,value in p.elect_sec_skills.items():
+                            if list(p.elect_sec_skills.keys())[-1] == key:
+                                sec_elect_desc += key + ': ' + str(value)
+                            else:
+                                sec_elect_desc += key + ': ' + str(value) + ', '
+                    else:
+                        sec_elect_desc += 'None'
+                    menu_dict['desc'][p.name] = 'Years of training remaining: ' + str(years) + '\n' + prim_desc + '\n' + sec_desc + '\n' + prim_elect_desc + '\n' + sec_elect_desc + '\n' + prof_str + '\n' + skill_str
+    return menu_dict
 
 def allowed_profs(curr_actor, roll=0) -> set:
     #Goal: Return a set of valid profs based on social standing, ethnicity, and upbringing
@@ -548,7 +575,7 @@ def prune_profs(curr_actor, professions) -> set:
             p = pr(curr_actor)
             if p.name == prof:
                 for key,value in p.prereq_dict.items():
-                    if curr_actor.creation_choices.get('attributes').get(attr_name_dict.get(key)) < value:
+                    if curr_actor.fighter.get_attribute(key) < value:
                         invalid_profs.add(p.name)
     professions -= invalid_profs
     for prof in professions:
@@ -561,21 +588,15 @@ def prune_profs(curr_actor, professions) -> set:
 
 def determine_ranks(curr_actor, selected_prof=None) -> (dict, dict):
     #Goal: Return two dicts with profession and level and skill and xp based on profession choices and upbringing/ethnicity
-    py_dict = curr_actor.creation_choices.get('professions')
+    py_dict = deepcopy(curr_actor.creation_choices.get('professions'))
     prof_dict = {}
     skill_dict = {}
     primary_skills = {}
     secondary_skills = {}
     attrs = curr_actor.creation_choices.get('attributes')
     attr_mods = determine_attr_mods(curr_actor)
-
-    for u in get_valid_upbringings(curr_actor, None):
-        if u.name == curr_actor.creation_choices.get('upbringing'):
-            upbringing = u
-
-    for e in Ethnicity.getinstances():
-        if e.name == curr_actor.creation_choices.get('ethnicity'):
-            ethnicity = e
+    upbringing = curr_actor.fighter.upbringing
+    ethnicity = curr_actor.fighter.ethnicity
 
     for a,d in attr_mods.items():
         attrs[a] += sum(d.values())
@@ -646,8 +667,8 @@ def determine_ranks(curr_actor, selected_prof=None) -> (dict, dict):
     return prof_dict, skill_dict
 
 def convert_ranks(curr_actor, prof_dict, skill_dict) -> (str,str):
-    prof_str = 'Professions and ranks: '
-    skill_str = 'Skills and levels: '
+    prof_str = 'Professions and ranks based on selection: '
+    skill_str = 'Skills and levels based on selection: '
 
     if len(prof_dict) == 0:
         prof_str + 'None'
@@ -656,9 +677,9 @@ def convert_ranks(curr_actor, prof_dict, skill_dict) -> (str,str):
             for pr in Profession.__subclasses__():
                 prof = pr(curr_actor)
                 if prof.name == p:
-                    prof_str + p + ': ' + prof.title_list[y-1]
+                    prof_str += p + ': ' + prof.title_list[y-1]
                     if list(prof_dict.keys())[-1] != p:
-                        prof_str + ', '
+                        prof_str += ', '
     if len(skill_dict) == 0:
         skill_str + 'None'
     else:
@@ -666,9 +687,9 @@ def convert_ranks(curr_actor, prof_dict, skill_dict) -> (str,str):
             for sk in Skill.__subclasses__():
                 skl = sk(curr_actor,x)
                 if skl.name == s:
-                    skill_str + s + ': ' + str(skl.set_level())
+                    skill_str += s + ': ' + str(skl.set_level())
                     if list(skill_dict.keys())[-1] != s:
-                        skill_str + ', '
+                        skill_str += ', '
 
     return prof_str, skill_str
 
