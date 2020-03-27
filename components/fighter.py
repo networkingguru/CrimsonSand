@@ -71,7 +71,7 @@ class Fighter:
         self.ethnicity = None
         self.social_standing_roll = 0
         self.upbringing = None
-        self.professions = dict()
+        self.professions = ()
         
         #Skills
         self.skill_dict = dict()
@@ -369,6 +369,7 @@ class Fighter:
         self.loc_hit_mod = guard.loc_hit_mods
 
     def get_attribute(self, attr, value = 'val') -> int:
+        result = None
         dicts = [self.parent_attr_dict, self.attr_dict, self.skill_dict]
         if hasattr(self, attr):
             a = self
@@ -1498,7 +1499,7 @@ class Thrown_Axes(Skill):
         self.level = 0
         self.prim_base = ['man'] #Primary base attribute(s). If multiple, are averaged
         self.prim_amount = .6 #Percentage the PB contributes to total score
-        self.sec_base = ['pow']
+        self.sec_base = ['pwr']
         self.sec_amount = .2
         self.ter_base = ['men','wis']
         self.ter_amount = .2
@@ -1525,7 +1526,7 @@ class Thrown_Spear(Skill):
         self.level = 0
         self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
         self.prim_amount = .5 #Percentage the PB contributes to total score
-        self.sec_base = ['pow']
+        self.sec_base = ['pwr']
         self.sec_amount = .3
         self.ter_base = ['men','wis']
         self.ter_amount = .2
@@ -1883,6 +1884,141 @@ class Physics(Skill):
         
         self.autodidact = False #Defines if skill can be used untrained
         self.cost = 48 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
+        self.attributes = None
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class History(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'History'
+        self.abbr = 'history'
+        self.category = 'Liberal Arts'
+        self.level = 0
+        self.prim_base = ['mem'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = 1 #Percentage the PB contributes to total score
+        self.sec_base = []
+        self.sec_amount = 0
+        self.ter_base = []
+        self.ter_amount = 0
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 16 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
+        self.attributes = None
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Sociology(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Sociology'
+        self.abbr = 'sociology'
+        self.category = 'Liberal Arts'
+        self.level = 0
+        self.prim_base = ['mem'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .6 #Percentage the PB contributes to total score
+        self.sec_base = ['wis']
+        self.sec_amount = .2
+        self.ter_base = ['log']
+        self.ter_amount = .2
+        
+        self.autodidact = False #Defines if skill can be used untrained
+        self.cost = 24 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
+        self.attributes = None
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Philosophy(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Philosophy'
+        self.abbr = 'philosophy'
+        self.category = 'Liberal Arts'
+        self.level = 0
+        self.prim_base = ['wis'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .6 #Percentage the PB contributes to total score
+        self.sec_base = ['log']
+        self.sec_amount = .3
+        self.ter_base = ['cre']
+        self.ter_amount = .1
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 32 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
+        self.attributes = None
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Law(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Law'
+        self.abbr = 'law'
+        self.category = 'Liberal Arts'
+        self.level = 0
+        self.prim_base = ['log','cre'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .5 #Percentage the PB contributes to total score
+        self.sec_base = ['comm']
+        self.sec_amount = .4
+        self.ter_base = ['wis']
+        self.ter_amount = .1
+        
+        self.autodidact = False #Defines if skill can be used untrained
+        self.cost = 48 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = False
+        self.unarmed = False
+        self.grappling = False
+        self.attributes = None
+
+        self.__dict__.update(kwargs)
+        self.level = self.set_level()
+        self.rating = self.set_rating()
+
+class Literature(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Literature'
+        self.abbr = 'lit'
+        self.category = 'Liberal Arts'
+        self.level = 0
+        self.prim_base = ['mem'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .6 #Percentage the PB contributes to total score
+        self.sec_base = ['cre']
+        self.sec_amount = .3
+        self.ter_base = ['log']
+        self.ter_amount = .1
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 24 #Determines difficulty in improving skill
         self.rating = 0
         self.offensive = False
         self.unarmed = False

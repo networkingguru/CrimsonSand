@@ -455,7 +455,16 @@ def choose_profs(curr_actor, game_state, command) -> (dict, int, bool):
 
     elif len(command) > 0:
         if command.get('Accept'):
+            add_profs(curr_actor)
+            electives = False
+            for p in curr_actor.fighter.professions:
+                if len(p.elect_primary_skills) > 0:
+                    electives = True
+                elif len(p.elect_sec_skills) > 0:
+                    electives = True
             game_state = GameStates.name
+            if electives:
+                game_state = GameStates.skill
             clear = True
             menu_dict = {}
             curr_actor.temp_store = {}
@@ -478,6 +487,27 @@ def choose_profs(curr_actor, game_state, command) -> (dict, int, bool):
 
 
     return menu_dict, game_state, clear
+
+
+
+def add_profs(curr_actor) -> None:
+    prof_dict, skill_dict = determine_ranks(curr_actor)
+    for p in Profession.__subclasses__():
+        prof = p(curr_actor)
+        if curr_actor.creation_choices.get('professions').get(prof.name):
+            prof.level = prof_dict.get(prof.name)
+            prof.years = curr_actor.creation_choices.get('professions').get(prof.name)
+            curr_actor.fighter.professions.add(prof)
+    for s in skill_dict:
+        for sk in Skill.__subclasses__():
+            skl = sk(curr_actor)
+            if skl.name == s:
+                xp = 0
+                lvl = skill_dict.get(s)
+                while lvl > 0:
+                    xp += skl.cost * lvl
+                    lvl -= 1
+                curr_actor.fighter.skill_dict[skl.name] = xp
 
 def gen_profs_menu(curr_actor,valid_professions,years) -> dict:
     valid_profs_list = []
