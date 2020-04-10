@@ -71,7 +71,7 @@ class Fighter:
         self.ethnicity = None
         self.social_standing_roll = 0
         self.upbringing = None
-        self.professions = ()
+        self.professions = set()
         
         #Skills
         self.skill_dict = dict()
@@ -605,13 +605,13 @@ class Skill():
         xp = self.experience
         level = 0
         while xp > 0:
-            if xp > self.cost * level:
-                xp -= self.cost * level
+            if xp > self.cost * (level+1):
+                xp -= self.cost * (level+1)
                 level += 1
             else:
                 xp = 0
         
-        return level
+        self.level = level
 
     def set_rating(self) -> int:
         prim_list = []
@@ -650,7 +650,7 @@ class Skill():
         else:
             rating = (base_rating*2)/(self.level+1)*self.level
 
-        return int(round(rating))
+        self.rating = int(round(rating))
 
 class Deflect(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -676,8 +676,8 @@ class Deflect(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Dodge(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -703,8 +703,8 @@ class Dodge(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Martial_Arts(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -730,8 +730,8 @@ class Martial_Arts(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Boxing(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -757,8 +757,8 @@ class Boxing(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Brawling(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -784,8 +784,8 @@ class Brawling(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Wrestling(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -811,8 +811,8 @@ class Wrestling(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Long_Sword(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -838,8 +838,8 @@ class Long_Sword(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Dagger(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -865,8 +865,8 @@ class Dagger(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Short_Sword(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -892,8 +892,8 @@ class Short_Sword(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Great_Sword(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -919,8 +919,8 @@ class Great_Sword(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Small_Axe(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -946,8 +946,8 @@ class Small_Axe(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Large_Axe(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -973,8 +973,8 @@ class Large_Axe(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Staff(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1000,8 +1000,8 @@ class Staff(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Mace(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1027,8 +1027,8 @@ class Mace(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Flail(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1054,8 +1054,8 @@ class Flail(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Small_Hammer(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1081,8 +1081,8 @@ class Small_Hammer(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Large_Hammer(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1108,8 +1108,8 @@ class Large_Hammer(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Lance(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1135,8 +1135,8 @@ class Lance(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Spear(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1162,8 +1162,8 @@ class Spear(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Polearm(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1189,8 +1189,8 @@ class Polearm(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Light_Armor(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1216,8 +1216,8 @@ class Light_Armor(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Medium_Armor(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1243,8 +1243,8 @@ class Medium_Armor(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Heavy_Armor(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1270,8 +1270,8 @@ class Heavy_Armor(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Shield(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1297,8 +1297,8 @@ class Shield(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Long_Bow(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1324,8 +1324,8 @@ class Long_Bow(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Short_Bow(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1351,8 +1351,8 @@ class Short_Bow(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Composite_Bow(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1378,8 +1378,8 @@ class Composite_Bow(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Archery(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1405,8 +1405,8 @@ class Archery(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Crossbow(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1432,8 +1432,8 @@ class Crossbow(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Large_Crossbow(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1459,8 +1459,8 @@ class Large_Crossbow(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Thrown_Knives(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1486,8 +1486,8 @@ class Thrown_Knives(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Thrown_Axes(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1513,8 +1513,8 @@ class Thrown_Axes(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Thrown_Spear(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1540,8 +1540,8 @@ class Thrown_Spear(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Thrown_Picks(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1567,8 +1567,8 @@ class Thrown_Picks(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Slings(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1594,8 +1594,8 @@ class Slings(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Thrown_Rocks(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1621,8 +1621,8 @@ class Thrown_Rocks(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Shuriken(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1648,8 +1648,8 @@ class Shuriken(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Chemistry(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1675,8 +1675,8 @@ class Chemistry(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Astrology(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1702,8 +1702,8 @@ class Astrology(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Biology(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1729,8 +1729,8 @@ class Biology(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Medicine(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1756,8 +1756,8 @@ class Medicine(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Surgery(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1783,8 +1783,8 @@ class Surgery(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Lore(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1810,8 +1810,8 @@ class Lore(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Oratory(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1837,8 +1837,8 @@ class Oratory(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Math(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1864,8 +1864,8 @@ class Math(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Physics(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1891,8 +1891,8 @@ class Physics(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class History(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1918,8 +1918,8 @@ class History(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Sociology(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1945,8 +1945,8 @@ class Sociology(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Philosophy(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1972,8 +1972,8 @@ class Philosophy(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Law(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -1999,8 +1999,8 @@ class Law(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 class Literature(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
@@ -2026,8 +2026,8 @@ class Literature(Skill):
         self.attributes = None
 
         self.__dict__.update(kwargs)
-        self.level = self.set_level()
-        self.rating = self.set_rating()
+        self.set_level()
+        self.set_rating()
 
 
 
