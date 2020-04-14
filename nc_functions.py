@@ -494,7 +494,7 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
     skip = False
 
     if not curr_actor.creation_choices.get('skills'):
-        curr_actor.creation_choices['skills'] = {} #Nested dict in the following format {primary:{skill:picks}}
+        curr_actor.creation_choices['skills'] = {} #Nested dict in the following format {primary:{skill:xp}}
     
     if not curr_actor.temp_store.get('electives'):
         curr_actor.temp_store['electives'] = {} #Nested dict in following format {profession:{primary:{category:[[skill list],levels]}}}
@@ -511,43 +511,82 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
     
     if len(command) > 0:
         if command.get('Accept'):
-            
+            for k in curr_actor.creation_choices.get('skills'):
+                skill = curr_actor.skill_dict.get(k)
+                xp = curr_actor.creation_choices.get('skills').get(k)
+                skill.experience += xp
+                skill.set_level()
+                skill.set_rating()
             game_state = GameStates.name
             clear = True
             menu_dict = {}
             curr_actor.temp_store = {}
         elif command.get('Revert'):
-            curr_actor.temp_store['electives'] = {} 
+            curr_actor.temp_store['electives'] = {}
+            curr_actor.creation_choices['skills'] = {} 
         else: 
-            for p in curr_actor.temp_store.get('electives'):
-                if p.get('primary'):
-                    cat = list(p.get('primary').keys())[0]
-                    for k,v in p.get('primary').get(cat).items():
+            p = list(curr_actor.temp_store.get('electives').keys())[0]
+            for ps in curr_actor.temp_store.get('electives').get(p):
+                if ps.get('primary'):
+                    cat = list(ps.get('primary').keys())[0]
+                    for k,v in ps.get('primary').get(cat).items():
                         for skill in v[0]:
                             if command.get(skill):
                                 if not curr_actor.creation_choices.get('skills'):
                                     curr_actor.creation_choices['skills'] = {}
                                 if not curr_actor.creation_choices.get('skills').get(skill):
                                     curr_actor.creation_choices['skills'][skill] = 0
-                                if curr_actor.fighter.skill_dict.get(skill):
-                                    for sk in Skill.__subclasses__():
-                                        skl = sk(curr_actor)
-                                        if skl.name == skill:
-                                            xp = curr_actor.fighter.skill_dict.get(skill)
-                                            lvl = skill_dict.get(s)
-                                            while lvl > 0:
-                                                xp += skl.cost * lvl
-                                                lvl -= 1
-                                            curr_actor.fighter.skill_dict[skl.name] = xp
-                                    curr_actor.creation_choices['skills'][skill] += (curr_actor.fighter.skill_dict.get(skill).level + 1) * curr_actor.fighter.skill_dict.get(skill).cost
-                                else:
-                                    pass
+                                skl = curr_actor.fighter.skill_dict.get(skill)
+                                xp = skl.experience
+                                lvl = skl.level
+                                for prof in curr_actor.fighter.professions:
+                                    if p == prof.name:
+                                        add_lvl = prof.level
+                                        new_lvl = lvl
+                                        while add_lvl > 0:
+                                            new_lvl += 1
+                                            xp += skl.cost * new_lvl
+                                            add_lvl -= 1
+                                
+                                curr_actor.creation_choices['skills'][skill] += xp
+                                del skill
                                 v[1] -= 1
                                 if v[1] == 0:
                                     del k
-
+                                if len(ps.get('primary').get(cat)) == 0:
+                                    del ps['primary'][cat]
+                                if len(ps.get('primary')) == 0:
+                                    del ps['primary']
+                                if len(ps) == 0:
+                                    del ps
+                elif ps.get('secondary'):
+                    cat = list(ps.get('secondary').keys())[0]
+                    for k,v in ps.get('secondary').get(cat).items():
+                        for skill in v[0]:
+                            if command.get(skill):
+                                if not curr_actor.creation_choices.get('skills'):
+                                    curr_actor.creation_choices['skills'] = {}
+                                if not curr_actor.creation_choices.get('skills').get(skill):
+                                    curr_actor.creation_choices['skills'][skill] = 0
+                                skl = curr_actor.fighter.skill_dict.get(skill)
+                                xp = skl.experience
+                                xp += skl.cost
+                                
+                                curr_actor.creation_choices['skills'][skill] += xp
+                                del skill
+                                v[1] -= 1
+                                if v[1] == 0:
+                                    del k
+                                if len(ps.get('secondary').get(cat)) == 0:
+                                    del ps['secondary'][cat]
+                                if len(ps.get('secondary')) == 0:
+                                    del ps['secondary']
+                                if len(p) == 0:
+                                    del ps
     else:
-        options = ['Revert']
+        menu_dict = gen_skill_menu(curr_actor)
+
+    return menu_dict, game_state, clear
 
     
 def gen_skill_menu(curr_actor) -> dict:
@@ -560,11 +599,46 @@ def gen_skill_menu(curr_actor) -> dict:
     if len(electives) == 0:
         menu_dict['options'].append('Accept')
     else:
-        prof = list(electives.keys())[0]
-        cat = list(electives.get(prof).keys())[0]
-        levels = electives.get(prof).get(cat)[1]
-        for skill in electives.get(prof).get(cat)[0]:
+        prof = list(electives.keys())[0] 
+        sk_type = list(electives.get(prof).keys())[0]
+        cat = list(electives.get(prof).get(sk_type))[0]
+        levels = electives.get(prof).get(sk_type).get(cat)[1]
+        desc = 'Profession: ' + prof + '\n' + 'Category: ' + cat + '\n' + 'Picks Remaining: ' + str(levels) + '\n' + 'Skill \t Level \t Rating \n' + '===== \t ===== \t ======\n'
+        
+        for skill in electives.get(prof).get(sk_type).get(cat)[0]:
+            skl = curr_actor.fighter.skill_dict.get(skill)
+
+            for p in curr_actor.fighter.professions:
+                if p.name == prof:
+                    profession = p
+
+            for sk in Skill.__subclasses__():
+                s = sk(curr_actor)
+                if s.name == skill:
+                    l = skl.level+profession.level
+                    xp = 0
+                    while l > 0:
+                        xp += l * s.cost
+                        l -= 1
+                    s.set_level()
+                    s.set_rating()
+
+
+            desc += skl.name + ' \t ' + str(s.level) + ' \t ' + str(s.rating)
+
+            for k,v in curr_actor.fighter.skill_dict.items():
+                if k == skill:
+                    pass
+                else:
+                    desc += v.name + ' \t ' + str(v.level) + ' \t ' + str(v.rating)
+                
+
+
             menu_dict['options'].append(skill)
+            menu_dict['desc'][skill] = desc
+    
+    
+    return menu_dict
 
 
 
@@ -582,9 +656,9 @@ def add_profs(curr_actor) -> None:
         for sk in Skill.__subclasses__():
             skl = sk(curr_actor)
             if skl.name == s:
-                curr_actor.fighter.skill_dict[skl.abbr].experience = skill_dict.get(s)
-                curr_actor.fighter.skill_dict[skl.abbr].set_level()
-                curr_actor.fighter.skill_dict[skl.abbr].set_rating()
+                curr_actor.fighter.skill_dict[skl.name].experience = skill_dict.get(s)
+                curr_actor.fighter.skill_dict[skl.name].set_level()
+                curr_actor.fighter.skill_dict[skl.name].set_rating()
 
 def gen_profs_menu(curr_actor,valid_professions,years) -> dict:
     valid_profs_list = []

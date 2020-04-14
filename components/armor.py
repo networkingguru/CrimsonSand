@@ -303,9 +303,9 @@ def apply_armor_mods(entity):
     m_mod = 0
     h_mod = 0 
 
-    la_skill = entity.fighter.get_attribute('l_armor')
-    ma_skill = entity.fighter.get_attribute('m_armor')
-    ha_skill = entity.fighter.get_attribute('h_armor')
+    la_skill = entity.fighter.get_attribute('Light Armor')
+    ma_skill = entity.fighter.get_attribute('Medium Armor')
+    ha_skill = entity.fighter.get_attribute('Heavy Armor')
 
     for loc in entity.loc_armor:
         for ao in loc:

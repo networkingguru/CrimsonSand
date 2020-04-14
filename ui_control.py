@@ -77,7 +77,7 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_csheet(players)
     elif game_state == GameStates.main_menu:
         render_main_menu(frame_list, menu_dict)
-    elif len(menu_dict) > 0 and game_state in [GameStates.circumstance, GameStates.sex, GameStates.ethnicity, GameStates.upbringing, GameStates.profession]:
+    elif len(menu_dict) > 0 and game_state in [GameStates.circumstance, GameStates.sex, GameStates.ethnicity, GameStates.upbringing, GameStates.profession, GameStates.skills]:
         render_page(frame_list,menu_dict)
     elif len(menu_dict) > 0 and game_state in [GameStates.social]:
         render_rollpage(frame_list,menu_dict)

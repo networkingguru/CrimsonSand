@@ -523,7 +523,7 @@ class Fighter:
                     self.best_grappling_skill = skill
 
 
-        self.init = (self.get_attribute('men') + self.get_attribute('swift'))/4 + (self.get_attribute('sens') + self.get_attribute(self.best_combat_skill.abbr))/4
+        self.init = (self.get_attribute('men') + self.get_attribute('swift'))/4 + (self.get_attribute('sens') + self.get_attribute(self.best_combat_skill.name))/4
 
 def stance_constants(stance) -> dict:
     stance_stability = 0
@@ -601,7 +601,7 @@ class Skill():
         self.__dict__.update(kwargs)
 
 
-    def set_level(self) -> int:
+    def set_level(self):
         xp = self.experience
         level = 0
         while xp > 0:
@@ -613,7 +613,7 @@ class Skill():
         
         self.level = level
 
-    def set_rating(self) -> int:
+    def set_rating(self):
         prim_list = []
         sec_list = []
         ter_list = []

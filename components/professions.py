@@ -100,7 +100,7 @@ class Warrior(Profession):
         self.cost = 0
         self.prereq_dict = {'men':80,'will':80,'ss':120,'pwr':120,'man':120,'ped':80,'bal':70,'swift':70,'sta':120,'sit':60} #Dict with the prereq attributes in 'attr':score format
         self.base_primary_dict = {'Dodge':2,'Deflect':2,'Brawling':1} #Dict with the base primary skills in 'Skill Name':level format
-        self.elect_primary_skills = {'Melee':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Mace','Flail','Large Hammer','Small Hammer','Spear','Polearm'],3],'Armor':[['Shield','Light Armor','Medium Armor','Heavy Armor'],3]} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
+        self.elect_primary_skills = {'Melee':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Club/Mace','Flail/Whip','Large Hammer','Small Hammer','Spear','Polearm'],3],'Armor':[['Shield','Light Armor','Medium Armor','Heavy Armor'],3]} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
         self.base_sec_dict = {}
         self.elect_sec_skills = {}
         self.title_list = ['Recruit','Soldier','Warrior','Veteran','Shock Troop','Elite','Commander','General','Warlord','Lord','Hero'] #List of titles in order of level, beginning with 0 and ending with 11
@@ -122,7 +122,7 @@ class Knight(Profession):
         self.cost = 0
         self.prereq_dict = {'log':80,'mem':80,'wis':80,'comp':70,'comm':70,'men':120,'will':115,'ss':120,'pwr':90,'man':80,'bal':120,'flex':80,'bone':120,'sit':80} #Dict with the prereq attributes in 'attr':score format
         self.base_primary_dict = {'Lance':2,'Heavy Armor':1,'Shield':1} #Dict with the base primary skills in 'Skill Name':level format
-        self.elect_primary_skills = {'Melee':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Mace','Flail','Large Hammer','Small Hammer','Spear','Polearm'],2],'Armor':[['Shield','Light Armor','Medium Armor','Heavy Armor'],1]} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
+        self.elect_primary_skills = {'Melee':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Club/Mace','Flail/Whip','Large Hammer','Small Hammer','Spear','Polearm'],2],'Armor':[['Shield','Light Armor','Medium Armor','Heavy Armor'],1]} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
         self.base_sec_dict = {}
         self.elect_sec_skills = {}
         self.title_list = ['Squire','Cavalry','Seasoned Cavalry','Veteran Cavalry','Minor Knight','Knight','Cavalier','Knight of the Land','Knight Commander','Lord','Hero'] #List of titles in order of level, beginning with 0 and ending with 11
@@ -168,7 +168,7 @@ class Mariner(Profession):
         self.base_primary_dict = {'Dodge':1,'Brawling':1,'Dagger':1,'Short Sword':1} #Dict with the base primary skills in 'Skill Name':level format
         self.elect_primary_skills = {} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
         self.base_sec_dict = {}
-        self.elect_sec_skills = {'Combat':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Mace','Flail','Large Hammer','Small Hammer','Spear','Polearm','Light Armor'],6]}
+        self.elect_sec_skills = {'Combat':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Club/Mace','Flail/Whip','Large Hammer','Small Hammer','Spear','Polearm','Light Armor'],6]}
         self.title_list = ['Apprentice','Journeyman Archer','Archer','Seasoned Archer','Marksman','Sharpshooter','Sniper','Master Archer','Archery Commander','Lord','Legend'] #List of titles in order of level, beginning with 0 and ending with 11
         self.primary_skills = {} #Dict of chosen skils and effective levels
         self.secondary_skills = {} #Dict of chosen skills and levels
@@ -210,7 +210,7 @@ class Thief(Profession):
         self.cost = 0
         self.prereq_dict = {'log':90,'mem':90,'wis':100,'comp':90,'comm':90,'cre':130,'men':120,'swift':120} #Dict with the prereq attributes in 'attr':score format
         self.base_primary_dict = {'Dodge':1,'Light Armor':1} #Dict with the base primary skills in 'Skill Name':level format
-        self.elect_primary_skills = {'Melee':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Mace','Flail','Large Hammer','Small Hammer','Spear','Polearm'],1]} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
+        self.elect_primary_skills = {'Melee':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Club/Mace','Flail/Whip','Large Hammer','Small Hammer','Spear','Polearm'],1]} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
         self.base_sec_dict = {}
         self.elect_sec_skills = {}
         self.title_list = ['Apprentice','Footpad','Robber','Burglar','Journeyman','Cutthroat','Thief','Hitman','Nightblade','Master Thief','Grandmaster'] #List of titles in order of level, beginning with 0 and ending with 11
@@ -232,7 +232,7 @@ class Spy(Profession):
         self.cost = 0
         self.prereq_dict = {'log':120,'mem':130,'wis':110,'comp':110,'comm':110,'cre':90,'men':120} #Dict with the prereq attributes in 'attr':score format
         self.base_primary_dict = {'Dodge':1,'Light Armor':1} #Dict with the base primary skills in 'Skill Name':level format
-        self.elect_primary_skills = {'Melee':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Mace','Flail','Large Hammer','Small Hammer','Spear','Polearm'],1]} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
+        self.elect_primary_skills = {'Melee':[['Long Sword','Dagger','Short Sword','Great Sword','Small Axe','Large Axe','Staff','Club/Mace','Flail/Whip','Large Hammer','Small Hammer','Spear','Polearm'],1]} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
         self.base_sec_dict = {}
         self.elect_sec_skills = {}
         self.title_list = ['Informant','Leak','Source','Mole','Plant','Operative','Agent','Mist','Shadow','Ghost','Unknown'] #List of titles in order of level, beginning with 0 and ending with 11
@@ -343,7 +343,7 @@ class Ninja(Profession):
         self.prereq_dict = {'log':110,'mem':110,'wis':110,'comp':110,'comm':120,'cre':130,'men':130,'will':130,'ss':110,'pwr':110,'man':120,'ped':120,'bal':115,'swift':110,'flex':110,'sta':110,'derm':110,'bone':110,'immune':110,'shock':110,'toxic':110,'sit':110,'hear':110,'ts':110,'touch':110} #Dict with the prereq attributes in 'attr':score format
         self.base_primary_dict = {'Dagger':1,'Short Sword':2,'Dodge':2,'Deflect':1,'Light Armor':1,'Martial Arts':2} #Dict with the base primary skills in 'Skill Name':level format
         self.elect_primary_skills = {} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
-        self.base_sec_dict = {'Long Sword':1,'Small Axe':1,'Mace':1,'Small Hammer':1,'Spear':1,'Polearm':1}
+        self.base_sec_dict = {'Long Sword':1,'Small Axe':1,'Club/Mace':1,'Small Hammer':1,'Spear':1,'Polearm':1}
         self.elect_sec_skills = {}
         self.title_list = ['Apprentice Jenin','Journeyman Jenin','Jenin','Apprentice Chunnin','Journeyman Chunnin','Chunnin','Apprentice Jounin','Journeyman Jounin','Jounin','Shinobi','Kage'] #List of titles in order of level, beginning with 0 and ending with 11
         self.primary_skills = {} #Dict of chosen skils and effective levels
@@ -408,7 +408,7 @@ class Monk(Profession):
         self.prereq_dict = {'wis':110,'will':110} #Dict with the prereq attributes in 'attr':score format
         self.base_primary_dict = {'Dodge':2,'Deflect':2,'Martial Arts':3,'Staff':2} #Dict with the base primary skills in 'Skill Name':level format
         self.elect_primary_skills = {} #Dict with elective primarys in the following format: {'Skill cat':[[Skill Name, Skill Name],Levels]} ex:{'Melee':[['Long Sword','Dagger'],Levels],'Armor':[['Heavy Armor'],2]}
-        self.base_sec_dict = {'Flail':1,'Mace':1}
+        self.base_sec_dict = {'Flail/Whip':1,'Club/Mace':1}
         self.elect_sec_skills = {}
         self.title_list = ['Supplicant','Initiate','Brother','Disciple','Guide','Master','Master of Wind','Master of Earth','Master of Fire','Master of Water','Grandmaster of Flowers'] #List of titles in order of level, beginning with 0 and ending with 11
         self.primary_skills = {} #Dict of chosen skils and effective levels

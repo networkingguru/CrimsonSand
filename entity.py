@@ -67,15 +67,15 @@ class Entity:
         for key in skills:
             for cls in itersubclasses(Skill):
                 c = cls(self)
-                if c.abbr == key:
+                if c.name == key:
                     xp = skills.get(key)
                     s = cls(self, xp)
-            self.fighter.skill_dict[key] = s
+                    self.fighter.skill_dict[s.name] = s
 
         for cls in itersubclasses(Skill):
             c = cls(self)
-            if c.abbr not in self.fighter.skill_dict:
-                self.fighter.skill_dict[c.abbr] = c
+            if c.name not in self.fighter.skill_dict:
+                self.fighter.skill_dict[c.name] = c
 
 
         self.fighter.set_dynamic_attributes()
