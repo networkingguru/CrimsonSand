@@ -453,7 +453,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
         #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
         if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, 
                             GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing, GameStates.age,
-                            GameStates.profession]: command = blt_handle_global_input(game_state)
+                            GameStates.profession,GameStates.skills]: command = blt_handle_global_input(game_state)
         else:
             if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
