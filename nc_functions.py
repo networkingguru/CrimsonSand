@@ -549,14 +549,14 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
                                         add_lvl -= 1
                             
                             curr_actor.creation_choices['skills'][skill] += xp
-                            del skill
+                            skill_list[0].remove(skill)
                             skill_list[1] -= 1
                             if skill_list[1] == 0 or len(skill_list[0]) == 0:
-                                del curr_actor.temp_store.get['electives'][p]['primary'][cat]
-                            if len(p.get('primary')) == 0:
-                                del curr_actor.temp_store.get['electives'][p]['primary']
-                            if len(p) == 0:
-                                del curr_actor.temp_store.get['electives'][p]
+                                del curr_actor.temp_store['electives'][p]['primary'][cat]
+                            if len(curr_actor.temp_store.get('electives').get(p).get('primary')) == 0:
+                                del curr_actor.temp_store['electives'][p]['primary']
+                            if len(curr_actor.temp_store.get('electives').get(p)) == 0:
+                                del curr_actor.temp_store['electives'][p]
                 elif ps == 'secondary':
                     cat = list(curr_actor.temp_store.get('electives').get(p).get('secondary').keys())[0]
                     skill_list = curr_actor.temp_store.get('electives').get(p).get('secondary').get(cat)
@@ -571,14 +571,14 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
                             xp += skl.cost
                             
                             curr_actor.creation_choices['skills'][skill] += xp
-                            del skill
+                            skill_list[0].remove(skill)
                             skill_list[1] -= 1
                             if skill_list[1] == 0 or len(skill_list[0]) == 0:
-                                del curr_actor.temp_store.get['electives'][p]['secondary'][cat]
+                                del curr_actor.temp_store['electives'][p]['secondary'][cat]
                             if len(curr_actor.temp_store.get('electives').get(p).get('secondary')) == 0:
-                                del curr_actor.temp_store.get['electives'][p]['secondary']
+                                del curr_actor.temp_store['electives'][p]['secondary']
                             if len(curr_actor.temp_store.get('electives').get(p)) == 0:
-                                del curr_actor.temp_store.get['electives'][p]
+                                del curr_actor.temp_store['electives'][p]
     else:
         menu_dict = gen_skill_menu(curr_actor)
 
@@ -599,10 +599,11 @@ def gen_skill_menu(curr_actor) -> dict:
         sk_type = list(electives.get(prof).keys())[0]
         cat = list(electives.get(prof).get(sk_type))[0]
         levels = electives.get(prof).get(sk_type).get(cat)[1]
-        desc = 'Profession: ' + prof + '\n' + 'Category: ' + cat + '\n' + 'Picks Remaining: ' + str(levels) + '\n' + 'Skill \t\t Level \t\t Rating \n' + '===== \t\t ===== \t\t ======\n'
+        
 
         for skill in electives.get(prof).get(sk_type).get(cat)[0]:
             skl = curr_actor.fighter.skill_dict.get(skill)
+            desc = 'Profession: ' + prof + '\n' + 'Category: ' + cat + '\n' + 'Skill Type: ' + sk_type + '\n' + 'Picks Remaining: ' + str(levels) + '\n' + 'Skill \t\t Level \t\t Rating \n' + '===== \t\t ===== \t\t ======\n'
 
             for p in curr_actor.fighter.professions:
                 if p.name == prof:
@@ -619,12 +620,18 @@ def gen_skill_menu(curr_actor) -> dict:
                     s.experience = xp
                     s.set_level()
                     s.set_rating()
-                    desc += skl.name + ' \t\t ' + str(s.level) + ' \t\t ' + str(s.rating) + '\n'
+                    x = len(skl.name)
+                    if len(skl.name) < 7:
+                        desc += skl.name + ' \t\t ' + str(s.level) + ' \t\t ' + str(s.rating) + '\n'
+                    else:
+                        desc += skl.name + ' \t ' + str(s.level) + ' \t\t ' + str(s.rating) + '\n'
 
             for k,v in curr_actor.fighter.skill_dict.items():
                 if k != skill:
-                    desc += v.name + ' \t\t ' + str(v.level) + ' \t\t ' + str(v.rating) + '\n'
-
+                    if len(k) < 7:
+                        desc += v.name + ' \t\t ' + str(v.level) + ' \t\t ' + str(v.rating) + '\n'
+                    else:
+                        desc += v.name + ' \t ' + str(v.level) + ' \t\t ' + str(v.rating) + '\n'
 
 
             menu_dict['options'].append(skill)
