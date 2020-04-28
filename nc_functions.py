@@ -494,7 +494,7 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
     skip = False
 
     if not curr_actor.creation_choices.get('skills'):
-        curr_actor.creation_choices['skills'] = {} #Nested dict in the following format {primary:{skill:xp}}
+        curr_actor.creation_choices['skills'] = {} #Nested dict in the following format {skill:xp}
     
     if not curr_actor.temp_store.get('electives'):
         curr_actor.temp_store['electives'] = {} #Nested dict in following format {profession:{primary:{category:[[skill list],levels]}}}
@@ -525,122 +525,133 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
             curr_actor.temp_store['electives'] = {}
             curr_actor.creation_choices['skills'] = {} 
         else: 
-            p = list(curr_actor.temp_store.get('electives').keys())[0]
-            for ps in curr_actor.temp_store.get('electives').get(p):
-                if ps == 'primary':
-                    cat = list(curr_actor.temp_store.get('electives').get(p).get('primary').keys())[0]
-                    skill_list = curr_actor.temp_store.get('electives').get(p).get('primary').get(cat)
-                    for skill in skill_list[0]:
-                        if command.get(skill):
-                            if not curr_actor.creation_choices.get('skills'):
-                                curr_actor.creation_choices['skills'] = {}
-                            if not curr_actor.creation_choices.get('skills').get(skill):
-                                curr_actor.creation_choices['skills'][skill] = 0
+            profs = list(curr_actor.temp_store.get('electives').keys())
+            if not curr_actor.temp_store.get('picks'):
+                gen_picks_dict(curr_actor)
+            for prof in profs:
+                for ps in curr_actor.temp_store.get('electives').get(prof):
+                    for cat in curr_actor.temp_store.get('electives').get(prof).get(ps):
+                        if list(command.keys())[0] in curr_actor.temp_store.get('electives').get(prof).get(ps).get(cat)[0]:
+                            skill = list(command.keys())[0]
                             skl = curr_actor.fighter.skill_dict.get(skill)
                             xp = skl.experience
                             lvl = skl.level
-                            for prof in curr_actor.fighter.professions:
-                                if p == prof.name:
-                                    add_lvl = prof.level
-                                    new_lvl = lvl
-                                    while add_lvl > 0:
-                                        new_lvl += 1
-                                        xp += skl.cost * new_lvl
-                                        add_lvl -= 1
-                            
-                            curr_actor.creation_choices['skills'][skill] += xp
-                            skill_list[0].remove(skill)
-                            skill_list[1] -= 1
-                            if skill_list[1] == 0 or len(skill_list[0]) == 0:
-                                del curr_actor.temp_store['electives'][p]['primary'][cat]
-                            if len(curr_actor.temp_store.get('electives').get(p).get('primary')) == 0:
-                                del curr_actor.temp_store['electives'][p]['primary']
-                            if len(curr_actor.temp_store.get('electives').get(p)) == 0:
-                                del curr_actor.temp_store['electives'][p]
-                elif ps == 'secondary':
-                    cat = list(curr_actor.temp_store.get('electives').get(p).get('secondary').keys())[0]
-                    skill_list = curr_actor.temp_store.get('electives').get(p).get('secondary').get(cat)
-                    for skill in skill_list[0]:
-                        if command.get(skill):
-                            if not curr_actor.creation_choices.get('skills'):
-                                curr_actor.creation_choices['skills'] = {}
-                            if not curr_actor.creation_choices.get('skills').get(skill):
-                                curr_actor.creation_choices['skills'][skill] = 0
-                            skl = curr_actor.fighter.skill_dict.get(skill)
-                            xp = skl.experience
+                            if ps == 'primary' and curr_actor.temp_store.get('electives').get(prof).get(ps).get(cat)[1] > curr_actor.temp_store.get('picks').get(prof).get(ps).get(cat):  
+                                if not curr_actor.creation_choices.get('skills'):
+                                    curr_actor.creation_choices['skills'] = {}
+                                if not curr_actor.creation_choices.get('skills').get(skill):
+                                    curr_actor.creation_choices['skills'][skill] = 0
+                                    for p in curr_actor.fighter.professions:
+                                        if p.name == prof:
+                                            add_lvl = p.level
+                                            new_lvl = lvl
+                                            while add_lvl > 0:
+                                                new_lvl += 1
+                                                xp += skl.cost * new_lvl
+                                                add_lvl -= 1
+                                else:
+                                    xp += curr_actor.creation_choices.get('skills').get(skill)
+                                    for sk in Skill.__subclasses__():
+                                        s = sk(curr_actor)
+                                        if s.name == skill:
+                                            s.experience = xp
+                                            s.set_level()
+                                            xp += s.cost * (s.level + 1)
+                                            break                       
+                                
+                                curr_actor.creation_choices['skills'][skill] += xp
+                                curr_actor.temp_store['picks'][prof][ps][cat] += 1
+                                break
+                        elif cat == 'secondary' and curr_actor.temp_store.get('electives').get(prof).get(ps).get(cat)[1] > curr_actor.temp_store.get('picks').get(prof).get(ps).get(cat):
                             xp += skl.cost
-                            
                             curr_actor.creation_choices['skills'][skill] += xp
-                            skill_list[0].remove(skill)
-                            skill_list[1] -= 1
-                            if skill_list[1] == 0 or len(skill_list[0]) == 0:
-                                del curr_actor.temp_store['electives'][p]['secondary'][cat]
-                            if len(curr_actor.temp_store.get('electives').get(p).get('secondary')) == 0:
-                                del curr_actor.temp_store['electives'][p]['secondary']
-                            if len(curr_actor.temp_store.get('electives').get(p)) == 0:
-                                del curr_actor.temp_store['electives'][p]
+                            curr_actor.temp_store['picks'][prof][ps][cat] += 1
+                            break
+
     else:
         menu_dict = gen_skill_menu(curr_actor)
 
     return menu_dict, game_state, clear
 
-    
+def gen_picks_dict(curr_actor):
+    picks = curr_actor.temp_store['picks'] = {} #Nested dict for holding picks. Format is {profession:{primary:{category:picks}}}
+    electives = curr_actor.temp_store.get('electives')
+
+    for prof in electives:
+        picks[prof] = {}
+        for sk_type in electives.get(prof):
+            picks[prof][sk_type] = {}
+            for cat in electives.get(prof).get(sk_type):
+                picks[prof][sk_type][cat] = 0
+
 def gen_skill_menu(curr_actor) -> dict:
     menu_dict = {'type': MenuTypes.page, 'header': 'Choose your elective skills', 'options': [], 'mode': False, 'desc': {}}
     chosen_skills = curr_actor.creation_choices.get('skills')
     electives = curr_actor.temp_store.get('electives')
+    picks = curr_actor.temp_store.get('picks')
 
     if len(chosen_skills) > 0:
         menu_dict['options'].append('Revert')
     if len(electives) == 0:
         menu_dict['options'].append('Accept')
     else:
-        prof = list(electives.keys())[0]
-        sk_type = list(electives.get(prof).keys())[0]
-        cat = list(electives.get(prof).get(sk_type))[0]
-        levels = electives.get(prof).get(sk_type).get(cat)[1]
-        
-
-        for skill in electives.get(prof).get(sk_type).get(cat)[0]:
-            skl = curr_actor.fighter.skill_dict.get(skill)
-            desc = 'Profession: ' + prof + '\n' + 'Category: ' + cat + '\n' + 'Skill Type: ' + sk_type + '\n' + 'Picks Remaining: ' + str(levels) + '\n' + 'Skill \t\t Level \t\t Rating \n' + '===== \t\t ===== \t\t ======\n'
-
-            for p in curr_actor.fighter.professions:
-                if p.name == prof:
-                    profession = p
-
-            for sk in Skill.__subclasses__():
-                s = sk(curr_actor)
-                if s.name == skill:
-                    l = skl.level+profession.level
-                    xp = 0
-                    while l > 0:
-                        xp += l * s.cost
-                        l -= 1
-                    s.experience = xp
-                    s.set_level()
-                    s.set_rating()
-                    x = len(skl.name)
-                    if len(skl.name) < 7:
-                        desc += skl.name + ' \t\t ' + str(s.level) + ' \t\t ' + str(s.rating) + '\n'
-                    else:
-                        desc += skl.name + ' \t ' + str(s.level) + ' \t\t ' + str(s.rating) + '\n'
-
-            for k,v in curr_actor.fighter.skill_dict.items():
-                if k != skill:
-                    if len(k) < 7:
-                        desc += v.name + ' \t\t ' + str(v.level) + ' \t\t ' + str(v.rating) + '\n'
-                    else:
-                        desc += v.name + ' \t ' + str(v.level) + ' \t\t ' + str(v.rating) + '\n'
+        prof = sk_type = cat = None
+        prof, sk_type, cat = set_electives(curr_actor)
 
 
-            menu_dict['options'].append(skill)
-            menu_dict['desc'][skill] = desc
+        if prof is not None:
+            levels = electives.get(prof).get(sk_type).get(cat)[1]
+            for skill in electives.get(prof).get(sk_type).get(cat)[0]:
+                skl = curr_actor.fighter.skill_dict.get(skill)
+                desc = 'Profession: ' + prof + '\n' + 'Category: ' + cat + '\n' + 'Skill Type: ' + sk_type + '\n' + 'Picks Remaining: ' + str(levels) + '\n' + 'Skill \t\t Level \t\t Rating \n' + '===== \t\t ===== \t\t ======\n'
+
+                for p in curr_actor.fighter.professions:
+                    if p.name == prof:
+                        profession = p
+
+                for sk in Skill.__subclasses__():
+                    s = sk(curr_actor)
+                    if s.name == skill:
+                        l = skl.level+profession.level
+                        xp = 0
+                        while l > 0:
+                            xp += l * s.cost
+                            l -= 1
+                        s.experience = xp
+                        s.set_level()
+                        s.set_rating()
+                        x = len(skl.name)
+                        if len(skl.name) < 7:
+                            desc += skl.name + ' \t\t ' + str(s.level) + ' \t\t ' + str(s.rating) + '\n'
+                        else:
+                            desc += skl.name + ' \t ' + str(s.level) + ' \t\t ' + str(s.rating) + '\n'
+
+                for k,v in curr_actor.fighter.skill_dict.items():
+                    if k != skill:
+                        if len(k) < 7:
+                            desc += v.name + ' \t\t ' + str(v.level) + ' \t\t ' + str(v.rating) + '\n'
+                        else:
+                            desc += v.name + ' \t ' + str(v.level) + ' \t\t ' + str(v.rating) + '\n'
+
+
+                menu_dict['options'].append(skill)
+                menu_dict['desc'][skill] = desc
+
 
 
     return menu_dict
 
-
+def set_electives(curr_actor) -> (str,str,str):
+    electives = curr_actor.temp_store.get('electives')
+    picks = curr_actor.temp_store.get('picks')
+    profs = list(curr_actor.temp_store.get('electives').keys())
+    for prof in profs:
+            for sk_type in electives.get(prof):
+                for cat in electives.get(prof).get(sk_type):
+                    if not curr_actor.temp_store.get('picks'):
+                        return prof, sk_type, cat
+                    elif electives.get(prof).get(sk_type).get(cat)[1] > picks.get(prof).get(sk_type).get(cat):
+                        return prof, sk_type, cat
 
 
 
