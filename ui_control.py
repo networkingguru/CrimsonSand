@@ -13,6 +13,7 @@ from components.professions import Profession
 from chargen_functions import attr_descriptions, rating_description
 from bltGui import bltFrame as Frame
 from bltGui.bltTextBox import bltNumericBox as NumBox
+from bltGui.bltTextBox import bltTextBox
 import bltGui
 
 
@@ -87,6 +88,8 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_attr_assn(frame_list,menu_dict)
     elif len(menu_dict) > 0 and game_state == GameStates.age:
         render_age(frame_list,menu_dict)
+    elif len(menu_dict) > 0 and game_state == GameStates.name:
+        render_name(frame_list,menu_dict)
 
     terminal.refresh()
 
@@ -375,7 +378,26 @@ def render_age(frame_list, menu_dict) -> None:
                     f.text = 'Mods based on your age: \n' + mods
             render_frames(frame_list)
 
+def render_name(frame_list, menu_dict) -> None:
 
+    header = menu_dict.get('header')
+    desc = menu_dict.get('desc')
+    name = desc.get('name')
+    header_pos = int((90-(len(header))/2))
+    dir_string = ''
+
+    terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
+    
+    menu_type = menu_dict.get('type')
+
+    if menu_type == MenuTypes.name_page:
+               
+        if len(frame_list) == 0:
+            bltgui_name_page(terminal,options.screen_width,options.screen_height,menu_dict,frame_list)
+            initialize()
+
+        if len(frame_list) != 0:
+            render_frames(frame_list)
 
 
 def render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict) -> None:
@@ -453,7 +475,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                 #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
         if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, 
                                     GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing, GameStates.age,
-                                    GameStates.profession,GameStates.skills]: command = blt_handle_global_input(game_state)
+                                    GameStates.profession,GameStates.skills,GameStates.name]: command = blt_handle_global_input(game_state)
         else:
             if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0:    #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
@@ -483,6 +505,10 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                         elif isinstance(control,NumBox):
                                             if control.updated:
                                                 command = {'Age':control.text}
+                                                control.updated = False
+                                        elif isinstance(control,bltTextBox):
+                                            if control.updated:
+                                                command = {'Name':control.text}
                                                 control.updated = False
 
 
@@ -845,6 +871,25 @@ def bltgui_rollpage(terminal, w, h, menu_dict, frame_list):
     frame_list.append(list_frame)
 
     frame_list.append(content_frame)
+
+def bltgui_name_page(terminal, w, h, menu_dict, frame_list):
+    items = menu_dict.get('options')   
+    desc = menu_dict.get('desc')
+    header = menu_dict.get('header')
+    
+
+    list_frame = Frame(0,5,w,15,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+
+    if len(items) > 0:
+        list_box = bltGui.bltListbox(list_frame, 87, 10, items, False, True)
+        list_frame.add_control(list_box)
+
+    text_box = bltTextBox(list_frame,88,5,desc.get('name'),length=30)
+
+        
+    list_frame.add_control(text_box)
+    frame_list.append(list_frame)
+
 
 def bltgui_page(terminal, w, h, menu_dict, frame_list):
     items = menu_dict.get('options')   

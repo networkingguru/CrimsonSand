@@ -136,7 +136,7 @@ eye_color = ['Brown']
 skin_color = ['Tan', 'Dark']
 
 
-nomad = Ethnicity(name='Nomad', culture=culture, history=history, phys_desc=phys_desc, 
+kebrini = Ethnicity(name='Kebrini', culture=culture, history=history, phys_desc=phys_desc, 
             avg_ht_m=68, avg_ht_f=63,attr_mods=attr_mods,eye_color=eye_color,hair_color=hair_color,skin_color=skin_color,
             name_lang='Kebrini')
 

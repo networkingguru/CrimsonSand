@@ -8,6 +8,7 @@ from components.upbringing import get_valid_upbringings
 from components.fighter import attr_name_dict, Skill
 from utilities import inch_conv,roll_dice
 from chargen_functions import random_attr
+from options import name_dict
 from copy import deepcopy
 
 
@@ -409,7 +410,7 @@ def choose_profs(curr_actor, game_state, command) -> (dict, int, bool):
     menu_dict = {}
     clear = False
     years = int(curr_actor.creation_choices.get('age')) - 16
-    skip = False
+    skip = True
     
 
     #Add fighter component if missing
@@ -491,7 +492,7 @@ def choose_profs(curr_actor, game_state, command) -> (dict, int, bool):
 def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
     menu_dict = {}
     clear = False
-    skip = False
+    skip = True
 
     
 
@@ -578,6 +579,48 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
 
     else:
         menu_dict = gen_skill_menu(curr_actor)
+
+    return menu_dict, game_state, clear
+
+def choose_name(curr_actor, game_state, command) -> (dict, int, bool):
+    menu_dict = {'type': MenuTypes.name_page, 'header': 'Choose your name', 'options': ['Random','Accept'], 'mode': False, 'desc': {}}
+    clear = False
+    lang_name = curr_actor.fighter.ethnicity.name_lang
+    skip = False
+    if curr_actor.fighter.male:
+        sex = 'male'
+    else:
+        sex = 'female'
+    names = name_dict.get(lang_name).get(sex) + name_dict.get(lang_name).get('unisex')
+
+    if skip: #For debugging
+        curr_actor.temp_store = {}
+        curr_actor.creation_choices['name'] = 'Player'
+        curr_actor.name = 'Player' 
+        game_state = GameStates.shop_w
+        clear = True
+
+
+    elif len(command) > 0:
+        if command.get('Name'):
+            curr_actor.temp_store['name'] = command.get('Name')
+        elif command.get('Accept'):
+            curr_actor.creation_choices['name'] = curr_actor.temp_store.get('name')
+            curr_actor.name = curr_actor.temp_store.get('name')
+            curr_actor.temp_store = {}
+            game_state = GameStates.shop_w
+            clear = True
+        elif command.get('Random'):
+            idx = roll_dice(1,len(names)) - 1
+            curr_actor.temp_store['name'] = names[idx]
+
+
+    else:
+        if not curr_actor.temp_store.get('name'):
+            idx = roll_dice(1,len(names)) - 1
+            curr_actor.temp_store['name'] = names[idx]
+
+    menu_dict['desc']['name'] = curr_actor.temp_store.get('name')
 
     return menu_dict, game_state, clear
 

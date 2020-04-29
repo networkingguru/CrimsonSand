@@ -19,32 +19,36 @@ class bltTextBox(Control):
         self.active = False
         self.dirty = True
         self.frame_element = False
+        self.updated = False
 
     def draw(self):
-        if self.dirty:
-            if self.owner:
-                layer = self.owner.layer
-                x = self.owner.pos.x
-                y = self.owner.pos.y
-            else:
-                layer = terminal.state(terminal.TK_LAYER)
-                x = 0
-                y = 0
+        if not self.dirty:
+            return
 
-            terminal.color(self.bkcolor)
-            terminal.puts(self.x + 1 + x, self.y + y, self.skin['BACKGROUND'] * self.length)
-            terminal.color(self.color)
+        if self.owner:
+            layer = self.owner.layer
+            x = self.owner.pos.x
+            y = self.owner.pos.y
+        else:
+            layer = terminal.state(terminal.TK_LAYER)
+            x = 0
+            y = 0
 
-            if self.active:
+        terminal.color(self.bkcolor)
+        terminal.puts(self.x + 1 + x, self.y + y, self.skin['BACKGROUND'] * self.length)
+        terminal.color(self.color)
 
-                self.active = False
+        if self.active:
 
-            terminal.color(self.bkcolor)
-            terminal.puts(self.x + 1 + x, self.y + y, self.skin['BACKGROUND'] * self.length)
-            terminal.color(self.color)
-            #print self.text
-            terminal.puts(self.x + x + 1, self.y + y, self.text[:self.length])
-            self.dirty = False
+            self.active = False
+
+        terminal.color(self.bkcolor)
+        terminal.puts(self.x + 1 + x, self.y + y, self.skin['BACKGROUND'] * self.length)
+        terminal.color(self.color)
+        #print self.text
+        terminal.puts(self.x + x + 1, self.y + y, self.text[:self.length])
+        #self.dirty = False
+            
 
     def update(self):
         if self.owner:
@@ -65,6 +69,7 @@ class bltTextBox(Control):
             result, text = terminal.read_str(self.x + x + 1, self.y + y, self.text, self.length)
             terminal.refresh()
             self.text = text
+            self.updated = True
 
 
 
@@ -91,30 +96,32 @@ class bltNumericBox(Control):
         self.updated = False
 
     def draw(self):
-        if self.dirty:
-            if self.owner:
-                layer = self.owner.layer
-                x = self.owner.pos.x
-                y = self.owner.pos.y
-            else:
-                layer = terminal.state(terminal.TK_LAYER)
-                x = 0
-                y = 0
+        if not self.dirty:
+            return
 
-            terminal.color(self.bkcolor)
-            terminal.puts(self.x + 1 + x, self.y + y, self.skin['BACKGROUND'] * self.length)
-            terminal.color(self.color)
+        if self.owner:
+            layer = self.owner.layer
+            x = self.owner.pos.x
+            y = self.owner.pos.y
+        else:
+            layer = terminal.state(terminal.TK_LAYER)
+            x = 0
+            y = 0
 
-            if self.active:
+        terminal.color(self.bkcolor)
+        terminal.puts(self.x + 1 + x, self.y + y, self.skin['BACKGROUND'] * self.length)
+        terminal.color(self.color)
 
-                self.active = False
+        if self.active:
 
-            terminal.color(self.bkcolor)
-            terminal.puts(self.x + 1 + x, self.y + y, self.skin['BACKGROUND'] * self.length)
-            terminal.color(self.color)
-            #print self.text
-            terminal.puts(self.x + x + 1, self.y + y, self.text[:self.length])
-            self.dirty = False
+            self.active = False
+
+        terminal.color(self.bkcolor)
+        terminal.puts(self.x + 1 + x, self.y + y, self.skin['BACKGROUND'] * self.length)
+        terminal.color(self.color)
+        #print self.text
+        terminal.puts(self.x + x + 1, self.y + y, self.text[:self.length])
+        #self.dirty = False
 
     def update(self):
         if self.owner:
