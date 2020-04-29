@@ -19,7 +19,8 @@ class GameStates(Enum):
     profession = auto()
     skills = auto()
     name = auto()
-    shop = auto()
+    shop_w = auto()
+    shop_a = auto()
     equip = auto()
     hire = auto()
 

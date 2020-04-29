@@ -24,7 +24,11 @@ def nc_controller(curr_actor, entities, game_state, command) -> (dict, int, bool
         menu_dict, game_state, clear = choose_profs(curr_actor, game_state, command)
     elif game_state == GameStates.skills:
         menu_dict, game_state, clear = choose_skills(curr_actor, game_state, command)
-    elif game_state == GameStates.shop:
+    elif game_state == GameStates.name:
+        pass
+    elif game_state == GameStates.shop_w:
+        pass
+    elif game_state == GameStates.shop_a:
         pass
     elif game_state == GameStates.equip:
         pass
