@@ -445,56 +445,55 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
     dirty = False
     hide_options = menu_dict.get('mode')
 
-    
 
-    
+
+
     if active_entity.player:
         #Below complexity is due to modal nature. if targets exist, block for input. 
-        #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
+                #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
         if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, 
-                            GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing, GameStates.age,
-                            GameStates.profession,GameStates.skills]: command = blt_handle_global_input(game_state)
+                                    GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing, GameStates.age,
+                                    GameStates.profession,GameStates.skills]: command = blt_handle_global_input(game_state)
         else:
-            if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0: #This is to handle the case of moving with direction keys
+            if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0:    #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
             else:
-                if 'options' in menu_dict:
-                    if len(frame_list) != 0:
-                        
-                        key = bltGui.bltInput.update()       
-                        update(frame_list)
+                if 'options' in menu_dict and len(frame_list) != 0:
 
-                        if key is not None:
-                            if key == terminal.TK_CLOSE:
-                                exit()
-                            dirty = True
-                            if not hide_options:
-                                if key == 41:
-                                    if 'Return' in menu_dict.get('options'):
-                                        command = {'Return':'Return'}
-                                    else:                                  
-                                        command = {'esc':'esc'}
-                                else:
-                                    for frame in frame_list:
-                                        for control in frame.controls:
-                                            if isinstance(control, bltGui.bltListbox):
-                                                if control.selected_index is not None:
-                                                    item = control.return_item()
-                                                    command = {item:item}
-                                            elif isinstance(control,NumBox):
-                                                if control.updated:
-                                                    command = {'Age':control.text}
-                                                    control.updated = False
-                                            
+                    key = bltGui.bltInput.update()       
+                    update(frame_list)
 
-                            elif key < 128:
-                                char = chr(key+93) #Needed because BLT returns a hex value for the scan code that is offset -93
-                                if key in menu_dict.get('options'):
-                                    command = blt_handle_keys(game_state, menu_dict, key)
-                                elif char in menu_dict.get('options'):
-                                    command = blt_handle_keys(game_state, menu_dict, char)
+                    if key is not None:
+                        if key == terminal.TK_CLOSE:
+                            exit()
+                        dirty = True
+                        if not hide_options:
+                            if key == 41:
+                                if 'Return' in menu_dict.get('options'):
+                                    command = {'Return':'Return'}
+                                else:                                  
+                                    command = {'esc':'esc'}
+                            else:
+                                for frame in frame_list:
+                                    for control in frame.controls:
+                                        if isinstance(control, bltGui.bltListbox):
+                                            if control.selected_index is not None:
+                                                item = control.return_item()
+                                                command = {item:item}
+                                        elif isinstance(control,NumBox):
+                                            if control.updated:
+                                                command = {'Age':control.text}
+                                                control.updated = False
 
-    elif not active_entity.player:
+
+                        elif key < 128:
+                            char = chr(key+93) #Needed because BLT returns a hex value for the scan code that is offset -93
+                            if key in menu_dict.get('options'):
+                                command = blt_handle_keys(game_state, menu_dict, key)
+                            elif char in menu_dict.get('options'):
+                                command = blt_handle_keys(game_state, menu_dict, char)
+
+    else:
         command = active_entity.fighter.ai.ai_command(active_entity, entities, combat_phase, game_map, order)
         dirty = True
 

@@ -493,6 +493,9 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
     clear = False
     skip = False
 
+    
+
+
     if not curr_actor.creation_choices.get('skills'):
         curr_actor.creation_choices['skills'] = {} #Nested dict in the following format {skill:xp}
     
@@ -508,8 +511,13 @@ def choose_skills(curr_actor, game_state, command) -> (dict, int, bool):
             if len(p.elect_sec_skills) > 0:
                 electives[p.name] = {'secondary':{}}
                 electives[p.name]['secondary'] = p.elect_sec_skills
-    
-    if len(command) > 0:
+    if skip:
+        game_state = GameStates.name
+        clear = True
+        curr_actor.temp_store = {}
+
+
+    elif len(command) > 0:
         if command.get('Accept'):
             for k in curr_actor.creation_choices.get('skills'):
                 skill = curr_actor.skill_dict.get(k)
