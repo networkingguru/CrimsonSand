@@ -160,7 +160,7 @@ class Entity:
                             if self.fighter.equip_loc.get(19).name not in ['Unarmed', w.name]:
                                 remove_list.append(a)
                 else:
-                    #Remove is hand attack on foot
+                    #Remove if hand attack on foot
                     if loc in [19,20]:
                         remove_list.append(a)
             for i in remove_list:
@@ -222,16 +222,18 @@ class Entity:
         elif 14 < location < 17 or 26 < location < 29:
             to_hit -= 20
             if 14 < location < 17:
-                dodge_mod += 30
                 parry_mod += 20
                 b_psi *= 40/self.fighter.get_attribute('flex')
             else:
-                dodge_mod += 30
                 parry_mod -= 30
 
-        loc_mod_dict = {'to_hit':to_hit, 'dodge_mod':dodge_mod, 'parry_mod': parry_mod, 'b_psi': b_psi}
-
-        return loc_mod_dict
+            dodge_mod += 30
+        return {
+            'to_hit': to_hit,
+            'dodge_mod': dodge_mod,
+            'parry_mod': parry_mod,
+            'b_psi': b_psi,
+        }
 
     def determine_combat_stats(self, weapon, attack, location = 30, angle_id = 0) -> dict:
         

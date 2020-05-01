@@ -7,7 +7,7 @@ from components.maneuver import (Headbutt, Tackle, Push, Trip, Bearhug, Reap, Wi
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
 
-quality_dict = {'Junk': -.5, 'Very Poor': -.3, 'Poor': -.2, 'Below Average': -.1, 'Average': 1, 'Above Average': 1.15, 'Fine': 1.3, 'Exceptional': 1.4, 'Masterwork': 1.5}
+quality_dict = {'Junk': .5, 'Very Poor': .7, 'Poor': .8, 'Below Average': .9, 'Average': 1, 'Above Average': 1.15, 'Fine': 1.3, 'Exceptional': 1.4, 'Masterwork': 1.5}
 
 
 
@@ -105,7 +105,7 @@ class Weapon:
 
         self.__dict__.update(kwargs)
 
-        self.set_dynamic_attributes()
+        #self.set_dynamic_attributes()
         
     def set_dynamic_attributes(self):
         #Determine which variant name to use
@@ -127,6 +127,14 @@ class Weapon:
         self.attack_mod += 20 * quality_dict.get(self.quality)
         self.parry_mod += 20 * quality_dict.get(self.quality)
 
+        self.length = self.main_length + self.shaft_length
+        sword_like = ['sword','dagger']
+        if self.skill is not None:
+            for s in sword_like:
+                if s in self.skill:
+                    self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+                    self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+                    self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
         
 
         self.main_weight = ((self.main_length * self.avg_main_depth * self.avg_main_width)*self.main_num) * (self.main_material.density * .03)
@@ -137,13 +145,13 @@ class Weapon:
         self.main_only_com = ((self.main_length*self.main_com)+(self.main_loc*self.length))*self.main_weight
         self.shaft_only_com = (self.shaft_length*.5)*self.shaft_weight
         self.accent_only_com = (self.accent_loc*self.length)*self.accent_weight
-        self.com = (self.main_only_com + self.shaft_only_com + self.accent_only_com)/self.weight #Center of mass for the whole weapon
+        self.com = (self.main_only_com + self.shaft_only_com + self.accent_only_com)/self.weight #Effective added weight on strike for the whole weapon
         self.com_perc = self.com / self.length #com as a percentage
         self.axis_vs_com = self.com_perc - self.grip_loc #Shows COM relative to grip location (axis for swings). Used to determine AP/stamina costs.
 
         self.main_hits = (self.main_material.elasticity * 1450000) * (self.main_weight/(self.main_material.density*.03)) * self.main_material.toughness * sqrt(self.main_material.hardness)
 
-        self.parry_ap += (self.weight * 10)/self.axis_vs_com
+        self.parry_ap += (self.weight * 100)*self.axis_vs_com
 
         self.min_pwr_1h = ((self.added_mass + .86) * 40)/1 #1 pwr = 1 ft/lb/s; accelleration = 40 f/s2; weight of average hand = .86 lb
         self.min_pwr_2h = ((self.added_mass + 1.72) * 40)/1.5 #1 pwr = 1.5 ft/lb/s; accelleration = 40 f/s2; weight of average hand = .86 lb
@@ -156,6 +164,7 @@ class Weapon:
             self.sharpness = sqrt((self.main_material.hardness/m_iron.hardness)*quality_dict.get(self.quality))
             self.pointedness = sqrt(self.main_material.hardness/m_iron.hardness)
         if self.main_shape == 'curved blade': self.sharpness *= 1.1
+        
         
 
   
@@ -731,6 +740,7 @@ class Unarmed(Weapon):
 
     def __init__(self, **kwargs):
         Weapon.__init__(self)
+        self.name = 'unarmed'
         self.shafted = False #Used to determine if wpn has a shaft
         self.allowed_main_materials = [m_tissue] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_bone #Damage component (blade, head, etc) material
@@ -828,8 +838,9 @@ class De_Medium_Sword(Weapon):
         self.base_name = 'Hand and a Half Sword'
         self.bname_variants = ['Longsword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
         self.skill = 'long_sword' #This is the default skill used for the weapon. String
-        self.length = 45
+        self.main_length = 39
         self.shaft_length = 6 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
         self.shaft_diameter = 1
         self.shaft_num = 1
         self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
@@ -840,15 +851,15 @@ class De_Medium_Sword(Weapon):
         self.main_shape = 'de blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
         self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
         self.accent_cuin = 7 #Cubic inches of accent material, such as the crossguard and pommel on a sword
-        self.main_com = .3 #Center of mass for the main weapon component
-        self.main_loc = .13 #Location along the total length for the main weapon component
-        self.accent_loc = .13 #Location along the total length for the accent component
-        self.grip_loc = .08 #location along the total length for the grip
+        self.main_com = .33 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
         
         self.damage_type = 's'
 
 
-        self.main_length = 39
+        
        
 
 
@@ -923,8 +934,9 @@ class Se_Medium_Sword(Weapon):
         self.base_name = 'Falchion'
         self.bname_variants = ['Katana', 'Falchion', 'Badelaire', 'Kamplain'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
         self.skill = 'long_sword' #This is the default skill used for the weapon. String
-        self.length = 45
+        self.main_length = 39
         self.shaft_length = 6 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
         self.shaft_diameter = 1
         self.shaft_num = 1
         self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
@@ -935,15 +947,15 @@ class Se_Medium_Sword(Weapon):
         self.main_shape = 'blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
         self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
         self.accent_cuin = 7 #Cubic inches of accent material, such as the crossguard and pommel on a sword
-        self.main_com = .3 #Center of mass for the main weapon component
-        self.main_loc = .16 #Location along the total length for the main weapon component
-        self.accent_loc = .16 #Location along the total length for the accent component
-        self.grip_loc = .08 #location along the total length for the grip
+        self.main_com = .35 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
         
         self.damage_type = 's'
 
 
-        self.main_length = 39
+        
        
 
 
@@ -1018,8 +1030,9 @@ class Sec_Medium_Sword(Weapon):
         self.base_name = 'Scimitar'
         self.bname_variants = ['Scimitar', 'Sabre', 'Khopesh', 'Falx', 'Talwar', 'Scythe Sword'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
         self.skill = 'long_sword' #This is the default skill used for the weapon. String
-        self.length = 32
+        self.main_length = 26
         self.shaft_length = 6 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
         self.shaft_diameter = 1
         self.shaft_num = 1
         self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
@@ -1030,15 +1043,15 @@ class Sec_Medium_Sword(Weapon):
         self.main_shape = 'curved blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
         self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
         self.accent_cuin = 7 #Cubic inches of accent material, such as the crossguard and pommel on a sword
-        self.main_com = .4 #Center of mass for the main weapon component
-        self.main_loc = .19 #Location along the total length for the main weapon component
-        self.accent_loc = .19 #Location along the total length for the accent component
-        self.grip_loc = .1 #location along the total length for the grip
+        self.main_com = .49 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
         
         self.damage_type = 's'
 
 
-        self.main_length = 26
+        
        
 
 
@@ -1113,8 +1126,9 @@ class De_Short_Sword(Weapon):
         self.base_name = 'Short Sword'
         self.bname_variants = ['Short Sword', 'Gladius', 'Xiphos', 'Jian', 'Spatha', 'Tsurugi', 'Cinquedea', 'Katzbalger'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
         self.skill = 'short_sword' #This is the default skill used for the weapon. String
-        self.length = 34
+        self.main_length = 28
         self.shaft_length = 6 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
         self.shaft_diameter = 1
         self.shaft_num = 1
         self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
@@ -1125,15 +1139,15 @@ class De_Short_Sword(Weapon):
         self.main_shape = 'de blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
         self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
         self.accent_cuin = 5 #Cubic inches of accent material, such as the crossguard and pommel on a sword
-        self.main_com = .16 #Center of mass for the main weapon component
-        self.main_loc = .17 #Location along the total length for the main weapon component
-        self.accent_loc = .17 #Location along the total length for the accent component
-        self.grip_loc = .09 #location along the total length for the grip
+        self.main_com = .19 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
         
         self.damage_type = 's'
 
 
-        self.main_length = 28
+        
        
 
 
@@ -1208,8 +1222,9 @@ class Se_Short_Sword(Weapon):
         self.base_name = 'Cutlass'
         self.bname_variants = ['Machete', 'Seax', 'Makhaira', 'Kodachi', 'Wakizashi', 'Ninjato', 'Messer', 'Dha', 'Cutlass', 'Yatagan'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
         self.skill = 'short_sword' #This is the default skill used for the weapon. String
-        self.length = 34
+        self.main_length = 28
         self.shaft_length = 6 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
         self.shaft_diameter = 1
         self.shaft_num = 1
         self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
@@ -1220,15 +1235,15 @@ class Se_Short_Sword(Weapon):
         self.main_shape = 'blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
         self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
         self.accent_cuin = 5 #Cubic inches of accent material, such as the crossguard and pommel on a sword
-        self.main_com = .22 #Center of mass for the main weapon component
-        self.main_loc = .18 #Location along the total length for the main weapon component
-        self.accent_loc = .18 #Location along the total length for the accent component
-        self.grip_loc = .12 #location along the total length for the grip
+        self.main_com = .27 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
         
         self.damage_type = 's'
 
 
-        self.main_length = 28
+        
        
 
 
@@ -1303,8 +1318,9 @@ class Sec_Short_Sword(Weapon):
         self.base_name = 'Falcata'
         self.bname_variants = ['Kukri', 'Falcata', 'Kopis', 'Kora', 'Kilij'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
         self.skill = 'short_sword' #This is the default skill used for the weapon. String
-        self.length = 24
+        self.main_length = 20
         self.shaft_length = 4 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
         self.shaft_diameter = 1
         self.shaft_num = 1
         self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
@@ -1315,15 +1331,15 @@ class Sec_Short_Sword(Weapon):
         self.main_shape = 'curved blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
         self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
         self.accent_cuin = 3 #Cubic inches of accent material, such as the crossguard and pommel on a sword
-        self.main_com = .18 #Center of mass for the main weapon component
-        self.main_loc = .14 #Location along the total length for the main weapon component
-        self.accent_loc = .14 #Location along the total length for the accent component
-        self.grip_loc = .06 #location along the total length for the grip
+        self.main_com = .22 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
         
         self.damage_type = 's'
 
 
-        self.main_length = 20
+        
        
 
 
@@ -1398,8 +1414,9 @@ class De_Great_Sword(Weapon):
         self.base_name = 'Greatsword'
         self.bname_variants = ['Greatsword', 'Two-handed Sword', 'Claymore', 'Estoc', 'Flamberge'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
         self.skill = 'great_sword' #This is the default skill used for the weapon. String
-        self.length = 65
+        self.main_length = 54
         self.shaft_length = 11 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
         self.shaft_diameter = 1
         self.shaft_num = 1
         self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
@@ -1410,15 +1427,15 @@ class De_Great_Sword(Weapon):
         self.main_shape = 'de blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
         self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
         self.accent_cuin = 9 #Cubic inches of accent material, such as the crossguard and pommel on a sword
-        self.main_com = .45 #Center of mass for the main weapon component
-        self.main_loc = .25 #Location along the total length for the main weapon component
-        self.accent_loc = .25 #Location along the total length for the accent component
-        self.grip_loc = .13 #location along the total length for the grip
+        self.main_com = .54 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
         
         self.damage_type = 's'
 
 
-        self.main_length = 54
+        
        
 
 
@@ -1459,3 +1476,188 @@ class De_Great_Sword(Weapon):
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = [] 
+
+class De_Dagger(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'de_dagger'
+
+        self.allowed_main_materials = [m_copper,m_bronze,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (8,15) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (0.1,0.2)
+        self.main_avg_depth_range = (0.07,0.15)
+        self.main_width_range = (.5,2)
+        self.main_avg_width_range = (.3,1.5)
+        self.length_range = (12,20)
+        self.shaft_length_range = (4,5) 
+        self.shaft_diameter_range = (.5,1.5)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_leather
+        self.accent_material = m_steel
+        self.attack_mod = +20
+        self.parry_mod = -20 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'accent' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'main'
+        self.p_striker = 'main'
+        self.t_striker = 'none'
+        self.hands = [1] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Dagger'
+        self.bname_variants = ['Dirk', 'Dagger', 'Stiletto', 'Baselard', 'Kris'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'dagger' #This is the default skill used for the weapon. String
+        self.main_length = 12
+        self.shaft_length = 4 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = .7 #1.25 average longsword
+        self.main_width = 1 #Absolute width at widest point
+        self.avg_main_depth = .12 #.14 is average for a sword blade 
+        self.main_depth =  .18 #Absolute depth at deepest point 
+        self.main_shape = 'de blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 1 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .4 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
+        
+        self.damage_type = 's'
+
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Slash, Stab, Pommel_Strike]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.conventional = Guard('Conventional', {'Face': -10, 'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': -20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20}, 0, 0, 0, [7,8,11,12,15,16], [9,10], 
+                                True, desc = 'Minor face protection, good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, to-hit and parry chances. \n\nAuto-blocks ribs.')
+        self.southpaw = Guard('Southpaw', {'Face': -10, 'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': -20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20}, 0, 0, 0, [7,8,11,12,15,16],[9,10], 
+                                False, True, desc = 'Minor face protection, good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, to-hit and parry chances. \n\nAuto-blocks ribs.')
+        self.high = Guard('High', {'Scalp': -20, 'Face': -30, 'Neck': -60, 'R Chest': -40, 'L Chest': -40, 'R Ribs': -20, 'L Ribs': -20, 'R Elbow': 20, 'L Elbow': 20, 'R Forearm': 20, 
+                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20}, -10, -20, 20, [7,8,11,12,15,16], [0,1,2,5,6], 
+                                desc = 'Good head protection, very good neck protection, good upper body protection, exposes arms. \n\n-20 to dodge, -10 to-hit and +20 parry chances. \n\nAuto-blocks head, neck, and chest.')
+        self.low = Guard('Low', {'Scalp': 20, 'Face': -10, 'Neck': -80, 'R Chest': -80, 'L Chest': -80, 'R Ribs': -80, 'L Ribs': -80, 'R Forearm': 20, 
+                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20, 'R Abdomen': -60, 'L Abdomen': -60}, -20, -10, 20, [7,8,11,12,15,16], [2,5,6,9,10,13,14], 
+                                desc = 'Minor face protection, excellent neck protection, excellent core protection, exposes scalp and arms. \n\n-10 to dodge, -20 to-hit and +20 to parry chances. \n\nAuto-blocks neck and center torso.')
+        self.half_l = Guard('Half, L lead', {'Neck': -10, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'R Ribs': -60, 
+                                'R Elbow': -60, 'R Forearm': -60, 'R Hand': -60}, 20, 20, 0, [7,11,15], [9, 10],
+                                desc = 'Minor neck protection, good right-side protection, exposes left shoulder. \n\n+20 to dodge, +20 to-hit and neutral parry chances. \n\nAuto-blocks ribs.')
+        self.half_r = Guard('Half, R lead', {'Neck': -10, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'L Ribs': -60, 
+                                'L Elbow': -60, 'L Forearm': -60, 'L Hand': -60}, 20, 20, 0, [7,11,15], [9, 10],
+                                desc = 'Minor neck protection, good left-side protection, exposes right shoulder. \n\n+20 to dodge, +20 to-hit and neutral parry chances. \n\nAuto-blocks ribs.')
+        self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half_l, self.half_r]
+        self.base_maneuvers = [Headbutt,Tackle,Push,Trip,Collar_Tie,Wind_Choke,Strangle_Hold,Blood_Choke,Neck_Crank,Reap,Sacrifice_Throw,Hip_Throw,Shoulder_Throw,Single_Leg_Takedown,Double_Leg_Takedown]
+
+class Se_Knife(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'se_knife'
+
+        self.allowed_main_materials = [m_copper,m_bronze,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (6,12) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (0.1,0.4)
+        self.main_avg_depth_range = (0.08,0.3)
+        self.main_width_range = (1,2)
+        self.main_avg_width_range = (.8,1.6)
+        self.length_range = (11,19)
+        self.shaft_length_range = (5,7) 
+        self.shaft_diameter_range = (.5,1.5)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_leather
+        self.accent_material = m_steel
+        self.attack_mod = +20
+        self.parry_mod = -20 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'accent' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'main'
+        self.p_striker = 'main'
+        self.t_striker = 'none'
+        self.hands = [1] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Knife'
+        self.bname_variants = ['Knife', 'Tanto'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'dagger' #This is the default skill used for the weapon. String
+        self.main_length = 11
+        self.shaft_length = 5 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 1 #1.25 average longsword
+        self.main_width = 1.25 #Absolute width at widest point
+        self.avg_main_depth = .16 #.14 is average for a sword blade 
+        self.main_depth =  .2 #Absolute depth at deepest point 
+        self.main_shape = 'blade' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .4 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
+        self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
+        
+        self.damage_type = 's'
+
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Slash, Stab, Pommel_Strike]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.conventional = Guard('Conventional', {'Face': -10, 'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': -20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20}, 0, 0, 0, [7,8,11,12,15,16], [9,10], 
+                                True, desc = 'Minor face protection, good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, to-hit and parry chances. \n\nAuto-blocks ribs.')
+        self.southpaw = Guard('Southpaw', {'Face': -10, 'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': -20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20}, 0, 0, 0, [7,8,11,12,15,16],[9,10], 
+                                False, True, desc = 'Minor face protection, good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, to-hit and parry chances. \n\nAuto-blocks ribs.')
+        self.high = Guard('High', {'Scalp': -20, 'Face': -30, 'Neck': -60, 'R Chest': -40, 'L Chest': -40, 'R Ribs': -20, 'L Ribs': -20, 'R Elbow': 20, 'L Elbow': 20, 'R Forearm': 20, 
+                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20}, -10, -20, 20, [7,8,11,12,15,16], [0,1,2,5,6], 
+                                desc = 'Good head protection, very good neck protection, good upper body protection, exposes arms. \n\n-20 to dodge, -10 to-hit and +20 parry chances. \n\nAuto-blocks head, neck, and chest.')
+        self.low = Guard('Low', {'Scalp': 20, 'Face': -10, 'Neck': -80, 'R Chest': -80, 'L Chest': -80, 'R Ribs': -80, 'L Ribs': -80, 'R Forearm': 20, 
+                                'L Forearm': 20, 'R Hand': 20, 'L Hand': 20, 'R Abdomen': -60, 'L Abdomen': -60}, -20, -10, 20, [7,8,11,12,15,16], [2,5,6,9,10,13,14], 
+                                desc = 'Minor face protection, excellent neck protection, excellent core protection, exposes scalp and arms. \n\n-10 to dodge, -20 to-hit and +20 to parry chances. \n\nAuto-blocks neck and center torso.')
+        self.half_l = Guard('Half, L lead', {'Neck': -10, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'R Ribs': -60, 
+                                'R Elbow': -60, 'R Forearm': -60, 'R Hand': -60}, 20, 20, 0, [7,11,15], [9, 10],
+                                desc = 'Minor neck protection, good right-side protection, exposes left shoulder. \n\n+20 to dodge, +20 to-hit and neutral parry chances. \n\nAuto-blocks ribs.')
+        self.half_r = Guard('Half, R lead', {'Neck': -10, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'L Ribs': -60, 
+                                'L Elbow': -60, 'L Forearm': -60, 'L Hand': -60}, 20, 20, 0, [7,11,15], [9, 10],
+                                desc = 'Minor neck protection, good left-side protection, exposes right shoulder. \n\n+20 to dodge, +20 to-hit and neutral parry chances. \n\nAuto-blocks ribs.')
+        self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half_l, self.half_r]
+        self.base_maneuvers = [Headbutt,Tackle,Push,Trip,Collar_Tie,Wind_Choke,Strangle_Hold,Blood_Choke,Neck_Crank,Reap,Sacrifice_Throw,Hip_Throw,Shoulder_Throw,Single_Leg_Takedown,Double_Leg_Takedown]
+
+
+
+
+
+
+
+
+
+
+        
