@@ -135,6 +135,7 @@ class Weapon:
                     self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
                     self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
                     self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
+                    break
         
 
         self.main_weight = ((self.main_length * self.avg_main_depth * self.avg_main_width)*self.main_num) * (self.main_material.density * .03)
@@ -813,7 +814,7 @@ class De_Medium_Sword(Weapon):
         self.allowed_main_materials = [m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         #Maximums; used to procedurally gen weapons
         self.main_len_range = (30,47) #Tuple containing min and max range for acceptable lengths
-        self.main_depth_range = (0.15,0.5)
+        self.main_depth_range = (0.15,0.3)
         self.main_avg_depth_range = (0.07,0.2)
         self.main_width_range = (0.7,5)
         self.main_avg_width_range = (0.5,4)
@@ -909,7 +910,7 @@ class Se_Medium_Sword(Weapon):
         self.allowed_main_materials = [m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         #Maximums; used to procedurally gen weapons
         self.main_len_range = (30,47) #Tuple containing min and max range for acceptable lengths
-        self.main_depth_range = (0.15,0.5)
+        self.main_depth_range = (0.15,0.3)
         self.main_avg_depth_range = (0.07,0.2)
         self.main_width_range = (0.7,4)
         self.main_avg_width_range = (0.5,3.5)
@@ -1005,7 +1006,7 @@ class Sec_Medium_Sword(Weapon):
         self.allowed_main_materials = [m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         #Maximums; used to procedurally gen weapons
         self.main_len_range = (20,40) #Tuple containing min and max range for acceptable lengths
-        self.main_depth_range = (0.15,0.5)
+        self.main_depth_range = (0.15,0.3)
         self.main_avg_depth_range = (0.07,0.2)
         self.main_width_range = (1.2,4)
         self.main_avg_width_range = (0.5,3.5)
