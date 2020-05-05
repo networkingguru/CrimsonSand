@@ -1,15 +1,17 @@
 import global_vars
 import time
+from copy import deepcopy
 from enums import GameStates, MenuTypes
 from components.circumstances import Circumstance
 from components.ethnicities import Ethnicity, age_mods
 from components.professions import Profession
 from components.upbringing import get_valid_upbringings
 from components.fighter import attr_name_dict, Skill
-from utilities import inch_conv,roll_dice
+from utilities import inch_conv,roll_dice,make_bar
 from chargen_functions import random_attr
 from options import name_dict
-from copy import deepcopy
+from item_gen import weapon_generator, calc_weapon_stats
+
 
 
 sex_attr_mods_m = {'Logic':5,'Wisdom':-5,'Comprehension':-5,'Communication':-5,'Mental Celerity':-5,'Willpower':5,'Steady State':30,'Power':30,'Manual Dexterity':-5,
@@ -624,6 +626,35 @@ def choose_name(curr_actor, game_state, command) -> (dict, int, bool):
 
     return menu_dict, game_state, clear
 
+def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
+    menu_dict = {}
+    clear = False
+    skip = False
+    categories = ['sword','dagger','staff','spear','axe','mace','flail','hammer','lance','pick','polearm']
+    category = 0
+
+    
+    if skip:
+        game_state = GameStates.shop_a
+        clear = True
+        curr_actor.temp_store = {}
+
+
+    elif len(command) > 0:
+        if command.get('Next Category'):
+            category += 1
+        else:
+            for w in curr_actor.temp_store.get(weapons):
+                if command.get(id(w)):
+                    curr_actor.fighter.money -= w.cost
+                    curr_actor.fighter.weapons.append(w)
+                    game_state = GameStates.sw_confirm
+
+    else:
+        menu_dict = gen_skill_menu(curr_actor,category)
+
+    return menu_dict, game_state, clear
+
 def gen_picks_dict(curr_actor):
     picks = curr_actor.temp_store['picks'] = {} #Nested dict for holding picks. Format is {profession:{primary:{category:picks}}}
     electives = curr_actor.temp_store.get('electives')
@@ -703,6 +734,65 @@ def set_electives(curr_actor) -> (str,str,str):
                         return prof, sk_type, cat
                     elif electives.get(prof).get(sk_type).get(cat)[1] > picks.get(prof).get(sk_type).get(cat):
                         return prof, sk_type, cat
+
+def gen_wstore_menu(curr_actor,category) -> dict:
+    to_hit_best = -100
+    to_hit_worst = 100
+    parry_best = -100
+    parry_worst = 100
+    damage_best = 0
+    damage_worst = 10000
+    purchased_weapons = []
+    categories = ['sword','dagger','staff','spear','axe','mace','flail','hammer','lance','pick','polearm']
+    active_cat = categories[category]
+    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': [], 'mode': False, 'desc': {}}
+
+    #combat_dict = {'total er': tot_er, 'psi': psi,'to hit': to_hit, 
+    #                'to parry': to_parry, 'final ap': final_ap, 'parry ap': parry_ap}
+
+    if not curr_actor.temp_store.get('weapons'):
+        curr_actor.temp_store['weapons'] = {'sword':[],'dagger':[],'staff':[],'spear':[],'axe':[],'mace':[],'flail':[],'hammer':[]'lance':[],'pick':[],'polearm':[]}
+    
+    weapon_dict = curr_actor.temp_store.get('weapons')
+
+    for w_type in weapon_dict.keys():
+        if len(weapon_dict.get(w_type)) == 0:
+            weapon_generator(w_type,26,max_cost=curr_actor.fighter.money)
+
+    if not curr_actor.temp_store.get('combat_stats'):
+        combat_stats = curr_actor.temp_store.['combat_stats'] = {}
+    else:
+        combat_stats = curr_actor.temp_store.get('combat_stats')
+
+    for w_type in weapon_dict.keys():
+        for w in weapon_dict.get(w_type):
+            if not combat_stats.get(id(w)):
+                combat_stats[id(w)] = calc_weapon_stats(curr_actor,w)
+                if combat_stats.get(id(w)).get('psi') > damage_best: damage_best = combat_stats.get(id(w)).get('psi')
+                if combat_stats.get(id(w)).get('psi') < damage_worst: damage_worst = combat_stats.get(id(w)).get('psi')
+                if combat_stats.get(id(w)).get('to hit') > to_hit_best: to_hit_best = combat_stats.get(id(w)).get('to hit')
+                if combat_stats.get(id(w)).get('to hit') < to_hit_worst: to_hit_worst = combat_stats.get(id(w)).get('to hit')
+                if combat_stats.get(id(w)).get('to parry') > parry_best: parry_best = combat_stats.get(id(w)).get('to parry')
+                if combat_stats.get(id(w)).get('to parry') < parry_worst: parry_worst = combat_stats.get(id(w)).get('to parry')
+
+    for wpn in curr_actor.fighter.weapons:
+        purchased_weapons.append(wpn)
+    
+    #Item details: Name Price  Weight  Length  To-hit  Parry   Damage  Hands   ER  AP/Attack  AP/Parry
+    for w in weapon_dict.get(active_cat):
+        if w not in purchased_weapons:
+            menu_dict['options'].append(id(w))
+            hit_bar = make_bar(combat_stats.get(id(w)).get('to hit'),to_hit_best,to_hit_worst)
+            parry_bar = make_bar(combat_stats.get(id(w)).get('to parry'),parry_best,parry_worst)
+            dam_bar = make_bar(combat_stats.get(id(w)).get('psi'),damage_best,damage_worst)
+            menu_item = w.name +'\t'+ str(int(w.cost)) +'\t'+ str(int(w.weight)) +'\t'+ str(int(w.length)) +'\t'+ hit_bar 
+            menu_item += '\t'+ parry_bar +'\t'+ dam_bar +'\t'+ ', '.join(w.hands) +'\t'+ str(int(combat_stats.get(id(w)).get('total er')))
+            menu_item += '\t'+ str(int(combat_stats.get(id(w)).get('final ap'))) +'\t'+ str(int(combat_stats.get(id(w)).get('parry ap')))
+
+            menu_dict['desc'][id(w)] = menu_item
+
+    return menu_dict
+
 
 
 

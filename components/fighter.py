@@ -105,6 +105,11 @@ class Fighter:
         self.stability = self.stability_mods
         self.lm = 0 #Learning modifier
         
+        #Inventory
+        self.money = 0
+        self.weapons = []
+        self.armor = []
+
         #Reach
         self.reach = None #Main hand reach. All reach vars set by entity.set_reach
         self.reach_oh = None #Off hand reach
