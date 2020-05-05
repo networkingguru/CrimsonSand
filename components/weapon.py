@@ -201,8 +201,8 @@ class Attack():
         self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
         self.side_restrict = True #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
         self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
-        self.allowed_angles_r = [] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
-        self.allowed_angles_l = [] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_r = [] #Angles that are allowed as a clockwise index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. S->N with an uppercut)
+        self.allowed_angles_l = [] #Angles that are allowed as a clockwise index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. S->N with an uppercut)
         self.force_scalar = 1 #Used to adjust force/damage for the attack
         self.added_mass = 0 #Dynamicly assigned
         self.main_area = 0 #Dynamicly assigned
@@ -212,7 +212,7 @@ class Attack():
         self.main_length = self.weapon.main_length
         self.avg_main_width = self.weapon.avg_main_width
         self.main_depth = self.weapon.main_depth
-        self.avg_main_width = self.weapon.avg_main_width
+        self.avg_main_depth = self.weapon.avg_main_depth
         self.main_width = self.weapon.main_width
         self.main_material = self.weapon.main_material
         self.shaft_material = self.weapon.shaft_material
@@ -248,8 +248,8 @@ class Attack():
                     shape = 'round'
                     
                 if shape == 'wedge':
-                    self.main_area = self.main_length * self.avg_main_width
-                    self.mech_adv =  self.main_depth / self.main_width
+                    self.main_area = self.main_length * self.avg_main_depth
+                    self.mech_adv =  self.main_width / self.main_depth
                 elif shape == 'round':
                     #Basic hack, treating cylinders and spheres the same and basically making them truncated rectangles
                     #Tried to use Hertz's formula, but got wacky results
@@ -267,16 +267,15 @@ class Attack():
                     self.solidness = (material.elasticity / 2) ** (1. / 3)
                     self.main_area = (min(length,8)*width)/8
                 elif self.main_shape == 'flat':
-                    self.main_area = min(self.main_length,8) * min(self.main_width,8)
+                    self.main_area = min(self.main_depth,8) * min(self.main_width,8)
 
             elif t == 's':
-                if self.main_shape == 'blade':
-                    self.main_area = min(self.main_length, 12) * self.avg_main_width
-                    self.mech_adv =  self.main_depth / self.main_width
+                if self.main_shape in ['blade','curved blade']:
+                    self.main_area = min(self.main_length, 12) * self.avg_main_depth
+                    self.mech_adv =  self.main_width / self.main_depth
                 elif self.main_shape == 'de blade':
-                    self.main_area = min(self.main_length, 12) * self.avg_main_width
-                    self.mech_adv =  (self.main_depth/2) / self.main_width
-            
+                    self.main_area = min(self.main_length, 12) * self.avg_main_depth
+                    self.mech_adv =  (self.main_width/2) / self.main_depth
             elif t == 'p':
                 if self.striker == 'main':
                     shape = self.main_shape
@@ -287,9 +286,9 @@ class Attack():
                     shape = 'point'
                     if self.striker == 'shaft':
                         length = min(self.shaft_length, 12)
-                        depth = width = 1
+                        depth = width = self.weapon.shaft_diameter
                     else:
-                        length = depth = width = 1
+                        length = depth = width = self.weapon.shaft_diameter
                 if shape in ['point', 'blade', 'de blade']:
                     wedge1 = length / width
                     wedge2 = width / depth

@@ -67,7 +67,7 @@ class Entity:
         for key in skills:
             for cls in itersubclasses(Skill):
                 c = cls(self)
-                if c.name == key:
+                if c.abbr == key:
                     xp = skills.get(key)
                     s = cls(self, xp)
                     self.fighter.skill_dict[s.name] = s
@@ -75,7 +75,7 @@ class Entity:
         for cls in itersubclasses(Skill):
             c = cls(self)
             if c.name not in self.fighter.skill_dict:
-                self.fighter.skill_dict[c.name] = c
+                self.fighter.skill_dict[c.abbr] = c
 
 
         self.fighter.set_dynamic_attributes()
@@ -320,7 +320,7 @@ class Entity:
             t_psi = ep
 
         to_hit = attack.attack_mod + skill_rating + self.fighter.guard_hit_mod - self.fighter.armor_mod - self.fighter.temp_physical_mod
-        to_parry = attack.parry_mod + skill_rating - self.fighter.armor_mod - self.fighter.temp_physical_mod
+        to_parry = weapon.parry_mod + skill_rating - self.fighter.armor_mod - self.fighter.temp_physical_mod
         dodge_mod = self.fighter.stance_dodge - self.fighter.armor_mod - self.fighter.temp_physical_mod
         parry_mod = 0
         dam_mult = 1

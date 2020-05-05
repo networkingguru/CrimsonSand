@@ -523,7 +523,7 @@ class Fighter:
                     self.best_grappling_skill = skill
 
 
-        self.init = (self.get_attribute('men') + self.get_attribute('swift'))/4 + (self.get_attribute('sens') + self.get_attribute(self.best_combat_skill.name))/4
+        self.init = (self.get_attribute('men') + self.get_attribute('swift'))/4 + (self.get_attribute('sens') + self.get_attribute(self.best_combat_skill.abbr))/4
 
 def stance_constants(stance) -> dict:
     stance_stability = 0

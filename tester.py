@@ -12,6 +12,7 @@ import options
 from components.professions import DeathKnight
 from components.circumstances import Circumstance
 from components.upbringing import get_valid_upbringings
+from item_gen import weapon_generator, calc_weapon_stats
 
 
 entity_list = options.entities
@@ -20,16 +21,14 @@ fighters = options.fighters
 add_fighters(entities, fighters)
 weapons = options.weapons
 add_weapons(entities, weapons)
-entities[0].creation_choices['sex'] = 'Male'
-entities[0].creation_choices['circumstance'] = 'Contracted Gladiator'
-entities[0].creation_choices['ethnicity'] = 'Eastern'
-
-
 
 entities[0].worn_armor = options.player_armor
 apply_armor(entities[0])
 
-u_list = get_valid_upbringings(entities[0],50)
+wpns = weapon_generator('sword',100)
+
+for w in wpns:
+    stats = calc_weapon_stats(entities[0],w)
 
 
 

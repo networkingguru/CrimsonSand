@@ -1,5 +1,6 @@
 from random import choice, randrange, uniform
 from numpy.random import normal
+from math import sqrt, pi
 from components.weapon import Weapon, quality_dict
 from utilities import roll_dice, itersubclasses
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
@@ -57,6 +58,97 @@ def weapon_generator(weapon,quantity,min_cost=0,max_cost=100000) -> list:
 
     return weapons
 
-wpns = weapon_generator('sword',15,0,50)
 
-print('done')
+
+def calc_weapon_stats(entity, weapon) -> dict:
+    attack = weapon.base_attacks[0](weapon)
+        
+    if len(attack.skill) > 1:
+        skills = []
+        for s in attack.skill:
+            skills.append(entity.fighter.get_attribute(s))
+        max_s = max(skills)
+        idx = skills.index(max_s)
+        skill = attack.skill[idx]
+    else:
+        skill = attack.skill[0]
+    skill_rating = entity.fighter.get_attribute(skill)
+    tot_er = entity.fighter.er + attack.length
+    b_psi = 0
+    s_psi = 0
+    t_psi = 0
+    p_psi = 0
+    eff_area = 0
+    fist_mass = .0065 * entity.fighter.weight 
+
+    if attack.hand:
+        limb_length = entity.fighter.reach
+    else:
+        limb_length = entity.fighter.reach_leg
+        
+    wpn_length = attack.length
+    reach = limb_length + wpn_length
+    distance = limb_length
+    #Determine max velocity based on pwr stat and mass distribution of attack
+    if attack.hands == 2:
+        max_vel = sqrt(entity.fighter.get_attribute('pwr'))*(4.5-(attack.added_mass/2))
+    else:
+        max_vel = sqrt(entity.fighter.get_attribute('pwr'))*(3-(attack.added_mass/2))
+
+
+    #Determine how long attack will take
+    time = (((1/8)*(2*pi*limb_length)*pi)/12)/max_vel
+    #Find final velocity using full distance travelled by weapon
+    velocity = (1/time) * (distance/12)
+
+    force = (fist_mass + attack.added_mass) * velocity
+
+    psi = force*12 #Convert to inches
+
+    
+    
+
+    #Damage calc = ((((added_mass + fist mass) * velocity) / main_area) * mech_adv) * sharpness or hardness or pointedness
+
+    if attack.damage_type is 'b':
+        eff_area =  attack.main_area * (velocity/40) #scale main area size based on velocity; hack to represent deformation
+    else:
+        eff_area = attack.main_area 
+
+    ep = ((psi * attack.force_scalar) / eff_area) * attack.mech_adv
+
+    if attack.damage_type == 's':
+        modifier = attack.sharpness
+        s_psi = ep*modifier
+    elif attack.damage_type == 'p':
+        modifier = attack.pointedness
+        p_psi = ep*modifier
+    elif attack.damage_type == 'b':
+        modifier = attack.solidness
+        b_psi = ep*modifier
+    else:
+        t_psi = ep
+
+    psi = max([s_psi,b_psi,t_psi,p_psi])
+
+    to_hit = attack.attack_mod + skill_rating
+    to_parry = weapon.parry_mod + skill_rating
+
+    dam_mult = 1
+    weight_factor = (entity.fighter.weight/100)**.4
+    
+    final_ap = attack.base_ap * (((100/skill_rating)**.2 + weight_factor))
+    if final_ap > entity.fighter.get_attribute('swift'): final_ap = entity.fighter.get_attribute('swift')
+    parry_ap = int(weapon.parry_ap * (((100/skill_rating)**.2 + weight_factor)))  
+
+
+    combat_dict = {'total er': tot_er, 'psi': psi,'to hit': to_hit, 
+                    'to parry': to_parry, 'final ap': final_ap, 'parry ap': parry_ap}
+
+    #convert items to int
+    for key in combat_dict:
+        combat_dict[key] = int(combat_dict[key])
+
+
+    return combat_dict
+
