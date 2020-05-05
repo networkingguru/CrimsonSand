@@ -643,15 +643,42 @@ def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
     elif len(command) > 0:
         if command.get('Next Category'):
             category += 1
+        elif command.get('Revert Purchases'):
+            for w in curr_actor.fighter.weapons:
+                curr_actor.fighter.money += w.cost
+            curr_actor.fighter.weapons.clear()
+        elif command.get('Continue to Armor Store'):
+            curr_actor.temp_store = {}
+            game_state = GameStates.shop_a
+            clear = True
         else:
-            for w in curr_actor.temp_store.get(weapons):
+            for w in curr_actor.temp_store.get('weapons'):
                 if command.get(id(w)):
-                    curr_actor.fighter.money -= w.cost
-                    curr_actor.fighter.weapons.append(w)
+                    curr_actor.temp_store['purchase'] = w
                     game_state = GameStates.sw_confirm
 
     else:
-        menu_dict = gen_skill_menu(curr_actor,category)
+        menu_dict = gen_wstore_menu(curr_actor,category)
+
+    return menu_dict, game_state, clear
+
+def confirm_weapon(curr_actor, game_state, command) -> (dict, int, bool):
+    menu_dict = {'type': MenuTypes.confirm_page, 'header': 'Confirm your purchase', 'options': ['Confirm', 'Abort'], 'mode': False, 'desc': {}}
+    clear = False
+    skip = False
+    w = curr_actor.temp_store.get('purchase')
+
+    if len(command) != 0 or skip:
+        if skip or command.get('Confirm'):
+            curr_actor.fighter.money -= w.cost
+            curr_actor.fighter.weapons.append(w)
+            
+        curr_actor.temp_store['purchase'] = None
+        game_state = GameStates.shop_w
+        clear = True
+    else:
+        menu_dict['desc']['text'] = 'You have decided to purchase ' + w.name + ' for ' + str(int(w.cost)) + ' gold. This will leave you with ' + str(int(curr_actor.fighter.money - w.cost)) + ' gold. \n'
+        menu_dict['desc']['text'] += 'Is this OK? '
 
     return menu_dict, game_state, clear
 
@@ -751,18 +778,18 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     #                'to parry': to_parry, 'final ap': final_ap, 'parry ap': parry_ap}
 
     if not curr_actor.temp_store.get('weapons'):
-        curr_actor.temp_store['weapons'] = {'sword':[],'dagger':[],'staff':[],'spear':[],'axe':[],'mace':[],'flail':[],'hammer':[]'lance':[],'pick':[],'polearm':[]}
+        curr_actor.temp_store['weapons'] = {'sword':[],'dagger':[],'staff':[],'spear':[],'axe':[],'mace':[],'flail':[],'hammer':[],'lance':[],'pick':[],'polearm':[]}
     
     weapon_dict = curr_actor.temp_store.get('weapons')
 
     for w_type in weapon_dict.keys():
         if len(weapon_dict.get(w_type)) == 0:
-            weapon_generator(w_type,26,max_cost=curr_actor.fighter.money)
+            weapon_dict[w_type] = weapon_generator(w_type,26,max_cost=curr_actor.fighter.money)
 
     if not curr_actor.temp_store.get('combat_stats'):
-        combat_stats = curr_actor.temp_store.['combat_stats'] = {}
-    else:
-        combat_stats = curr_actor.temp_store.get('combat_stats')
+        combat_stats = curr_actor.temp_store['combat_stats'] = {}
+
+    combat_stats = curr_actor.temp_store.get('combat_stats')
 
     for w_type in weapon_dict.keys():
         for w in weapon_dict.get(w_type):
@@ -774,13 +801,10 @@ def gen_wstore_menu(curr_actor,category) -> dict:
                 if combat_stats.get(id(w)).get('to hit') < to_hit_worst: to_hit_worst = combat_stats.get(id(w)).get('to hit')
                 if combat_stats.get(id(w)).get('to parry') > parry_best: parry_best = combat_stats.get(id(w)).get('to parry')
                 if combat_stats.get(id(w)).get('to parry') < parry_worst: parry_worst = combat_stats.get(id(w)).get('to parry')
-
-    for wpn in curr_actor.fighter.weapons:
-        purchased_weapons.append(wpn)
     
     #Item details: Name Price  Weight  Length  To-hit  Parry   Damage  Hands   ER  AP/Attack  AP/Parry
     for w in weapon_dict.get(active_cat):
-        if w not in purchased_weapons:
+        if w not in curr_actor.fighter.weapons:
             menu_dict['options'].append(id(w))
             hit_bar = make_bar(combat_stats.get(id(w)).get('to hit'),to_hit_best,to_hit_worst)
             parry_bar = make_bar(combat_stats.get(id(w)).get('to parry'),parry_best,parry_worst)

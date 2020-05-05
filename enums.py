@@ -21,10 +21,8 @@ class GameStates(Enum):
     name = auto()
     shop_w = auto()
     sw_confirm = auto()
-    sw_repeat =  auto()
     shop_a = auto()
     sa_confirm = auto()
-    sa_repeat =  auto()
     equip = auto()
     hire = auto()
 
@@ -60,6 +58,7 @@ class MenuTypes(Enum):
     prof_page = auto()
     name_page = auto()
     store_page = auto()
+    confirm_page = auto()
 
 class CombatPhase(Enum):   
     explore = auto()

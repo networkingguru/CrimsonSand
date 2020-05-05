@@ -31,8 +31,4 @@ for w in wpns:
     stats = calc_weapon_stats(entities[0],w)
 
 
-
-
-
-
 print('done')
