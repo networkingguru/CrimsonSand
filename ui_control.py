@@ -14,6 +14,7 @@ from chargen_functions import attr_descriptions, rating_description
 from bltGui import bltFrame as Frame
 from bltGui.bltTextBox import bltNumericBox as NumBox
 from bltGui.bltTextBox import bltTextBox
+from bltGui.bltButton import bltButton
 import bltGui
 
 
@@ -399,6 +400,24 @@ def render_name(frame_list, menu_dict) -> None:
         if len(frame_list) != 0:
             render_frames(frame_list)
 
+def render_store(frame_list, menu_dict) -> None:
+
+    header = menu_dict.get('header')
+    header_pos = int(90-(len(header)/2))
+
+    terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
+    menu_type = menu_dict.get('type')
+
+    if menu_type == MenuTypes.store_page:
+               
+
+        if len(frame_list) == 0:
+            bltgui_store_page(terminal,40,90,menu_dict,frame_list)
+            initialize()
+
+    if len(frame_list) != 0:
+        render_frames(frame_list)
+
 
 def render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict) -> None:
     map_con = con_list[0]
@@ -475,7 +494,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                 #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
         if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, 
                                     GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing, GameStates.age,
-                                    GameStates.profession,GameStates.skills,GameStates.name]: command = blt_handle_global_input(game_state)
+                                    GameStates.profession,GameStates.skills,GameStates.name,GameStates.shop_w]: command = blt_handle_global_input(game_state)
         else:
             if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0:    #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
@@ -500,8 +519,12 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                     for control in frame.controls:
                                         if isinstance(control, bltGui.bltListbox):
                                             if control.selected_index is not None:
-                                                item = control.return_item()
-                                                command = {item:item}
+                                                if game_state in [GameStates.shop_w,GameStates.shop_a]:
+                                                    item = control.return_item()
+                                                    command = {menu_dict.get('desc').get(item):menu_dict.get('desc').get(item)}
+                                                else:
+                                                    item = control.return_item()
+                                                    command = {item:item}
                                         elif isinstance(control,NumBox):
                                             if control.updated:
                                                 command = {'Age':control.text}
@@ -888,6 +911,29 @@ def bltgui_name_page(terminal, w, h, menu_dict, frame_list):
 
         
     list_frame.add_control(text_box)
+    frame_list.append(list_frame)
+
+def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
+    items = menu_dict.get('options')  
+    list_box = None
+    
+    frame_text = 'Name \t Price \t Weight \t Length \t To-hit \t Parry \t Damage \t Hands \t ER \t AP/Attack \t AP/Parry'
+
+    list_frame = Frame(0,0,w,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    if len(items) > 0:
+        list_box = bltGui.bltListbox(list_frame, 5, 15, items, False, True)
+    
+    cat_button = bltButton(list_frame,5,5,'1) Next Category',command='Next Category')
+    revert_button = bltButton(list_frame,5,25,'2) Revert Purchases',command='Revert Purchases')
+    cont_button = bltButton(list_frame,5,45,'3) Continue to Armor Store',command='Continue to Armor Store')
+    
+    if list_box is not None:    
+        list_frame.add_control(list_box)
+    
+    list_frame.add_control(cat_button)
+    list_frame.add_control(revert_button)
+    list_frame.add_control(cont_button)
+
     frame_list.append(list_frame)
 
 

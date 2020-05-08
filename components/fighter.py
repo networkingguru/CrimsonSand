@@ -106,7 +106,7 @@ class Fighter:
         self.lm = 0 #Learning modifier
         
         #Inventory
-        self.money = 0
+        self.money = 1000
         self.weapons = []
         self.armor = []
 
@@ -1184,6 +1184,33 @@ class Polearm(Skill):
         self.sec_amount = .3
         self.ter_base = ['men','wis']
         self.ter_amount = .2
+        
+        self.autodidact = True #Defines if skill can be used untrained
+        self.cost = 8 #Determines difficulty in improving skill
+        self.rating = 0
+        self.offensive = True
+        self.unarmed = False
+        self.grappling = False
+        self.attributes = None
+
+        self.__dict__.update(kwargs)
+        self.set_level()
+        self.set_rating()
+
+class Pick(Skill):
+    def __init__(self, entity, experience = 0, **kwargs):
+        self.entity = entity
+        self.experience = experience #The experience aquired in the skill
+        self.name = 'Pick'
+        self.abbr = 'pick'
+        self.category = 'Piercing'
+        self.level = 0
+        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
+        self.prim_amount = .7 #Percentage the PB contributes to total score
+        self.sec_base = ['men']
+        self.sec_amount = .2
+        self.ter_base = ['wis']
+        self.ter_amount = .1
         
         self.autodidact = True #Defines if skill can be used untrained
         self.cost = 8 #Determines difficulty in improving skill

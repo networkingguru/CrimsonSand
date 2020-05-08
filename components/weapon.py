@@ -3,7 +3,7 @@ from math import sqrt
 from enums import WeaponTypes, FighterStance, EntityState
 from utilities import itersubclasses, clamp, roll_dice
 from components.maneuver import (Headbutt, Tackle, Push, Trip, Bearhug, Reap, Wind_Choke, Blood_Choke, Collar_Tie, Compression_Lock, Joint_Lock, Limb_Capture, Sacrifice_Throw, 
-    Shoulder_Throw, Strangle_Hold, Hip_Throw, Double_Leg_Takedown, Single_Leg_Takedown, Neck_Crank)
+    Shoulder_Throw, Strangle_Hold, Hip_Throw, Double_Leg_Takedown, Single_Leg_Takedown, Neck_Crank, Weapon_Push, Weapon_Trip)
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
 
@@ -128,6 +128,7 @@ class Weapon:
         self.parry_mod += 20 * quality_dict.get(self.quality)
 
         self.length = self.main_length + self.shaft_length
+
         sword_like = ['sword','dagger']
         if self.skill is not None:
             for s in sword_like:
@@ -328,9 +329,9 @@ class Attack():
             if self.damage_type == 'p':
                 self.attack_mod -= self.weight/10
                 self.parry_mod -= self.weight * 5
-            else:
-                self.attack_mod += -5 + (self.main_num * 5)
-                self.parry_mod -= self.main_num * 20
+                
+            self.attack_mod += -5 + (self.main_num * 5)
+            self.parry_mod -= self.main_num * 20
 
 class Guard():
     def __init__(self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = [], rh_default = False, lh_default = False, desc = ''):
@@ -340,7 +341,7 @@ class Guard():
         self.hit_mod = hit_mod
         self.dodge_mod = dodge_mod
         self.parry_mod = parry_mod
-        self.req_locs = req_locs #A list of locs required to be funtional to use the guard
+        self.req_locs = req_locs #A list of locs required to be functional to use the guard
         self.auto_block = auto_block #A list of locations autoblocked
         self.rh_default = rh_default
         self.lh_default = lh_default  
@@ -736,6 +737,87 @@ class Pommel_Strike(Attack):
 
         self.set_dynamic_attributes()
 
+class Tip_Strike(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Tip Strike"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = 0
+        self.parry_mod = 0 #Modifier to OPPONENT'S parry chance
+        self.stamina = 5
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 2
+        self.damage_type = weapon.damage_type
+        self.base_ap = 15
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Shaft_Strike(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Shaft Strike"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = 0
+        self.parry_mod = -10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 5
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'shaft'
+        self.hands = 2
+        self.damage_type = 'b'
+        self.base_ap = 15
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Thrust(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Thrust"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = -20
+        self.parry_mod = -10 #Modifier to OPPONENT'S parry chance
+        self.stamina = 3
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 2
+        self.damage_type = weapon.damage_type
+        self.base_ap = 8
+        self.hand = True
+        self.length = 0 #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
 class Unarmed(Weapon):
 
     def __init__(self, **kwargs):
@@ -896,7 +978,7 @@ class De_Medium_Sword(Weapon):
         self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
                                 'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
-                                [0,1], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
+                                [19,20], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = [] 
@@ -992,7 +1074,7 @@ class Se_Medium_Sword(Weapon):
         self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
                                 'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
-                                [0,1], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
+                                [19,20], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = []
@@ -1088,7 +1170,7 @@ class Sec_Medium_Sword(Weapon):
         self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
                                 'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
-                                [0,1], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
+                                [19,20], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = []
@@ -1184,7 +1266,7 @@ class De_Short_Sword(Weapon):
         self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
                                 'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
-                                [0,1], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
+                                [19,20], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = [] 
@@ -1280,7 +1362,7 @@ class Se_Short_Sword(Weapon):
         self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
                                 'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
-                                [0,1], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
+                                [19,20], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = [] 
@@ -1376,7 +1458,7 @@ class Sec_Short_Sword(Weapon):
         self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
                                 'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
-                                [0,1], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
+                                [19,20], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = [] 
@@ -1451,28 +1533,28 @@ class De_Great_Sword(Weapon):
         #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
         self.ox_r = Guard('Hanging, Right-handed', {'Neck': -60, 'R Shoulder': -80, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
                                 'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -60, 
-                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [19,20], 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [17,8,11,12,15,16,19,20], 
                                 desc = 'Excellent neck protection, good right-side protection, exposes left side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
         self.ox_l = Guard('Hanging, Left-handed', {'Neck': -60, 'L Shoulder': -80, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
                                 'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -60, 
-                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [19,20], 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
                                 desc = 'Excellent neck protection, good left-side protection, exposes right side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
         self.plow_r = Guard('Middle, Right-handed', {'Neck': -20, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
                                 'L Ribs': -20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': -40, 'R Abdomen': -80, 'R Hip': -80, 'L Hip': -40}, 10, 20, 0, [7,8,11,12,15,16,19,20], 
-                                [4,6,8,10,12,14,16,19,20], True, desc = 'Minor neck protection, very good right side protection, exposes left side. \n\n+10 to hit, +20 to dodge, neutral parry chances. \n\nAuto-blocks left upper body and hands.')
+                                [7,8,11,12,15,16,19,20], True, desc = 'Minor neck protection, very good right side protection, exposes left side. \n\n+10 to hit, +20 to dodge, neutral parry chances. \n\nAuto-blocks left upper body and hands.')
         self.plow_l = Guard('Middle, Left-handed', {'Neck': -20, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
                                 'R Ribs': -20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -80, 
                                 'L Shin': -100, 'L Foot': -100, 'R Knee': 30, 'R Shin': 20, 'R Abdomen': -40, 'L Abdomen': -80, 'L Hip': -80, 'R Hip': -40}, 10, 20, 0, [7,8,11,12,15,16,19,20], 
-                                [3,5,7,9,11,13,15,19,20], False, True, desc = 'Minor neck protection, very good left side protection, exposes right side. \n\n+10 to hit, +20 to dodge, neutral parry chances. \n\nAuto-blocks right upper body and hands.')
+                                [7,8,11,12,15,16,19,20], False, True, desc = 'Minor neck protection, very good left side protection, exposes right side. \n\n+10 to hit, +20 to dodge, neutral parry chances. \n\nAuto-blocks right upper body and hands.')
         self.low = Guard('Low', {'Neck': -20, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
                                 'L Elbow': -40, 'R Elbow': 20, 'L Forearm': -20, 'R Forearm': 20, 'L Thigh': -60, 'L Knee': -80, 
                                 'L Shin': -100, 'L Foot': -100, 'R Knee': 30, 'R Shin': 20, 'R Abdomen': -40, 'L Abdomen': -20, 'L Hip': -80, 'R Hip': -40}, 0, 30, -10, [7,8,11,12,15,16,19,20], 
-                                [23,24,25,26,27,28], desc = 'Minor neck protection, very good left side protection, exposes right side. \n\nNeutral to hit, +30 to dodge, -10 to parry chances. \n\nAuto-blocks lower legs.')
+                                [7,8,11,12,15,16,19,20], desc = 'Minor neck protection, very good left side protection, exposes right side. \n\nNeutral to hit, +30 to dodge, -10 to parry chances. \n\nAuto-blocks lower legs.')
         self.high = Guard('High', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -20, 'L Chest': 20, 'Up R Arm': -20, 'Up L Arm': 40, 'R Ribs': -20, 
                                 'L Ribs': 20, 'L Elbow': 40, 'R Forearm': -20, 'L Forearm': 20, 'R Hand': -20, 'L Hand': -20, 'R Thigh': -60, 'R Knee': -80, 
                                 'R Shin': -100, 'R Foot': -100, 'L Knee': 30, 'L Shin': 20, 'L Abdomen': 20, 'R Abdomen': -20, 'R Hip': -80, 'L Hip': -20}, 20, 10, 10, [7,8,11,12,15,16,19,20], 
-                                [0,1], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
+                                [7,8,11,12,15,16,19,20], desc = 'Good neck protection, very good right side protection, exposes left side. \n\n+20 to hit, +10 to dodge, +10 to parry chances. \n\nAuto-blocks head.')
         self.guards = [self.ox_l, self.ox_r, self.plow_l, self.plow_r, self.low, self.high]
         self.base_maneuvers = []
         self.maneuvers = [] 
@@ -1651,12 +1733,413 @@ class Se_Knife(Weapon):
         self.guards = [self.conventional, self.southpaw, self.high, self.low, self.half_l, self.half_r]
         self.base_maneuvers = [Headbutt,Tackle,Push,Trip,Collar_Tie,Wind_Choke,Strangle_Hold,Blood_Choke,Neck_Crank,Reap,Sacrifice_Throw,Hip_Throw,Shoulder_Throw,Single_Leg_Takedown,Double_Leg_Takedown]
 
+class Staff(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'staff'
+
+        self.allowed_main_materials = [m_wood,m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (1,3) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (0.15,0.3)
+        self.main_avg_depth_range = (0.15,0.3)
+        self.main_width_range = (1,1.8)
+        self.main_avg_width_range = (1,1.8)
+        self.length_range = (72,144)
+        self.shaft_length_range = (66,138) 
+        self.shaft_diameter_range = (1,1.5)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_wood #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = 20
+        self.parry_mod = 40 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'none'
+        self.t_striker = 'none'
+        self.hands = [2] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Staff'
+        self.bname_variants = ['Staff'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'staff' #This is the default skill used for the weapon. String
+        self.main_length = 2
+        self.shaft_length = 66 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.5
+        self.shaft_num = 1
+        self.pre_load = True #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 2 #1.25 average longsword
+        self.main_width = 2 #Absolute width at widest point
+        self.avg_main_depth = .15 #.14 is average for a sword blade
+        self.main_depth =  .15 #Absolute depth at deepest point
+        self.main_shape = 'round' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .5 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = (self.length/100)/2 #location along the total length for the grip
+        
+        self.damage_type = 'b'
 
 
+        
+       
 
 
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Tip_Strike,Shaft_Strike,Thrust]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.ht_r = Guard('High Thrust, Right-handed', {'Neck': -60, 'R Shoulder': -80, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
+                                desc = 'Excellent neck protection, good right-side protection, exposes left side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
+        self.ht_l = Guard('High Thrust, Left-handed', {'Neck': -60, 'L Shoulder': -80, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
+                                desc = 'Excellent neck protection, good left-side protection, exposes right side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
+        self.hs_l = Guard('High Striking, Left-handed', {'Neck': -20, 'R Shoulder': -20, 'L Shoulder': 20, 'R Chest': -10, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -20, 
+                                'L Ribs': -20, 'R Elbow': -40, 'L Elbow': 30, 'R Forearm': -60, 'L Forearm': 40, 'R Hand': -60, 'L Hand': 40, 'R Thigh': 60, 'R Knee': 80, 
+                                'R Shin': 60, 'R Foot': 40, 'L Knee': -30, 'L Shin': -40, 'L Thigh': -20, 'L Foot': -60, 'L Abdomen': -40, 'R Abdomen': -30, 'L Hip': -10}, 30, 10, -10, [7,8,11,12,15,16,19,20], 
+                                [4,6,8,10,12,14,16,19,20], True, desc = 'Minor neck protection, good right upper body protection, exposes left upper and right lower body. \n\n+30 to hit, +10 to dodge, -10 parry chances. \n\nAuto-blocks right upper body.')
+        self.hs_r = Guard('High Striking, Right-handed', {'Neck': -20, 'L Shoulder': 20, 'R Shoulder': -20, 'L Chest': -10, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -20, 
+                                'R Ribs': -20, 'L Elbow': -40, 'R Elbow': 30, 'L Forearm': -60, 'R Forearm': 40, 'L Hand': -60, 'R Hand': 40, 'L Thigh': 60, 'L Knee': 80, 
+                                'L Shin': 60, 'L Foot': 40, 'R Knee': -30, 'R Shin': -40, 'R Thigh': -20, 'R Foot': -60, 'R Abdomen': -40, 'L Abdomen': -30, 'L Hip': -10}, 30, 10, -10, [7,8,11,12,15,16,19,20], 
+                                [3,5,7,9,11,13,15,19,20], False, True, desc = 'Minor neck protection, good left upper body protection, exposes right upper and left lower body. \n\n+30 to hit, +10 to dodge, -10 parry chances. \n\nAuto-blocks left upper body.')
+        self.rudder = Guard('Rudder', {'L Shoulder': -20, 'R Shoulder': -60, 'Up L Arm': -20, 'Up R Arm': -60, 'L Ribs': -20, 
+                                'L Elbow': -20, 'R Elbow': -40, 'L Forearm': -60, 'R Forearm': -60, 'L Thigh': -60, 'L Knee': -60, 'R Chest':-20,
+                                'L Shin': -60, 'L Foot': -80, 'R Thigh':-60, 'R Knee': -80, 'R Shin': -100,'R Foot': -120, 'R Abdomen': -40, 'R Ribs': -20, 'L Hip': -80, 'R Hip': -40}, -60, -30, 40, [0,1,2,3,4,5,6,7,8,9,11,12,15,16,17,21], 
+                                [7,8,11,12,15,16,19,20], desc = 'Excellent overall protection. \n\n -60 to hit, -30 to dodge, +40 to parry chances. \n\nAuto-blocks head, neck, shoulders, chest, arms, right hip and right thigh.')
+        self.mid_r = Guard('Middle, Right-handed', {'Neck': -80, 'L Hand': 20, 'L Forearm': 10, 'Up L Arm': -10, 'L Shoulder': -20, 'Scalp': -40, 'Face':-30, 'R Shoulder':-40, 
+                                'Up R Arm':-60, 'R Elbow': -80, 'R Forearm': -40, 'R Hand': -30, 'L Chest': -30, 'R Chest': -40, 'L Ribs': -40, 'R Ribs': -80, 'L Abdomen': -50, 
+                                'R Abdomen': -100, 'L Hip': -30, 'L Thigh': -30, 'L Knee': -40, 'L Shin': -60, 'L Foot': -80, 'R Hip': -140, 'R Thigh': -50, 'R Knee': -60,
+                                'R Shin': -80, 'R Foot': -100}, 40, 30, 10, [], 
+                                [7,8,11,12,15,16,19,20], desc = 'Good overall protection, slightly exposes left hand and forearm. \n\n+40 to hit, +30 to dodge, +10 to parry chances. \n\nNo locations auto-blocked.')
+        self.mid_l = Guard('Middle, Left-handed', {'Neck': -80, 'R Hand': 20, 'R Forearm': 10, 'Up R Arm': -10, 'R Shoulder': -20, 'Scalp': -40, 'Face':-30, 'L Shoulder':-40, 
+                                'Up L Arm':-60, 'L Elbow': -80, 'L Forearm': -40, 'L Hand': -30, 'R Chest': -30, 'L Chest': -40, 'R Ribs': -40, 'L Ribs': -80, 'R Abdomen': -50, 
+                                'L Abdomen': -100, 'R Hip': -30, 'R Thigh': -30, 'R Knee': -40, 'R Shin': -60, 'R Foot': -80, 'L Hip': -140, 'L Thigh': -50, 'L Knee': -60,
+                                'L Shin': -80, 'L Foot': -100}, 40, 30, 10, [], 
+                                [7,8,11,12,15,16,19,20], desc = 'Good overall protection, slightly exposes left hand and forearm. \n\n+40 to hit, +30 to dodge, +10 to parry chances. \n\nNo locations auto-blocked.')                        
+        self.guards = [self.ht_l, self.ht_r, self.hs_l, self.hs_r, self.rudder, self.mid_r, self.mid_l]
+        self.base_maneuvers = [Weapon_Push,Weapon_Trip]
+        self.maneuvers = [] 
+
+class Spear(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'spear'
+
+        self.allowed_main_materials = [m_wood,m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (6,20) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (0.1,0.5)
+        self.main_avg_depth_range = (0.15,0.25)
+        self.main_width_range = (1,4)
+        self.main_avg_width_range = (.2,2)
+        self.length_range = (60,120)
+        self.shaft_length_range = (54,100) 
+        self.shaft_diameter_range = (1,1.5)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = 20
+        self.parry_mod = 40 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'shaft' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'main'
+        self.t_striker = 'none'
+        self.hands = [1,2] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Spear'
+        self.bname_variants = ['Spear','Hasta','Spetum','Boar Spear','Dory'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'spear' #This is the default skill used for the weapon. String
+        self.main_length = 12
+        self.shaft_length = 60 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.25
+        self.shaft_num = 1
+        self.pre_load = True #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = .16 #1.25 average longsword
+        self.main_width = 2 #Absolute width at widest point
+        self.avg_main_depth = .1 #.14 is average for a sword blade
+        self.main_depth =  .2 #Absolute depth at deepest point
+        self.main_shape = 'point' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .6 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = (self.length/100)/2 #location along the total length for the grip
+        
+        self.damage_type = 'p'
 
 
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Stab,Shaft_Strike]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.ht_r = Guard('High Thrust, Right-handed', {'Neck': -60, 'R Shoulder': -80, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
+                                desc = 'Excellent neck protection, good right-side protection, exposes left side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
+        self.ht_l = Guard('High Thrust, Left-handed', {'Neck': -60, 'L Shoulder': -80, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
+                                desc = 'Excellent neck protection, good left-side protection, exposes right side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
+        self.hs_l = Guard('High Striking, Left-handed', {'Neck': -20, 'R Shoulder': -20, 'L Shoulder': 20, 'R Chest': -10, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -20, 
+                                'L Ribs': -20, 'R Elbow': -40, 'L Elbow': 30, 'R Forearm': -60, 'L Forearm': 40, 'R Hand': -60, 'L Hand': 40, 'R Thigh': 60, 'R Knee': 80, 
+                                'R Shin': 60, 'R Foot': 40, 'L Knee': -30, 'L Shin': -40, 'L Thigh': -20, 'L Foot': -60, 'L Abdomen': -40, 'R Abdomen': -30, 'L Hip': -10}, 30, 10, -10, [7,8,11,12,15,16,19,20], 
+                                [4,6,8,10,12,14,16,19,20], True, desc = 'Minor neck protection, good right upper body protection, exposes left upper and right lower body. \n\n+30 to hit, +10 to dodge, -10 parry chances. \n\nAuto-blocks right upper body.')
+        self.hs_r = Guard('High Striking, Right-handed', {'Neck': -20, 'L Shoulder': 20, 'R Shoulder': -20, 'L Chest': -10, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -20, 
+                                'R Ribs': -20, 'L Elbow': -40, 'R Elbow': 30, 'L Forearm': -60, 'R Forearm': 40, 'L Hand': -60, 'R Hand': 40, 'L Thigh': 60, 'L Knee': 80, 
+                                'L Shin': 60, 'L Foot': 40, 'R Knee': -30, 'R Shin': -40, 'R Thigh': -20, 'R Foot': -60, 'R Abdomen': -40, 'L Abdomen': -30, 'L Hip': -10}, 30, 10, -10, [7,8,11,12,15,16,19,20], 
+                                [3,5,7,9,11,13,15,19,20], False, True, desc = 'Minor neck protection, good left upper body protection, exposes right upper and left lower body. \n\n+30 to hit, +10 to dodge, -10 parry chances. \n\nAuto-blocks left upper body.')
+        self.rudder = Guard('Rudder', {'L Shoulder': -20, 'R Shoulder': -60, 'Up L Arm': -20, 'Up R Arm': -60, 'L Ribs': -20, 
+                                'L Elbow': -20, 'R Elbow': -40, 'L Forearm': -60, 'R Forearm': -60, 'L Thigh': -60, 'L Knee': -60, 'R Chest':-20,
+                                'L Shin': -60, 'L Foot': -80, 'R Thigh':-60, 'R Knee': -80, 'R Shin': -100,'R Foot': -120, 'R Abdomen': -40, 'R Ribs': -20, 'L Hip': -80, 'R Hip': -40}, -60, -30, 40, [0,1,2,3,4,5,6,7,8,9,11,12,15,16,17,21], 
+                                [7,8,11,12,15,16,19,20], desc = 'Excellent overall protection. \n\n -60 to hit, -30 to dodge, +40 to parry chances. \n\nAuto-blocks head, neck, shoulders, chest, arms, right hip and right thigh.')
+        self.mid_r = Guard('Middle, Right-handed', {'Neck': -80, 'L Hand': 20, 'L Forearm': 10, 'Up L Arm': -10, 'L Shoulder': -20, 'Scalp': -40, 'Face':-30, 'R Shoulder':-40, 
+                                'Up R Arm':-60, 'R Elbow': -80, 'R Forearm': -40, 'R Hand': -30, 'L Chest': -30, 'R Chest': -40, 'L Ribs': -40, 'R Ribs': -80, 'L Abdomen': -50, 
+                                'R Abdomen': -100, 'L Hip': -30, 'L Thigh': -30, 'L Knee': -40, 'L Shin': -60, 'L Foot': -80, 'R Hip': -140, 'R Thigh': -50, 'R Knee': -60,
+                                'R Shin': -80, 'R Foot': -100}, 40, 30, 10, [], 
+                                [7,8,11,12,15,16,19,20], desc = 'Good overall protection, slightly exposes left hand and forearm. \n\n+40 to hit, +30 to dodge, +10 to parry chances. \n\nNo locations auto-blocked.')
+        self.mid_l = Guard('Middle, Left-handed', {'Neck': -80, 'R Hand': 20, 'R Forearm': 10, 'Up R Arm': -10, 'R Shoulder': -20, 'Scalp': -40, 'Face':-30, 'L Shoulder':-40, 
+                                'Up L Arm':-60, 'L Elbow': -80, 'L Forearm': -40, 'L Hand': -30, 'R Chest': -30, 'L Chest': -40, 'R Ribs': -40, 'L Ribs': -80, 'R Abdomen': -50, 
+                                'L Abdomen': -100, 'R Hip': -30, 'R Thigh': -30, 'R Knee': -40, 'R Shin': -60, 'R Foot': -80, 'L Hip': -140, 'L Thigh': -50, 'L Knee': -60,
+                                'L Shin': -80, 'L Foot': -100}, 40, 30, 10, [], 
+                                [7,8,11,12,15,16,19,20], desc = 'Good overall protection, slightly exposes left hand and forearm. \n\n+40 to hit, +30 to dodge, +10 to parry chances. \n\nNo locations auto-blocked.')                        
+        self.guards = [self.ht_l, self.ht_r, self.hs_l, self.hs_r, self.rudder, self.mid_r, self.mid_l]
+        self.base_maneuvers = [Weapon_Push,Weapon_Trip]
+        self.maneuvers = []
+
+class Pike(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'pike'
+
+        self.allowed_main_materials = [m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (6,20) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (0.1,0.5)
+        self.main_avg_depth_range = (0.15,0.25)
+        self.main_width_range = (1,4)
+        self.main_avg_width_range = (.2,2)
+        self.length_range = (120,300)
+        self.shaft_length_range = (114,280) 
+        self.shaft_diameter_range = (1.3,2)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = -20
+        self.parry_mod = -80 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'none' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'main'
+        self.t_striker = 'none'
+        self.hands = [2] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Pike'
+        self.bname_variants = ['Pike','Sarissa'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'spear' #This is the default skill used for the weapon. String
+        self.main_length = 12
+        self.shaft_length = 168 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.5
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = .16 #1.25 average longsword
+        self.main_width = 2 #Absolute width at widest point
+        self.avg_main_depth = .1 #.14 is average for a sword blade
+        self.main_depth =  .2 #Absolute depth at deepest point
+        self.main_shape = 'point' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .52 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = (self.length/100)/2 #location along the total length for the grip
+        
+        self.damage_type = 'p'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Stab]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.ht_r = Guard('High Thrust, Right-handed', {'Neck': -60, 'R Shoulder': -80, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
+                                desc = 'Excellent neck protection, good right-side protection, exposes left side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
+        self.ht_l = Guard('High Thrust, Left-handed', {'Neck': -60, 'L Shoulder': -80, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
+                                desc = 'Excellent neck protection, good left-side protection, exposes right side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
+        self.hs_l = Guard('High Striking, Left-handed', {'Neck': -20, 'R Shoulder': -20, 'L Shoulder': 20, 'R Chest': -10, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -20, 
+                                'L Ribs': -20, 'R Elbow': -40, 'L Elbow': 30, 'R Forearm': -60, 'L Forearm': 40, 'R Hand': -60, 'L Hand': 40, 'R Thigh': 60, 'R Knee': 80, 
+                                'R Shin': 60, 'R Foot': 40, 'L Knee': -30, 'L Shin': -40, 'L Thigh': -20, 'L Foot': -60, 'L Abdomen': -40, 'R Abdomen': -30, 'L Hip': -10}, 30, 10, -10, [7,8,11,12,15,16,19,20], 
+                                [4,6,8,10,12,14,16,19,20], True, desc = 'Minor neck protection, good right upper body protection, exposes left upper and right lower body. \n\n+30 to hit, +10 to dodge, -10 parry chances. \n\nAuto-blocks right upper body.')
+        self.hs_r = Guard('High Striking, Right-handed', {'Neck': -20, 'L Shoulder': 20, 'R Shoulder': -20, 'L Chest': -10, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -20, 
+                                'R Ribs': -20, 'L Elbow': -40, 'R Elbow': 30, 'L Forearm': -60, 'R Forearm': 40, 'L Hand': -60, 'R Hand': 40, 'L Thigh': 60, 'L Knee': 80, 
+                                'L Shin': 60, 'L Foot': 40, 'R Knee': -30, 'R Shin': -40, 'R Thigh': -20, 'R Foot': -60, 'R Abdomen': -40, 'L Abdomen': -30, 'L Hip': -10}, 30, 10, -10, [7,8,11,12,15,16,19,20], 
+                                [3,5,7,9,11,13,15,19,20], False, True, desc = 'Minor neck protection, good left upper body protection, exposes right upper and left lower body. \n\n+30 to hit, +10 to dodge, -10 parry chances. \n\nAuto-blocks left upper body.')
+        self.rudder = Guard('Rudder', {'L Shoulder': -20, 'R Shoulder': -60, 'Up L Arm': -20, 'Up R Arm': -60, 'L Ribs': -20, 
+                                'L Elbow': -20, 'R Elbow': -40, 'L Forearm': -60, 'R Forearm': -60, 'L Thigh': -60, 'L Knee': -60, 'R Chest':-20,
+                                'L Shin': -60, 'L Foot': -80, 'R Thigh':-60, 'R Knee': -80, 'R Shin': -100,'R Foot': -120, 'R Abdomen': -40, 'R Ribs': -20, 'L Hip': -80, 'R Hip': -40}, -60, -30, 40, [0,1,2,3,4,5,6,7,8,9,11,12,15,16,17,21], 
+                                [7,8,11,12,15,16,19,20], desc = 'Excellent overall protection. \n\n -60 to hit, -30 to dodge, +40 to parry chances. \n\nAuto-blocks head, neck, shoulders, chest, arms, right hip and right thigh.')
+        self.mid_r = Guard('Middle, Right-handed', {'Neck': -80, 'L Hand': 20, 'L Forearm': 10, 'Up L Arm': -10, 'L Shoulder': -20, 'Scalp': -40, 'Face':-30, 'R Shoulder':-40, 
+                                'Up R Arm':-60, 'R Elbow': -80, 'R Forearm': -40, 'R Hand': -30, 'L Chest': -30, 'R Chest': -40, 'L Ribs': -40, 'R Ribs': -80, 'L Abdomen': -50, 
+                                'R Abdomen': -100, 'L Hip': -30, 'L Thigh': -30, 'L Knee': -40, 'L Shin': -60, 'L Foot': -80, 'R Hip': -140, 'R Thigh': -50, 'R Knee': -60,
+                                'R Shin': -80, 'R Foot': -100}, 40, 30, 10, [], 
+                                [7,8,11,12,15,16,19,20], desc = 'Good overall protection, slightly exposes left hand and forearm. \n\n+40 to hit, +30 to dodge, +10 to parry chances. \n\nNo locations auto-blocked.')
+        self.mid_l = Guard('Middle, Left-handed', {'Neck': -80, 'R Hand': 20, 'R Forearm': 10, 'Up R Arm': -10, 'R Shoulder': -20, 'Scalp': -40, 'Face':-30, 'L Shoulder':-40, 
+                                'Up L Arm':-60, 'L Elbow': -80, 'L Forearm': -40, 'L Hand': -30, 'R Chest': -30, 'L Chest': -40, 'R Ribs': -40, 'L Ribs': -80, 'R Abdomen': -50, 
+                                'L Abdomen': -100, 'R Hip': -30, 'R Thigh': -30, 'R Knee': -40, 'R Shin': -60, 'R Foot': -80, 'L Hip': -140, 'L Thigh': -50, 'L Knee': -60,
+                                'L Shin': -80, 'L Foot': -100}, 40, 30, 10, [], 
+                                [7,8,11,12,15,16,19,20], desc = 'Good overall protection, slightly exposes left hand and forearm. \n\n+40 to hit, +30 to dodge, +10 to parry chances. \n\nNo locations auto-blocked.')                        
+        self.guards = [self.ht_l, self.ht_r, self.hs_l, self.hs_r, self.rudder, self.mid_r, self.mid_l]
+        self.base_maneuvers = []
+        self.maneuvers = []
+
+class Trident(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'trident'
+
+        self.allowed_main_materials = [m_wood,m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (6,20) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (0.2,0.5)
+        self.main_avg_depth_range = (0.15,0.4)
+        self.main_width_range = (.2,.5)
+        self.main_avg_width_range = (.15,.4)
+        self.length_range = (60,120)
+        self.shaft_length_range = (54,100) 
+        self.shaft_diameter_range = (1,1.5)
+        self.max_main_num = 3
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = -20
+        self.parry_mod = 0 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'shaft' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'main'
+        self.t_striker = 'none'
+        self.hands = [1,2] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Trident'
+        self.bname_variants = ['Trident','Trishula','Fuscina'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'spear' #This is the default skill used for the weapon. String
+        self.main_length = 12
+        self.shaft_length = 60 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.25
+        self.shaft_num = 1
+        self.pre_load = True #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = .25 #1.25 average longsword
+        self.main_width = .4 #Absolute width at widest point
+        self.avg_main_depth = .25 #.14 is average for a sword blade
+        self.main_depth =  .4 #Absolute depth at deepest point
+        self.main_shape = 'point' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 3 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .7 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = (self.length/100)/2 #location along the total length for the grip
+        
+        self.damage_type = 'p'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Stab,Shaft_Strike]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.ht_r = Guard('High Thrust, Right-handed', {'Neck': -60, 'R Shoulder': -80, 'L Shoulder': 20, 'R Chest': -60, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': -60, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
+                                desc = 'Excellent neck protection, good right-side protection, exposes left side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
+        self.ht_l = Guard('High Thrust, Left-handed', {'Neck': -60, 'L Shoulder': -80, 'R Shoulder': 20, 'L Chest': -60, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': -60, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 20, [7,8,11,12,15,16,19,20], [7,8,11,12,15,16,19,20], 
+                                desc = 'Excellent neck protection, good left-side protection, exposes right side. \n\nNeutral dodge and to-hit modifiers, +20 to parry chances. \n\nAuto-blocks hands.')
+        self.hs_l = Guard('High Striking, Left-handed', {'Neck': -20, 'R Shoulder': -20, 'L Shoulder': 20, 'R Chest': -10, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -20, 
+                                'L Ribs': -20, 'R Elbow': -40, 'L Elbow': 30, 'R Forearm': -60, 'L Forearm': 40, 'R Hand': -60, 'L Hand': 40, 'R Thigh': 60, 'R Knee': 80, 
+                                'R Shin': 60, 'R Foot': 40, 'L Knee': -30, 'L Shin': -40, 'L Thigh': -20, 'L Foot': -60, 'L Abdomen': -40, 'R Abdomen': -30, 'L Hip': -10}, 30, 10, -10, [7,8,11,12,15,16,19,20], 
+                                [4,6,8,10,12,14,16,19,20], True, desc = 'Minor neck protection, good right upper body protection, exposes left upper and right lower body. \n\n+30 to hit, +10 to dodge, -10 parry chances. \n\nAuto-blocks right upper body.')
+        self.hs_r = Guard('High Striking, Right-handed', {'Neck': -20, 'L Shoulder': 20, 'R Shoulder': -20, 'L Chest': -10, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -20, 
+                                'R Ribs': -20, 'L Elbow': -40, 'R Elbow': 30, 'L Forearm': -60, 'R Forearm': 40, 'L Hand': -60, 'R Hand': 40, 'L Thigh': 60, 'L Knee': 80, 
+                                'L Shin': 60, 'L Foot': 40, 'R Knee': -30, 'R Shin': -40, 'R Thigh': -20, 'R Foot': -60, 'R Abdomen': -40, 'L Abdomen': -30, 'L Hip': -10}, 30, 10, -10, [7,8,11,12,15,16,19,20], 
+                                [3,5,7,9,11,13,15,19,20], False, True, desc = 'Minor neck protection, good left upper body protection, exposes right upper and left lower body. \n\n+30 to hit, +10 to dodge, -10 parry chances. \n\nAuto-blocks left upper body.')
+        self.rudder = Guard('Rudder', {'L Shoulder': -20, 'R Shoulder': -60, 'Up L Arm': -20, 'Up R Arm': -60, 'L Ribs': -20, 
+                                'L Elbow': -20, 'R Elbow': -40, 'L Forearm': -60, 'R Forearm': -60, 'L Thigh': -60, 'L Knee': -60, 'R Chest':-20,
+                                'L Shin': -60, 'L Foot': -80, 'R Thigh':-60, 'R Knee': -80, 'R Shin': -100,'R Foot': -120, 'R Abdomen': -40, 'R Ribs': -20, 'L Hip': -80, 'R Hip': -40}, -60, -30, 40, [0,1,2,3,4,5,6,7,8,9,11,12,15,16,17,21], 
+                                [7,8,11,12,15,16,19,20], desc = 'Excellent overall protection. \n\n -60 to hit, -30 to dodge, +40 to parry chances. \n\nAuto-blocks head, neck, shoulders, chest, arms, right hip and right thigh.')
+        self.mid_r = Guard('Middle, Right-handed', {'Neck': -80, 'L Hand': 20, 'L Forearm': 10, 'Up L Arm': -10, 'L Shoulder': -20, 'Scalp': -40, 'Face':-30, 'R Shoulder':-40, 
+                                'Up R Arm':-60, 'R Elbow': -80, 'R Forearm': -40, 'R Hand': -30, 'L Chest': -30, 'R Chest': -40, 'L Ribs': -40, 'R Ribs': -80, 'L Abdomen': -50, 
+                                'R Abdomen': -100, 'L Hip': -30, 'L Thigh': -30, 'L Knee': -40, 'L Shin': -60, 'L Foot': -80, 'R Hip': -140, 'R Thigh': -50, 'R Knee': -60,
+                                'R Shin': -80, 'R Foot': -100}, 40, 30, 10, [], 
+                                [7,8,11,12,15,16,19,20], desc = 'Good overall protection, slightly exposes left hand and forearm. \n\n+40 to hit, +30 to dodge, +10 to parry chances. \n\nNo locations auto-blocked.')
+        self.mid_l = Guard('Middle, Left-handed', {'Neck': -80, 'R Hand': 20, 'R Forearm': 10, 'Up R Arm': -10, 'R Shoulder': -20, 'Scalp': -40, 'Face':-30, 'L Shoulder':-40, 
+                                'Up L Arm':-60, 'L Elbow': -80, 'L Forearm': -40, 'L Hand': -30, 'R Chest': -30, 'L Chest': -40, 'R Ribs': -40, 'L Ribs': -80, 'R Abdomen': -50, 
+                                'L Abdomen': -100, 'R Hip': -30, 'R Thigh': -30, 'R Knee': -40, 'R Shin': -60, 'R Foot': -80, 'L Hip': -140, 'L Thigh': -50, 'L Knee': -60,
+                                'L Shin': -80, 'L Foot': -100}, 40, 30, 10, [], 
+                                [7,8,11,12,15,16,19,20], desc = 'Good overall protection, slightly exposes left hand and forearm. \n\n+40 to hit, +30 to dodge, +10 to parry chances. \n\nNo locations auto-blocked.')                        
+        self.guards = [self.ht_l, self.ht_r, self.hs_l, self.hs_r, self.rudder, self.mid_r, self.mid_l]
+        self.base_maneuvers = [Weapon_Push,Weapon_Trip]
+        self.maneuvers = []
 
 
 

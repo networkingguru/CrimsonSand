@@ -305,7 +305,7 @@ class Entity:
         else:
             eff_area = attack.main_area 
 
-        ep = ((psi * attack.force_scalar) / eff_area) * attack.mech_adv
+        ep = (((psi * attack.force_scalar) / eff_area) * attack.mech_adv) * attack.main_num
 
         if attack.damage_type == 's':
             modifier = attack.sharpness

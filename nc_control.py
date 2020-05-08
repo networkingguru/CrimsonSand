@@ -1,6 +1,6 @@
 from enums import GameStates
 from nc_functions import (choose_circumstance, choose_sex, choose_ethnicity, roll_social, roll_attr, assign_attr, 
-    choose_upbringing, choose_age, choose_profs, choose_skills, choose_name)
+    choose_upbringing, choose_age, choose_profs, choose_skills, choose_name, buy_weapons)
 
 def nc_controller(curr_actor, entities, game_state, command) -> (dict, int, bool):
     clear = False
@@ -28,7 +28,7 @@ def nc_controller(curr_actor, entities, game_state, command) -> (dict, int, bool
     elif game_state == GameStates.name:
         menu_dict, game_state, clear = choose_name(curr_actor, game_state, command)
     elif game_state == GameStates.shop_w:
-        pass
+        menu_dict, game_state, clear = buy_weapons(curr_actor, game_state, command)
     elif game_state == GameStates.shop_a:
         pass
     elif game_state == GameStates.equip:

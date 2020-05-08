@@ -25,7 +25,9 @@ add_weapons(entities, weapons)
 entities[0].worn_armor = options.player_armor
 apply_armor(entities[0])
 
-wpns = weapon_generator('sword',100)
+wpns = []
+for c in ['sword','dagger']:
+    wpns = weapon_generator(c,100)
 
 for w in wpns:
     stats = calc_weapon_stats(entities[0],w)

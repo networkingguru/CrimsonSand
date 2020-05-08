@@ -6,13 +6,13 @@ from utilities import roll_dice, itersubclasses
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
 
-weapon_master_list = itersubclasses(Weapon)
+
 
 
 def weapon_generator(weapon,quantity,min_cost=0,max_cost=100000) -> list:
     weapon_classes = []
     weapons = []
-
+    weapon_master_list = itersubclasses(Weapon)
     #Fill weapon classes with weapon objects from each class of the chosen weapon
     for w in weapon_master_list:
         wpn = w()
@@ -115,7 +115,7 @@ def calc_weapon_stats(entity, weapon) -> dict:
     else:
         eff_area = attack.main_area 
 
-    ep = ((psi * attack.force_scalar) / eff_area) * attack.mech_adv
+    ep = (((psi * attack.force_scalar) / eff_area) * attack.mech_adv) * attack.main_num
 
     if attack.damage_type == 's':
         modifier = attack.sharpness
