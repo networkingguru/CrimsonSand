@@ -1345,11 +1345,11 @@ class Weapon_Push(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Push with Weapon'
-        self.desc = 'Use your weaponm to shove ' + target.name
+        self.desc = 'Use your weapon to shove ' + target.name
         self.skill = ['staff','spear','polearm']
         self.loc_idx = target.fighter.name_location(loc_name)
-        self.succeed_desc = aggressor.name + ' pushes ' + target.name + 'with the but of thier weapon, forcing ' + ('him ' if target.fighter.male else 'her ') + 'back. '
-        self.fail_desc = aggressor.name + ' attempts to push ' + target.name + 'with the but of thier weapon, but fails. '
+        self.succeed_desc = aggressor.name + ' pushes ' + target.name + ' with the but of thier weapon, forcing ' + ('him ' if target.fighter.male else 'her ') + 'back. '
+        self.fail_desc = aggressor.name + ' attempts to push ' + target.name + ' with the but of thier weapon, but fails. '
         self.aggressor = aggressor #Used to indicate person controlling hold
         self.mnvr_mod = -10 #Mod to initial roll
         self.counter_mod = 0 #Mod to counter
@@ -1399,5 +1399,63 @@ class Weapon_Push(Maneuver):
         self.agg_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the aggressor of the maneuver
         self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
 
-
+class Disarm(Maneuver):
+    def __init__(self, aggressor, target, loc_name):
+        Maneuver.__init__(self)
+        self.name = 'Disarm the opponent'
+        self.desc = 'Use your axe to disarm ' + target.name
+        self.skill = ['large_axe']
+        self.loc_idx = target.fighter.name_location(loc_name)
+        self.succeed_desc = aggressor.name + ' disarms ' + target.name + ' with the horn of thier axe. '
+        self.fail_desc = aggressor.name + ' attempts to disarm ' + target.name + ' with the horn of thier axe, but fails. '
+        self.aggressor = aggressor #Used to indicate person controlling hold
+        self.mnvr_mod = -30 #Mod to initial roll
+        self.counter_mod = 0 #Mod to counter
+        self.dodge_mod = 0
+        self.escape_mod = 0 
+        self.reversal_mod = 0 
+        self.reversible = False
+        self.counterable = False
+        self.counters = [] #List of maneuvers that can be used to counter this one. 'Or' list.
+        self.stamina = 2
+        self.b_dam = 0
+        self.s_dam = 0
+        self.p_dam = 0
+        self.t_dam = 0
+        self.hands = 1
+        self.locs_allowed = set(19,20) #Locs maneuver can target
+        self.restricted_locs = list(set(range(29)).difference(self.locs_allowed)) #Added because reachable_locs needs it 
+        self.prereq = [] #Maneuvers required to be in place before this one can be used. Meant to be an 'or' list
+        self.base_ap = 5
+        self.hand = True
+        self.length = 0
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.immobilized_locs = set()
+        self.agg_immob_locs = set() #LOcs immobilized on the aggressor (i.e. both arms in a bear hug)
+        self.stability_mod = 0
+        self.pain_check = False 
+        self.balance_check = False
+        self.clarity_reduction = None 
+        self.temp_phys_mod = None
+        self.disarm = True
+        self.deshield = False
+        self.paralyzed_locs = None #set
+        self.suffocation = None #In rounds till death
+        self.stam_drain = None #Amount per round
+        self.stam_regin = None #Scalar
+        self.atk_mod_r = None
+        self.atk_mod_l = None
+        self.state = None #EntityState
+        self.escape_uses_skill = False
+        self.escape_skill = None #Skill used to escape/reverse.
+        self.escape_attr = None #Attr used to escape (i.e. Bear hug) 
+        self.stance = None #Stance the defender is in if the manuever succeeds
+        self.agg_suc_stance = None #Stance the aggressor is in if the maneuver succeeds
+        self.agg_fail_stance = None #Stance the aggressor is in if the maneuver fails
+        self.mv_scalar = 1 #Used to reduce movement as long as the hold is maintained
+        self.can_move = True #Used to block movement
+        self.inv_move = False #Used to trigger an involuntary move (such as in a push or throw)
+        self.inv_move_back = True #If inv moved, is defender thrown back? Forward if false.
+        self.agg_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the aggressor of the maneuver
+        self.target_stance_pre = [FighterStance.standing] #An 'or' list of stances necessary for the target of the maneuver
 
