@@ -42,6 +42,8 @@ class Maneuver():
         self.pain_check = False 
         self.balance_check = False
         self.clarity_reduction = None 
+        self.disarm = False
+        self.deshield = False
         self.temp_phys_mod = None
         self.paralyzed_locs = None #set
         self.suffocation = None #In rounds till death
