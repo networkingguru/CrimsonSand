@@ -1035,33 +1035,6 @@ class Mace(Skill):
         self.set_level()
         self.set_rating()
 
-class Flail(Skill):
-    def __init__(self, entity, experience = 0, **kwargs):
-        self.entity = entity
-        self.experience = experience #The experience aquired in the skill
-        self.name = 'Flail/Whip'
-        self.abbr = 'flail'
-        self.category = 'Bludgeoning'
-        self.level = 0
-        self.prim_base = ['agi'] #Primary base attribute(s). If multiple, are averaged
-        self.prim_amount = .8 #Percentage the PB contributes to total score
-        self.sec_base = ['men']
-        self.sec_amount = .1
-        self.ter_base = ['wis']
-        self.ter_amount = .1
-        
-        self.autodidact = True #Defines if skill can be used untrained
-        self.cost = 12 #Determines difficulty in improving skill
-        self.rating = 0
-        self.offensive = True
-        self.unarmed = False
-        self.grappling = False
-        self.attributes = None
-
-        self.__dict__.update(kwargs)
-        self.set_level()
-        self.set_rating()
-
 class Small_Hammer(Skill):
     def __init__(self, entity, experience = 0, **kwargs):
         self.entity = entity

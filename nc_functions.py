@@ -768,7 +768,7 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     damage_best = 0
     damage_worst = 10000
     purchased_weapons = []
-    categories = ['sword','dagger','staff','spear','axe','mace','flail','hammer','lance','pick','polearm']
+    categories = ['sword','dagger','staff','spear','axe','mace','hammer','pick','polearm']
     active_cat = categories[category]
     menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': [], 'mode': False, 'desc': {}}
 
