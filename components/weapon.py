@@ -8,7 +8,7 @@ from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
 
 quality_dict = {'Junk': .5, 'Very Poor': .7, 'Poor': .8, 'Below Average': .9, 'Average': 1, 'Above Average': 1.15, 'Fine': 1.3, 'Exceptional': 1.4, 'Masterwork': 1.5}
-
+craft_diff_dict = {'de blade':1.5, 'blade':1, 'curved blade':1.2, 'point':.8, 'wedge':.6, 'round':.4, 'flat':.2, 'hook':2}
 
 
 class Weapon:
@@ -55,6 +55,7 @@ class Weapon:
         self.weight = 1
         self.main_length = 0
         self.added_mass = 0
+        self.craft_diff = 1
 
         self.damage_type = 'b'
         self.stamina = 0
@@ -169,14 +170,14 @@ class Weapon:
         
         
 
-  
+        self.craft_diff = craft_diff_dict.get(self.main_shape)
         main_materials_cost = self.main_material.cost * self.main_weight
         shaft_materials_cost = self.shaft_material.cost * self.shaft_weight
         grip_materials_cost = self.grip_material.cost * self.grip_weight
         accent_materials_cost = self.accent_material.cost * self.accent_weight
 
         #Crafting costs. 1 day skilled labor = ~5 material cost
-        main_crafting_cost = self.main_material.craft_diff * self.main_weight
+        main_crafting_cost = self.main_material.craft_diff * self.main_weight * self.craft_diff
         shaft_crafting_cost = self.shaft_material.craft_diff * self.shaft_weight
         grip_crafting_cost = self.grip_material.craft_diff * self.grip_weight
         accent_crafting_cost = self.accent_material.craft_diff * self.accent_weight
@@ -866,6 +867,58 @@ class Horn_Thrust(Attack):
         self.restricted_locs = [0] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
         self.allowed_angles_r = [8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
         self.allowed_angles_l = [8] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Swing(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Swing"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = 0
+        self.parry_mod = -20 #Modifier to OPPONENT'S parry chance
+        self.stamina = 6
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 1
+        self.damage_type = 'b'
+        self.base_ap = 15
+        self.hand = True
+        self.length = weapon.main_length #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+class Swing_2H(Attack):
+    def __init__(self, weapon, **kwargs):
+        Attack.__init__(self, weapon)
+
+        self.name = "Two-Handed Swing"
+        self.weapon = weapon
+        self.skill = [weapon.skill]
+        self.attack_mod = -10
+        self.parry_mod = 0 #Modifier to OPPONENT'S parry chance
+        self.stamina = 8
+        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.striker = 'main'
+        self.hands = 2
+        self.damage_type = 'b'
+        self.base_ap = 20
+        self.hand = True
+        self.length = weapon.main_length #Used to add or subtract from base weapon length got added/reduced reach
+        self.side_restrict = False #Determines if the attack can only hit one side of the enemy (i.e. hook from R hand only hitting left side)
+        self.restricted_locs = [] #Locations that can never be targeted with this attack (i.e. foot with uppercut)
+        self.allowed_angles_r = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
+        self.allowed_angles_l = [0,1,2,3,4,5,6,7] #Angles that are allowed as an index of angles (0 = N-> S, 7 = NW -> SE, 8 = thrust) (i.e. N->S with an uppercut)
         
         self.__dict__.update(kwargs)
 
@@ -2338,7 +2391,7 @@ class Large_Axe(Weapon):
 
         #Attacks below
 
-        self.base_attacks = [Axe_Hammer,Horn_Thrust,Slash]
+        self.base_attacks = [Axe_Hammer,Horn_Thrust,Slash,Slash_2H]
         self.attacks = []
         #Guards below
         #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
@@ -2352,6 +2405,566 @@ class Large_Axe(Weapon):
                                 desc = 'Good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')                       
         self.guards = [self.default_l,self.default_r]
         self.base_maneuvers = [Weapon_Trip,Hook_Neck,Disarm,Deshield]
+        self.maneuvers = []
+
+class Club(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'club'
+
+        self.allowed_main_materials = [m_wood,m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (6,8) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (0.1,0.2)
+        self.main_avg_depth_range = (0.1,0.2)
+        self.main_width_range = (1,1.5)
+        self.main_avg_width_range = (1,1.5)
+        self.length_range = (12,24)
+        self.shaft_length_range = (5,16) 
+        self.shaft_diameter_range = (.6,1.5)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_wood #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = 0
+        self.parry_mod = -10 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'none'
+        self.t_striker = 'none'
+        self.hands = [1] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Club'
+        self.bname_variants = ['Club', 'Cudgel', 'Baton', 'Bludgeon', 'Truncheon', 'Cosh'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'mace' #This is the default skill used for the weapon. String
+        self.main_length = 6
+        self.shaft_length = 16 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 1 #1.25 average longsword
+        self.main_width = 1 #Absolute width at widest point
+        self.avg_main_depth = .1 #.14 is average for a sword blade
+        self.main_depth =  .1 #Absolute depth at deepest point
+        self.main_shape = 'round' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .5 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = 1-((self.length-6)/self.length) #location along the total length for the grip
+        
+        self.damage_type = 'b'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Swing]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.default_r = Guard('Default, Right handed', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -40, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 0, [7,11,15,19], [], 
+                                desc = 'Good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')
+        self.default_l = Guard('Default, Left handed', {'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -40, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 0, [8,12,16,20], [], 
+                                desc = 'Good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')                       
+        self.guards = [self.default_l,self.default_r]
+        self.base_maneuvers = []
+        self.maneuvers = []
+
+class Small_Mace(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'small_mace'
+
+        self.allowed_main_materials = [m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (3,6) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (2,6)
+        self.main_avg_depth_range = (1.5,3)
+        self.main_width_range = (2,6)
+        self.main_avg_width_range = (1.5,3)
+        self.length_range = (24,36)
+        self.shaft_length_range = (21,30) 
+        self.shaft_diameter_range = (.8,1.8)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = -10
+        self.parry_mod = -20 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'none'
+        self.t_striker = 'none'
+        self.hands = [1] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Footman\'s Mace'
+        self.bname_variants = ['Footman\'s Mace'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'mace' #This is the default skill used for the weapon. String
+        self.main_length = 5
+        self.shaft_length = 19 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.25
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 2.75 #1.25 average longsword
+        self.main_width = 2.75 #Absolute width at widest point
+        self.avg_main_depth = 2.75 #.14 is average for a sword blade
+        self.main_depth =  2.75 #Absolute depth at deepest point
+        self.main_shape = 'round' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .8 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = 1-((self.length-6)/self.length) #location along the total length for the grip
+        
+        self.damage_type = 'b'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Swing]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.default_r = Guard('Default, Right handed', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -40, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 0, [7,11,15,19], [], 
+                                desc = 'Good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')
+        self.default_l = Guard('Default, Left handed', {'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -40, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 0, [8,12,16,20], [], 
+                                desc = 'Good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')                       
+        self.guards = [self.default_l,self.default_r]
+        self.base_maneuvers = []
+        self.maneuvers = []
+
+class Fluted_Small_Mace(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'fluted_small_mace'
+
+        self.allowed_main_materials = [m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (3,6) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (.2,.5)
+        self.main_avg_depth_range = (.2,.5)
+        self.main_width_range = (2,6)
+        self.main_avg_width_range = (1,3)
+        self.length_range = (24,36)
+        self.shaft_length_range = (21,30) 
+        self.shaft_diameter_range = (.8,1.8)
+        self.max_main_num = 3
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = -10
+        self.parry_mod = -20 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'none'
+        self.t_striker = 'none'
+        self.hands = [1] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Fluted Footman\'s Mace'
+        self.bname_variants = ['Fluted Footman\'s Mace'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'mace' #This is the default skill used for the weapon. String
+        self.main_length = 5
+        self.shaft_length = 19 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.25
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 2.75 #1.25 average longsword
+        self.main_width = 2.75 #Absolute width at widest point
+        self.avg_main_depth = 2.75 #.14 is average for a sword blade
+        self.main_depth =  2.75 #Absolute depth at deepest point
+        self.main_shape = 'wedge' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 2 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .8 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = 1-((self.length-6)/self.length) #location along the total length for the grip
+        
+        self.damage_type = 'b'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Swing]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.default_r = Guard('Default, Right handed', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -40, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 0, [7,11,15,19], [], 
+                                desc = 'Good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')
+        self.default_l = Guard('Default, Left handed', {'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -40, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 0, [8,12,16,20], [], 
+                                desc = 'Good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')                       
+        self.guards = [self.default_l,self.default_r]
+        self.base_maneuvers = []
+        self.maneuvers = []
+
+class Medium_Mace(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'medium_mace'
+
+        self.allowed_main_materials = [m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (3,6) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (2,6)
+        self.main_avg_depth_range = (1.5,3)
+        self.main_width_range = (2,6)
+        self.main_avg_width_range = (1.5,3)
+        self.length_range = (36,48)
+        self.shaft_length_range = (33,42) 
+        self.shaft_diameter_range = (.8,1.8)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = -30
+        self.parry_mod = -50 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'none'
+        self.t_striker = 'none'
+        self.hands = [1,2] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Horseman\'s Mace'
+        self.bname_variants = ['Horseman\'s Mace'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'mace' #This is the default skill used for the weapon. String
+        self.main_length = 5
+        self.shaft_length = 40 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.25
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 2.75 #1.25 average longsword
+        self.main_width = 2.75 #Absolute width at widest point
+        self.avg_main_depth = 2.75 #.14 is average for a sword blade
+        self.main_depth =  2.75 #Absolute depth at deepest point
+        self.main_shape = 'round' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .7 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = 1-((self.length-6)/self.length) #location along the total length for the grip
+        
+        self.damage_type = 'b'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Swing,Swing_2H]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.default_r = Guard('Default, Right handed', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -40, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 0, [7,11,15,19], [], 
+                                desc = 'Good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')
+        self.default_l = Guard('Default, Left handed', {'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -40, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 0, [8,12,16,20], [], 
+                                desc = 'Good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')                       
+        self.guards = [self.default_l,self.default_r]
+        self.base_maneuvers = []
+        self.maneuvers = []
+
+class Fluted_Medium_Mace(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'fluted_medium_mace'
+
+        self.allowed_main_materials = [m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (3,6) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (.2,.5)
+        self.main_avg_depth_range = (.2,.5)
+        self.main_width_range = (2,6)
+        self.main_avg_width_range = (1.5,3)
+        self.length_range = (36,48)
+        self.shaft_length_range = (33,42) 
+        self.shaft_diameter_range = (.8,1.8)
+        self.max_main_num = 3
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = -30
+        self.parry_mod = -50 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'none'
+        self.t_striker = 'none'
+        self.hands = [1,2] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Fluted Horseman\'s Mace'
+        self.bname_variants = ['Fluted Horseman\'s Mace'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'mace' #This is the default skill used for the weapon. String
+        self.main_length = 5
+        self.shaft_length = 40 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.25
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 2.75 #1.25 average longsword
+        self.main_width = 2.75 #Absolute width at widest point
+        self.avg_main_depth = .3 #.14 is average for a sword blade
+        self.main_depth =  .3 #Absolute depth at deepest point
+        self.main_shape = 'wedge' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 2 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .7 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = 1-((self.length-6)/self.length) #location along the total length for the grip
+        
+        self.damage_type = 'b'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Swing,Swing_2H]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.default_r = Guard('Default, Right handed', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -40, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 0, [7,11,15,19], [], 
+                                desc = 'Good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')
+        self.default_l = Guard('Default, Left handed', {'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -40, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 0, [8,12,16,20], [], 
+                                desc = 'Good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')                       
+        self.guards = [self.default_l,self.default_r]
+        self.base_maneuvers = []
+        self.maneuvers = []
+
+class Large_Mace(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'large_mace'
+
+        self.allowed_main_materials = [m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (3,6) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (2,6)
+        self.main_avg_depth_range = (1.5,3)
+        self.main_width_range = (2,6)
+        self.main_avg_width_range = (1.5,3)
+        self.length_range = (48,60)
+        self.shaft_length_range = (45,54) 
+        self.shaft_diameter_range = (1,1.8)
+        self.max_main_num = 1
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = -40
+        self.parry_mod = -80 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'none'
+        self.t_striker = 'none'
+        self.hands = [2] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Two-Handed Mace'
+        self.bname_variants = ['Two-Handed Mace'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'mace' #This is the default skill used for the weapon. String
+        self.main_length = 5
+        self.shaft_length = 50 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.25
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 2.75 #1.25 average longsword
+        self.main_width = 2.75 #Absolute width at widest point
+        self.avg_main_depth = 2.75 #.14 is average for a sword blade
+        self.main_depth =  2.75 #Absolute depth at deepest point
+        self.main_shape = 'round' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 1 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .65 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = 1-((self.length-6)/self.length) #location along the total length for the grip
+        
+        self.damage_type = 'b'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Swing_2H]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.default_r = Guard('Default, Right handed', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -40, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 0, [7,11,15,19], [], 
+                                desc = 'Good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')
+        self.default_l = Guard('Default, Left handed', {'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -40, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 0, [8,12,16,20], [], 
+                                desc = 'Good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')                       
+        self.guards = [self.default_l,self.default_r]
+        self.base_maneuvers = []
+        self.maneuvers = []
+
+class Fluted_Large_Mace(Weapon):
+    def __init__(self, **kwargs):
+        Weapon.__init__(self)
+        self.name = 'fluted_large_mace'
+
+        self.allowed_main_materials = [m_copper,m_bronze,m_granite,m_bone,m_iron,m_hiron,m_steel,m_hsteel,m_ssteel,m_hssteel,m_mithril,m_adam] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
+        #Maximums; used to procedurally gen weapons
+        self.main_len_range = (3,6) #Tuple containing min and max range for acceptable lengths
+        self.main_depth_range = (.2,.5)
+        self.main_avg_depth_range = (.2,.5)
+        self.main_width_range = (2,6)
+        self.main_avg_width_range = (1.5,3)
+        self.length_range = (48,60)
+        self.shaft_length_range = (45,54) 
+        self.shaft_diameter_range = (1,1.8)
+        self.max_main_num = 3
+        self.max_shaft_num = 1
+
+        self.main_material = m_steel #Damage component (blade, head, etc) material
+        self.shaft_material = m_wood
+        self.grip_material = m_wood
+        self.accent_material = m_wood
+        self.attack_mod = -40
+        self.parry_mod = -80 #Mod to weilder's ability to parry with weapon
+        self.b_striker = 'main' #Striking surface for damage type. Can be main, shaft, accent, or none
+        self.s_striker = 'none'
+        self.p_striker = 'none'
+        self.t_striker = 'none'
+        self.hands = [2] #List can include 0,1,2
+        self.quality = 'Average'
+        self.base_name = 'Two-Handed Mace'
+        self.bname_variants = ['Two-Handed Mace'] #A list of variant names for the weapon 'Long Sword', 'Bastard Sword', 'Hand and a Half Sword', 'Arming Sword', 'Broadsword', 'Knight’s Sword', 'Kaskara', 'Rapier', 'Schiavona'
+        self.skill = 'mace' #This is the default skill used for the weapon. String
+        self.main_length = 5
+        self.shaft_length = 50 #Also used as tethers for flail and whip like weapons
+        self.length = self.main_length + self.shaft_length
+        self.shaft_diameter = 1.25
+        self.shaft_num = 1
+        self.pre_load = False #Used to account for weapons that can be preloaded with velocity, like flails or staves
+        self.avg_main_width = 2.75 #1.25 average longsword
+        self.main_width = 2.75 #Absolute width at widest point
+        self.avg_main_depth = .3 #.14 is average for a sword blade
+        self.main_depth =  .3 #Absolute depth at deepest point
+        self.main_shape = 'wedge' #Acceptable values: de blade, blade, point, wedge, round, flat, hook
+        self.main_num = 2 #Number of main attack surfaces, mostly used for flails/flogs
+        self.accent_cuin = 0 #Cubic inches of accent material, such as the crossguard and pommel on a sword
+        self.main_com = .65 #Center of mass for the main weapon component
+        self.main_loc = (self.shaft_length/((self.length-self.main_length)/100))/100 #Location along the total length for the main weapon component
+        self.accent_loc = 0 #Location along the total length for the accent component
+        self.grip_loc = 1-((self.length-6)/self.length) #location along the total length for the grip
+        
+        self.damage_type = 'b'
+
+
+        
+       
+
+
+        self.__dict__.update(kwargs)
+
+        self.set_dynamic_attributes()
+
+        #Attacks below
+
+        self.base_attacks = [Swing_2H]
+        self.attacks = []
+        #Guards below
+        #self, name, loc_hit_mods, hit_mod = 0, dodge_mod = 0, parry_mod = 0, req_locs = [], auto_block = []
+        self.default_r = Guard('Default, Right handed', {'Neck': -40, 'R Shoulder': -60, 'L Shoulder': 20, 'R Chest': -40, 'Up R Arm': -60, 'Up L Arm': 20, 'R Ribs': -60, 
+                                'L Ribs': 20, 'R Elbow': -60, 'L Elbow': 20, 'R Forearm': -60, 'L Forearm': 20, 'R Hand': -60, 'L Hand': 20, 'R Thigh': -60, 'R Knee': -60, 
+                                'R Shin': -80, 'R Foot': -80, 'L Knee': 30, 'L Shin': 20, 'R Hip': -80, 'L Hip': -20}, 0, 0, 0, [7,11,15,19], [], 
+                                desc = 'Good neck protection, good right-side protection, exposes left side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')
+        self.default_l = Guard('Default, Left handed', {'Neck': -40, 'L Shoulder': -60, 'R Shoulder': 20, 'L Chest': -40, 'Up L Arm': -60, 'Up R Arm': 20, 'L Ribs': -60, 
+                                'R Ribs': 20, 'L Elbow': -60, 'R Elbow': 20, 'L Forearm': -60, 'R Forearm': 20, 'L Hand': -60, 'R Hand': 20, 'L Thigh': -60, 'L Knee': -60, 
+                                'L Shin': -80, 'L Foot': -80, 'R Knee': 30, 'R Shin': 20, 'L Hip': -80, 'R Hip': -20}, 0, 0, 0, [8,12,16,20], [], 
+                                desc = 'Good neck protection, good left-side protection, exposes right side. \n\nNeutral dodge, parry and to-hit modifiers. \n\nAuto-blocks nothing.')                       
+        self.guards = [self.default_l,self.default_r]
+        self.base_maneuvers = []
         self.maneuvers = []
 
 
