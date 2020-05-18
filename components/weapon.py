@@ -246,14 +246,14 @@ class Attack():
             if t == 'b':
                 if self.striker == 'main':
                     shape = self.main_shape
-                    if self.main_shape in ['de blade', 'blade', 'curved blade']:
+                    if shape in ['de blade', 'blade', 'curved blade']:
                         shape = 'flat'
-                    elif self.main_shape == 'wedge':
+                    elif shape == 'wedge':
                         if 'axe' in self.weapon.skill:
-                            shape = 'flat'   
+                            shape = 'flat'
                 else:
                     shape = 'round'
-                    
+
                 if shape == 'wedge':
                     self.main_area = self.main_length * self.avg_main_depth
                     self.mech_adv =  self.main_width / self.main_depth
@@ -289,24 +289,22 @@ class Attack():
                     length = self.main_length
                     depth = self.main_depth
                     width = self.main_width
+                elif self.striker == 'shaft':
+                    shape = 'point'
+                    length = min(self.shaft_length, 12)
+                    depth = width = self.weapon.shaft_diameter
                 else:
                     shape = 'point'
-                    if self.striker == 'shaft':
-                        length = min(self.shaft_length, 12)
-                        depth = width = self.weapon.shaft_diameter
-                    else:
-                        length = depth = width = self.weapon.shaft_diameter
+                    length = depth = width = self.weapon.shaft_diameter
                 if shape in ['point', 'blade', 'de blade']:
                     wedge1 = length / width
                     wedge2 = width / depth
                     if shape in ['point', 'de blade']:
                         #Double each (since there are two wedges per side) and multiply for full MA of tip
                         self.mech_adv = (wedge1*2)*(wedge2*2)
-                        self.main_area = depth * length * width
                     else:
                         self.mech_adv = (wedge1)*(wedge2)
-                        self.main_area = depth * length * width
-                        
+                    self.main_area = depth * length * width
             else:
                 if self.main_shape == 'hook':
                     wedge1 = self.main_length / self.main_width
@@ -323,7 +321,7 @@ class Attack():
             self.added_mass = self.weight * self.com_perc
             self.attack_mod += (20 - ((self.weight*10) * self.com_perc))    
             self.parry_mod -= ((self.weight*10) * self.com_perc) 
-            
+
             if self.main_num > 1:
                 self.attack_mod += self.main_num * 5
                 self.parry_mod -= self.main_num * 20
@@ -331,11 +329,11 @@ class Attack():
             self.stamina += self.weight/5
             self.base_ap += self.weight * 5
             self.added_mass = self.weight/10
-            
+
             if self.damage_type == 'p':
                 self.attack_mod -= self.weight/10
                 self.parry_mod -= self.weight * 5
-                
+
             self.attack_mod += -5 + (self.main_num * 5)
             self.parry_mod -= self.main_num * 20
 
