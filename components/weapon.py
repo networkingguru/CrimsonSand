@@ -251,7 +251,7 @@ class Attack():
                     if shape in ['de blade', 'blade', 'curved blade']:
                         shape = 'flat'
                     elif shape == 'wedge':
-                        if 'axe' in self.weapon.skill or self.weapon.name == 'pole_axe':
+                        if 'axe' in self.weapon.skill or self.weapon.base_name == 'Pole Axe':
                             shape = 'flat'
                 else:
                     shape = 'round'
@@ -275,7 +275,7 @@ class Attack():
                         width = length = 2
                     self.solidness = (material.elasticity / 2) ** (1. / 3)
                     self.main_area = (min(length,8)*width)/8
-                elif self.main_shape == 'flat':
+                elif shape == 'flat':
                     self.main_area = min(self.main_depth,8) * min(self.main_width,8)
 
             elif t == 's':

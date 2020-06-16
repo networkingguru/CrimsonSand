@@ -806,9 +806,16 @@ def gen_wstore_menu(curr_actor,category) -> dict:
             hit_bar = make_bar(combat_stats.get(id(w)).get('to hit'),to_hit_best,to_hit_worst)
             parry_bar = make_bar(combat_stats.get(id(w)).get('to parry'),parry_best,parry_worst)
             dam_bar = make_bar(combat_stats.get(id(w)).get('psi'),damage_best,damage_worst)
-            menu_item = w.name +'\t'+ str(int(w.cost)) +'\t'+ str(int(w.weight)) +'\t'+ str(int(w.length)) +'\t'+ hit_bar 
-            menu_item += '\t'+ parry_bar +'\t'+ dam_bar +'\t'+ ', '.join(w.hands) +'\t'+ str(int(combat_stats.get(id(w)).get('total er')))
-            menu_item += '\t'+ str(int(combat_stats.get(id(w)).get('final ap'))) +'\t'+ str(int(combat_stats.get(id(w)).get('parry ap')))
+            cs_er = str(int(combat_stats.get(id(w)).get('total er')))
+            cs_ap = str(int(combat_stats.get(id(w)).get('final ap')))
+            cs_pap =str(int(combat_stats.get(id(w)).get('parry ap')))
+            hands = '1'
+            if w.hands == [1,2]:
+                hands = '1,2'
+            elif w.hands == 2:
+                hands = '2'
+            menu_item = w.name +'\t'+ str(int(w.cost)) +'\t'+ str(int(w.weight)) +'\t'+ str(int(w.length)) +'\t'+ hit_bar + '\t'
+            menu_item += parry_bar +'\t'+ dam_bar +'\t'+ hands +'\t'+ cs_er + '\t'+ cs_ap +'\t'+ cs_pap
 
             menu_dict['desc'][menu_item] = id(w)
             menu_dict['options'].append(menu_item)

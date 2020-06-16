@@ -2,7 +2,7 @@ from random import choice, randrange, uniform
 from numpy.random import normal
 from math import sqrt, pi
 from components.weapon import Weapon, quality_dict
-from utilities import roll_dice, itersubclasses
+from utilities import roll_dice, itersubclasses, inch_conv
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
 
@@ -20,7 +20,7 @@ def weapon_generator(weapon,quantity,min_cost=0,max_cost=100000) -> list:
             weapon_classes.append(wpn)
 
     #Generate
-    while len(weapons) < quantity:
+    while len(weapons) < quantity and len(weapon_classes) > 0:
         wpn = choice(weapon_classes)
         wcls = wpn.__class__
         #Range setup
@@ -81,14 +81,15 @@ def calc_weapon_stats(entity, weapon) -> dict:
     eff_area = 0
     fist_mass = .0065 * entity.fighter.weight 
 
+
     if attack.hand:
-        limb_length = entity.fighter.reach
+        limb_length = entity.fighter.er
     else:
-        limb_length = entity.fighter.reach_leg
-        
-    wpn_length = attack.length
-    reach = limb_length + wpn_length
-    distance = limb_length
+        limb_length = inch_conv(self.fighter.height*self.fighter.location_ratios[17])
+
+    distance = limb_length + attack.length
+
+
     #Determine max velocity based on pwr stat and mass distribution of attack
     if attack.hands == 2:
         max_vel = sqrt(entity.fighter.get_attribute('pwr'))*(4.5-(attack.added_mass/2))
