@@ -814,7 +814,7 @@ def gen_wstore_menu(curr_actor,category) -> dict:
                 hands = '1,2'
             elif w.hands == 2:
                 hands = '2'
-            menu_item = w.name +'\t'+ str(int(w.cost)) +'\t'+ str(int(w.weight)) +'\t'+ str(int(w.length)) +'\t'+ hit_bar + '\t'
+            menu_item = w.name +'\t\t'+ str(int(w.cost)) +'\t'+ str(int(w.weight)) +'\t'+ str(int(w.length)) +'\t'+ hit_bar + '\t'
             menu_item += parry_bar +'\t'+ dam_bar +'\t'+ hands +'\t'+ cs_er + '\t'+ cs_ap +'\t'+ cs_pap
 
             menu_dict['desc'][menu_item] = id(w)

@@ -91,7 +91,8 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_age(frame_list,menu_dict)
     elif len(menu_dict) > 0 and game_state == GameStates.name:
         render_name(frame_list,menu_dict)
-
+    elif len(menu_dict) > 0 and game_state == GameStates.shop_w:
+        render_store(frame_list,menu_dict)
     terminal.refresh()
 
 def render_main_menu(frame_list, menu_dict) -> None:
