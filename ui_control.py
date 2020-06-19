@@ -920,13 +920,13 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     
     frame_text = 'Name \t Price \t Weight \t Length \t To-hit \t Parry \t Damage \t Hands \t ER \t AP/Attack \t AP/Parry'
 
-    list_frame = Frame(0,0,w,h,'', text='', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    list_frame = Frame(0,0,w,h,'', text=frame_text, frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     if len(items) > 0:
         list_box = bltGui.bltListbox(list_frame, 5, 15, items, False, True)
     
-    cat_button = bltButton(list_frame,5,5,'1) Next Category',command='Next Category')
-    revert_button = bltButton(list_frame,5,25,'2) Revert Purchases',command='Revert Purchases')
-    cont_button = bltButton(list_frame,5,45,'3) Continue to Armor Store',command='Continue to Armor Store')
+    cat_button = bltButton(list_frame,15,5,'1) Next Category',command='Next Category')
+    revert_button = bltButton(list_frame,45,5,'2) Revert Purchases',command='Revert Purchases')
+    cont_button = bltButton(list_frame,75,5,'3) Continue to Armor Store',command='Continue to Armor Store')
     
     if list_box is not None:    
         list_frame.add_control(list_box)

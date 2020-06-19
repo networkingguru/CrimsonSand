@@ -761,16 +761,12 @@ def set_electives(curr_actor) -> (str,str,str):
                         return prof, sk_type, cat
 
 def gen_wstore_menu(curr_actor,category) -> dict:
-    to_hit_best = -100
-    to_hit_worst = 100
-    parry_best = -100
-    parry_worst = 100
-    damage_best = 0
-    damage_worst = 10000
+    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': [], 'mode': False, 'desc': {}, 'to_hit_best': -100, 'to_hit_worst': 100,
+                'parry_best': -100, 'parry_worst': 100, 'damage_best': 0, 'damage_worst': 10000}
     purchased_weapons = []
     categories = ['sword','dagger','staff','spear','axe','mace','hammer','pick','polearm']
     active_cat = categories[category]
-    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': [], 'mode': False, 'desc': {}}
+    
 
     #combat_dict = {'total er': tot_er, 'psi': psi,'to hit': to_hit, 
     #                'to parry': to_parry, 'final ap': final_ap, 'parry ap': parry_ap}
@@ -793,19 +789,21 @@ def gen_wstore_menu(curr_actor,category) -> dict:
         for w in weapon_dict.get(w_type):
             if not combat_stats.get(id(w)):
                 combat_stats[id(w)] = calc_weapon_stats(curr_actor,w)
-                if combat_stats.get(id(w)).get('psi') > damage_best: damage_best = combat_stats.get(id(w)).get('psi')
-                if combat_stats.get(id(w)).get('psi') < damage_worst: damage_worst = combat_stats.get(id(w)).get('psi')
-                if combat_stats.get(id(w)).get('to hit') > to_hit_best: to_hit_best = combat_stats.get(id(w)).get('to hit')
-                if combat_stats.get(id(w)).get('to hit') < to_hit_worst: to_hit_worst = combat_stats.get(id(w)).get('to hit')
-                if combat_stats.get(id(w)).get('to parry') > parry_best: parry_best = combat_stats.get(id(w)).get('to parry')
-                if combat_stats.get(id(w)).get('to parry') < parry_worst: parry_worst = combat_stats.get(id(w)).get('to parry')
+                if combat_stats.get(id(w)).get('psi') > menu_dict.get('damage_best'): menu_dict['damage_best'] = combat_stats.get(id(w)).get('psi')
+                if combat_stats.get(id(w)).get('psi') < menu_dict.get('damage_worst'): menu_dict['damage_worst'] = combat_stats.get(id(w)).get('psi')
+                if combat_stats.get(id(w)).get('to hit') > menu_dict.get('to_hit_best'): menu_dict['to_hit_best'] = combat_stats.get(id(w)).get('to hit')
+                if combat_stats.get(id(w)).get('to hit') < menu_dict.get('to_hit_worst'): menu_dict['to_hit_worst'] = combat_stats.get(id(w)).get('to hit')
+                if combat_stats.get(id(w)).get('to parry') > menu_dict.get('parry_best'): menu_dict['parry_best'] = combat_stats.get(id(w)).get('to parry')
+                if combat_stats.get(id(w)).get('to parry') < menu_dict.get('parry_worst'): menu_dict['parry_worst'] = combat_stats.get(id(w)).get('to parry')
     
+    
+
     #Item details: Name Price  Weight  Length  To-hit  Parry   Damage  Hands   ER  AP/Attack  AP/Parry
     for w in weapon_dict.get(active_cat):
         if w not in curr_actor.fighter.weapons:
-            hit_bar = make_bar(combat_stats.get(id(w)).get('to hit'),to_hit_best,to_hit_worst)
-            parry_bar = make_bar(combat_stats.get(id(w)).get('to parry'),parry_best,parry_worst)
-            dam_bar = make_bar(combat_stats.get(id(w)).get('psi'),damage_best,damage_worst)
+            hit_bar = make_bar(combat_stats.get(id(w)).get('to hit'),menu_dict.get('to_hit_best'),menu_dict.get('to_hit_worst'))
+            parry_bar = make_bar(combat_stats.get(id(w)).get('to parry'),menu_dict.get('parry_best'),menu_dict.get('parry_worst'))
+            dam_bar = make_bar(combat_stats.get(id(w)).get('psi'),menu_dict.get('damage_best'),menu_dict.get('damage_worst'))
             cs_er = str(int(combat_stats.get(id(w)).get('total er')))
             cs_ap = str(int(combat_stats.get(id(w)).get('final ap')))
             cs_pap =str(int(combat_stats.get(id(w)).get('parry ap')))
