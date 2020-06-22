@@ -408,13 +408,45 @@ def render_store(frame_list, menu_dict) -> None:
 
     terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
     menu_type = menu_dict.get('type')
+    menu_options = menu_dict.get('options')
+    stats = menu_dict.get('desc')
 
     if menu_type == MenuTypes.store_page:
                
 
         if len(frame_list) == 0:
-            bltgui_store_page(terminal,40,90,menu_dict,frame_list)
+            bltgui_store_page(terminal,options.screen_width,options.screen_height,menu_dict,frame_list)
             initialize()
+
+        elif len(menu_dict.get('options')) > 0:
+            #Build stats frames
+            frame_list[1].text = 'Price'
+            frame_list[2].text = 'Weight'
+            frame_list[3].text = 'Length'
+            frame_list[4].text = 'To-Hit'
+            frame_list[5].text = 'Parry'
+            frame_list[6].text = 'Damage'
+            frame_list[7].text = 'Hands'
+            frame_list[8].text = 'ER'
+            frame_list[9].text = 'AP/Attack'
+            frame_list[10].text = 'AP/Parry'
+            for w in menu_options:
+                wid = menu_options.get(w)
+                w_stats = stats.get(wid)
+                #{'cost':str(int(w.cost),'weight':str(int(w.weight),'length':inch_conv(w.length),'to_hit':combat_stats.get(id(w)).get('to hit'),
+                #        'parry':combat_stats.get(id(w)).get('to parry'),'damage':combat_stats.get(id(w)).get('psi'),'hands':hands,'er':cs_er, 
+                #       'ap':cs_ap,'pap':cs_pap}
+                frame_list[1].text += '\n' + w_stats.get('cost')
+                frame_list[2].text += '\n' + w_stats.get('weight')
+                frame_list[3].text += '\n' + w_stats.get('length')
+                frame_list[4].text += '\n' + make_bar(w_stats.get('to_hit'),menu_dict.get('to_hit_best'),menu_dict.get('to_hit_worst'))
+                frame_list[5].text += '\n' + make_bar(w_stats.get('parry'),menu_dict.get('parry_best'),menu_dict.get('parry_worst'))
+                frame_list[6].text += '\n' + make_bar(w_stats.get('damage'),menu_dict.get('damage_best'),menu_dict.get('damage_worst'))
+                frame_list[7].text += '\n' + w_stats.get('hands')
+                frame_list[8].text += '\n' + w_stats.get('er')
+                frame_list[9].text += '\n' + w_stats.get('ap')
+                frame_list[10].text += '\n' + w_stats.get('pap')
+                
 
     if len(frame_list) != 0:
         render_frames(frame_list)
@@ -522,7 +554,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                             if control.selected_index is not None:
                                                 if game_state in [GameStates.shop_w,GameStates.shop_a]:
                                                     item = control.return_item()
-                                                    command = {menu_dict.get('desc').get(item):menu_dict.get('desc').get(item)}
+                                                    command = {menu_dict.get('options').get(item):menu_dict.get('optioons').get(item)}
                                                 else:
                                                     item = control.return_item()
                                                     command = {item:item}
@@ -920,7 +952,18 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     
     frame_text = 'Name \t Price \t Weight \t Length \t To-hit \t Parry \t Damage \t Hands \t ER \t AP/Attack \t AP/Parry'
 
-    list_frame = Frame(0,0,w,h,'', text=frame_text, frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    list_frame = Frame(0,0,20,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    price_frame = Frame(35,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    weight_frame = Frame(40,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    length_frame = Frame(45,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    hit_frame = Frame(50,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    parry_frame = Frame(55,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    damage_frame = Frame(60,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    hands_frame = Frame(65,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    er_frame = Frame(70,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    ap_frame = Frame(75,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    pap_frame = Frame(80,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+
     if len(items) > 0:
         list_box = bltGui.bltListbox(list_frame, 5, 15, items, False, True)
     
@@ -935,7 +978,9 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     list_frame.add_control(revert_button)
     list_frame.add_control(cont_button)
 
-    frame_list.append(list_frame)
+    frame_list.extend([list_frame,price_frame,weight_frame,length_frame,hit_frame,parry_frame,damage_frame,hands_frame,er_frame,ap_frame,pap_frame])
+
+
 
 
 def bltgui_page(terminal, w, h, menu_dict, frame_list):

@@ -761,11 +761,12 @@ def set_electives(curr_actor) -> (str,str,str):
                         return prof, sk_type, cat
 
 def gen_wstore_menu(curr_actor,category) -> dict:
-    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': [], 'mode': False, 'desc': {}, 'to_hit_best': -100, 'to_hit_worst': 100,
+    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': {}, 'mode': False, 'desc': {}, 'to_hit_best': -100, 'to_hit_worst': 100,
                 'parry_best': -100, 'parry_worst': 100, 'damage_best': 0, 'damage_worst': 10000}
     purchased_weapons = []
     categories = ['sword','dagger','staff','spear','axe','mace','hammer','pick','polearm']
     active_cat = categories[category]
+    
     
 
     #combat_dict = {'total er': tot_er, 'psi': psi,'to hit': to_hit, 
@@ -801,9 +802,6 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     #Item details: Name Price  Weight  Length  To-hit  Parry   Damage  Hands   ER  AP/Attack  AP/Parry
     for w in weapon_dict.get(active_cat):
         if w not in curr_actor.fighter.weapons:
-            hit_bar = make_bar(combat_stats.get(id(w)).get('to hit'),menu_dict.get('to_hit_best'),menu_dict.get('to_hit_worst'))
-            parry_bar = make_bar(combat_stats.get(id(w)).get('to parry'),menu_dict.get('parry_best'),menu_dict.get('parry_worst'))
-            dam_bar = make_bar(combat_stats.get(id(w)).get('psi'),menu_dict.get('damage_best'),menu_dict.get('damage_worst'))
             cs_er = str(int(combat_stats.get(id(w)).get('total er')))
             cs_ap = str(int(combat_stats.get(id(w)).get('final ap')))
             cs_pap =str(int(combat_stats.get(id(w)).get('parry ap')))
@@ -812,11 +810,14 @@ def gen_wstore_menu(curr_actor,category) -> dict:
                 hands = '1,2'
             elif w.hands == 2:
                 hands = '2'
-            menu_item = w.name +'\t\t'+ str(int(w.cost)) +'\t'+ str(int(w.weight)) +'\t'+ str(int(w.length)) +'\t'+ hit_bar + '\t'
-            menu_item += parry_bar +'\t'+ dam_bar +'\t'+ hands +'\t'+ cs_er + '\t'+ cs_ap +'\t'+ cs_pap
+            menu_item = w.name
+            item_stats = {'cost':str(int(w.cost)),'weight':str(int(w.weight)),'length':inch_conv(w.length),'to_hit':combat_stats.get(id(w)).get('to hit'),
+                        'parry':combat_stats.get(id(w)).get('to parry'),'damage':combat_stats.get(id(w)).get('psi'),'hands':hands,'er':cs_er, 
+                        'ap':cs_ap,'pap':cs_pap}
 
-            menu_dict['desc'][menu_item] = id(w)
-            menu_dict['options'].append(menu_item)
+
+            menu_dict['options'][menu_item] = id(w)
+            menu_dict['desc'][id(w)] = item_stats
 
     return menu_dict
 
