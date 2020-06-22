@@ -33,6 +33,7 @@ class bltFrame(Control):
         self._text_pages = []
         self.font = font
         self.title_font = title_font
+        
 
         self.frame = frame
         if layer is None:

@@ -420,32 +420,43 @@ def render_store(frame_list, menu_dict) -> None:
 
         elif len(menu_dict.get('options')) > 0:
             #Build stats frames
-            frame_list[1].text = 'Price'
-            frame_list[2].text = 'Weight'
-            frame_list[3].text = 'Length'
-            frame_list[4].text = 'To-Hit'
-            frame_list[5].text = 'Parry'
-            frame_list[6].text = 'Damage'
-            frame_list[7].text = 'Hands'
-            frame_list[8].text = 'ER'
-            frame_list[9].text = 'AP/Attack'
-            frame_list[10].text = 'AP/Parry'
+            fl1_txt = 'Price'
+            fl2_txt = 'Weight'
+            fl3_txt = 'Length'
+            fl4_txt = 'To-Hit'
+            fl5_txt = 'Parry'
+            fl6_txt = 'Damage'
+            fl7_txt = 'Hands'
+            fl8_txt = 'ER'
+            fl9_txt = 'AP/Attack'
+            fl10_txt = 'AP/Parry'
             for w in menu_options:
                 wid = menu_options.get(w)
                 w_stats = stats.get(wid)
                 #{'cost':str(int(w.cost),'weight':str(int(w.weight),'length':inch_conv(w.length),'to_hit':combat_stats.get(id(w)).get('to hit'),
                 #        'parry':combat_stats.get(id(w)).get('to parry'),'damage':combat_stats.get(id(w)).get('psi'),'hands':hands,'er':cs_er, 
                 #       'ap':cs_ap,'pap':cs_pap}
-                frame_list[1].text += '\n' + w_stats.get('cost')
-                frame_list[2].text += '\n' + w_stats.get('weight')
-                frame_list[3].text += '\n' + w_stats.get('length')
-                frame_list[4].text += '\n' + make_bar(w_stats.get('to_hit'),menu_dict.get('to_hit_best'),menu_dict.get('to_hit_worst'))
-                frame_list[5].text += '\n' + make_bar(w_stats.get('parry'),menu_dict.get('parry_best'),menu_dict.get('parry_worst'))
-                frame_list[6].text += '\n' + make_bar(w_stats.get('damage'),menu_dict.get('damage_best'),menu_dict.get('damage_worst'))
-                frame_list[7].text += '\n' + w_stats.get('hands')
-                frame_list[8].text += '\n' + w_stats.get('er')
-                frame_list[9].text += '\n' + w_stats.get('ap')
-                frame_list[10].text += '\n' + w_stats.get('pap')
+                fl1_txt += '\n' + w_stats.get('cost')
+                fl2_txt += '\n' + w_stats.get('weight')
+                fl3_txt += '\n' + w_stats.get('length')
+                fl4_txt += '\n' + make_bar(w_stats.get('to_hit'),menu_dict.get('to_hit_best'),menu_dict.get('to_hit_worst'))
+                fl5_txt += '\n' + make_bar(w_stats.get('parry'),menu_dict.get('parry_best'),menu_dict.get('parry_worst'))
+                fl6_txt += '\n' + make_bar(w_stats.get('damage'),menu_dict.get('damage_best'),menu_dict.get('damage_worst'))
+                fl7_txt += '\n' + w_stats.get('hands')
+                fl8_txt += '\n' + w_stats.get('er')
+                fl9_txt += '\n' + w_stats.get('ap')
+                fl10_txt += '\n' + w_stats.get('pap')
+            
+            frame_list[1].text = fl1_txt
+            frame_list[2].text = fl2_txt   
+            frame_list[3].text = fl3_txt
+            frame_list[4].text = fl4_txt
+            frame_list[5].text = fl5_txt
+            frame_list[6].text = fl6_txt
+            frame_list[7].text = fl7_txt
+            frame_list[8].text = fl8_txt
+            frame_list[9].text = fl9_txt
+            frame_list[10].text = fl10_txt
                 
 
     if len(frame_list) != 0:
