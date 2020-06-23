@@ -964,16 +964,16 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     frame_text = 'Name \t Price \t Weight \t Length \t To-hit \t Parry \t Damage \t Hands \t ER \t AP/Attack \t AP/Parry'
 
     list_frame = Frame(0,0,20,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    price_frame = Frame(35,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    weight_frame = Frame(40,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    length_frame = Frame(45,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    hit_frame = Frame(50,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    parry_frame = Frame(55,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    damage_frame = Frame(60,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    hands_frame = Frame(65,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    er_frame = Frame(70,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    ap_frame = Frame(75,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    pap_frame = Frame(80,14,5,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    price_frame = Frame(55,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    weight_frame = Frame(65,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    length_frame = Frame(75,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    hit_frame = Frame(85,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    parry_frame = Frame(95,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    damage_frame = Frame(105,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    hands_frame = Frame(115,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    er_frame = Frame(125,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    ap_frame = Frame(135,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    pap_frame = Frame(145,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
 
     if len(items) > 0:
         list_box = bltGui.bltListbox(list_frame, 5, 15, items, False, True)
@@ -988,6 +988,8 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     list_frame.add_control(cat_button)
     list_frame.add_control(revert_button)
     list_frame.add_control(cont_button)
+
+    #
 
     frame_list.extend([list_frame,price_frame,weight_frame,length_frame,hit_frame,parry_frame,damage_frame,hands_frame,er_frame,ap_frame,pap_frame])
 
