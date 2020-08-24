@@ -310,14 +310,14 @@ class Attack():
                         self.mech_adv = (wedge1*2)*(wedge2*2)
                     else:
                         self.mech_adv = (wedge1)*(wedge2)
-                    self.main_area = depth * length * width
+                    self.main_area = depth * length * width * self.main_num
             else:
                 if self.main_shape == 'hook':
                     wedge1 = self.main_length / self.main_width
                     wedge2 = self.main_width / self.main_depth
                     #Double each (since there are two wedges per side) and multiply for full MA of tip
                     self.mech_adv = (wedge1*2)*(wedge2*2)
-                    self.main_area = self.main_depth * self.main_width
+                    self.main_area = self.main_depth * self.main_width * self.main_num
 
 
 
@@ -704,7 +704,7 @@ class Stab(Attack):
         self.attack_mod = -10
         self.parry_mod = -10 #Modifier to OPPONENT'S parry chance
         self.stamina = 3
-        self.force_scalar = 1 #Used to adjust force/damage for the attack
+        self.force_scalar = .3 #Used to adjust force/damage for the attack
         self.striker = 'main'
         self.hands = 1
         self.damage_type = 'p'

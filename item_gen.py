@@ -85,7 +85,7 @@ def calc_weapon_stats(entity, weapon) -> dict:
     if attack.hand:
         limb_length = entity.fighter.er
     else:
-        limb_length = inch_conv(self.fighter.height*self.fighter.location_ratios[17])
+        limb_length = inch_conv(entity.fighter.height*entity.fighter.location_ratios[17])
 
     distance = limb_length + attack.length
 
@@ -125,7 +125,7 @@ def calc_weapon_stats(entity, weapon) -> dict:
         modifier = attack.pointedness
         p_psi = ep*modifier
     elif attack.damage_type == 'b':
-        modifier = attack.solidness
+        modifier = attack.solidness*.01
         b_psi = ep*modifier
     else:
         t_psi = ep
@@ -149,6 +149,7 @@ def calc_weapon_stats(entity, weapon) -> dict:
     #convert items to int
     for key in combat_dict:
         combat_dict[key] = int(combat_dict[key])
+
 
 
     return combat_dict

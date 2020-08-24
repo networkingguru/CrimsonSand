@@ -790,12 +790,12 @@ def gen_wstore_menu(curr_actor,category) -> dict:
         for w in weapon_dict.get(w_type):
             if not combat_stats.get(id(w)):
                 combat_stats[id(w)] = calc_weapon_stats(curr_actor,w)
-                if combat_stats.get(id(w)).get('psi') > menu_dict.get('damage_best'): menu_dict['damage_best'] = combat_stats.get(id(w)).get('psi')
-                if combat_stats.get(id(w)).get('psi') < menu_dict.get('damage_worst'): menu_dict['damage_worst'] = combat_stats.get(id(w)).get('psi')
-                if combat_stats.get(id(w)).get('to hit') > menu_dict.get('to_hit_best'): menu_dict['to_hit_best'] = combat_stats.get(id(w)).get('to hit')
-                if combat_stats.get(id(w)).get('to hit') < menu_dict.get('to_hit_worst'): menu_dict['to_hit_worst'] = combat_stats.get(id(w)).get('to hit')
-                if combat_stats.get(id(w)).get('to parry') > menu_dict.get('parry_best'): menu_dict['parry_best'] = combat_stats.get(id(w)).get('to parry')
-                if combat_stats.get(id(w)).get('to parry') < menu_dict.get('parry_worst'): menu_dict['parry_worst'] = combat_stats.get(id(w)).get('to parry')
+            if combat_stats.get(id(w)).get('psi') > menu_dict.get('damage_best'): menu_dict['damage_best'] = combat_stats.get(id(w)).get('psi')
+            if combat_stats.get(id(w)).get('psi') < menu_dict.get('damage_worst'): menu_dict['damage_worst'] = combat_stats.get(id(w)).get('psi')
+            if combat_stats.get(id(w)).get('to hit') > menu_dict.get('to_hit_best'): menu_dict['to_hit_best'] = combat_stats.get(id(w)).get('to hit')
+            if combat_stats.get(id(w)).get('to hit') < menu_dict.get('to_hit_worst'): menu_dict['to_hit_worst'] = combat_stats.get(id(w)).get('to hit')
+            if combat_stats.get(id(w)).get('to parry') > menu_dict.get('parry_best'): menu_dict['parry_best'] = combat_stats.get(id(w)).get('to parry')
+            if combat_stats.get(id(w)).get('to parry') < menu_dict.get('parry_worst'): menu_dict['parry_worst'] = combat_stats.get(id(w)).get('to parry')
     
     
 
