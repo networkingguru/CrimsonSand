@@ -130,15 +130,15 @@ class Weapon:
 
         self.length = self.main_length + self.shaft_length
 
-        sword_like = ['sword','dagger']
         if self.skill is not None:
+            sword_like = ['sword','dagger']
             for s in sword_like:
-                if s in self.skill:
+                if s == self.skill:
                     self.main_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the main weapon component
                     self.accent_loc = (self.shaft_length/(self.length/100))/100 #Location along the total length for the accent component
                     self.grip_loc = ((self.shaft_length/2)/(self.length/100))/100 #location along the total length for the grip
                     break
-        
+
 
         self.main_weight = ((self.main_length * self.avg_main_depth * self.avg_main_width)*self.main_num) * (self.main_material.density * .03)
         self.shaft_weight = (self.shaft_length * self.shaft_diameter * (self.shaft_material.density * .03)) * self.shaft_num
@@ -150,11 +150,11 @@ class Weapon:
         self.accent_only_com = (self.accent_loc*self.length)*self.accent_weight
         self.com = (self.main_only_com + self.shaft_only_com + self.accent_only_com)/self.weight #Effective added weight on strike for the whole weapon
         self.com_perc = self.com / self.length #com as a percentage
-        self.axis_vs_com = self.com_perc - self.grip_loc #Shows COM relative to grip location (axis for swings). Used to determine AP/stamina costs.
+        self.axis_vs_com = abs(self.com_perc - self.grip_loc) #Shows COM relative to grip location (axis for swings). Used to determine AP/stamina costs.
 
         self.main_hits = (self.main_material.elasticity * 1450000) * (self.main_weight/(self.main_material.density*.03)) * self.main_material.toughness * sqrt(self.main_material.hardness)
 
-        self.parry_ap += (self.weight * 100)*self.axis_vs_com
+        self.parry_ap += (self.weight * 10)*self.axis_vs_com
 
         self.min_pwr_1h = ((self.added_mass + .86) * 40)/1 #1 pwr = 1 ft/lb/s; accelleration = 40 f/s2; weight of average hand = .86 lb
         self.min_pwr_2h = ((self.added_mass + 1.72) * 40)/1.5 #1 pwr = 1.5 ft/lb/s; accelleration = 40 f/s2; weight of average hand = .86 lb
@@ -167,8 +167,8 @@ class Weapon:
             self.sharpness = sqrt((self.main_material.hardness/m_iron.hardness)*quality_dict.get(self.quality))
             self.pointedness = sqrt(self.main_material.hardness/m_iron.hardness)
         if self.main_shape == 'curved blade': self.sharpness *= 1.1
-        
-        
+
+
 
         self.craft_diff = craft_diff_dict.get(self.main_shape)
         main_materials_cost = self.main_material.cost * self.main_weight
@@ -184,7 +184,7 @@ class Weapon:
 
 
         self.cost = main_crafting_cost + main_materials_cost + shaft_crafting_cost + shaft_materials_cost + grip_crafting_cost + grip_materials_cost + accent_crafting_cost + accent_materials_cost
-        
+
         self.normality = self.main_material.normality * self.shaft_material.normality * self.grip_material.normality * self.accent_material.normality
         
 class Attack():

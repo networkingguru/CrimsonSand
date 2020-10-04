@@ -131,6 +131,8 @@ def calc_weapon_stats(entity, weapon) -> dict:
         t_psi = ep
 
     psi = max([s_psi,b_psi,t_psi,p_psi])
+    if psi > 100000:
+        print('Stop')
 
     to_hit = attack.attack_mod + skill_rating
     to_parry = weapon.parry_mod + skill_rating

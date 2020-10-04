@@ -431,21 +431,23 @@ def render_store(frame_list, menu_dict) -> None:
             fl9_txt = 'AP/Attack'
             fl10_txt = 'AP/Parry'
             for w in menu_options:
-                wid = menu_options.get(w)
-                w_stats = stats.get(wid)
-                #{'cost':str(int(w.cost),'weight':str(int(w.weight),'length':inch_conv(w.length),'to_hit':combat_stats.get(id(w)).get('to hit'),
-                #        'parry':combat_stats.get(id(w)).get('to parry'),'damage':combat_stats.get(id(w)).get('psi'),'hands':hands,'er':cs_er, 
-                #       'ap':cs_ap,'pap':cs_pap}
-                fl1_txt += '\n' + w_stats.get('cost')
-                fl2_txt += '\n' + w_stats.get('weight')
-                fl3_txt += '\n' + w_stats.get('length')
-                fl4_txt += '\n' + make_bar(w_stats.get('to_hit'),menu_dict.get('to_hit_best'),menu_dict.get('to_hit_worst'))
-                fl5_txt += '\n' + make_bar(w_stats.get('parry'),menu_dict.get('parry_best'),menu_dict.get('parry_worst'))
-                fl6_txt += '\n' + make_bar(w_stats.get('damage'),menu_dict.get('damage_best'),menu_dict.get('damage_worst'))
-                fl7_txt += '\n' + w_stats.get('hands')
-                fl8_txt += '\n' + w_stats.get('er')
-                fl9_txt += '\n' + w_stats.get('ap')
-                fl10_txt += '\n' + w_stats.get('pap')
+                if w not in ['Next Category','Revert Purchases','Continue to Armor Store']:
+                    wid = menu_options.get(w)
+                    w_stats = stats.get(wid)
+                    #{'cost':str(int(w.cost),'weight':str(int(w.weight),'length':inch_conv(w.length),'to_hit':combat_stats.get(id(w)).get('to hit'),
+                    #        'parry':combat_stats.get(id(w)).get('to parry'),'damage':combat_stats.get(id(w)).get('psi'),'hands':hands,'er':cs_er, 
+                    #       'ap':cs_ap,'pap':cs_pap}
+                    fl1_txt += '\n' + w_stats.get('cost')
+                    fl2_txt += '\n' + w_stats.get('weight')
+                    fl3_txt += '\n' + w_stats.get('length')
+                    fl4_txt += '\n' + make_bar(w_stats.get('to_hit'),menu_dict.get('to_hit_best'),menu_dict.get('to_hit_worst'))
+                    fl5_txt += '\n' + make_bar(w_stats.get('parry'),menu_dict.get('parry_best'),menu_dict.get('parry_worst'))
+                    fl6_txt += '\n' + make_bar(w_stats.get('damage'),menu_dict.get('damage_best'),menu_dict.get('damage_worst'))
+                    fl7_txt += '\n' + w_stats.get('hands')
+                    fl8_txt += '\n' + w_stats.get('er')
+                    fl9_txt += '\n' + w_stats.get('ap')
+                    fl10_txt += '\n' + w_stats.get('pap')
+
             
             frame_list[1].text = fl1_txt
             frame_list[2].text = fl2_txt   
@@ -565,7 +567,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                                             if control.selected_index is not None:
                                                 if game_state in [GameStates.shop_w,GameStates.shop_a]:
                                                     item = control.return_item()
-                                                    command = {menu_dict.get('options').get(item):menu_dict.get('optioons').get(item)}
+                                                    command = {menu_dict.get('options').get(item):menu_dict.get('options').get(item)}
                                                 else:
                                                     item = control.return_item()
                                                     command = {item:item}
@@ -977,18 +979,12 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     blank_frame = Frame(55,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
 
     if len(items) > 0:
-        list_box = bltGui.bltListbox(list_frame, 5, 15, items, False, True)
+        list_box = bltGui.bltListbox(list_frame, 5, 16, items, False, True)
     
-    cat_button = bltButton(list_frame,15,5,'1) Next Category',command='Next Category')
-    revert_button = bltButton(list_frame,45,5,'2) Revert Purchases',command='Revert Purchases')
-    cont_button = bltButton(list_frame,75,5,'3) Continue to Armor Store',command='Continue to Armor Store')
-    
+
     if list_box is not None:    
         list_frame.add_control(list_box)
     
-    list_frame.add_control(cat_button)
-    list_frame.add_control(revert_button)
-    list_frame.add_control(cont_button)
 
     #
 

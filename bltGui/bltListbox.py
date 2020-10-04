@@ -76,16 +76,28 @@ class bltListbox(Control):
                             self.dispatch('changed', self.hover_index)
                             self.dirty = True
                     else:
-                        for item in self.items:
-                            item_index = self.items.index(item)
-                            cp = 4 + item_index
-                            if cp == key:
-                                self.hover_index = item_index
-                                self.selected_index = item_index
-                                self.dispatch('changed', self.hover_index)
-                                self.dispatch('changed', self.selected_index)
-                                self.dirty = True
-                                break
+                        if isinstance(self.items,list):
+                            for item in self.items:
+                                item_index = self.items.index(item)
+                                cp = 4 + item_index
+                                if cp == key:
+                                    self.hover_index = item_index
+                                    self.selected_index = item_index
+                                    self.dispatch('changed', self.hover_index)
+                                    self.dispatch('changed', self.selected_index)
+                                    self.dirty = True
+                                    break
+                        else:
+                            for item in self.items:
+                                item_index = list(self.items).index(item)
+                                cp = 4 + item_index
+                                if cp == key:
+                                    self.hover_index = item_index
+                                    self.selected_index = item_index
+                                    self.dispatch('changed', self.hover_index)
+                                    self.dispatch('changed', self.selected_index)
+                                    self.dirty = True
+                                    break
 
 
             if mouse.hover_rect(self.x + x, self.y + y, self.length + 1, len(self.items)):
@@ -179,7 +191,10 @@ class bltListbox(Control):
             self.dirty = False
 
     def return_item(self):
-        item = self.items[self.selected_index]
+        if isinstance(self.items,dict):
+            item = list(self.items.keys())[self.selected_index]
+        else:
+            item = self.items[self.selected_index]
         return item
 
 

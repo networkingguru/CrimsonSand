@@ -630,9 +630,11 @@ def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
     menu_dict = {}
     clear = False
     skip = False
-    category = 0
 
-    
+    if 'Category' not in curr_actor.temp_store:
+        curr_actor.temp_store['Category'] = 0
+    category = curr_actor.temp_store.get('Category')
+
     if skip:
         game_state = GameStates.shop_a
         clear = True
@@ -640,6 +642,10 @@ def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
     elif len(command) > 0:
         if command.get('Next Category'):
             category += 1
+            if category >= len(list(curr_actor.temp_store.get('weapons').keys())):
+                category = 0
+            curr_actor.temp_store['Category'] = category
+
         elif command.get('Revert Purchases'):
             for w in curr_actor.fighter.weapons:
                 curr_actor.fighter.money += w.cost
@@ -649,11 +655,13 @@ def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
             game_state = GameStates.shop_a
             clear = True
         else:
-            for w in curr_actor.temp_store.get('weapons'):
+            catname = list(curr_actor.temp_store.get('weapons'))[category]
+            for w in curr_actor.temp_store.get('weapons').get(catname):
                 if command.get(id(w)):
-                    curr_actor.temp_store['purchase'] = w
-                    game_state = GameStates.sw_confirm
-                    break
+                    if curr_actor.fighter.money >= w.cost:
+                        curr_actor.fighter.weapons.append(w)
+                        curr_actor.fighter.money -= int(w.cost)
+                        break
     else:
         menu_dict = gen_wstore_menu(curr_actor,category)
 
@@ -779,7 +787,7 @@ def gen_wstore_menu(curr_actor,category) -> dict:
 
     for w_type in weapon_dict.keys():
         if len(weapon_dict.get(w_type)) == 0:
-            weapon_dict[w_type] = weapon_generator(w_type,26,max_cost=curr_actor.fighter.money)
+            weapon_dict[w_type] = weapon_generator(w_type,23,max_cost=curr_actor.fighter.money)
 
     if not curr_actor.temp_store.get('combat_stats'):
         combat_stats = curr_actor.temp_store['combat_stats'] = {}
@@ -805,11 +813,7 @@ def gen_wstore_menu(curr_actor,category) -> dict:
             cs_er = str(int(combat_stats.get(id(w)).get('total er')))
             cs_ap = str(int(combat_stats.get(id(w)).get('final ap')))
             cs_pap =str(int(combat_stats.get(id(w)).get('parry ap')))
-            hands = '1'
-            if w.hands == [1,2]:
-                hands = '1,2'
-            elif w.hands == 2:
-                hands = '2'
+            hands = ','.join(map(str,w.hands))
             menu_item = w.name
             item_stats = {'cost':str(int(w.cost)),'weight':str(int(w.weight)),'length':inch_conv(w.length),'to_hit':combat_stats.get(id(w)).get('to hit'),
                         'parry':combat_stats.get(id(w)).get('to parry'),'damage':combat_stats.get(id(w)).get('psi'),'hands':hands,'er':cs_er, 
@@ -818,6 +822,11 @@ def gen_wstore_menu(curr_actor,category) -> dict:
 
             menu_dict['options'][menu_item] = id(w)
             menu_dict['desc'][id(w)] = item_stats
+
+    menu_dict['options']['Next Category'] = 'Next Category'
+    menu_dict['options']['Revert Purchases'] = 'Revert Purchases'
+    menu_dict['options']['Continue to Armor Store'] = 'Continue to Armor Store'
+
 
     return menu_dict
 
