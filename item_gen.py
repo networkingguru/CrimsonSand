@@ -73,7 +73,7 @@ def calc_weapon_stats(entity, weapon) -> dict:
     else:
         skill = attack.skill[0]
     skill_rating = entity.fighter.get_attribute(skill)
-    tot_er = entity.fighter.er + attack.length
+    tot_er = entity.fighter.er + attack.length + (weapon.length*weapon.grip_loc)
     b_psi = 0
     s_psi = 0
     t_psi = 0
@@ -123,16 +123,14 @@ def calc_weapon_stats(entity, weapon) -> dict:
         s_psi = ep*modifier
     elif attack.damage_type == 'p':
         modifier = attack.pointedness
-        p_psi = ep*modifier
+        p_psi = ep*modifier/3
     elif attack.damage_type == 'b':
         modifier = attack.solidness*.01
-        b_psi = ep*modifier
+        b_psi = ep*modifier*2.5
     else:
         t_psi = ep
 
     psi = max([s_psi,b_psi,t_psi,p_psi])
-    if psi > 100000:
-        print('Stop')
 
     to_hit = attack.attack_mod + skill_rating
     to_parry = weapon.parry_mod + skill_rating

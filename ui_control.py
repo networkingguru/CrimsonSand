@@ -407,6 +407,10 @@ def render_store(frame_list, menu_dict) -> None:
     header_pos = int(90-(len(header)/2))
 
     terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
+    if 'category' in menu_dict.keys():
+        terminal.puts(header_pos, 5, 'Category: ' + menu_dict.get('category'))
+    if 'money' in menu_dict.keys():
+        terminal.puts(header_pos, 7, 'Money: ' + str(menu_dict.get('money')))
     menu_type = menu_dict.get('type')
     menu_options = menu_dict.get('options')
     stats = menu_dict.get('desc')
@@ -448,7 +452,7 @@ def render_store(frame_list, menu_dict) -> None:
                     fl9_txt += '\n' + w_stats.get('ap')
                     fl10_txt += '\n' + w_stats.get('pap')
 
-            
+ 
             frame_list[1].text = fl1_txt
             frame_list[2].text = fl2_txt   
             frame_list[3].text = fl3_txt
@@ -963,7 +967,6 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     items = menu_dict.get('options')  
     list_box = None
     
-
     list_frame = Frame(0,0,20,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     price_frame = Frame(155,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     weight_frame = Frame(145,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')

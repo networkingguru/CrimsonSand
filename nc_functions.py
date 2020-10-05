@@ -642,7 +642,7 @@ def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
     elif len(command) > 0:
         if command.get('Next Category'):
             category += 1
-            if category >= len(list(curr_actor.temp_store.get('weapons').keys())):
+            if category >= (len(list(curr_actor.temp_store.get('weapons').keys()))-2):
                 category = 0
             curr_actor.temp_store['Category'] = category
 
@@ -771,7 +771,7 @@ def set_electives(curr_actor) -> (str,str,str):
 def gen_wstore_menu(curr_actor,category) -> dict:
     menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': {}, 'mode': False, 'desc': {}, 'to_hit_best': -100, 'to_hit_worst': 100,
                 'parry_best': -100, 'parry_worst': 100, 'damage_best': 0, 'damage_worst': 10000}
-    purchased_weapons = []
+    purchased_weapons = curr_actor.fighter.weapons
     categories = ['sword','dagger','staff','spear','axe','mace','hammer','pick','polearm']
     active_cat = categories[category]
     
@@ -826,6 +826,8 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     menu_dict['options']['Next Category'] = 'Next Category'
     menu_dict['options']['Revert Purchases'] = 'Revert Purchases'
     menu_dict['options']['Continue to Armor Store'] = 'Continue to Armor Store'
+    menu_dict['category'] = active_cat.capitalize()
+    menu_dict['money'] = curr_actor.fighter.money
 
 
     return menu_dict
