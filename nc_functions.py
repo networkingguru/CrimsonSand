@@ -774,8 +774,27 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     purchased_weapons = curr_actor.fighter.weapons
     categories = ['sword','dagger','staff','spear','axe','mace','hammer','pick','polearm']
     active_cat = categories[category]
-    
-    
+    sword_desc = ('Swords are weapons that can do slashing, piercing, or bludgeoning damage. Slashing and piercing damage are done with the blade, giving them the advantage of length, while bludgeoning damage is done with the pommel, requiring close quarters. Swords come in nine varieties, based on length and blade design. There are short, medium, and long swords, and single-edged, double-edged, '  
+                'and curved single-edged swords. Swords tend to be fast, versatile weapons that are devastatingly powerful vs. unarmored opponents, but tend to be ineffective vs. metal armor. Slashing/piercing damage is converted to bludgeoning damage for any damage that does not peirce the armor, and is spread out over a 3-4 hit location area. For unarmored opponents or armor piercing attacks, '  
+                'slashing/piercing damage must go through each layer (skin/tissue/bone) one at a time, but can sever or run through, passing additional damage to a new location. In the case of slashing damage, this can sever limbs or even split an enemy in two. ')
+    dagger_desc = ('Daggers are short weapons that can do slashing, piercing, or bludgeoning damage. Slashing and piercing damage are done with the blade, while bludgeoning damage is done with the pommel. As short weapons, all daggers require close quarters. ' 
+                'Daggers are extremely fast, versatile weapons that are deadly vs. unarmored opponents, but tend to be ineffective vs. metal armor. Slashing/piercing damage is converted to bludgeoning damage for any damage that does not peirce the armor, and is spread out over a 3-4 hit location area. ')
+    staff_desc = ('Staves are long wooden poles, sometimes shod with metal at the ends, with a grip around the center. While not incredibly powerful, staves are very defensive, with the basic guards providing ample protection. Additionally, wood is not easily cut by a blade, making staves excellent defenders vs. swords and other slashing weapons. Finally, staves inflict '  
+                'bludgeoning damage, which damages all three hit layers (skin, tissue, and bone) simultaneously. If a location is removed of all hits, bludgeoning damage will pass through to the next location in the path. Bludgeoning damage is incredibly effective vs. flexible and semi flexible armor, and can even destroy rigid armor like plate. ')
+    spear_desc = ('Spears are long wooden poles with a sharp point. Spears can perform both piercing (stab) and bludgeoning (shaft strike) damage, making spears a slightly more versatile version of staves. Spears share staff guards, so they are very good defensively. Piercing damage is very good at defeating armor, but suffers from deflection penalties. However, spears '  
+                'also have the advantage of length, giving you the ability to engage the enemy from a great distance. Bludgeoning damage is incredibly effective vs. flexible and semi flexible armor, and can even destroy rigid armor like plate. ')
+    axe_desc = ('Axes are weapons that can do slashing, piercing (Horn Thrust), or bludgeoning (Axe Hammer) damage, but they are not terribly effective at any of these roles. Axes do have the advantage, however, of being easy to manufacture, making them cheap weapons of destruction. '  
+                'They also tend to be fast weapons that are powerful vs. unarmored opponents. Slashing/piercing damage is converted to bludgeoning damage for any damage that does not peirce the armor, and is spread out over a 3-4 hit location area. For unarmored opponents or armor piercing attacks, '  
+                'slashing/piercing damage must go through each layer (skin/tissue/bone) one at a time, but can sever or run through, passing additional damage to a new location. In the case of slashing damage, this can sever limbs or even split an enemy in two. ')
+    mace_desc = ('Maces are glorified clubs, with a wooden or metal shaft connected to a head that may be a ball, a spiked ball, or an advanced fluted surface. Maces inflict '  
+                'intense bludgeoning damage, which damages all three hit layers (skin, tissue, and bone) simultaneously. If a location is removed of all hits, bludgeoning damage will pass through to the next location in the path. Bludgeoning damage is incredibly effective vs. flexible and semi flexible armor, and can even destroy rigid armor like plate. ')
+    hammer_desc = ('Hammers are tools turned to war, with a wooden or metal shaft connected to a solid head with a flat striking surface. Hammers inflict '  
+                'bludgeoning damage, which damages all three hit layers (skin, tissue, and bone) simultaneously. If a location is removed of all hits, bludgeoning damage will pass through to the next location in the path. Bludgeoning damage is incredibly effective vs. flexible and semi flexible armor, and can even destroy rigid armor like plate. ')
+    pick_desc = ('Picks are tools turned to war, with a wooden or metal shaft connected to a solid head with a pointed striking surface. Picks inflict '  
+                'piercing damage, but they aren\'t sharp in the traditional sense. Picks peirce armor very well due to the energy behind their attacks, but are cumbersome to use, and offer little in the way of defensive guards. ')
+    pole_desc = ('Polearms are large, two-handed weapons that can often do slashing and piercing damage, and somtimes bludgeoning as well. Polearms also benefit from the stave guards, making them good defensive weapons, and long lengths, making the engagement range high. '  
+                'They tend to be slow weapons, but due to the previously mentioned advantages, are often victorious despite this. ')
+    cat_desc = [sword_desc,dagger_desc,staff_desc,spear_desc,axe_desc,mace_desc,hammer_desc,pick_desc,pole_desc]
 
     #combat_dict = {'total er': tot_er, 'psi': psi,'to hit': to_hit, 
     #                'to parry': to_parry, 'final ap': final_ap, 'parry ap': parry_ap}
@@ -828,6 +847,7 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     menu_dict['options']['Continue to Armor Store'] = 'Continue to Armor Store'
     menu_dict['category'] = active_cat.capitalize()
     menu_dict['money'] = curr_actor.fighter.money
+    menu_dict['cat_desc'] = cat_desc[category]
 
 
     return menu_dict

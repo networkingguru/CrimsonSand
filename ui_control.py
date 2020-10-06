@@ -463,6 +463,7 @@ def render_store(frame_list, menu_dict) -> None:
             frame_list[8].text = fl8_txt
             frame_list[9].text = fl9_txt
             frame_list[10].text = fl10_txt
+            frame_list[0].text = menu_dict.get('cat_desc')
                 
 
     if len(frame_list) != 0:
@@ -978,8 +979,8 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     er_frame = Frame(85,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     ap_frame = Frame(75,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     pap_frame = Frame(65,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-    #Hack to fix frame positioning bug where last frame always gets 0,0 pos
-    blank_frame = Frame(55,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    desc_frame = Frame(5,42,150,15,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+
 
     if len(items) > 0:
         list_box = bltGui.bltListbox(list_frame, 5, 16, items, False, True)
@@ -989,10 +990,7 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
         list_frame.add_control(list_box)
     
 
-    #
-
-    frame_list.extend([list_frame,price_frame,weight_frame,length_frame,hit_frame,parry_frame,damage_frame,hands_frame,er_frame,ap_frame,pap_frame,blank_frame])
-
+    frame_list.extend([desc_frame,price_frame,weight_frame,length_frame,hit_frame,parry_frame,damage_frame,hands_frame,er_frame,ap_frame,pap_frame,list_frame])
 
 
 
