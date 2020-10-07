@@ -648,7 +648,7 @@ def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
 
         elif command.get('Revert Purchases'):
             for w in curr_actor.fighter.weapons:
-                curr_actor.fighter.money += w.cost
+                curr_actor.fighter.money += int(w.cost)
             curr_actor.fighter.weapons.clear()
         elif command.get('Continue to Armor Store'):
             curr_actor.temp_store = {}
@@ -848,6 +848,11 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     menu_dict['category'] = active_cat.capitalize()
     menu_dict['money'] = curr_actor.fighter.money
     menu_dict['cat_desc'] = cat_desc[category]
+
+    w_purchases = []
+    for w in curr_actor.fighter.weapons:
+        w_purchases.append(w.name)
+    menu_dict['w_purchases'] = ', '.join(w_purchases)
 
 
     return menu_dict

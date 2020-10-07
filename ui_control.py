@@ -434,6 +434,7 @@ def render_store(frame_list, menu_dict) -> None:
             fl8_txt = 'ER'
             fl9_txt = 'AP/Attack'
             fl10_txt = 'AP/Parry'
+            fl11_txt = 'Purchases: '
             for w in menu_options:
                 if w not in ['Next Category','Revert Purchases','Continue to Armor Store']:
                     wid = menu_options.get(w)
@@ -451,19 +452,19 @@ def render_store(frame_list, menu_dict) -> None:
                     fl8_txt += '\n' + w_stats.get('er')
                     fl9_txt += '\n' + w_stats.get('ap')
                     fl10_txt += '\n' + w_stats.get('pap')
-
  
-            frame_list[1].text = fl1_txt
-            frame_list[2].text = fl2_txt   
-            frame_list[3].text = fl3_txt
-            frame_list[4].text = fl4_txt
-            frame_list[5].text = fl5_txt
-            frame_list[6].text = fl6_txt
-            frame_list[7].text = fl7_txt
-            frame_list[8].text = fl8_txt
-            frame_list[9].text = fl9_txt
-            frame_list[10].text = fl10_txt
-            frame_list[0].text = menu_dict.get('cat_desc')
+            frame_list[2].text = fl1_txt
+            frame_list[3].text = fl2_txt   
+            frame_list[4].text = fl3_txt
+            frame_list[5].text = fl4_txt
+            frame_list[6].text = fl5_txt
+            frame_list[7].text = fl6_txt
+            frame_list[8].text = fl7_txt
+            frame_list[9].text = fl8_txt
+            frame_list[10].text = fl9_txt
+            frame_list[11].text = fl10_txt
+            frame_list[0].text = fl11_txt + menu_dict.get('w_purchases')
+            frame_list[1].text = menu_dict.get('cat_desc')
                 
 
     if len(frame_list) != 0:
@@ -980,7 +981,7 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
     ap_frame = Frame(75,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     pap_frame = Frame(65,14,10,26,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     desc_frame = Frame(5,42,150,15,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
-
+    purch_frame = Frame(5,57,150,5,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
 
     if len(items) > 0:
         list_box = bltGui.bltListbox(list_frame, 5, 16, items, False, True)
@@ -990,7 +991,7 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
         list_frame.add_control(list_box)
     
 
-    frame_list.extend([desc_frame,price_frame,weight_frame,length_frame,hit_frame,parry_frame,damage_frame,hands_frame,er_frame,ap_frame,pap_frame,list_frame])
+    frame_list.extend([purch_frame,desc_frame,price_frame,weight_frame,length_frame,hit_frame,parry_frame,damage_frame,hands_frame,er_frame,ap_frame,pap_frame,list_frame])
 
 
 
