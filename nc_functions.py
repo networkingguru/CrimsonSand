@@ -657,11 +657,10 @@ def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
         else:
             catname = list(curr_actor.temp_store.get('weapons'))[category]
             for w in curr_actor.temp_store.get('weapons').get(catname):
-                if command.get(id(w)):
-                    if curr_actor.fighter.money >= w.cost:
-                        curr_actor.fighter.weapons.append(w)
-                        curr_actor.fighter.money -= int(w.cost)
-                        break
+                if command.get(id(w)) and curr_actor.fighter.money >= w.cost:
+                    curr_actor.fighter.weapons.append(w)
+                    curr_actor.fighter.money -= int(w.cost)
+                    break
     else:
         menu_dict = gen_wstore_menu(curr_actor,category)
 

@@ -32,9 +32,8 @@ def inch_conv(inches, mode = 0) -> str or int:
         #Return number of hexes
         feet = int(inches / 12)
         total = round(feet / 3)
-        if feet/3 >= 1:
-            if feet % 12 != 0:
-                total += 1
+        if feet >= 3 and feet % 12 != 0:
+            total += 1
         if total < 1:
             total += 1
         return total
