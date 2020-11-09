@@ -667,6 +667,59 @@ def buy_weapons(curr_actor, game_state, command) -> (dict, int, bool):
 
     return menu_dict, game_state, clear
 
+def buy_armor(curr_actor, game_state, command) -> (dict, int, bool):
+    menu_dict = {}
+    clear = False
+    skip = False
+
+    if 'Category' not in curr_actor.temp_store:
+        curr_actor.temp_store['Category'] = 0
+    category = curr_actor.temp_store.get('Category')
+
+    if 'Type' not in curr_actor.temp_store:
+        curr_actor.temp_store['Type'] = 0
+    a_type = curr_actor.temp_store.get('Type')
+
+    if skip:
+        game_state = GameStates.equip
+        clear = True
+        curr_actor.temp_store = {}
+    elif len(command) > 0:
+        if command.get('Next Category'):
+            category += 1
+            if category >= (len(list(curr_actor.temp_store.get('armor').keys()))-2):
+                category = 0
+            curr_actor.temp_store['Category'] = category
+
+        if command.get('Next Type'):
+            a_type += 1
+            if a_type >= (len(list(curr_actor.temp_store.get('armor').get('type').keys()))-2):
+                a_type = 0
+            curr_actor.temp_store['Type'] = a_type
+
+        elif command.get('Revert Purchases'):
+            for w in curr_actor.worn_armor:
+                curr_actor.fighter.money += int(w.cost)
+            curr_actor.worn_armor.clear()
+        elif command.get('Continue to Equip'):
+            curr_actor.temp_store = {}
+            game_state = GameStates.equip
+            clear = True
+        else:
+            catname = list(curr_actor.temp_store.get('armor'))[category]
+            tname = list(curr_actor.temp_store.get('armor').get('type'))[a_type]
+            for a in curr_actor.temp_store.get('armor').get(catname).get(tname):
+                if command.get(id(a)) and curr_actor.fighter.money >= a.cost:
+                    #None of this will work. Need to figure out how to make this work with apply_armor
+                    """ curr_actor.fighter.weapons.append(a)
+                    curr_actor.fighter.money -= int(a.cost) """
+                    break
+    else:
+        menu_dict = gen_wstore_menu(curr_actor,category)
+
+
+    return menu_dict, game_state, clear
+
 def confirm_weapon(curr_actor, game_state, command) -> (dict, int, bool):
     menu_dict = {'type': MenuTypes.confirm_page, 'header': 'Confirm your purchase', 'options': ['Confirm', 'Abort'], 'mode': False, 'desc': {}}
     clear = False

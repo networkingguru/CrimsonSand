@@ -279,21 +279,18 @@ def determine_validity(armor_component, entity):
             top_layer = entity.loc_armor[loc][-1]
         else:
             top_layer = None
-        thickness = 0
-
-        if top_layer == None:
+        if top_layer is None:
             continue
         elif armor_component.rigidity == 'rigid' and top_layer.rigidity == 'rigid' or armor_component.rigidity == 'semi' and top_layer.rigidity in ['rigid','semi']:
             error_message = 'Cannot apply ' + armor_component.name + '. ' + top_layer.name + ' is already applied. '
-        
-        for layer in entity.loc_armor[loc]:
-            thickness += layer.thickness
+
+        thickness = sum(layer.thickness for layer in entity.loc_armor[loc])
 
         if thickness + armor_component.thickness > 1:
             error_message += 'Cannot apply ' + armor_component.name + '. Total armor thickness at ' + entity.fighter.name_location(loc) + ' exceeds 1 inch. '
 
         if error_message != '': break
-    
+
     return error_message
 
 def apply_armor_mods(entity):
