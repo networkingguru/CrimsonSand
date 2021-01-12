@@ -149,28 +149,28 @@ def gen_armor(armor_component, **kwargs):
             if accent_amount == None:
                 accent_amount = round(uniform(.01,.1),2)
 
-        c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material}
-        del_keys = []
+            c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material}
+            del_keys = []
 
-        for key, value in c_kwargs.items():
-            if value == None:
-                del_keys.append(key)
+            for key, value in c_kwargs.items():
+                if value == None:
+                    del_keys.append(key)
 
-        for key in del_keys:
-            del c_kwargs[key]
-        
-        component = armor_component(**c_kwargs)
-        components.append(component)
-        #Reset vars
-        main_material = kwargs.get('main_material')
-        binder = kwargs.get('binder')
-        construction = kwargs.get('construction')
-        thickness = kwargs.get('thickness')
-        ht_range = kwargs.get('ht_range')
-        str_fat_range = kwargs.get('str_fat_range')
-        accent_material = kwargs.get('accent_material')
-        accent_amount = kwargs.get('accent_amount')
-        i += 1
+            for key in del_keys:
+                del c_kwargs[key]
+            
+            component = armor_component(**c_kwargs)
+            components.append(component)
+            #Reset vars
+            main_material = kwargs.get('main_material')
+            binder = kwargs.get('binder')
+            construction = kwargs.get('construction')
+            thickness = kwargs.get('thickness')
+            ht_range = kwargs.get('ht_range')
+            str_fat_range = kwargs.get('str_fat_range')
+            accent_material = kwargs.get('accent_material')
+            accent_amount = kwargs.get('accent_amount')
+            i += 1
 
     return components
 
@@ -246,7 +246,7 @@ def apply_armor(entity):
     apply_armor_mods(entity)
 
 #Utility function for apply_armor
-def armor_classifier(armor_component):
+def armor_classifier(armor_component) -> str:
     #Sort by general type based on location
     torso_locs = [3,4,5,6,9,10,13,14]
     leg_locs = [17,18,21,22,23,24,25,26]
@@ -269,6 +269,20 @@ def armor_classifier(armor_component):
     for loc in other_locs:
         if loc in armor_component.covered_locs:
             return 'o'
+
+#Armor sorter for store
+def component_sort() -> dict:
+    components = itersubclasses(Armor_Component)
+    categories = {'t':[],'l':[],'h':[],'a':[],'o':[]}
+
+    for comp in components:
+        #Dummy component
+        c = gen_armor(comp)
+        cat = armor_classifier(c[0])
+        categories[cat].append(comp)
+
+    return categories
+
 
 #Determine if armor can be applied to layer
 def determine_validity(armor_component, entity):

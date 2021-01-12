@@ -7,6 +7,7 @@ from components.ethnicities import Ethnicity, age_mods
 from components.professions import Profession
 from components.upbringing import get_valid_upbringings
 from components.fighter import attr_name_dict, Skill
+from components.armor import component_sort
 from utilities import inch_conv,roll_dice,make_bar
 from chargen_functions import random_attr
 from options import name_dict
@@ -676,9 +677,6 @@ def buy_armor(curr_actor, game_state, command) -> (dict, int, bool):
         curr_actor.temp_store['Category'] = 0
     category = curr_actor.temp_store.get('Category')
 
-    if 'Type' not in curr_actor.temp_store:
-        curr_actor.temp_store['Type'] = 0
-    a_type = curr_actor.temp_store.get('Type')
 
     if skip:
         game_state = GameStates.equip
@@ -690,12 +688,6 @@ def buy_armor(curr_actor, game_state, command) -> (dict, int, bool):
             if category >= (len(list(curr_actor.temp_store.get('armor').keys()))-2):
                 category = 0
             curr_actor.temp_store['Category'] = category
-
-        if command.get('Next Type'):
-            a_type += 1
-            if a_type >= (len(list(curr_actor.temp_store.get('armor').get('type').keys()))-2):
-                a_type = 0
-            curr_actor.temp_store['Type'] = a_type
 
         elif command.get('Revert Purchases'):
             for w in curr_actor.worn_armor:
@@ -715,7 +707,7 @@ def buy_armor(curr_actor, game_state, command) -> (dict, int, bool):
                     curr_actor.fighter.money -= int(a.cost) """
                     break
     else:
-        menu_dict = gen_wstore_menu(curr_actor,category)
+        menu_dict = gen_astore_menu(curr_actor,category)
 
 
     return menu_dict, game_state, clear
@@ -909,7 +901,53 @@ def gen_wstore_menu(curr_actor,category) -> dict:
 
     return menu_dict
 
+def gen_astore_menu(curr_actor,category) -> dict:
+    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': {}, 'mode': False, 'desc': {}, 'to_hit_best': -100, 'to_hit_worst': 100,
+                'parry_best': -100, 'parry_worst': 100, 'damage_best': 0, 'damage_worst': 10000}
+    purchased_weapons = curr_actor.fighter.weapons
+    categories = ['Head/Neck','Torso','Arms','Hands/Feet','Legs']
+    active_cat = categories[category]
+    components = component_sort()
+   
+    
 
+    if not curr_actor.temp_store.get('armor'):
+        curr_actor.temp_store['armor'] = []
+    
+    
+    
+    
+
+    #Item details: Name Price  Weight  Length  To-hit  Parry   Damage  Hands   ER  AP/Attack  AP/Parry
+    """ for w in weapon_dict.get(active_cat):
+        if w not in curr_actor.fighter.weapons:
+            cs_er = str(int(combat_stats.get(id(w)).get('total er')))
+            cs_ap = str(int(combat_stats.get(id(w)).get('final ap')))
+            cs_pap =str(int(combat_stats.get(id(w)).get('parry ap')))
+            hands = ','.join(map(str,w.hands))
+            menu_item = w.name
+            item_stats = {'cost':str(int(w.cost)),'weight':str(int(w.weight)),'length':inch_conv(w.length),'to_hit':combat_stats.get(id(w)).get('to hit'),
+                        'parry':combat_stats.get(id(w)).get('to parry'),'damage':combat_stats.get(id(w)).get('psi'),'hands':hands,'er':cs_er, 
+                        'ap':cs_ap,'pap':cs_pap}
+
+
+            menu_dict['options'][menu_item] = id(w)
+            menu_dict['desc'][id(w)] = item_stats
+
+    menu_dict['options']['Next Category'] = 'Next Category'
+    menu_dict['options']['Revert Purchases'] = 'Revert Purchases'
+    menu_dict['options']['Continue to Armor Store'] = 'Continue to Armor Store'
+    menu_dict['category'] = active_cat.capitalize()
+    menu_dict['money'] = curr_actor.fighter.money
+    menu_dict['cat_desc'] = cat_desc[category]
+
+    w_purchases = []
+    for w in curr_actor.fighter.weapons:
+        w_purchases.append(w.name)
+    menu_dict['w_purchases'] = ', '.join(w_purchases) """
+
+
+    return menu_dict
 
 
 def add_profs(curr_actor) -> None:
