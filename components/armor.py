@@ -6,7 +6,7 @@ from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide, material_dict)
 
 
-quality_dict = {'Junk': -.5, 'Very Poor': -.3, 'Poor': -.2, 'Below Average': -.1, 'Average': 1, 'Above Average': 1.15, 'Fine': 1.3, 'Exceptional': 1.4, 'Masterwork': 1.5}
+quality_dict = {'Junk': .5, 'Very Poor': .3, 'Poor': .2, 'Below Average': .1, 'Average': 1, 'Above Average': 1.15, 'Fine': 1.3, 'Exceptional': 1.4, 'Masterwork': 1.5}
 
 #Generator Function
 def gen_armor(armor_component, **kwargs):
@@ -30,6 +30,7 @@ def gen_armor(armor_component, **kwargs):
     const_obj = kwargs.get('const_obj')
     comparison = kwargs.get('comparison')
     entity = kwargs.get('entity')
+    quality = kwargs.get('quality')
 
     if amount == None:
         amount = 1
@@ -149,7 +150,11 @@ def gen_armor(armor_component, **kwargs):
             if accent_amount == None:
                 accent_amount = round(uniform(.01,.1),2)
 
-            c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material}
+            if quality == None:
+                quals = list(quality_dict.keys())
+                quality = quals[(roll_dice(1,len(quals)-1))]
+
+            c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material, 'quality': quality}
             del_keys = []
 
             for key, value in c_kwargs.items():
@@ -279,7 +284,7 @@ def component_sort() -> dict:
         #Dummy component
         c = gen_armor(comp)
         cat = armor_classifier(c[0])
-        categories[cat].append(comp)
+        categories[cat].append(c[0])
 
     return categories
 

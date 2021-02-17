@@ -268,5 +268,52 @@ def make_bar(value,max=200,min=0,reverse=False):
 
     return bar
 
+def name_location(location) -> int or str:
+        #THIS IS A DIRECT COPY OF THE METHOD IN THE FIGHTER CLASS. COPIED SO IT CAN BE USED OUTSIDE OF THE CLASS (FOR TESTING).
 
+        #Method to convert loc names to numbers and vice versa
+        loc_list = ['Scalp', 'Face', 'Neck', 'R Shoulder', 'L Shoulder', 'R Chest', 'L Chest', 'Up R Arm', 'Up L Arm', 'R Ribs', 'L Ribs', 
+                    'R Elbow', 'L Elbow', 'R Abdomen', 'L Abdomen', 'R Forearm', 'L Forearm', 'R Hip', 'L Hip', 'R Hand', 'L Hand', 'R Thigh', 'L Thigh', 
+                    'R Knee', 'L Knee', 'R Shin', 'L Shin', 'R Foot', 'L Foot']
+        #Key for reference
+        # 0 Scalp
+        # 1 Face
+        # 2 Neck
+        # 3 R Shoulder
+        # 4 L Shoulder
+        # 5 R Chest
+        # 6 L Chest
+        # 7 Up R Arm
+        # 8 Up L Arm
+        # 9 R Ribs
+        # 10 L Ribs
+        # 11 R Elbow
+        # 12 L Elbow
+        # 13 R Abdomen
+        # 14 L Abdomen
+        # 15 R Forearm
+        # 16 L Forearm
+        # 17 R Hip
+        # 18 L Hip
+        # 19 R Hand
+        # 20 L Hand
+        # 21 R Thigh
+        # 22 L Thigh
+        # 23 R Knee
+        # 24 L Knee
+        # 25 R Shin
+        # 26 L Shin
+        # 27 R Foot
+        # 28 L Foot
+
+
+        #If given a number, return a name
+        try:
+            val = int(location)
+            title = loc_list[location]
+        #Otherwise, return a number
+        except:
+            title = loc_list.index(location)
+
+        return title
     
