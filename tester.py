@@ -35,7 +35,7 @@ with open('armor_gen.txt','w') as armor_log:
             armor_log.write('Rigidity: ' + a.rigidity + '\n')
             armor_log.write('Covered Locations: ' + locs + '\n')
             armor_log.write('Area Covered: ' + str(round(a.main_area,1)) + ' square inches\n')
-            armor_log.write('Weight: ' + str(round(a.weight)) + ' pounds \n')
+            armor_log.write('Weight: ' + str(round(a.weight,2)) + ' pounds \n')
             armor_log.write('Density: ' + str(round(a.density)) + '\n')
             armor_log.write('Quality: ' + a.quality + '\n')
             armor_log.write('B/S/P Deflect Maximums: ' + str(round(a.b_deflect_max)) + '/' + str(round(a.s_deflect_max)) + '/' + str(round(a.p_deflect_max)) + ' PSI' + '\n')

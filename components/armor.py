@@ -112,59 +112,16 @@ def gen_armor(armor_component, **kwargs):
     elif random:
         i=0
         while i < amount:
-            if construction == None:
-                if len(a.allowed_constructions) > 1:
-                    construction = a.allowed_constructions[(roll_dice(1,len(a.allowed_constructions)))-1]
-                else:
-                    construction = a.allowed_constructions[0]
-
-            #Create dummy construction
-            c = construction()
-            if main_material == None:
-                if len(c.allowed_main_materials) > 1:
-                    main_material = c.allowed_main_materials[(roll_dice(1,len(c.allowed_main_materials)))-1]
-                else:
-                    main_material = c.allowed_main_materials[0]
-                
-            if binder == None: 
-                if len(c.allowed_binder_materials) > 1:
-                    binder = c.allowed_binder_materials[(roll_dice(1,len(c.allowed_binder_materials)))-1]
-                else:
-                    binder = c.allowed_binder_materials[0]
-            
-            const_obj = construction(main_material = main_material, binder_material = binder)
-            
-            if thickness == None:
-                thickness = round(uniform(const_obj.min_thickness, const_obj.max_thickness), 2)
-
-            if ht_range == None:
-                ht_min = roll_dice(1,60) + 30
-                ht_max = ht_min + a.ht_range[1] - a.ht_range[0]
-                ht_range = (ht_min, ht_max)
-
-            if str_fat_range == None:
-                sf_min = (roll_dice(10,6)*10)
-                sf_max = sf_min + a.str_fat_range[1] - a.str_fat_range[0]
-                str_fat_range = (sf_min,sf_max)
-
-            if accent_amount == None:
-                accent_amount = round(uniform(.01,.1),2)
-
-            if quality == None:
-                quals = list(quality_dict.keys())
-                quality = quals[(roll_dice(1,len(quals)-1))]
-
-            c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material, 'quality': quality}
-            del_keys = []
-
-            for key, value in c_kwargs.items():
-                if value == None:
-                    del_keys.append(key)
-
-            for key in del_keys:
-                del c_kwargs[key]
+            c_kwargs = gen_random_armor(a, **kwargs)
             
             component = armor_component(**c_kwargs)
+
+            while any(ele < 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]):
+                if any(ele > 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]):
+                    break
+                c_kwargs = gen_random_armor(a, **kwargs)
+                component = armor_component(**c_kwargs)
+                
             components.append(component)
             #Reset vars
             main_material = kwargs.get('main_material')
@@ -178,6 +135,74 @@ def gen_armor(armor_component, **kwargs):
             i += 1
 
     return components
+
+def gen_random_armor(a, **kwargs):
+    main_material = kwargs.get('main_material')
+    binder = kwargs.get('binder')
+    construction = kwargs.get('construction')
+    thickness = kwargs.get('thickness')
+    ht_range = kwargs.get('ht_range')
+    str_fat_range = kwargs.get('str_fat_range')
+    accent_material = kwargs.get('accent_material')
+    accent_amount = kwargs.get('accent_amount')
+    const_obj = kwargs.get('const_obj')
+    comparison = kwargs.get('comparison')
+    entity = kwargs.get('entity')
+    quality = kwargs.get('quality')
+
+    if construction == None:
+        if len(a.allowed_constructions) > 1:
+            construction = a.allowed_constructions[(roll_dice(1,len(a.allowed_constructions)))-1]
+        else:
+            construction = a.allowed_constructions[0]
+
+    #Create dummy construction
+    c = construction()
+    if main_material == None:
+        if len(c.allowed_main_materials) > 1:
+            main_material = c.allowed_main_materials[(roll_dice(1,len(c.allowed_main_materials)))-1]
+        else:
+            main_material = c.allowed_main_materials[0]
+        
+    if binder == None: 
+        if len(c.allowed_binder_materials) > 1:
+            binder = c.allowed_binder_materials[(roll_dice(1,len(c.allowed_binder_materials)))-1]
+        else:
+            binder = c.allowed_binder_materials[0]
+    
+    const_obj = construction(main_material = main_material, binder_material = binder)
+    
+    if thickness == None:
+        thickness = round(uniform(const_obj.min_thickness, const_obj.max_thickness), 2)
+
+    if ht_range == None:
+        ht_min = roll_dice(1,60) + 30
+        ht_max = ht_min + a.ht_range[1] - a.ht_range[0]
+        ht_range = (ht_min, ht_max)
+
+    if str_fat_range == None:
+        sf_min = (roll_dice(10,6)*10)
+        sf_max = sf_min + a.str_fat_range[1] - a.str_fat_range[0]
+        str_fat_range = (sf_min,sf_max)
+
+    if accent_amount == None:
+        accent_amount = round(uniform(.01,.1),2)
+
+    if quality == None:
+        quals = list(quality_dict.keys())
+        quality = quals[(roll_dice(1,len(quals)-1))]
+
+    c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material, 'quality': quality}
+    del_keys = []
+
+    for key, value in c_kwargs.items():
+        if value == None:
+            del_keys.append(key)
+
+    for key in del_keys:
+        del c_kwargs[key]           
+
+    return c_kwargs
 
 #Application Function
 def apply_armor(entity):
@@ -357,6 +382,7 @@ class Armor_Construction:
         self.allowed_binder_materials = [] #List of allowed materials for binder components
         self.binder_material = m_leather #Material that holds the armor together
         self.binder_amount = 1 #Scalar. 1 = 1:1 ratio of binder to main volume
+        self.binder_name = ''
         self.desc = ''
         self.rigidity = 'rigid' #rigid, semi, or flexible
         self.density = 1 #Scalar to represent main material density, in terms of how much material vs binder/air is in the armor per inch of thickness. For example, steel chainmail is mostly holes, so it is much less dense than steel plate. Even plate is not 1, though, because the thickness is not uniform
@@ -372,6 +398,8 @@ class Armor_Construction:
         
 
     def set_name(self):
+        if len(self.allowed_binder_materials) > 1:
+            self.binder_name = ' with ' + self.binder_material.name + ' bindings '
         self.name = self.main_material.name + ' ' + self.base_name
 
 class Armor_Component:
@@ -533,7 +561,7 @@ class Armor_Component:
         if self.quality != 'Average':
             qual = self.quality + ' '
 
-        self.name = qual + self.construction.name + ' ' + self.base_name
+        self.name = qual + self.construction.name + ' ' + self.base_name + self.construction.binder_name
 
         self.stam_drain = self.physical_mod / self.weight
 
@@ -632,7 +660,7 @@ class Chain(Armor_Construction):
         self.main_material = m_hiron #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
         self.density = .2 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
-        self.coverage = .33 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
+        self.coverage = .6 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1.2 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -657,12 +685,12 @@ class Ring(Armor_Construction):
         self.main_material = m_hiron #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
         self.density = .05 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
-        self.coverage = .1 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
+        self.coverage = .4 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
         self.p_resist = .3
-        self.t_resist = .3
+        self.t_resist = .5
         self.construction_diff = .5 #Scalar for difficulty of construction
 
         self.__dict__.update(kwargs)
@@ -682,7 +710,7 @@ class Splint(Armor_Construction):
         self.main_material = m_hiron #Primary material
         self.rigidity = 'semi' #rigid, semi, or flexible
         self.density = .4 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
-        self.coverage = .4 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
+        self.coverage = .8 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1.1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -707,7 +735,7 @@ class Scale(Armor_Construction):
         self.main_material = m_hiron #Primary material
         self.rigidity = 'semi' #rigid, semi, or flexible
         self.density = .3 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
-        self.coverage = .7 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
+        self.coverage = .9 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1.1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -733,7 +761,7 @@ class Lamellar(Armor_Construction):
         self.main_material = m_hiron #Primary material
         self.rigidity = 'semi' #rigid, semi, or flexible
         self.density = .1 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
-        self.coverage = .8 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
+        self.coverage = .85 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1.2 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
@@ -759,7 +787,7 @@ class Brigandine(Armor_Construction):
         self.main_material = m_hiron #Primary material
         self.rigidity = 'semi' #rigid, semi, or flexible
         self.density = .05 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
-        self.coverage = .9 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
+        self.coverage = .95 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1
