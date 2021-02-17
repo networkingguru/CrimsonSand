@@ -252,7 +252,7 @@ def armor_classifier(armor_component) -> str:
     leg_locs = [17,18,21,22,23,24,25,26]
     head_locs = [0,1,2]
     arm_locs = [7,8,11,12,15,16]
-    other_locs = [19,20,17,18]
+    other_locs = [19,20,17,18,27,28]
 
     for loc in torso_locs:
         if loc in armor_component.covered_locs:
@@ -464,7 +464,7 @@ class Armor_Component:
                 min_ht = location_ratios[self.covered_locs[0]]*avg_ht
                 max_ht = location_ratios[(self.covered_locs[0] - 1)]*avg_ht
             
-            height = max_ht - min_ht
+                height = max_ht - min_ht
 
         self.main_area = circ * height
 
@@ -1046,7 +1046,7 @@ class Pauldron(Armor_Component):
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1.5 #Scalar for base construction time
-        self.covered_locs = range(3-9) #List of locations protected
+        self.covered_locs = range(3,9) #List of locations protected
         self.shape = 'h_cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
         self.quality = 'Average'
 
@@ -1122,7 +1122,7 @@ class Chauses(Armor_Component):
         self.accent_material = m_steel #Material used for decorations
         self.accent_amount = 0 #Scalar. 1 = 1:1 ratio of accent to main volume
         self.assembly_diff = 1.5 #Scalar for base construction time
-        self.covered_locs = range(21-27) #List of locations protected
+        self.covered_locs = range(21,27) #List of locations protected
         self.shape = 'cyl' #Used to approximate area. Valid shapes: cyl, h_cyl
         self.quality = 'Average'
         self.single_side = False #Used to differentiate between items that are R/L vs those that cover both
@@ -1204,7 +1204,7 @@ class Sabaton(Armor_Component):
         self.quality = 'Average'
 
         self.__dict__.update(kwargs)
-        self.desc = self.construction.name + ' armor in a complex arangement to cover the top of the foot'
+        self.desc = self.construction.name + ' armor in a complex arrangement to cover the top of the foot'
         self.set_dynamic_attributes()
 
 class Boot(Armor_Component):
