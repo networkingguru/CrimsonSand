@@ -31,6 +31,7 @@ def gen_armor(armor_component, **kwargs):
     comparison = kwargs.get('comparison')
     entity = kwargs.get('entity')
     quality = kwargs.get('quality')
+    cost = kwargs.get('cost')
 
     if amount == None:
         amount = 1
@@ -77,7 +78,7 @@ def gen_armor(armor_component, **kwargs):
 
         const_obj = construction(main_material = main_material, binder_material = binder)
 
-        c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material}
+        c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material, 'quality': quality}
         del_keys = []
 
         for key, value in c_kwargs.items():
@@ -117,7 +118,7 @@ def gen_armor(armor_component, **kwargs):
             component = armor_component(**c_kwargs)
 
             while any(ele < 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]):
-                if any(ele > 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]):
+                if any(ele > 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]) and component.cost < cost:
                     break
                 c_kwargs = gen_random_armor(a, **kwargs)
                 component = armor_component(**c_kwargs)
@@ -146,8 +147,6 @@ def gen_random_armor(a, **kwargs):
     accent_material = kwargs.get('accent_material')
     accent_amount = kwargs.get('accent_amount')
     const_obj = kwargs.get('const_obj')
-    comparison = kwargs.get('comparison')
-    entity = kwargs.get('entity')
     quality = kwargs.get('quality')
 
     if construction == None:
