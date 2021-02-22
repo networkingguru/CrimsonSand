@@ -14,9 +14,12 @@ from components.circumstances import Circumstance
 from components.upbringing import get_valid_upbringings
 from item_gen import weapon_generator, calc_weapon_stats
 
+entity_list = options.entities
+entities = create_entity_list(entity_list)
+fighters = options.fighters
+add_fighters(entities, fighters)
 
-
-components = component_sort()
+components = component_sort(entities[0])
 
 with open('armor_gen.txt','w') as armor_log:
     for cat in components:

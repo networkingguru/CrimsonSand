@@ -28,12 +28,12 @@ class Material():
             self.craft_diff = round(self.craft_diff, 2)
 
 
-m_cloth = Material(name='Cloth', hardness=.2, elasticity=.3, toughness=6, normality=2, cost=12, density=.1, p_ratio = .5, craft_diff = 1)
-m_canvas = Material(name='Canvas', hardness=.3, elasticity=.5, toughness=9, normality=1.5, cost=15, density=.2, p_ratio = .48, craft_diff = 1)
-m_leather = Material(name='Leather', hardness=.4, elasticity=.5, toughness=8, normality=2, cost=14, density=.2, p_ratio = .47, craft_diff = .3)
-m_bleather = Material(name='Boiled Leather', hardness=.8, elasticity=.9, toughness=6, normality=1, cost=18, density=.2, p_ratio = .45, craft_diff = .4)
-m_hide = Material(name='Hide', hardness=.6, elasticity=.8, toughness=8, normality=2, cost=10, density=.25, p_ratio = .47, craft_diff = .1)
-m_xthide = Material(name='Exotic Thick Hide', hardness=.7, elasticity=.9, toughness=8, normality=.5, cost=20, density=.5, p_ratio = .47, craft_diff = .4)
+m_cloth = Material(name='Cloth', hardness=.2, elasticity=.3, toughness=6, normality=2, cost=12, density=.05, p_ratio = .5, craft_diff = 1)
+m_canvas = Material(name='Canvas', hardness=.3, elasticity=.5, toughness=9, normality=1.5, cost=15, density=.08, p_ratio = .48, craft_diff = 1)
+m_leather = Material(name='Leather', hardness=.4, elasticity=.5, toughness=8, normality=2, cost=14, density=.1, p_ratio = .47, craft_diff = .3)
+m_bleather = Material(name='Boiled Leather', hardness=.8, elasticity=.9, toughness=6, normality=1, cost=18, density=.1, p_ratio = .45, craft_diff = .4)
+m_hide = Material(name='Hide', hardness=.6, elasticity=.8, toughness=8, normality=2, cost=10, density=.25, p_ratio = .2, craft_diff = .1)
+m_xthide = Material(name='Exotic Thick Hide', hardness=.7, elasticity=.9, toughness=8, normality=.5, cost=20, density=.3, p_ratio = .47, craft_diff = .4)
 m_wood = Material(name='Wood', hardness=1, elasticity=1, toughness=1, normality=2, cost=1, density=1, p_ratio = .47, craft_diff = .1)
 m_bone = Material(name='Bone', hardness=1.3, elasticity=1.8, toughness=1.2, normality=2, cost=5, density=.8, p_ratio = .4, craft_diff = .2)
 m_tissue = Material(name='Tissue', hardness=.1, elasticity=.01, toughness=3, normality=2, cost=1, density=1, p_ratio = .46, craft_diff = 1)

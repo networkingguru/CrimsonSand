@@ -1,401 +1,401 @@
 Category: t
 
-Name: Poor Iron Lamellar Hauberk
-Cost: 444
-Thickness: 0.07 inches
+Name: Very Poor Iron Brigandine Hauberk with Canvas bindings 
+Cost: 26673
+Thickness: 0.24 inches
 Rigidity: semi
 Covered Locations: R Shoulder, L Shoulder, R Chest, L Chest, Up R Arm, Up L Arm, R Ribs, L Ribs, R Elbow, L Elbow, R Abdomen, L Abdomen, R Forearm, L Forearm
-Area Covered: 2866.9 square inches
-Weight: 8.29 pounds 
-Density: 0
-Quality: Poor
-B/S/P Deflect Maximums: 14432/2886/2886 PSI
+Area Covered: 4495.1 square inches
+Weight: 24.29 pounds 
+Density: 1
+Quality: Very Poor
+B/S/P Deflect Maximums: 105958/21192/21192 PSI
 B/S/P Deflect Percentage: 10.0%/35.0%/70.0%
-Hits: 11189736
-Hits per Square Inch: 3903
+Hits: 128813273
+Hits per Square Inch: 28656
 B Soak: 0%
-Physical Modifier (base): 20
+Physical Modifier (base): 49
 Stamina Drain: 2 per round
 
-Name: Fine Iron Scalemail Curiass with Leather bindings 
-Cost: 852
-Thickness: 0.07 inches
+Name: Exceptional Mithril Brigandine Curiass with Leather bindings 
+Cost: 70966
+Thickness: 0.12 inches
 Rigidity: semi
 Covered Locations: R Shoulder, L Shoulder, R Chest, L Chest, R Ribs, L Ribs, R Abdomen, L Abdomen
-Area Covered: 1017.8 square inches
-Weight: 6.83 pounds 
-Density: 1
-Quality: Fine
-B/S/P Deflect Maximums: 48539/9708/9708 PSI
-B/S/P Deflect Percentage: 10.0%/35.0%/60.0%
-Hits: 13361750
-Hits per Square Inch: 13127
+Area Covered: 4349.7 square inches
+Weight: 11.45 pounds 
+Density: 0
+Quality: Exceptional
+B/S/P Deflect Maximums: 43862/8772/8772 PSI
+B/S/P Deflect Percentage: 10.0%/35.0%/70.0%
+Hits: 30525691
+Hits per Square Inch: 7018
 B Soak: 0%
-Physical Modifier (base): 15
+Physical Modifier (base): 23
 Stamina Drain: 2 per round
 
-Name: Above Average Steel Chainmail Pixane
-Cost: 734
-Thickness: 0.24 inches
+Name: Exceptional Hardened Steel Chainmail Pixane
+Cost: 863
+Thickness: 0.18 inches
 Rigidity: flexible
 Covered Locations: R Shoulder, L Shoulder, R Chest, L Chest
-Area Covered: 542.0 square inches
-Weight: 6.11 pounds 
+Area Covered: 538.4 square inches
+Weight: 4.4 pounds 
 Density: 1
-Quality: Above Average
-B/S/P Deflect Maximums: 83658/16732/16732 PSI
+Quality: Exceptional
+B/S/P Deflect Maximums: 55987/11197/11197 PSI
 B/S/P Deflect Percentage: 5.0%/10.0%/7.0%
-Hits: 9609417
-Hits per Square Inch: 17729
+Hits: 6028319
+Hits per Square Inch: 11197
 B Soak: 0%
-Physical Modifier (base): 29
+Physical Modifier (base): 21
 Stamina Drain: 5 per round
 
-Name: Masterwork Hardened Iron Plate Spaulder
-Cost: 697
-Thickness: 0.06 inches
+Name: Fine Mithril Double-walled Plate Spaulder
+Cost: 37791
+Thickness: 0.09 inches
 Rigidity: rigid
 Covered Locations: R Shoulder, L Shoulder
-Area Covered: 385.2 square inches
-Weight: 1.04 pounds 
+Area Covered: 499.3 square inches
+Weight: 2.36 pounds 
 Density: 0
-Quality: Masterwork
-B/S/P Deflect Maximums: 14988/2998/2998 PSI
-B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 1408658
-Hits per Square Inch: 3657
+Quality: Fine
+B/S/P Deflect Maximums: 82013/16403/16403 PSI
+B/S/P Deflect Percentage: 22.0%/50.0%/104.0%
+Hits: 6551424
+Hits per Square Inch: 13122
 B Soak: 0%
-Physical Modifier (base): 1
+Physical Modifier (base): 2
 Stamina Drain: 1 per round
 
-Name: Poor Stygian Steel Plate Pauldron
-Cost: 547
-Thickness: 0.11 inches
+Name: Poor Mithril Plate Pauldron
+Cost: 2169
+Thickness: 0.03 inches
 Rigidity: rigid
 Covered Locations: R Shoulder, L Shoulder, R Chest, L Chest, Up R Arm, Up L Arm
-Area Covered: 207.2 square inches
+Area Covered: 984.1 square inches
 Weight: 0.96 pounds 
 Density: 0
 Quality: Poor
-B/S/P Deflect Maximums: 27146/5429/5429 PSI
+B/S/P Deflect Maximums: 6075/1215/1215 PSI
 B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 1067789
-Hits per Square Inch: 5155
+Hits: 956527
+Hits per Square Inch: 972
 B Soak: 0%
 Physical Modifier (base): 1
 Stamina Drain: 1 per round
 
-Name: Very Poor Leather  Jerkin
-Cost: 898
-Thickness: 0.46 inches
+Name: Masterwork Cloth  Jerkin
+Cost: 7045
+Thickness: 0.33 inches
 Rigidity: flexible
 Covered Locations: R Shoulder, L Shoulder, R Chest, L Chest, R Ribs, L Ribs, R Abdomen, L Abdomen
-Area Covered: 1173.1 square inches
-Weight: 16.35 pounds 
+Area Covered: 4312.9 square inches
+Weight: 25.19 pounds 
 Density: 1
-Quality: Very Poor
-B/S/P Deflect Maximums: 1004/201/201 PSI
+Quality: Masterwork
+B/S/P Deflect Maximums: 82/16/16 PSI
 B/S/P Deflect Percentage: 5.0%/10.0%/10.0%
-Hits: 2978762
-Hits per Square Inch: 2539
-B Soak: 5%
-Physical Modifier (base): 65
+Hits: 1268133
+Hits per Square Inch: 294
+B Soak: 7%
+Physical Modifier (base): 101
 Stamina Drain: 4 per round
 
 Category: l
 
-Name: Fine Hardened Steel Plate Culet
-Cost: 875
-Thickness: 0.07 inches
-Rigidity: rigid
-Covered Locations: R Hip, L Hip
-Area Covered: 147.6 square inches
-Weight: 0.47 pounds 
-Density: 0
-Quality: Fine
-B/S/P Deflect Maximums: 11760/2352/2352 PSI
-B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 347202
-Hits per Square Inch: 2352
-B Soak: 0%
-Physical Modifier (base): 0
-Stamina Drain: 1 per round
-
-Name: Below Average Iron Chainmail Chauses
-Cost: 139
-Thickness: 0.18 inches
+Name: Fine Copper Chainmail Culet
+Cost: 493
+Thickness: 0.22 inches
 Rigidity: flexible
-Covered Locations: R Thigh, L Thigh, R Knee, L Knee, R Shin, L Shin
-Area Covered: 2452.0 square inches
-Weight: 21.45 pounds 
+Covered Locations: R Hip, L Hip
+Area Covered: 249.6 square inches
+Weight: 3.06 pounds 
 Density: 1
-Quality: Below Average
-B/S/P Deflect Maximums: 95098/19020/19020 PSI
+Quality: Fine
+B/S/P Deflect Maximums: 47532/9506/9506 PSI
 B/S/P Deflect Percentage: 5.0%/10.0%/7.0%
-Hits: 63063064
-Hits per Square Inch: 25719
+Hits: 5480549
+Hits per Square Inch: 21954
 B Soak: 0%
-Physical Modifier (base): 103
+Physical Modifier (base): 15
 Stamina Drain: 5 per round
 
-Name: Very Poor Iron Plate Polyen
-Cost: 261
-Thickness: 0.14 inches
+Name: Leather  Chauses
+Cost: 5434
+Thickness: 0.45 inches
+Rigidity: flexible
+Covered Locations: R Thigh, L Thigh, R Knee, L Knee, R Shin, L Shin
+Area Covered: 1533.4 square inches
+Weight: 15.11 pounds 
+Density: 1
+Quality: Average
+B/S/P Deflect Maximums: 961/192/192 PSI
+B/S/P Deflect Percentage: 5.0%/10.0%/10.0%
+Hits: 3726195
+Hits per Square Inch: 2430
+B Soak: 5%
+Physical Modifier (base): 60
+Stamina Drain: 4 per round
+
+Name: Poor Iron Plate Polyen
+Cost: 187
+Thickness: 0.15 inches
 Rigidity: rigid
 Covered Locations: R Knee, L Knee
-Area Covered: 368.2 square inches
-Weight: 2.46 pounds 
+Area Covered: 374.9 square inches
+Weight: 2.48 pounds 
 Density: 1
-Quality: Very Poor
-B/S/P Deflect Maximums: 79900/15980/15980 PSI
+Quality: Poor
+B/S/P Deflect Maximums: 91722/18344/18344 PSI
 B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 7957136
-Hits per Square Inch: 21609
+Hits: 9300551
+Hits per Square Inch: 24806
 B Soak: 0%
 Physical Modifier (base): 2
 Stamina Drain: 1 per round
 
-Name: Below Average Adamantine Double-walled Plate Greave
-Cost: 939
-Thickness: 0.09 inches
+Name: Below Average Stygian Steel Plate Greave
+Cost: 53
+Thickness: 0.06 inches
 Rigidity: rigid
 Covered Locations: R Shin, L Shin
-Area Covered: 270.5 square inches
-Weight: 1.42 pounds 
-Density: 1
+Area Covered: 367.1 square inches
+Weight: 0.97 pounds 
+Density: 0
 Quality: Below Average
-B/S/P Deflect Maximums: 230185/46037/46037 PSI
-B/S/P Deflect Percentage: 22.0%/50.0%/104.0%
-Hits: 8133040
-Hits per Square Inch: 30071
+B/S/P Deflect Maximums: 8076/1615/1615 PSI
+B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
+Hits: 563038
+Hits per Square Inch: 1534
 B Soak: 0%
 Physical Modifier (base): 1
 Stamina Drain: 1 per round
 
-Name: Poor Bronze Plate Cuisse
-Cost: 305
-Thickness: 0.05 inches
+Name: Masterwork Mithril Plate Cuisse
+Cost: 21633
+Thickness: 0.13 inches
 Rigidity: rigid
 Covered Locations: R Thigh, L Thigh
-Area Covered: 1067.8 square inches
-Weight: 2.27 pounds 
-Density: 0
-Quality: Poor
-B/S/P Deflect Maximums: 11186/2237/2237 PSI
+Area Covered: 645.8 square inches
+Weight: 3.4 pounds 
+Density: 1
+Quality: Masterwork
+B/S/P Deflect Maximums: 114075/22815/22815 PSI
 B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 3747988
-Hits per Square Inch: 3510
+Hits: 11787198
+Hits per Square Inch: 18252
 B Soak: 0%
-Physical Modifier (base): 2
+Physical Modifier (base): 3
 Stamina Drain: 1 per round
 
-Name: Below Average Cloth  Breeches
-Cost: 133
-Thickness: 0.48 inches
+Name: Exceptional Cloth  Breeches
+Cost: 5967
+Thickness: 0.84 inches
 Rigidity: flexible
 Covered Locations: R Hip, L Hip, R Thigh, L Thigh, R Knee, L Knee, R Shin, L Shin
-Area Covered: 2050.5 square inches
-Weight: 8.27 pounds 
-Density: 0
-Quality: Below Average
-B/S/P Deflect Maximums: 174/35/35 PSI
+Area Covered: 3382.8 square inches
+Weight: 34.95 pounds 
+Density: 1
+Quality: Exceptional
+B/S/P Deflect Maximums: 532/106/106 PSI
 B/S/P Deflect Percentage: 5.0%/10.0%/10.0%
-Hits: 1275591
-Hits per Square Inch: 622
-B Soak: 11%
-Physical Modifier (base): 33
+Hits: 6444598
+Hits per Square Inch: 1905
+B Soak: 19%
+Physical Modifier (base): 140
 Stamina Drain: 4 per round
 
 Category: h
 
-Name: Poor Hardened Steel Ringmail Coif with Canvas bindings 
-Cost: 121
-Thickness: 0.2 inches
+Name: Masterwork Iron Ringmail Coif with Cloth bindings 
+Cost: 1206
+Thickness: 0.23 inches
 Rigidity: flexible
 Covered Locations: Scalp, Neck
-Area Covered: 337.0 square inches
-Weight: 0.63 pounds 
+Area Covered: 670.3 square inches
+Weight: 1.94 pounds 
 Density: 0
-Quality: Poor
-B/S/P Deflect Maximums: 7680/1536/1536 PSI
+Quality: Masterwork
+B/S/P Deflect Maximums: 17252/3450/3450 PSI
 B/S/P Deflect Percentage: 5.0%/10.0%/3.0%
-Hits: 517572
-Hits per Square Inch: 1536
+Hits: 3127667
+Hits per Square Inch: 4666
 B Soak: 0%
-Physical Modifier (base): 3
+Physical Modifier (base): 8
 Stamina Drain: 4 per round
 
-Name: Fine Hardened Iron Plate Helm
-Cost: 155
-Thickness: 0.08 inches
+Name: Poor Hardened Stygian Steel Double-walled Plate Helm
+Cost: 399
+Thickness: 0.05 inches
 Rigidity: rigid
 Covered Locations: Scalp
-Area Covered: 151.5 square inches
-Weight: 0.45 pounds 
+Area Covered: 279.5 square inches
+Weight: 0.62 pounds 
 Density: 0
-Quality: Fine
-B/S/P Deflect Maximums: 26646/5329/5329 PSI
-B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 985017
-Hits per Square Inch: 6502
-B Soak: 0%
-Physical Modifier (base): 0
-Stamina Drain: 1 per round
-
-Name: Poor Steel Double-walled Plate Closed Helm
-Cost: 587
-Thickness: 0.14 inches
-Rigidity: rigid
-Covered Locations: Scalp, Face
-Area Covered: 165.4 square inches
-Weight: 1.49 pounds 
-Density: 1
 Quality: Poor
-B/S/P Deflect Maximums: 59306/11861/11861 PSI
+B/S/P Deflect Maximums: 11215/2243/2243 PSI
 B/S/P Deflect Percentage: 22.0%/50.0%/104.0%
-Hits: 2078516
-Hits per Square Inch: 12569
+Hits: 540801
+Hits per Square Inch: 1935
 B Soak: 0%
 Physical Modifier (base): 1
 Stamina Drain: 1 per round
 
-Name: Below Average Adamantine Plate Bevor
-Cost: 131
-Thickness: 0.08 inches
+Name: Steel Plate Closed Helm
+Cost: 882
+Thickness: 0.07 inches
 Rigidity: rigid
-Covered Locations: Face, Neck
-Area Covered: 33.8 square inches
-Weight: 0.15 pounds 
+Covered Locations: Scalp, Face
+Area Covered: 255.5 square inches
+Weight: 0.55 pounds 
 Density: 0
-Quality: Below Average
-B/S/P Deflect Maximums: 121250/24250/24250 PSI
+Quality: Average
+B/S/P Deflect Maximums: 9884/1977/1977 PSI
 B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 534701
-Hits per Square Inch: 15840
+Hits: 535112
+Hits per Square Inch: 2095
 B Soak: 0%
 Physical Modifier (base): 0
 Stamina Drain: 1 per round
 
-Name: Very Poor Hardened Stygian Steel Double-walled Plate Gorget
-Cost: 875
-Thickness: 0.12 inches
+Name: Very Poor Stygian Steel Plate Bevor
+Cost: 333
+Thickness: 0.08 inches
+Rigidity: rigid
+Covered Locations: Face, Neck
+Area Covered: 173.7 square inches
+Weight: 0.58 pounds 
+Density: 0
+Quality: Very Poor
+B/S/P Deflect Maximums: 14358/2872/2872 PSI
+B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
+Hits: 473522
+Hits per Square Inch: 2726
+B Soak: 0%
+Physical Modifier (base): 0
+Stamina Drain: 1 per round
+
+Name: Below Average Steel Plate Gorget
+Cost: 62
+Thickness: 0.11 inches
 Rigidity: rigid
 Covered Locations: Neck
-Area Covered: 169.8 square inches
-Weight: 1.15 pounds 
-Density: 1
-Quality: Very Poor
-B/S/P Deflect Maximums: 64600/12920/12920 PSI
-B/S/P Deflect Percentage: 22.0%/50.0%/104.0%
-Hits: 1892951
-Hits per Square Inch: 11146
+Area Covered: 227.1 square inches
+Weight: 0.76 pounds 
+Density: 0
+Quality: Below Average
+B/S/P Deflect Maximums: 24408/4882/4882 PSI
+B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
+Hits: 1174851
+Hits per Square Inch: 5173
 B Soak: 0%
 Physical Modifier (base): 1
 Stamina Drain: 1 per round
 
 Category: a
 
-Name: Fine Hardened Iron Plate Couter
-Cost: 356
-Thickness: 0.06 inches
+Name: Hardened Stygian Steel Plate Couter
+Cost: 4905
+Thickness: 0.12 inches
 Rigidity: rigid
 Covered Locations: R Elbow, L Elbow
-Area Covered: 225.5 square inches
-Weight: 0.65 pounds 
-Density: 0
-Quality: Fine
-B/S/P Deflect Maximums: 14988/2998/2998 PSI
+Area Covered: 369.8 square inches
+Weight: 2.32 pounds 
+Density: 1
+Quality: Average
+B/S/P Deflect Maximums: 43067/8613/8613 PSI
 B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 824813
-Hits per Square Inch: 3657
+Hits: 2747442
+Hits per Square Inch: 7430
 B Soak: 0%
-Physical Modifier (base): 1
+Physical Modifier (base): 2
 Stamina Drain: 1 per round
 
-Name: Bronze Plate Brassart
-Cost: 225
-Thickness: 0.09 inches
+Name: Above Average Hardened Steel Plate Brassart
+Cost: 585
+Thickness: 0.06 inches
 Rigidity: rigid
 Covered Locations: Up R Arm, Up L Arm
-Area Covered: 203.2 square inches
-Weight: 0.83 pounds 
+Area Covered: 438.2 square inches
+Weight: 0.88 pounds 
 Density: 0
-Quality: Average
-B/S/P Deflect Maximums: 36243/7249/7249 PSI
+Quality: Above Average
+B/S/P Deflect Maximums: 8640/1728/1728 PSI
 B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 2311017
-Hits per Square Inch: 11372
+Hits: 757257
+Hits per Square Inch: 1728
 B Soak: 0%
 Physical Modifier (base): 1
 Stamina Drain: 1 per round
 
-Name: Poor Stygian Steel Plate Vambrace
-Cost: 47
-Thickness: 0.07 inches
+Name: Masterwork Mithril Plate Vambrace
+Cost: 1930
+Thickness: 0.08 inches
 Rigidity: rigid
 Covered Locations: R Forearm, L Forearm
-Area Covered: 140.1 square inches
-Weight: 0.55 pounds 
+Area Covered: 219.1 square inches
+Weight: 0.47 pounds 
 Density: 0
-Quality: Poor
-B/S/P Deflect Maximums: 10993/2199/2199 PSI
+Quality: Masterwork
+B/S/P Deflect Maximums: 43200/8640/8640 PSI
 B/S/P Deflect Percentage: 20.0%/50.0%/80.0%
-Hits: 292474
-Hits per Square Inch: 2087
+Hits: 1514513
+Hits per Square Inch: 6912
 B Soak: 0%
 Physical Modifier (base): 0
 Stamina Drain: 1 per round
 
 Category: o
 
-Name: Below Average Hardened Steel Brigandine Gauntlet with Cloth bindings 
-Cost: 757
-Thickness: 0.21 inches
+Name: Hardened Steel Brigandine Gauntlet with Canvas bindings 
+Cost: 2872
+Thickness: 0.12 inches
 Rigidity: semi
 Covered Locations: R Hand, L Hand
-Area Covered: 184.5 square inches
-Weight: 1.12 pounds 
-Density: 1
-Quality: Below Average
-B/S/P Deflect Maximums: 47760/9552/9552 PSI
+Area Covered: 111.7 square inches
+Weight: 0.51 pounds 
+Density: 0
+Quality: Average
+B/S/P Deflect Maximums: 15595/3119/3119 PSI
 B/S/P Deflect Percentage: 10.0%/35.0%/70.0%
-Hits: 1761966
-Hits per Square Inch: 9552
+Hits: 348265
+Hits per Square Inch: 3119
 B Soak: 0%
-Physical Modifier (base): 2
+Physical Modifier (base): 1
 Stamina Drain: 2 per round
 
-Name: Very Poor Hardened Iron Chainmail Sabaton
-Cost: 70
-Thickness: 0.16 inches
+Name: Mithril Chainmail Sabaton
+Cost: 10895
+Thickness: 0.24 inches
 Rigidity: flexible
 Covered Locations: R Foot, L Foot
-Area Covered: 254.8 square inches
-Weight: 1.92 pounds 
+Area Covered: 620.1 square inches
+Weight: 5.38 pounds 
 Density: 1
-Quality: Very Poor
-B/S/P Deflect Maximums: 76741/15348/15348 PSI
+Quality: Average
+B/S/P Deflect Maximums: 279936/55987/55987 PSI
 B/S/P Deflect Percentage: 5.0%/10.0%/7.0%
-Hits: 4771638
-Hits per Square Inch: 18725
+Hits: 27772107
+Hits per Square Inch: 44790
 B Soak: 0%
-Physical Modifier (base): 9
+Physical Modifier (base): 26
 Stamina Drain: 5 per round
 
-Name: Very Poor Leather  Boot
-Cost: 894
-Thickness: 0.45 inches
+Name: Below Average Leather  Boot
+Cost: 264
+Thickness: 0.49 inches
 Rigidity: flexible
 Covered Locations: R Foot, L Foot
-Area Covered: 1338.6 square inches
-Weight: 11.75 pounds 
-Density: 1
-Quality: Very Poor
-B/S/P Deflect Maximums: 961/192/192 PSI
+Area Covered: 1240.1 square inches
+Weight: 3.46 pounds 
+Density: 0
+Quality: Below Average
+B/S/P Deflect Maximums: 1139/228/228 PSI
 B/S/P Deflect Percentage: 5.0%/10.0%/10.0%
-Hits: 3252685
-Hits per Square Inch: 2430
-B Soak: 5%
-Physical Modifier (base): 47
+Hits: 3573004
+Hits per Square Inch: 2881
+B Soak: 6%
+Physical Modifier (base): 14
 Stamina Drain: 4 per round
 

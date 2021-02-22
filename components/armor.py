@@ -18,7 +18,6 @@ def gen_armor(armor_component, **kwargs):
 
     #Set vars for kwargs
     amount = kwargs.get('amount')
-    random = kwargs.get('random')
     main_material = kwargs.get('main_material')
     binder = kwargs.get('binder')
     construction = kwargs.get('construction')
@@ -33,12 +32,12 @@ def gen_armor(armor_component, **kwargs):
     quality = kwargs.get('quality')
     cost = kwargs.get('cost')
 
-    if amount == None:
+    if amount is None:
         amount = 1
-    if random == None:
-        random = True
-    if comparison == None:
+    if comparison is None:
         comparison = False
+    if cost is None:
+        cost = 1000000
 
     #List of components
     components = []
@@ -47,95 +46,54 @@ def gen_armor(armor_component, **kwargs):
     a = armor_component()
 
     if entity is not None:
-        ht_min = entity.fighter.height
-        ht_max = ht_min + a.ht_range[1] - a.ht_range[0]
-        sf_min  = entity.fighter.get_attribute('str') + entity.fighter.get_attribute('fat')
-        sf_max = sf_min + a.str_fat_range[1] - a.str_fat_range[0]
-        ht_range = (ht_min, ht_max)
-        str_fat_range = (sf_min,sf_max)
+        kwargs['ht_min'] = ht_min = entity.fighter.height
+        kwargs['ht_max'] = ht_max = ht_min + a.ht_range[1] - a.ht_range[0]
+        kwargs['sf_min'] = sf_min = entity.fighter.get_attribute('str') + entity.fighter.get_attribute('fat')
+        kwargs['sf_max'] = sf_max = sf_min + a.str_fat_range[1] - a.str_fat_range[0]
+        kwargs['ht_range'] = ht_range = (ht_min, ht_max)
+        kwargs['str_fat_range'] = str_fat_range = (sf_min,sf_max)
 
-        if thickness == None:
-            thickness = .1
-        if construction == None:
-            for construct in a.allowed_constructions:
-                c = construct()
-                if binder not in c.allowed_binder_materials or binder == None:
-                    binder = c.allowed_binder_materials[0]
-                if main_material not in c.allowed_main_materials:
-                    if construct != a.allowed_constructions[-1]:
-                        continue
-                    else:
-                        main_material = c.allowed_main_materials[0]                    
-                elif main_material == None:
-                    main_material = c.allowed_main_materials[0]
-                construction = construct
-        else:
-            c = construction()
-            if binder not in c.allowed_binder_materials or binder == None:
-                binder = c.allowed_binder_materials[0]
-            if main_material not in c.allowed_main_materials or main_material == None:
-                main_material = c.allowed_main_materials[0]
 
-        const_obj = construction(main_material = main_material, binder_material = binder)
-
-        c_kwargs = {'construction': const_obj, 'thickness': thickness, 'ht_range': ht_range, 'str_fat_range': str_fat_range, 'accent_amount': accent_amount, 'accent_material': accent_material, 'quality': quality}
-        del_keys = []
-
-        for key, value in c_kwargs.items():
-            if value == None:
-                del_keys.append(key)
-
-        for key in del_keys:
-            del c_kwargs[key]
-        
-        component = armor_component(**c_kwargs)
-        components.append(component)
-
-    
-    
     elif comparison:
-        if thickness == None:
+        if thickness is None:
             thickness = .1
         for construction in a.allowed_constructions:
             #Create dummy construction
             c = construction()
             for material in c.allowed_main_materials:
-                if binder == None:
+                if binder is None:
                     binder = c.allowed_binder_materials[0]
-                
+
                 const_obj = construction(main_material = material, binder_material = binder)
 
                 component = armor_component(thickness = thickness, construction = const_obj)
                 components.append(component)
 
-                
+                return components
 
-    elif random:
-        i=0
-        while i < amount:
+
+    for _ in range(amount):
+        c_kwargs = gen_random_armor(a, **kwargs)
+
+        component = armor_component(**c_kwargs)
+
+        while any(ele < 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]):
+            if any(ele > 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]) and component.cost < cost:
+                break
             c_kwargs = gen_random_armor(a, **kwargs)
-            
             component = armor_component(**c_kwargs)
 
-            while any(ele < 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]):
-                if any(ele > 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]) and component.cost < cost:
-                    break
-                c_kwargs = gen_random_armor(a, **kwargs)
-                component = armor_component(**c_kwargs)
-                
-            components.append(component)
-            #Reset vars
-            main_material = kwargs.get('main_material')
-            binder = kwargs.get('binder')
-            construction = kwargs.get('construction')
-            thickness = kwargs.get('thickness')
-            ht_range = kwargs.get('ht_range')
-            str_fat_range = kwargs.get('str_fat_range')
-            accent_material = kwargs.get('accent_material')
-            accent_amount = kwargs.get('accent_amount')
-            i += 1
+        components.append(component)
 
+        #Reset vars
+        main_material = kwargs.get('main_material')
+        binder = kwargs.get('binder')
+        construction = kwargs.get('construction')
+        thickness = kwargs.get('thickness')
+        accent_material = kwargs.get('accent_material')
+        accent_amount = kwargs.get('accent_amount')
     return components
+
 
 def gen_random_armor(a, **kwargs):
     main_material = kwargs.get('main_material')
@@ -300,13 +258,16 @@ def armor_classifier(armor_component) -> str:
             return 'o'
 
 #Armor sorter for store
-def component_sort() -> dict:
+def component_sort(entity) -> dict:
     components = itersubclasses(Armor_Component)
     categories = {'t':[],'l':[],'h':[],'a':[],'o':[]}
 
     for comp in components:
         #Dummy component
-        c = gen_armor(comp)
+        if entity is not None:
+            c = gen_armor(comp, entity = entity)
+        else:
+            c = gen_armor(comp)
         cat = armor_classifier(c[0])
         categories[cat].append(c[0])
 
