@@ -71,9 +71,6 @@ Future Features: Too numerous to list. See issues for a reasonable idea of what 
 Current Problems:
 
 - Tuning problems, especially with unarmed and bludgeoning attacks.
-- No win or lose conditions, mostly a tech demo
-- Many central features statically defined or unimplemented, such as profession, ethnicity, and armor. 
-- Lack of data to the player means that the AI has a subtle advantage on hit chances. AI knows what combo has the highest perceived hit/damage chance automatically, but player must cycle through all possibilities to find this. 
-- No UI for game setup; must manually modify options.py to change player and enemy loadout
 - No help. Key combinations are contained (and modifiable) in options.py
+- Currently in debugging state on character creation and unplayable (need to create a strable branch)
 
