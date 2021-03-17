@@ -11,7 +11,7 @@ quality_dict = {'Junk': .5, 'Very Poor': .3, 'Poor': .2, 'Below Average': .1, 'A
 #Generator Function
 def gen_armor(armor_component, **kwargs):
     #Modes: 
-    #1. Entity: Given an entity and (optional) kwargs, generate armor components to fit entity
+    #1. Entity: Given an entity and (optional) kwargs, generate random armor components to fit entity
     #2. Comparision: Set comparison kwarg to True, and given (optional) kwargs, will generate identical armors with every combination of main_material and contruction for comparison
     #3. Random: If the other modes are not set, generate x completely random armors. Will use kwargs if given to fix certain attributes.
 

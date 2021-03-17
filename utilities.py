@@ -317,3 +317,35 @@ def name_location(location) -> int or str:
 
         return title
     
+def armor_log (entities, components):
+    #Purpose: Write a log file in the project directory of random armors for debugging purposes
+    #Requires following line to create components outside of function prior to calling: components = component_sort(entities[0])
+
+    with open('armor_gen.txt','w') as armor_log:
+        for cat in components:
+            armor_log.write('Category: ' + cat + '\n')
+            armor_log.write('\n')
+            for a in components.get(cat):
+                locs = ''
+                for i, l in enumerate(a.covered_locs):
+                    if i: 
+                        locs += ', '
+                    locs += name_location(l)
+
+                armor_log.write('Name: ' + a.name + '\n')
+                armor_log.write('Cost: ' + str(round(a.cost)) + '\n') 
+                armor_log.write('Thickness: ' + str(round(a.thickness,2)) + ' inches'+ '\n')
+                armor_log.write('Rigidity: ' + a.rigidity + '\n')
+                armor_log.write('Covered Locations: ' + locs + '\n')
+                armor_log.write('Area Covered: ' + str(round(a.main_area,1)) + ' square inches\n')
+                armor_log.write('Weight: ' + str(round(a.weight,2)) + ' pounds \n')
+                armor_log.write('Density: ' + str(round(a.density)) + '\n')
+                armor_log.write('Quality: ' + a.quality + '\n')
+                armor_log.write('B/S/P Deflect Maximums: ' + str(round(a.b_deflect_max)) + '/' + str(round(a.s_deflect_max)) + '/' + str(round(a.p_deflect_max)) + ' PSI' + '\n')
+                armor_log.write('B/S/P Deflect Percentage: ' + str(round(a.b_deflect*100,2)) + '%/' + str(round(a.s_deflect*100,2)) + '%/' + str(round(a.p_deflect*100,2)) + '%' + '\n')
+                armor_log.write('Hits: ' + str(round(a.hits)) + '\n')
+                armor_log.write('Hits per Square Inch: ' + str(round(a.hits_sq_in)) + '\n')
+                armor_log.write('B Soak: ' + str(round(a.b_soak*100)) + '%' + '\n')
+                armor_log.write('Physical Modifier (base): ' + str(round(a.physical_mod)) + '\n')
+                armor_log.write('Stamina Drain: ' + str(round(a.stam_drain)) + ' per round' + '\n')
+                armor_log.write('\n')
