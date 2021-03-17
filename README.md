@@ -72,5 +72,5 @@ Current Problems:
 
 - Tuning problems, especially with unarmed and bludgeoning attacks.
 - No help. Key combinations are contained (and modifiable) in options.py
-- Currently in debugging state on character creation and unplayable (need to create a strable branch)
+- Currently in debugging state on character creation and unplayable (need to create a stable branch)
 
