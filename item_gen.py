@@ -2,6 +2,7 @@ from random import choice, randrange, uniform
 from numpy.random import normal
 from math import sqrt, pi
 from components.weapon import Weapon, quality_dict
+from components.armor import Armor_Component, armor_classifier
 from utilities import roll_dice, itersubclasses, inch_conv
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
@@ -154,3 +155,16 @@ def calc_weapon_stats(entity, weapon) -> dict:
 
     return combat_dict
 
+
+def armor_component_filter(rigidity,classification) -> set:
+    #Helper function for armor store. Generates armors that meet a rigidity and classification (torso, head, legs, etc) filter
+    valid_comps = set()
+
+    components = itersubclasses(Armor_Component)
+    for component in components:
+        c = component()
+        if c.rigidity == rigidity:
+            if classification == armor_classifier(c):
+                valid_comps.add(component)
+
+    return valid_comps
