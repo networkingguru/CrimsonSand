@@ -18,8 +18,8 @@ entities = create_entity_list(entity_list)
 fighters = options.fighters
 add_fighters(entities, fighters)
 
-#components = component_sort(entities[0])
-#armor_log(entities, components)
+components = component_sort(entities[0])
+armor_log(entities, components)
 
 
 

@@ -339,7 +339,7 @@ def armor_log (entities, components):
                 armor_log.write('Covered Locations: ' + locs + '\n')
                 armor_log.write('Area Covered: ' + str(round(a.main_area,1)) + ' square inches\n')
                 armor_log.write('Weight: ' + str(round(a.weight,2)) + ' pounds \n')
-                armor_log.write('Density: ' + str(round(a.density)) + '\n')
+                armor_log.write('Density: ' + str(round(a.density,2)) + '\n')
                 armor_log.write('Quality: ' + a.quality + '\n')
                 armor_log.write('B/S/P Deflect Maximums: ' + str(round(a.b_deflect_max)) + '/' + str(round(a.s_deflect_max)) + '/' + str(round(a.p_deflect_max)) + ' PSI' + '\n')
                 armor_log.write('B/S/P Deflect Percentage: ' + str(round(a.b_deflect*100,2)) + '%/' + str(round(a.s_deflect*100,2)) + '%/' + str(round(a.p_deflect*100,2)) + '%' + '\n')
