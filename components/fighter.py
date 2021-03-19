@@ -106,7 +106,7 @@ class Fighter:
         self.lm = 0 #Learning modifier
         
         #Inventory
-        self.money = 1000
+        self.money = 10000
         self.weapons = []
         self.armor = []
 

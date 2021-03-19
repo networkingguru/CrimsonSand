@@ -165,7 +165,11 @@ def armor_component_filter(rigidity,classification,main_t=False,first_layer=Fals
         c = component()
         for cn in c.allowed_constructions:
             const = cn()
-            if const.rigidity == rigidity and classification == armor_classifier(c):
+            if classification is 'h': #Allow rigid helms in flex and semi suits
+                if first_layer and cn.__name__ != 'Padded':
+                    continue
+                valid_comps[component]=cn
+            elif const.rigidity == rigidity and classification == armor_classifier(c):
                 if main_t and not set([3,4,5,6,9,10]).issubset(set(c.covered_locs)): #If main_t set, filter out t armors that only cover small areas
                    continue 
                 if first_layer and cn.__name__ != 'Padded':
@@ -183,12 +187,15 @@ def gen_filtered_armor(entity,rigidity,classification,cost,main_t=False,first_la
         components.append(key)
         constructions.append(value)
 
-    while len(armors)<20:
+    i=0
+    while len(armors)<20 and len(components) > 0: 
+        if i>100: break
         roll = roll_dice(1,len(components))
         c = components[roll-1]
         construction = constructions[roll-1]
         armor = gen_armor(c,construction=construction,entity=entity,cost=cost)[0]
-        armors.append(armor)
+        if armor is not None: armors.append(armor)
+        i += 1
 
     return armors
 
@@ -199,6 +206,9 @@ def rank_armors(entity,armors,cost,favor_coverage=False) -> object:
     ha_skill = entity.fighter.get_attribute('h_armor')
     mod = 0
     
+    if len(armors) == 0:
+        return None
+
     for a in armors:
         points = 0
         if a.density < .5:
@@ -221,3 +231,75 @@ def rank_armors(entity,armors,cost,favor_coverage=False) -> object:
     best_armor = armor_list[0]    
 
     return best_armor
+
+def build_armor_set(entity,rigidity) -> list:
+    #Purchase the best armor possible until money is expended
+    #Money distribution across body parts: T - 50%, H - 25%, A - 10%, L - 10%, O - 5%
+    #Money distribution across layers: L1: 25%, L2+: 75%
+    #For clarity, Layer 1 is padded for blunt absorption, L2 is the main armor
+
+    armor_list = []
+
+    money = entity.fighter.money
+    t_l2_money = money*.375
+    t_l1_money = t_l2_money/4
+    h_l2_money = money*.25*.75
+    h_l1_money = h_l2_money/4
+    a_l2_money = money*.1*.75
+    a_l1_money = a_l2_money/4
+    l_l2_money = money*.1*.75
+    l_l1_money = l_l2_money/4
+    o_l2_money = money*.05
+
+    #Begin by buying L2 armor. If L2 is unaffordable, skip L1 in that loc and save player $
+    
+    #Select primary torso armor
+    armors = gen_filtered_armor(entity,rigidity,'t',t_l2_money,True,False)
+    armor = rank_armors(entity,armors,t_l2_money,True)
+    if armor is not None: armor_list.append(armor)
+
+    #Select L1 torso armor
+    if armor is not None:
+        armors = gen_filtered_armor(entity,'flexible','t',t_l1_money,True,True)
+        armor = rank_armors(entity,armors,t_l1_money,True)
+        armor_list.append(armor)
+
+    #Select primary head armor
+    armors = gen_filtered_armor(entity,rigidity,'h',h_l2_money,False,False)
+    armor = rank_armors(entity,armors,h_l2_money,True)
+    if armor is not None: armor_list.append(armor)
+
+    #Select L1 head armor
+    if armor is not None:
+        armors = gen_filtered_armor(entity,'flexible','h',h_l1_money,False,True)
+        armor = rank_armors(entity,armors,h_l1_money,True)
+        armor_list.append(armor)
+
+    #Select primary arm armor
+    armors = gen_filtered_armor(entity,rigidity,'a',a_l2_money,False,False)
+    armor = rank_armors(entity,armors,a_l2_money,True)
+    if armor is not None: armor_list.append(armor)
+
+    #Select L1 arm armor
+    if armor is not None:
+        armors = gen_filtered_armor(entity,'flexible','a',a_l1_money,False,True)
+        armor = rank_armors(entity,armors,a_l1_money,True)
+        armor_list.append(armor)
+
+    #Select primary leg armor
+    armors = gen_filtered_armor(entity,rigidity,'l',l_l2_money,False,False)
+    armor = rank_armors(entity,armors,l_l2_money,True)
+    if armor is not None: armor_list.append(armor)
+
+    #Select L1 leg armor
+    if armor is not None:
+        armors = gen_filtered_armor(entity,'flexible','l',l_l1_money,False,True)
+        armor = rank_armors(entity,armors,l_l1_money,True)
+        armor_list.append(armor)
+
+    #Select primary other armor
+    armors = gen_filtered_armor(entity,rigidity,'o',o_l2_money,False,False)
+    armor = rank_armors(entity,armors,o_l2_money,True)
+    if armor is not None: armor_list.append(armor)
+
+    return armor_list

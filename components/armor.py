@@ -87,7 +87,12 @@ def gen_armor(armor_component, **kwargs):
                 c_kwargs = gen_random_armor(a, **kwargs)
                 component = armor_component(**c_kwargs)
         else: 
+            i=0
             while component.cost > cost:
+                if i > 100: 
+                    component = None
+                    break
+                i += 1
                 c_kwargs = gen_random_armor(a, **kwargs)
                 component = armor_component(**c_kwargs)
 
