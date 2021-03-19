@@ -86,6 +86,10 @@ def gen_armor(armor_component, **kwargs):
                     break
                 c_kwargs = gen_random_armor(a, **kwargs)
                 component = armor_component(**c_kwargs)
+        else: 
+            while component.cost > cost:
+                c_kwargs = gen_random_armor(a, **kwargs)
+                component = armor_component(**c_kwargs)
 
         components.append(component)
 
@@ -508,7 +512,7 @@ class Armor_Component:
         self.t_deflect *= self.construction.t_resist
         
         #Hits calc is attempting to model shear stress
-        self.hits = (self.construction.main_material.hardness * 15000) * self.thickness * self.construction.density if self.construction.density > .2 else .2 * self.construction.coverage * construction_vol * self.construction.main_material.toughness * ((self.construction.main_material.elasticity)/2) 
+        self.hits = (self.construction.main_material.hardness * 15000) * self.thickness * self.construction.density if self.construction.density > .04 else 10 * self.construction.coverage * construction_vol * self.construction.main_material.toughness * ((self.construction.main_material.elasticity)/2) 
         self.hits_sq_in = self.hits / self.main_area
 
         deflect_max = (sqrt(self.construction.main_material.hardness))/8 * self.hits_sq_in
@@ -589,16 +593,16 @@ class Padded(Armor_Construction):
     def __init__(self, **kwargs):
         Armor_Construction.__init__(self)
         self.base_name = ''
-        self.allowed_binder_materials = [m_leather] #List of allowed materials for binder components
-        self.binder_material = m_leather #Material that holds the armor together
+        self.allowed_binder_materials = [m_cloth,m_canvas,m_leather] #List of allowed materials for binder components
+        self.binder_material = m_cloth #Material that holds the armor together
         self.binder_amount = 0 #Scalar. 1 = 1:1 ratio of binder to main volume
-        self.min_thickness = .05
-        self.max_thickness = 1
+        self.min_thickness = .5
+        self.max_thickness = 2
         self.allowed_main_materials = [m_cloth, m_canvas] # List of materials applicable for the main surface. Young's modulus prevents copper and bronze swords longer than 24", for example
         self.main_material = m_cloth #Primary material
         self.rigidity = 'flexible' #rigid, semi, or flexible
-        self.density = .05 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
-        self.coverage = .5 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
+        self.density = .0001 #Scalar to represent material density. For example, steel chainmail is less dense than steel plate
+        self.coverage = .2 #Scalar to represent how much area is coverd by the main material. Plate would be 1, ring would be very low
         self.balance = 1 #Scalar to represent impact on overall balance. Used to apply negative modifiers for moving an attacking due to poor weight distribution.
         self.b_resist = 1 #Scalar to modify damage resistance
         self.s_resist = 1

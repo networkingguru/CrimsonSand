@@ -156,7 +156,7 @@ def calc_weapon_stats(entity, weapon) -> dict:
     return combat_dict
 
 
-def armor_component_filter(rigidity,classification) -> list:
+def armor_component_filter(rigidity,classification,main_t=False,first_layer=False) -> list:
     #Helper function for armor store. Generates armors that meet a rigidity and classification (torso, head, legs, etc) filter
     valid_comps = {}
 
@@ -166,15 +166,16 @@ def armor_component_filter(rigidity,classification) -> list:
         for cn in c.allowed_constructions:
             const = cn()
             if const.rigidity == rigidity and classification == armor_classifier(c):
-                if classification == 't' and not set([3,4,5,6,9,10]).issubset(set(c.covered_locs)):
+                if main_t and not set([3,4,5,6,9,10]).issubset(set(c.covered_locs)): #If main_t set, filter out t armors that only cover small areas
                    continue 
-                
+                if first_layer and cn.__name__ != 'Padded':
+                    continue
                 valid_comps[component]=cn
 
     return valid_comps
 
-def gen_filtered_armor(entity,rigidity,classification,cost) -> object:
-    valid_comps = armor_component_filter(rigidity,classification)
+def gen_filtered_armor(entity,rigidity,classification,cost,main_t=False,first_layer=False) -> object:
+    valid_comps = armor_component_filter(rigidity,classification,main_t,first_layer)
     armors = []
     components = []
     constructions = []
