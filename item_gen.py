@@ -2,7 +2,7 @@ from random import choice, randrange, uniform
 from numpy.random import normal
 from math import sqrt, pi
 from components.weapon import Weapon, quality_dict
-from components.armor import Armor_Component, armor_classifier
+from components.armor import Armor_Component, armor_classifier, gen_armor
 from utilities import roll_dice, itersubclasses, inch_conv
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
@@ -112,7 +112,7 @@ def calc_weapon_stats(entity, weapon) -> dict:
 
     #Damage calc = ((((added_mass + fist mass) * velocity) / main_area) * mech_adv) * sharpness or hardness or pointedness
 
-    if attack.damage_type is 'b':
+    if attack.damage_type == 'b':
         eff_area =  attack.main_area * (velocity/40) #scale main area size based on velocity; hack to represent deformation
     else:
         eff_area = attack.main_area 
@@ -156,15 +156,37 @@ def calc_weapon_stats(entity, weapon) -> dict:
     return combat_dict
 
 
-def armor_component_filter(rigidity,classification) -> set:
+def armor_component_filter(rigidity,classification) -> list:
     #Helper function for armor store. Generates armors that meet a rigidity and classification (torso, head, legs, etc) filter
-    valid_comps = set()
+    valid_comps = {}
 
     components = itersubclasses(Armor_Component)
     for component in components:
         c = component()
-        if c.rigidity == rigidity:
-            if classification == armor_classifier(c):
-                valid_comps.add(component)
+        for cn in c.allowed_constructions:
+            const = cn()
+            if const.rigidity == rigidity and classification == armor_classifier(c):
+                if classification == 't' and not set([3,4,5,6,9,10]).issubset(set(c.covered_locs)):
+                   continue 
+                
+                valid_comps[component]=cn
 
     return valid_comps
+
+def gen_filtered_armor(entity,rigidity,classification,cost) -> object:
+    valid_comps = armor_component_filter(rigidity,classification)
+    armors = []
+    components = []
+    constructions = []
+    for key, value in valid_comps.items():
+        components.append(key)
+        constructions.append(value)
+
+    while len(armors)<20:
+        roll = roll_dice(1,len(components))
+        c = components[roll-1]
+        construction = constructions[roll-1]
+        armor = gen_armor(c,construction=construction,entity=entity,cost=cost)[0]
+        armors.append(armor)
+
+    return armors

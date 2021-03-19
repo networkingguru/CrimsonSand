@@ -11,21 +11,17 @@ import options
 from components.professions import DeathKnight
 from components.circumstances import Circumstance
 from components.upbringing import get_valid_upbringings
-from item_gen import weapon_generator, calc_weapon_stats, armor_component_filter
+from item_gen import weapon_generator, calc_weapon_stats, armor_component_filter, gen_filtered_armor
 
 entity_list = options.entities
 entities = create_entity_list(entity_list)
 fighters = options.fighters
 add_fighters(entities, fighters)
 
-#components = component_sort(entities[0])
-#armor_log(entities, components)
+components = component_sort(entities[0])
+armor_log(entities, components)
 
-comps = armor_component_filter('flexible','t')
-armors = []
-for c in comps:
-    armor = c()
-    armors.append(armor)
+#armors = gen_filtered_armor(entities[0],'flexible','t',500)
 
 
 

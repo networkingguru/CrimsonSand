@@ -31,6 +31,7 @@ def gen_armor(armor_component, **kwargs):
     entity = kwargs.get('entity')
     quality = kwargs.get('quality')
     cost = kwargs.get('cost')
+    make_good = kwargs.get('make_good')
 
     if amount is None:
         amount = 1
@@ -38,6 +39,8 @@ def gen_armor(armor_component, **kwargs):
         comparison = False
     if cost is None:
         cost = 1000000
+    if make_good is None:
+        make_good = False
 
     #List of components
     components = []
@@ -77,11 +80,12 @@ def gen_armor(armor_component, **kwargs):
 
         component = armor_component(**c_kwargs)
 
-        while any(ele < 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]):
-            if any(ele > 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]) and component.cost < cost:
-                break
-            c_kwargs = gen_random_armor(a, **kwargs)
-            component = armor_component(**c_kwargs)
+        if make_good: #Used for cutting through some of the randomness and guaranteeing more or less OK armors
+            while any(ele < 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]):
+                if any(ele > 1000 for ele in [component.b_deflect,component.s_deflect_max,component.p_deflect_max,component.b_soak*20000]) and component.cost < cost:
+                    break
+                c_kwargs = gen_random_armor(a, **kwargs)
+                component = armor_component(**c_kwargs)
 
         components.append(component)
 
@@ -265,9 +269,9 @@ def component_sort(entity) -> dict:
     for comp in components:
         #Dummy component
         if entity is not None:
-            c = gen_armor(comp, entity = entity)
+            c = gen_armor(comp, entity = entity, make_good=True)
         else:
-            c = gen_armor(comp)
+            c = gen_armor(comp, make_good=True)
         cat = armor_classifier(c[0])
         categories[cat].append(c[0])
 
@@ -315,9 +319,9 @@ def apply_armor_mods(entity):
 
     for ao in armor_objects:
         total_stam += ao.stam_drain
-        if ao.density < .1:
+        if ao.density < .5:
             l_mod += ao.physical_mod
-        elif ao.density <= .2:
+        elif ao.density <= 1:
             m_mod += ao.physical_mod
         else:
             h_mod += ao.physical_mod
@@ -359,7 +363,7 @@ class Armor_Construction:
 
     def set_name(self):
         if len(self.allowed_binder_materials) > 1:
-            self.binder_name = ' with ' + self.binder_material.name + ' bindings '
+            self.binder_name = 'with ' + self.binder_material.name + ' bindings '
         self.name = self.main_material.name + ' ' + self.base_name
 
 class Armor_Component:
@@ -504,7 +508,7 @@ class Armor_Component:
         self.t_deflect *= self.construction.t_resist
         
         #Hits calc is attempting to model shear stress
-        self.hits = (self.construction.main_material.hardness * 15000) * self.thickness * self.construction.density * self.construction.coverage * construction_vol * self.construction.main_material.toughness * ((self.construction.main_material.elasticity)/2) 
+        self.hits = (self.construction.main_material.hardness * 15000) * self.thickness * self.construction.density if self.construction.density > .2 else .2 * self.construction.coverage * construction_vol * self.construction.main_material.toughness * ((self.construction.main_material.elasticity)/2) 
         self.hits_sq_in = self.hits / self.main_area
 
         deflect_max = (sqrt(self.construction.main_material.hardness))/8 * self.hits_sq_in
@@ -514,7 +518,7 @@ class Armor_Component:
         self.p_deflect_max = deflect_max
         self.t_deflect_max = deflect_max * 25
 
-        self.b_soak = round(.045/self.construction.main_material.hardness * self.thickness, 3)
+        self.b_soak = round(.1/self.construction.main_material.hardness * self.thickness, 3)
 
         qual = ''
 
