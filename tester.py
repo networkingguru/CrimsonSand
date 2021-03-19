@@ -11,7 +11,7 @@ import options
 from components.professions import DeathKnight
 from components.circumstances import Circumstance
 from components.upbringing import get_valid_upbringings
-from item_gen import weapon_generator, calc_weapon_stats, armor_component_filter, gen_filtered_armor
+from item_gen import weapon_generator, calc_weapon_stats, armor_component_filter, gen_filtered_armor, rank_armors
 
 entity_list = options.entities
 entities = create_entity_list(entity_list)
@@ -22,6 +22,7 @@ add_fighters(entities, fighters)
 #armor_log(entities, components)
 
 armors = gen_filtered_armor(entities[0],'flexible','t',500,True,True)
+top_armor = rank_armors(entities[0],armors,500,True)
 
 
 

@@ -42,7 +42,7 @@ def inch_conv(inches, mode = 0) -> str or int:
         feet = int(inches / 12)
         return feet
 
-def save_roll_un(score, modifiers) -> list:
+def save_roll_un(score, modifiers) -> list: #Uncontested save
     roll = roll_dice(1, 100)
     result = ['',0]
     if roll == 1: result = ['cs', (score + modifiers) - roll]
@@ -52,7 +52,7 @@ def save_roll_un(score, modifiers) -> list:
         else: result = ['f', 0]
     return result
 
-def save_roll_con(p1_score, p1_mods, p2_roll, p2_final_chance) -> (str, int, int):
+def save_roll_con(p1_score, p1_mods, p2_roll, p2_final_chance) -> (str, int, int): #Contested save
     result = 'f'
     p2_margin = p2_final_chance - p2_roll
     p1_result, p1_margin = save_roll_un(p1_score, p1_mods)

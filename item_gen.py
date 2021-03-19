@@ -3,7 +3,7 @@ from numpy.random import normal
 from math import sqrt, pi
 from components.weapon import Weapon, quality_dict
 from components.armor import Armor_Component, armor_classifier, gen_armor
-from utilities import roll_dice, itersubclasses, inch_conv
+from utilities import roll_dice, itersubclasses, inch_conv, clamp
 from components.material import (m_steel, m_leather, m_wood, m_tissue, m_bone, m_adam, m_bleather, m_bronze, m_canvas, m_cloth, m_copper, m_gold, m_granite, m_hgold,
     m_hsteel, m_ssteel, m_hssteel, m_iron, m_hiron, m_mithril, m_silver, m_hide, m_xthide)
 
@@ -174,7 +174,7 @@ def armor_component_filter(rigidity,classification,main_t=False,first_layer=Fals
 
     return valid_comps
 
-def gen_filtered_armor(entity,rigidity,classification,cost,main_t=False,first_layer=False) -> object:
+def gen_filtered_armor(entity,rigidity,classification,cost,main_t=False,first_layer=False) -> list:
     valid_comps = armor_component_filter(rigidity,classification,main_t,first_layer)
     armors = []
     components = []
@@ -191,3 +191,33 @@ def gen_filtered_armor(entity,rigidity,classification,cost,main_t=False,first_la
         armors.append(armor)
 
     return armors
+
+def rank_armors(entity,armors,cost,favor_coverage=False) -> object:
+    a_dict = {}
+    la_skill = entity.fighter.get_attribute('l_armor')
+    ma_skill = entity.fighter.get_attribute('m_armor')
+    ha_skill = entity.fighter.get_attribute('h_armor')
+    mod = 0
+    
+    for a in armors:
+        points = 0
+        if a.density < .5:
+            mod += a.physical_mod - la_skill
+        elif a.density <= 1:
+            a.physical_mod - ma_skill
+        else:
+            a.physical_mod - ha_skill
+
+
+        points += (a.b_deflect_max * a.b_deflect) + (a.p_deflect_max * a.p_deflect) + (a.s_deflect_max * a.s_deflect)
+        points += a.b_soak * 100000
+        points -= mod*30
+        if favor_coverage and points > 0: points *= len(a.covered_locs)/8
+
+        a_dict[a] = points
+
+    sorted_armor = dict(sorted(a_dict.items(), key = lambda kv:kv[1],reverse=True))
+    armor_list = list(sorted_armor.keys())
+    best_armor = armor_list[0]    
+
+    return best_armor
