@@ -303,8 +303,8 @@ def determine_validity(armor_component, entity):
 
         thickness = sum(layer.thickness for layer in entity.loc_armor[loc])
 
-        if thickness + armor_component.thickness > 1:
-            error_message += 'Cannot apply ' + armor_component.name + '. Total armor thickness at ' + entity.fighter.name_location(loc) + ' exceeds 1 inch. '
+        if thickness + armor_component.thickness > 4:
+            error_message += 'Cannot apply ' + armor_component.name + '. Total armor thickness at ' + entity.fighter.name_location(loc) + ' exceeds 4 inches. '
 
         if error_message != '': break
 

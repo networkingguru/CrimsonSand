@@ -26,5 +26,4 @@ armors = build_armor_set(entities[0],'flexible')
 
 
 
-
 print('done')

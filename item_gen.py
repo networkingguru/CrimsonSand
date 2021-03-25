@@ -156,7 +156,7 @@ def calc_weapon_stats(entity, weapon) -> dict:
     return combat_dict
 
 
-def armor_component_filter(rigidity,classification,main_t=False,first_layer=False) -> list:
+def armor_component_filter(rigidity,classification,main_t=False,first_layer=False,loc=None) -> list:
     #Helper function for armor store. Generates armors that meet a rigidity and classification (torso, head, legs, etc) filter
     valid_comps = {}
 
@@ -165,7 +165,11 @@ def armor_component_filter(rigidity,classification,main_t=False,first_layer=Fals
         c = component()
         for cn in c.allowed_constructions:
             const = cn()
-            if classification is 'h': #Allow rigid helms in flex and semi suits
+            if loc is not None:
+                if loc not in c.covered_locs:
+                    continue
+                valid_comps[component]=cn
+            elif classification == 'h' and armor_classifier(c) == 'h': #Allow rigid helms in flex and semi suits
                 if first_layer and cn.__name__ != 'Padded':
                     continue
                 valid_comps[component]=cn
@@ -245,11 +249,9 @@ def build_armor_set(entity,rigidity) -> list:
     t_l1_money = t_l2_money/4
     h_l2_money = money*.25*.75
     h_l1_money = h_l2_money/4
-    a_l2_money = money*.1*.75
-    a_l1_money = a_l2_money/4
     l_l2_money = money*.1*.75
     l_l1_money = l_l2_money/4
-    o_l2_money = money*.05
+
 
     #Begin by buying L2 armor. If L2 is unaffordable, skip L1 in that loc and save player $
     
@@ -275,17 +277,6 @@ def build_armor_set(entity,rigidity) -> list:
         armor = rank_armors(entity,armors,h_l1_money,True)
         armor_list.append(armor)
 
-    #Select primary arm armor
-    armors = gen_filtered_armor(entity,rigidity,'a',a_l2_money,False,False)
-    armor = rank_armors(entity,armors,a_l2_money,True)
-    if armor is not None: armor_list.append(armor)
-
-    #Select L1 arm armor
-    if armor is not None:
-        armors = gen_filtered_armor(entity,'flexible','a',a_l1_money,False,True)
-        armor = rank_armors(entity,armors,a_l1_money,True)
-        armor_list.append(armor)
-
     #Select primary leg armor
     armors = gen_filtered_armor(entity,rigidity,'l',l_l2_money,False,False)
     armor = rank_armors(entity,armors,l_l2_money,True)
@@ -297,9 +288,83 @@ def build_armor_set(entity,rigidity) -> list:
         armor = rank_armors(entity,armors,l_l1_money,True)
         armor_list.append(armor)
 
-    #Select primary other armor
-    armors = gen_filtered_armor(entity,rigidity,'o',o_l2_money,False,False)
-    armor = rank_armors(entity,armors,o_l2_money,True)
-    if armor is not None: armor_list.append(armor)
+    #Select other armor
+    armor_list = gen_other_armor(entity,armor_list,rigidity)
 
     return armor_list
+
+def determine_uncovered_locs(armor_list) -> list:
+    locs = set(range(29))
+
+    for a in armor_list:
+       locs.difference_update(set(a.covered_locs))
+
+    locs_list = list(locs)
+
+    return locs_list
+
+def gen_other_armor (entity, armor_list, rigidity) -> list:
+    #Determine uncovered locs
+    uncovered_locs = determine_uncovered_locs(armor_list)
+    i = 0
+    money = entity.fighter.money
+
+    #Loop to determine money left
+    for a in armor_list:
+        money -= a.cost
+
+    while len(uncovered_locs) > 0 and money > 0:
+        if i > 20: break
+        i+=1
+        #First, look for hand armor, skip if not found after 5 tries
+        if 19 in uncovered_locs and i < 5:
+            armors = gen_loc_armor(entity,19,money/2,rigidity)
+            
+        #Then foot armor, skip if not found after 5 tries
+        elif 27 in uncovered_locs and i < 10:
+            armors = gen_loc_armor(entity,27,money/2,rigidity)
+
+        #Then arm armor, skip if not found after 5 tries
+        elif set([7,11,15]).issubset(set(uncovered_locs)) and i < 10:
+            if 7 in uncovered_locs:
+                armors = gen_loc_armor(entity,7,money,rigidity)
+            elif 15 in uncovered_locs:
+                armors = gen_loc_armor(entity,15,money,rigidity)
+            else:
+                armors = gen_loc_armor(entity,11,money,rigidity)
+
+        #Finally, go from first to last in list
+        else:
+            loc = uncovered_locs[0]
+            armors = gen_loc_armor(entity,loc,money,rigidity)
+
+        armor = rank_armors(entity,armors,money,True)
+        
+        if armor is not None:
+            money -= armor.cost
+            armor_list.append(armor)
+            for l in armor.covered_locs:
+                if l in uncovered_locs: uncovered_locs.remove(l)
+
+    return armor_list
+
+def gen_loc_armor (entity,loc,cost,rigidity) -> list:
+    valid_comps = armor_component_filter(rigidity,None,loc=loc)
+    armors = []
+    components = []
+    constructions = []
+    for key, value in valid_comps.items():
+        components.append(key)
+        constructions.append(value)
+
+    i=0
+    while len(armors)<20 and len(components) > 0: 
+        if i>100: break
+        roll = roll_dice(1,len(components))
+        c = components[roll-1]
+        construction = constructions[roll-1]
+        armor = gen_armor(c,construction=construction,entity=entity,cost=cost)[0]
+        if armor is not None: armors.append(armor)
+        i += 1
+
+    return armors
