@@ -21,7 +21,13 @@ add_fighters(entities, fighters)
 #components = component_sort(entities[0])
 #armor_log(entities, components)
 
-armors = build_armor_set(entities[0],'flexible')
+i = 0
+error_msg = 'test'
+while i < 20 and error_msg != None:
+    armors = build_armor_set(entities[0],'flexible')
+    error_msg = apply_armor(entities[0],armors) 
+    i += 1
+    if error_msg != None: print(error_msg)
 
 
 

@@ -902,12 +902,9 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     return menu_dict
 
 def gen_astore_menu(curr_actor,category) -> dict:
-    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Weapons', 'options': {}, 'mode': False, 'desc': {}, 'to_hit_best': -100, 'to_hit_worst': 100,
+    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Armor', 'options': {}, 'mode': False, 'desc': {}, 'to_hit_best': -100, 'to_hit_worst': 100,
                 'parry_best': -100, 'parry_worst': 100, 'damage_best': 0, 'damage_worst': 10000}
-    purchased_weapons = curr_actor.fighter.weapons
-    categories = ['Head/Neck','Torso','Arms','Hands/Feet','Legs']
-    active_cat = categories[category]
-    components = component_sort()
+    
    
     
 

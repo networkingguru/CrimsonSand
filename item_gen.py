@@ -266,7 +266,7 @@ def build_armor_set(entity,rigidity) -> list:
     if armor is not None:
         armors = gen_filtered_armor(entity,'flexible','t',t_l1_money,True,True)
         armor = rank_armors(entity,armors,t_l1_money,True)
-        armor_list.append(armor)
+        if armor is not None:armor_list.append(armor)
 
     #Select primary head armor
     armors = gen_filtered_armor(entity,rigidity,'h',h_l2_money,False,False)
@@ -277,7 +277,7 @@ def build_armor_set(entity,rigidity) -> list:
     if armor is not None and armor.construction.main_material not in [m_leather,m_bleather,m_canvas,m_cloth,m_hide,m_xthide]:
         armors = gen_filtered_armor(entity,'flexible','h',h_l1_money,False,True)
         armor = rank_armors(entity,armors,h_l1_money,True)
-        armor_list.append(armor)
+        if armor is not None:armor_list.append(armor)
 
     #Select primary leg armor
     armors = gen_filtered_armor(entity,rigidity,'l',l_l2_money,False,False)
@@ -288,7 +288,7 @@ def build_armor_set(entity,rigidity) -> list:
     if armor is not None:
         armors = gen_filtered_armor(entity,'flexible','l',l_l1_money,False,True)
         armor = rank_armors(entity,armors,l_l1_money,True)
-        armor_list.append(armor)
+        if armor is not None: armor_list.append(armor)
 
     #Select other armor
     armor_list = gen_other_armor(entity,armor_list,rigidity)

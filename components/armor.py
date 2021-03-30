@@ -175,26 +175,26 @@ def gen_random_armor(a, **kwargs):
     return c_kwargs
 
 #Application Function
-def apply_armor(entity):
-    #Used to automatically apply a list of armors generated from a definition string in an entity
+def apply_armor(entity,armor_objects=[]):
+    #Used to automatically apply a list of armors generated from a definition string in an entity or armor objects from armor gen functions
     worn_armor = entity.worn_armor
-    armor_objects = []
     error_msg = ''
 
-    for num in worn_armor:
-        components = itersubclasses(Armor_Component)
-        for component in components:
-            if num.get('component') == component.__name__:
-                construction = num.get('construction')
-                constructions = itersubclasses(Armor_Construction)
-                for const in constructions:
-                    if construction == const.__name__:
-                        num['construction'] = const
-                        num['armor_component'] = component
-                        num['main_material'] = material_dict.get(num.get('main_material'))
-                        num['entity'] = entity
-                        armor_objects.extend(gen_armor(**num))
-                        
+    if len(armor_objects) == 0:
+        for num in worn_armor:
+            components = itersubclasses(Armor_Component)
+            for component in components:
+                if num.get('component') == component.__name__:
+                    construction = num.get('construction')
+                    constructions = itersubclasses(Armor_Construction)
+                    for const in constructions:
+                        if construction == const.__name__:
+                            num['construction'] = const
+                            num['armor_component'] = component
+                            num['main_material'] = material_dict.get(num.get('main_material'))
+                            num['entity'] = entity
+                            armor_objects.extend(gen_armor(**num))
+    
     
     
     t_armors = []
@@ -237,8 +237,8 @@ def apply_armor(entity):
             for ao in l:
                 #Check if valid to place
                 error_msg = determine_validity(ao, entity)
-                if error_msg != '':
-                    print (error_msg)
+                if error_msg != None:
+                    return error_msg
                 else:
                     for loc in ao.covered_locs:
                         entity.loc_armor[loc].append(ao)
@@ -289,7 +289,7 @@ def component_sort(entity) -> dict:
 
 #Determine if armor can be applied to layer
 def determine_validity(armor_component, entity):
-    error_message = ''
+    error_message = None
 
     for loc in armor_component.covered_locs:
         if len(entity.loc_armor[loc]) >= 1:
@@ -299,14 +299,16 @@ def determine_validity(armor_component, entity):
         if top_layer is None:
             continue
         elif armor_component.rigidity == 'rigid' and top_layer.rigidity == 'rigid' or armor_component.rigidity == 'semi' and top_layer.rigidity in ['rigid','semi']:
+            error_message = ''
             error_message = 'Cannot apply ' + armor_component.name + '. ' + top_layer.name + ' is already applied. '
 
         thickness = sum(layer.thickness for layer in entity.loc_armor[loc])
 
         if thickness + armor_component.thickness > 4:
+            error_message = ''
             error_message += 'Cannot apply ' + armor_component.name + '. Total armor thickness at ' + entity.fighter.name_location(loc) + ' exceeds 4 inches. '
 
-        if error_message != '': break
+        if error_message != None: break
 
     return error_message
 
