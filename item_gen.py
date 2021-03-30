@@ -168,6 +168,8 @@ def armor_component_filter(rigidity,classification,main_t=False,first_layer=Fals
             if loc is not None:
                 if loc not in c.covered_locs:
                     continue
+                if loc not in [0,1,2] and const.rigidity != rigidity:
+                    continue
                 valid_comps[component]=cn
             elif classification == 'h' and armor_classifier(c) == 'h': #Allow rigid helms in flex and semi suits
                 if first_layer and cn.__name__ != 'Padded':
@@ -272,7 +274,7 @@ def build_armor_set(entity,rigidity) -> list:
     if armor is not None: armor_list.append(armor)
 
     #Select L1 head armor
-    if armor is not None:
+    if armor is not None and armor.construction.main_material not in [m_leather,m_bleather,m_canvas,m_cloth,m_hide,m_xthide]:
         armors = gen_filtered_armor(entity,'flexible','h',h_l1_money,False,True)
         armor = rank_armors(entity,armors,h_l1_money,True)
         armor_list.append(armor)
