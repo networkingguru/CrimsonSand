@@ -7,11 +7,11 @@ from components.ethnicities import Ethnicity, age_mods
 from components.professions import Profession
 from components.upbringing import get_valid_upbringings
 from components.fighter import attr_name_dict, Skill
-from components.armor import component_sort
+from components.armor import component_sort, apply_armor
 from utilities import inch_conv,roll_dice,make_bar
 from chargen_functions import random_attr
 from options import name_dict
-from item_gen import weapon_generator, calc_weapon_stats
+from item_gen import weapon_generator, calc_weapon_stats, build_armor_set
 
 
 
@@ -672,6 +672,7 @@ def buy_armor(curr_actor, game_state, command) -> (dict, int, bool):
     menu_dict = {}
     clear = False
     skip = False
+    categories = ['flexible','semi','rigid']
 
     if 'Category' not in curr_actor.temp_store:
         curr_actor.temp_store['Category'] = 0
@@ -685,28 +686,26 @@ def buy_armor(curr_actor, game_state, command) -> (dict, int, bool):
     elif len(command) > 0:
         if command.get('Next Category'):
             category += 1
-            if category >= (len(list(curr_actor.temp_store.get('armor').keys()))-2):
+            if category >= (len(categories)):
                 category = 0
             curr_actor.temp_store['Category'] = category
+            curr_actor.loc_armor.clear()
+            menu_dict = gen_astore_menu(curr_actor,category)
 
-        elif command.get('Revert Purchases'):
-            for w in curr_actor.worn_armor:
-                curr_actor.fighter.money += int(w.cost)
-            curr_actor.worn_armor.clear()
-        elif command.get('Continue to Equip'):
+        elif command.get('Reroll Armor Set'):
+            curr_actor.loc_armor.clear()
+            menu_dict = gen_astore_menu(curr_actor,category)
+            
+        elif command.get('Purchase and continue to Equip Weapons'):
+            for l in curr_actor.loc_armor:
+                for a in l:
+                    curr_actor.fighter.money -= a.cost
             curr_actor.temp_store = {}
             game_state = GameStates.equip
             clear = True
-        else:
-            catname = list(curr_actor.temp_store.get('armor'))[category]
-            tname = list(curr_actor.temp_store.get('armor').get('type'))[a_type]
-            for a in curr_actor.temp_store.get('armor').get(catname).get(tname):
-                if command.get(id(a)) and curr_actor.fighter.money >= a.cost:
-                    #None of this will work. Need to figure out how to make this work with apply_armor
-                    """ curr_actor.fighter.weapons.append(a)
-                    curr_actor.fighter.money -= int(a.cost) """
-                    break
+
     else:
+        curr_actor.loc_armor.clear()
         menu_dict = gen_astore_menu(curr_actor,category)
 
 
@@ -902,46 +901,73 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     return menu_dict
 
 def gen_astore_menu(curr_actor,category) -> dict:
-    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Armor', 'options': {}, 'mode': False, 'desc': {}, 'to_hit_best': -100, 'to_hit_worst': 100,
-                'parry_best': -100, 'parry_worst': 100, 'damage_best': 0, 'damage_worst': 10000}
+    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Armor', 'options': {}, 'mode': False, 'desc': {},'category':category}
     
-   
-    
-
     if not curr_actor.temp_store.get('armor'):
         curr_actor.temp_store['armor'] = []
     
+    if category == 0:
+        cat_desc = 'flexible'
+    elif category == 1:
+        cat_desc = 'semi'
+    else:
+        cat_desc = 'rigid'
     
-    
-    
+    i = 0
+    error_msg = ''
+    while i < 20 and error_msg != None:
+        armors = build_armor_set(curr_actor,cat_desc)
+        error_msg = apply_armor(curr_actor,armors) 
+        i += 1
+        if error_msg != None: print(error_msg)
 
-    #Item details: Name Price  Weight  Length  To-hit  Parry   Damage  Hands   ER  AP/Attack  AP/Parry
-    """ for w in weapon_dict.get(active_cat):
-        if w not in curr_actor.fighter.weapons:
-            cs_er = str(int(combat_stats.get(id(w)).get('total er')))
-            cs_ap = str(int(combat_stats.get(id(w)).get('final ap')))
-            cs_pap =str(int(combat_stats.get(id(w)).get('parry ap')))
-            hands = ','.join(map(str,w.hands))
-            menu_item = w.name
-            item_stats = {'cost':str(int(w.cost)),'weight':str(int(w.weight)),'length':inch_conv(w.length),'to_hit':combat_stats.get(id(w)).get('to hit'),
-                        'parry':combat_stats.get(id(w)).get('to parry'),'damage':combat_stats.get(id(w)).get('psi'),'hands':hands,'er':cs_er, 
-                        'ap':cs_ap,'pap':cs_pap}
+    #location details: Name bdeflect pdeflect sdeflect bsoak hits phys_mod stam_drain weight cost
 
+    b_deflect = 0
+    p_deflect = 0
+    s_deflect = 0
+    b_soak = 0
+    hits = 0
+    phys_mod = 0
+    stam_drain = 0
+    weight = 0
+    l_cost = 0
+    t_cost = 0 
 
-            menu_dict['options'][menu_item] = id(w)
-            menu_dict['desc'][id(w)] = item_stats
+    for l in curr_actor.loc_armor:
+        loc_name = curr_actor.fighter.name_location(curr_actor.loc_armor.index(l))
+        b_deflect = 0
+        p_deflect = 0
+        s_deflect = 0
+        b_soak = 0
+        hits = 0
+        phys_mod = 0
+        stam_drain = 0
+        weight = 0
+        l_cost = 0
+        t_cost = 0 
+        for a in l:
+            b_deflect += a.b_deflect
+            p_deflect += a.p_deflect
+            s_deflect += a.s_deflect
+            b_soak += a.b_soak
+            hits += a.hits
+            phys_mod += a.physical_mod
+            stam_drain += a.stam_drain
+            weight += a.Weight
+        loc_stats = {'b_deflect':b_deflect,'p_deflect':p_deflect,'s_deflect':s_deflect,'b_soak':b_soak,'hits':hits,'phys_mod':phys_mod,
+                    'stam_drain':stam_drain,'weight':weight}
+        menu_dict['desc'][loc_name] = loc_stats
+            
+    menu_dict['desc']['t_stam_drain'] = curr_actor.fighter.stam_drain
+    menu_dict['desc']['armor_mod'] = curr_actor.fighter.armor_mod
+
+    menu_dict['money'] = curr_actor.fighter.money
 
     menu_dict['options']['Next Category'] = 'Next Category'
-    menu_dict['options']['Revert Purchases'] = 'Revert Purchases'
-    menu_dict['options']['Continue to Armor Store'] = 'Continue to Armor Store'
-    menu_dict['category'] = active_cat.capitalize()
-    menu_dict['money'] = curr_actor.fighter.money
-    menu_dict['cat_desc'] = cat_desc[category]
+    menu_dict['options']['Reroll Armor Set'] = 'Reroll Armor Set'
+    menu_dict['options']['Purchase and continue to Equip Weapons'] = 'Purchase and continue to Equip Weapons'
 
-    w_purchases = []
-    for w in curr_actor.fighter.weapons:
-        w_purchases.append(w.name)
-    menu_dict['w_purchases'] = ', '.join(w_purchases) """
 
 
     return menu_dict
