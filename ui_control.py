@@ -93,6 +93,8 @@ def render(entities, players, game_map, con_list, frame_list, offset_list, type_
         render_name(frame_list,menu_dict)
     elif len(menu_dict) > 0 and game_state == GameStates.shop_w:
         render_store(frame_list,menu_dict)
+    elif len(menu_dict) > 0 and game_state == GameStates.shop_a:
+        render_astore(frame_list,menu_dict)
     terminal.refresh()
 
 def render_main_menu(frame_list, menu_dict) -> None:
@@ -510,7 +512,7 @@ def render_astore(frame_list, menu_dict) -> None:
             fl12_txt = 'Total Stamina Drain Per Turn for Set: '
             fl13_txt = 'Total Physical Modifier for Set: '
             fl14_txt = 'List of Armor Items Included in Set: '
-            fl0_txt = '''Explanation/Help: Armor is generated in layered sets, with the primary layer designed to deflect and spread the 
+            fl15_txt = '''Explanation/Help: Armor is generated in layered sets, with the primary layer designed to deflect and spread the 
                     impact and one or more softer layers underneath to absorb the impact. Armor is generated based on the type you prefer. 
                     Flexible armors include leather, chain, hide, and padded armors. Semi-rigid armors include ringmail, scale, 
                     lamellar, and other armor types where there are generally larger segments that overlap or connect to disperse force. 
@@ -540,7 +542,7 @@ def render_astore(frame_list, menu_dict) -> None:
             fl13_txt += '-' + stats.get('armor_mod')
             fl14_txt += ', '.join(stats.get('a_names'))
  
-            frame_list[0].text = fl0_txt
+            
             frame_list[1].text = fl1_txt
             frame_list[2].text = fl2_txt   
             frame_list[3].text = fl3_txt
@@ -555,6 +557,7 @@ def render_astore(frame_list, menu_dict) -> None:
             frame_list[12].text = fl12_txt
             frame_list[13].text = fl13_txt
             frame_list[14].text = fl14_txt
+            frame_list[15].text = fl15_txt
 
     if len(frame_list) != 0:
         render_frames(frame_list)
@@ -634,7 +637,7 @@ def handle_input(active_entity, game_state, menu_dict, entities, combat_phase, g
                 #Otherwise, see if a menu is present. If so, block for input, if not, refresh and get menu
         if game_state not in [GameStates.menu, GameStates.main_menu, GameStates.circumstance, GameStates.sex, GameStates.ethnicity, 
                                     GameStates.social, GameStates.attributes, GameStates.attributes2, GameStates.upbringing, GameStates.age,
-                                    GameStates.profession,GameStates.skills,GameStates.name,GameStates.shop_w]: command = blt_handle_global_input(game_state)
+                                    GameStates.profession,GameStates.skills,GameStates.name,GameStates.shop_w,GameStates.shop_a]: command = blt_handle_global_input(game_state)
         else:
             if game_state in [GameStates.menu,GameStates.default] and len(active_entity.fighter.targets) == 0 and len(menu_dict.get('options')) == 0:    #This is to handle the case of moving with direction keys
                 command = blt_handle_keys(game_state, menu_dict)
@@ -1081,7 +1084,38 @@ def bltgui_store_page(terminal, w, h, menu_dict, frame_list):
 
     frame_list.extend([purch_frame,desc_frame,price_frame,weight_frame,length_frame,hit_frame,parry_frame,damage_frame,hands_frame,er_frame,ap_frame,pap_frame,list_frame])
 
+def bltgui_astore_page(terminal, w, h, menu_dict, frame_list):
+    items = menu_dict.get('options')  
+    list_box = None
+    
+    list_frame = Frame(0,0,20,4,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    loc_frame = Frame(155,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    bd_frame = Frame(145,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    pd_frame = Frame(135,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    sd_frame = Frame(125,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    bs_frame = Frame(115,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    hits_frame = Frame(105,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    pm_frame = Frame(95,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    stam_frame = Frame(85,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    wt_frame = Frame(75,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    cost_frame = Frame(65,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    
+    price_frame = Frame(5,45,28,1,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    tstam_frame = Frame(35,45,50,1,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    tpm_frame = Frame(85,45,50,1,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    items_frame = Frame(5,47,150,5,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    help_frame = Frame(5,52,150,15,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    
 
+    if len(items) > 0:
+        list_box = bltGui.bltListbox(list_frame, 5, 16, items, False, True)
+    
+
+    if list_box is not None:    
+        list_frame.add_control(list_box)
+    
+
+    frame_list.extend([list_frame,loc_frame,bd_frame,pd_frame,sd_frame,bs_frame,hits_frame,pm_frame,stam_frame,wt_frame,cost_frame,price_frame,tstam_frame,tpm_frame,items_frame,help_frame])
 
 def bltgui_page(terminal, w, h, menu_dict, frame_list):
     items = menu_dict.get('options')   
