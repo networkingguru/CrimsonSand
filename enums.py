@@ -59,6 +59,7 @@ class MenuTypes(Enum):
     name_page = auto()
     store_page = auto()
     confirm_page = auto()
+    astore_page = auto()
 
 class CombatPhase(Enum):   
     explore = auto()

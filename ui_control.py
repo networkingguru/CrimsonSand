@@ -470,6 +470,94 @@ def render_store(frame_list, menu_dict) -> None:
     if len(frame_list) != 0:
         render_frames(frame_list)
 
+def render_astore(frame_list, menu_dict) -> None:
+
+    header = menu_dict.get('header')
+    header_pos = int(90-(len(header)/2))
+
+    terminal.puts(header_pos, 2, '[font=headi][color=white][bg_color=black]'+ header)
+    if 'category' in menu_dict.keys():
+        if menu_dict.get('category') == 0: cat_text = 'Flexible'
+        elif menu_dict.get('category') == 1: cat_text = 'Semi-Rigid'
+        else: cat_text = 'Rigid'
+        terminal.puts(header_pos, 5, 'Armor Category: ' + cat_text)
+    if 'money' in menu_dict.keys():
+        terminal.puts(header_pos, 7, 'Money: ' + str(menu_dict.get('money')))
+    menu_type = menu_dict.get('type')
+    menu_options = menu_dict.get('options')
+    stats = menu_dict.get('desc')
+
+    if menu_type == MenuTypes.astore_page:
+               
+
+        if len(frame_list) == 0:
+            bltgui_astore_page(terminal,options.screen_width,options.screen_height,menu_dict,frame_list)
+            initialize()
+
+        elif len(menu_dict.get('options')) > 0:
+            #Build stats frames
+            fl1_txt = 'Location'
+            fl2_txt = 'Bludgeoning Deflection'
+            fl3_txt = 'Piercing Deflection'
+            fl4_txt = 'Slashing Deflection'
+            fl5_txt = 'Bludgeoning Soak'
+            fl6_txt = 'Hits'
+            fl7_txt = 'Physical Modifier'
+            fl8_txt = 'Stamina Drain'
+            fl9_txt = 'Weight'
+            fl10_txt = 'Price'
+            fl11_txt = 'Total Price for Set: '
+            fl12_txt = 'Total Stamina Drain Per Turn for Set: '
+            fl13_txt = 'Total Physical Modifier for Set: '
+            fl14_txt = 'List of Armor Items Included in Set: '
+            fl0_txt = '''Explanation/Help: Armor is generated in layered sets, with the primary layer designed to deflect and spread the 
+                    impact and one or more softer layers underneath to absorb the impact. Armor is generated based on the type you prefer. 
+                    Flexible armors include leather, chain, hide, and padded armors. Semi-rigid armors include ringmail, scale, 
+                    lamellar, and other armor types where there are generally larger segments that overlap or connect to disperse force. 
+                    Rigid armors are plate-type armors. In general, the more rigid an armor, the better it deflects most damage. You can 
+                    regenerate sets or change categories at will. On the right, each hit location is shown, with the combined 
+                    stats of all layers of armor shown. Deflection rates are how likely the armor is to deflect a type of damage (completely negating it), as long as the 
+                    damage does not exceed a certain threshold (determined by the armor's hardness and overall hits). Soak is the percentage of bludgeoning damage the padded 
+                    layers will absorb. Hits are the total hits the armor can take before being breached. Physical modifier is a negative 
+                    modifier applied to all physical activities (including combat) while wearing the armor. This number already takes your 
+                    armor skill level into account. Stamina drain is the per round stamina reduction incurred by the armor. '''
+
+            for i in stats:
+                if i not in ['a_names','price','t_stam_drain','armor_mod']:
+                    fl1_txt += '\n' + i
+                    fl2_txt += '\n' + make_bar(stats.get(i).get('b_deflect'),100)
+                    fl3_txt += '\n' + make_bar(stats.get(i).get('p_deflect'),100)
+                    fl4_txt += '\n' + make_bar(stats.get(i).get('s_deflect'),100)
+                    fl5_txt += '\n' + stats.get(i).get('b_soak') + '%%'
+                    fl6_txt += '\n' + make_bar(stats.get(i).get('hits'),100000)
+                    fl7_txt += '\n' + '-' + str(int(stats.get(i).get('phys_mod')))
+                    fl8_txt += '\n' + str(int(stats.get(i).get('stam_drain'))) + '/Rd'
+                    fl9_txt += '\n' + str(round(stats.get(i).get('weight'),1)) + ' lbs'
+                    fl10_txt += '\n' + str(int(stats.get(i).get('price')))
+
+            fl11_txt += stats.get('price')
+            fl12_txt += stats.get('t_stam_drain')
+            fl13_txt += '-' + stats.get('armor_mod')
+            fl14_txt += ', '.join(stats.get('a_names'))
+ 
+            frame_list[0].text = fl0_txt
+            frame_list[1].text = fl1_txt
+            frame_list[2].text = fl2_txt   
+            frame_list[3].text = fl3_txt
+            frame_list[4].text = fl4_txt
+            frame_list[5].text = fl5_txt
+            frame_list[6].text = fl6_txt
+            frame_list[7].text = fl7_txt
+            frame_list[8].text = fl8_txt
+            frame_list[9].text = fl9_txt
+            frame_list[10].text = fl10_txt
+            frame_list[11].text = fl11_txt
+            frame_list[12].text = fl12_txt
+            frame_list[13].text = fl13_txt
+            frame_list[14].text = fl14_txt
+
+    if len(frame_list) != 0:
+        render_frames(frame_list)
 
 def render_combat(entities, players, game_map, con_list, frame_list, offset_list, type_list, dim_list, color_list, logs, menu_dict) -> None:
     map_con = con_list[0]

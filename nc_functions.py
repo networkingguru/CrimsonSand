@@ -901,7 +901,7 @@ def gen_wstore_menu(curr_actor,category) -> dict:
     return menu_dict
 
 def gen_astore_menu(curr_actor,category) -> dict:
-    menu_dict = {'type': MenuTypes.store_page, 'header': 'Purchase Armor', 'options': {}, 'mode': False, 'desc': {},'category':category}
+    menu_dict = {'type': MenuTypes.astore_page, 'header': 'Purchase Armor', 'options': {}, 'mode': False, 'desc': {},'category':category}
     
     if not curr_actor.temp_store.get('armor'):
         curr_actor.temp_store['armor'] = []
@@ -923,16 +923,9 @@ def gen_astore_menu(curr_actor,category) -> dict:
 
     #location details: Name bdeflect pdeflect sdeflect bsoak hits phys_mod stam_drain weight cost
 
-    b_deflect = 0
-    p_deflect = 0
-    s_deflect = 0
-    b_soak = 0
-    hits = 0
-    phys_mod = 0
-    stam_drain = 0
-    weight = 0
-    l_cost = 0
+
     t_cost = 0 
+    a_names = []
 
     for l in curr_actor.loc_armor:
         loc_name = curr_actor.fighter.name_location(curr_actor.loc_armor.index(l))
@@ -944,21 +937,25 @@ def gen_astore_menu(curr_actor,category) -> dict:
         phys_mod = 0
         stam_drain = 0
         weight = 0
-        l_cost = 0
-        t_cost = 0 
+        l_cost = 0 
         for a in l:
+            a_names.append(a.name)
             b_deflect += a.b_deflect
             p_deflect += a.p_deflect
             s_deflect += a.s_deflect
             b_soak += a.b_soak
-            hits += a.hits
+            hits += a.hits_sq_in
             phys_mod += a.physical_mod
             stam_drain += a.stam_drain
             weight += a.Weight
+            l_cost += a.cost
+            t_cost += a.cost
         loc_stats = {'b_deflect':b_deflect,'p_deflect':p_deflect,'s_deflect':s_deflect,'b_soak':b_soak,'hits':hits,'phys_mod':phys_mod,
-                    'stam_drain':stam_drain,'weight':weight}
+                    'stam_drain':stam_drain,'weight':weight,'price':l_cost}
         menu_dict['desc'][loc_name] = loc_stats
-            
+
+    menu_dict['desc']['a_names'] = a_names
+    menu_dict['desc']['price'] = t_cost        
     menu_dict['desc']['t_stam_drain'] = curr_actor.fighter.stam_drain
     menu_dict['desc']['armor_mod'] = curr_actor.fighter.armor_mod
 
