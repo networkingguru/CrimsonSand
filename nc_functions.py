@@ -926,9 +926,11 @@ def gen_astore_menu(curr_actor,category) -> dict:
 
     t_cost = 0 
     a_names = []
+    idx = 0
 
     for l in curr_actor.loc_armor:
-        loc_name = curr_actor.fighter.name_location(curr_actor.loc_armor.index(l))
+        if idx < 28: idx += 1
+        loc_name = curr_actor.fighter.name_location(idx)
         b_deflect = 0
         p_deflect = 0
         s_deflect = 0
@@ -947,7 +949,7 @@ def gen_astore_menu(curr_actor,category) -> dict:
             hits += a.hits_sq_in
             phys_mod += a.physical_mod
             stam_drain += a.stam_drain
-            weight += a.Weight
+            weight += a.weight
             l_cost += a.cost
             t_cost += a.cost
         loc_stats = {'b_deflect':b_deflect,'p_deflect':p_deflect,'s_deflect':s_deflect,'b_soak':b_soak,'hits':hits,'phys_mod':phys_mod,

@@ -291,6 +291,9 @@ def component_sort(entity) -> dict:
 def determine_validity(armor_component, entity):
     error_message = None
 
+    while len(entity.loc_armor) < 29:
+        entity.loc_armor.append([])
+
     for loc in armor_component.covered_locs:
         if len(entity.loc_armor[loc]) >= 1:
             top_layer = entity.loc_armor[loc][-1]

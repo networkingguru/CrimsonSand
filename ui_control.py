@@ -496,7 +496,7 @@ def render_astore(frame_list, menu_dict) -> None:
             bltgui_astore_page(terminal,options.screen_width,options.screen_height,menu_dict,frame_list)
             initialize()
 
-        elif len(menu_dict.get('options')) > 0:
+        if len(menu_dict.get('options')) > 0:
             #Build stats frames
             fl1_txt = 'Location'
             fl2_txt = 'Bludgeoning Deflection'
@@ -530,16 +530,16 @@ def render_astore(frame_list, menu_dict) -> None:
                     fl2_txt += '\n' + make_bar(stats.get(i).get('b_deflect'),100)
                     fl3_txt += '\n' + make_bar(stats.get(i).get('p_deflect'),100)
                     fl4_txt += '\n' + make_bar(stats.get(i).get('s_deflect'),100)
-                    fl5_txt += '\n' + stats.get(i).get('b_soak') + '%%'
+                    fl5_txt += '\n' + str(int(stats.get(i).get('b_soak'))) + '%%'
                     fl6_txt += '\n' + make_bar(stats.get(i).get('hits'),100000)
                     fl7_txt += '\n' + '-' + str(int(stats.get(i).get('phys_mod')))
                     fl8_txt += '\n' + str(int(stats.get(i).get('stam_drain'))) + '/Rd'
                     fl9_txt += '\n' + str(round(stats.get(i).get('weight'),1)) + ' lbs'
                     fl10_txt += '\n' + str(int(stats.get(i).get('price')))
 
-            fl11_txt += stats.get('price')
-            fl12_txt += stats.get('t_stam_drain')
-            fl13_txt += '-' + stats.get('armor_mod')
+            fl11_txt += str(int(stats.get('price')))
+            fl12_txt += str(int(stats.get('t_stam_drain')))
+            fl13_txt += '-' + str(int(stats.get('armor_mod')))
             fl14_txt += ', '.join(stats.get('a_names'))
  
             
