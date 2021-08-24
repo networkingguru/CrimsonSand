@@ -26,8 +26,8 @@ if __name__ == "__main__":
     dim_list = [(options.map_width, options.map_height), (options.status_panel_w, options.status_panel_h), 
                 (options.enemy_panel_w, options.enemy_panel_h), (options.message_panel_w, options.message_panel_h)]
 
-    menu_desc = {'New Game':'Start a new game', 'Load Game': 'Load the game from disk','Quit Game':'Exit the game'}
-    menu_dict = {'type': MenuTypes.combat, 'header': 'Main Menu', 'options': ['New Game', 'Load Game','Quit Game'], 'mode': False, 'desc': menu_desc}
+    menu_desc = {'New Game':'DEBUGGING - Do not choose', 'Load Game': 'Load the game from disk', 'Combat DEMO': 'Load a pregenerated combat setup', 'Quit Game':'Exit the game'}
+    menu_dict = {'type': MenuTypes.combat, 'header': 'Main Menu', 'options': ['New Game', 'Load Game', 'Combat DEMO', 'Quit Game'], 'mode': False, 'desc': menu_desc}
 
     term = create_terminal(options.screen_width, options.screen_height)
 
@@ -147,6 +147,8 @@ if __name__ == "__main__":
                 messages = load_game()
                 for msg in messages:
                     logs[2].add_message(msg)
+            if command.get('Combat DEMO'):
+                game_state = GameStates.default
 
             
             fill_status_panel(players[0], status_log)

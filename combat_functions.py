@@ -1095,7 +1095,7 @@ def dam_loop(target, location, layer, active_entity, atk_angle, rel_angle, dam_t
 def armor_control(target, location, attack, dam_type, dam_amount) -> (list, list, list):
     locations = [location]
     dam_amt_list = []
-    dam_type_list = [] 
+    dam_type_list = [dam_type] 
     dam_total = dam_amount
     ao_idx =  1 #Counter. Subtracted from len of loc_armor to determine ao to effect
 
@@ -1143,7 +1143,7 @@ def armor_displace(target, location, attack, ao_idx, dam_type, dam_amount) -> (l
     ao = target.loc_armor[location][idx]
     locs = [location]
     dam_amt_list = []
-    dam_type_list = []
+    dam_type_list = [dam_type]
     deflect = False
     deflect_max = 0
 
@@ -1172,7 +1172,7 @@ def armor_displace(target, location, attack, ao_idx, dam_type, dam_amount) -> (l
         if dam_amount > armor_breach_psi or dam_amount > ao.hits:
             dam_amount -= min([armor_breach_psi, ao.hits])
             ao.hits -= dam_amount
-            dam_amt_list[0] = dam_amount
+            dam_amt_list = [dam_amount]
         #If no penetration, convert damage and apply to next area(s)
         elif dam_type == 'p':
             ao.hits -= dam_amount
