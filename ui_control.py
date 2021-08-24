@@ -543,21 +543,21 @@ def render_astore(frame_list, menu_dict) -> None:
             fl14_txt += ', '.join(stats.get('a_names'))
  
             
-            frame_list[1].text = fl1_txt
-            frame_list[2].text = fl2_txt   
-            frame_list[3].text = fl3_txt
-            frame_list[4].text = fl4_txt
-            frame_list[5].text = fl5_txt
-            frame_list[6].text = fl6_txt
-            frame_list[7].text = fl7_txt
-            frame_list[8].text = fl8_txt
-            frame_list[9].text = fl9_txt
-            frame_list[10].text = fl10_txt
-            frame_list[11].text = fl11_txt
-            frame_list[12].text = fl12_txt
-            frame_list[13].text = fl13_txt
-            frame_list[14].text = fl14_txt
-            frame_list[15].text = fl15_txt
+            # frame_list[1].text = fl1_txt
+            # frame_list[2].text = fl2_txt   
+            # frame_list[3].text = fl3_txt
+            # frame_list[4].text = fl4_txt
+            # frame_list[5].text = fl5_txt
+            # frame_list[6].text = fl6_txt
+            # frame_list[7].text = fl7_txt
+            # frame_list[8].text = fl8_txt
+            # frame_list[9].text = fl9_txt
+            # frame_list[10].text = fl10_txt
+            # frame_list[11].text = fl11_txt
+            # frame_list[12].text = fl12_txt
+            # frame_list[13].text = fl13_txt
+            # frame_list[14].text = fl14_txt
+            # frame_list[15].text = fl15_txt
 
     if len(frame_list) != 0:
         render_frames(frame_list)
@@ -1088,7 +1088,7 @@ def bltgui_astore_page(terminal, w, h, menu_dict, frame_list):
     items = menu_dict.get('options')  
     list_box = None
     
-    list_frame = Frame(0,0,20,4,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
+    list_frame = Frame(0,0,20,10,'', frame=True, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     loc_frame = Frame(155,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     bd_frame = Frame(145,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
     pd_frame = Frame(135,14,10,29,'', frame=False, draggable=False, color_skin = 'GRAY', font = '[font=big]', title_font='[font=head]')
@@ -1114,8 +1114,9 @@ def bltgui_astore_page(terminal, w, h, menu_dict, frame_list):
     if list_box is not None:    
         list_frame.add_control(list_box)
     
+    frame_list.extend([list_frame])
 
-    frame_list.extend([list_frame,loc_frame,bd_frame,pd_frame,sd_frame,bs_frame,hits_frame,pm_frame,stam_frame,wt_frame,cost_frame,price_frame,tstam_frame,tpm_frame,items_frame,help_frame])
+    #frame_list.extend([loc_frame,bd_frame,pd_frame,sd_frame,bs_frame,hits_frame,pm_frame,stam_frame,wt_frame,cost_frame,price_frame,tstam_frame,tpm_frame,items_frame,help_frame,list_frame])
 
 def bltgui_page(terminal, w, h, menu_dict, frame_list):
     items = menu_dict.get('options')   

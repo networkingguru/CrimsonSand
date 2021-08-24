@@ -691,10 +691,12 @@ def buy_armor(curr_actor, game_state, command) -> (dict, int, bool):
             curr_actor.temp_store['Category'] = category
             curr_actor.loc_armor.clear()
             menu_dict = gen_astore_menu(curr_actor,category)
+            curr_actor.temp_store['menu'] = menu_dict
 
         elif command.get('Reroll Armor Set'):
             curr_actor.loc_armor.clear()
             menu_dict = gen_astore_menu(curr_actor,category)
+            curr_actor.temp_store['menu'] = menu_dict
             
         elif command.get('Purchase and continue to Equip Weapons'):
             for l in curr_actor.loc_armor:
@@ -706,7 +708,9 @@ def buy_armor(curr_actor, game_state, command) -> (dict, int, bool):
 
     else:
         curr_actor.loc_armor.clear()
-        menu_dict = gen_astore_menu(curr_actor,category)
+        if not 'menu' in curr_actor.temp_store:
+            curr_actor.temp_store['menu'] = gen_astore_menu(curr_actor,category)
+        menu_dict = curr_actor.temp_store.get('menu')
 
 
     return menu_dict, game_state, clear
