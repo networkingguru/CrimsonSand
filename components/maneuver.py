@@ -124,7 +124,7 @@ class Tackle(Maneuver):
     def __init__(self, aggressor, target, loc_name):
         Maneuver.__init__(self)
         self.name = 'Tackle'
-        self.desc = 'Rush forward and attept to tackle ' + target.name
+        self.desc = 'Rush forward and attempt to tackle ' + target.name
         self.skill = ['brawling','wrestling','martial_arts']
         self.loc_idx = target.fighter.name_location(loc_name)
         self.succeed_desc = aggressor.name + ' tackles ' + target.name + ', forcing both to the ground. '
