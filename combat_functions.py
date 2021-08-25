@@ -550,6 +550,7 @@ def perform_attack(active_entity, entities, final_to_hit, target, cs, combat_pha
 
     if target in active_entity.fighter.entities_opportunity_attacked:
         target.fighter.mod_attribute('ap', -final_ap)
+        active_entity.fighter.entities_opportunity_attacked.clear()
     elif target.fighter.wait or target.fighter.feint:
         target.fighter.mod_attribute('ap', -final_ap)
     else:

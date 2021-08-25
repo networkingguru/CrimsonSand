@@ -246,6 +246,7 @@ def phase_option(active_entity, command, logs, combat_phase) -> (int, dict):
                     combat_phase = CombatPhase.location
             elif len(command) != 0: #Bug catcher
                 if global_vars.debug: print('Too many combat choices')
+                breakpoint()
     
     for message in messages:
         log.add_message(Message(message))
