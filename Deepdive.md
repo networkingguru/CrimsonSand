@@ -32,8 +32,8 @@ First, you need to look at combatcontrol.py. Basically, this is where all the co
 9.  Phase_option2's goal is to get the player to commit to an angle of attack. The angle has some significant affects on damage, the ability to dodge, and the ability to block depending on the weapon. For example, a sword thrust is easier to dodge than a slash. Also, it has some impact on the damage. An overhand slash from a sword has the entire weight of the actor behind it, while a horizontal slash has the power of the actor's hips behind it (think about the power in a major league home run swing). A thrust has none of these, but has a mechanical advantage because of the force multiplier of the point of the sword. This function doesn't determine these things, but it tries to present them in a reasonable way to the actor, using damage, to hit, parry mod, and dodge mod descriptors (all entered into a dictionary then converted to a list by UI functions).\
     Angle is (currently) listed based on cardinal directions, numbered clockwise.\
     NW N NE\
-    W E\
-    SW S SE\
+    W        E\
+    SW  S  SE\
     1 is N-\>S, which means the swing begins directly overhead and continues directly down.\
     2 is NE-\>SW, which means the swing begins at the upper right of the attacker, and continues down to the lower left.\
     And so on...\
